@@ -1,0 +1,131 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/budimanjojo/talhelper/master/pkg/config/schemas/talconfig.json
+clusterName: ${clusterName}
+endpoint: "https://${clusterName}.${clusterDNSSuffix}:6443"
+allowSchedulingOnMasters: true
+# renovate: depName=ghcr.io/siderolabs/installer datasource=docker extractVersion=^(?<version>.*)$
+talosVersion: v1.6.4
+# renovate: depName=kubernetes/kubernetes datasource=github-releases extractVersion=^v(?<version>.*)$
+kubernetesVersion: 1.29.1
+
+cniConfig:
+  name: none
+
+clusterPodNets:
+  - 10.244.0.0/16
+  - 2001:0470:e899:9951::/64
+clusterSvcNets:
+  - 10.96.0.0/12
+  - 2001:0470:e899:9951:cafe:1::/112
+
+additionalApiServerCertSans: &san
+  - ${clusterEndpointIP}
+  - ${clusterName}.${clusterDNSSuffix}
+  - "127.0.0.1" # KubePrism
+additionalMachineCertSans: *san
+
+nodes:
+  - hostname: node01.${clusterName}.${clusterDNSSuffix}
+    ipAddress: 172.17.1.11
+    controlPlane: true
+    installDisk: /dev/nvme0n1
+    machineSpec:
+      mode: metal
+      arch: amd64
+
+  - hostname: node02.${clusterName}.${clusterDNSSuffix}
+    ipAddress: 172.17.1.12
+    controlPlane: true
+    installDisk: /dev/sda
+    machineSpec:
+      mode: metal
+      arch: amd64
+
+  - hostname: node03.${clusterName}.${clusterDNSSuffix}
+    ipAddress: 172.17.1.13
+    controlPlane: true
+    installDisk: /dev/sda
+    machineSpec:
+      mode: metal
+      arch: amd64
+
+controlPlane:
+  patches:
+    # Kubelet configuration
+    - |-
+      machine:
+        kubelet:
+          extraArgs:
+            feature-gates: GracefulNodeShutdown=true,NewVolumeManagerReconstruction=false
+            rotate-server-certificates: "true"
+          extraConfig:
+            maxPods: 150
+
+    - |-
+      machine:
+        network:
+          extraHostEntries:
+            - ip: ${clusterEndpointIP}
+              aliases:
+                - ${clusterName}.${clusterDNSSuffix}
+          interfaces:
+            - deviceSelector:
+                busPath: "0"
+              dhcp: true
+              vip:
+                ip: ${clusterEndpointIP}
+
+    - |-
+      machine:
+        files:
+          - op: overwrite
+            path: /etc/nfsmount.conf
+            permissions: 0o644
+            content: |
+              [ NFSMount_Global_Options ]
+              nfsvers=4.2
+              hard=True
+              noatime=True
+              nodiratime=True
+              rsize=131072
+              wsize=131072
+              nconnect=8
+
+    # Custom sysctls
+    - |-
+      machine:
+        sysctls:
+          fs.inotify.max_user_watches: "1048576"
+          fs.inotify.max_user_instances: "8192"
+
+    # Enable K8s Talos API Access
+    - |-
+      machine:
+        features:
+          kubernetesTalosAPIAccess:
+            enabled: true
+            allowedRoles:
+              - os:admin
+            allowedKubernetesNamespaces:
+              - system-controllers
+  schematic:
+    customization:
+      extraKernelArgs:
+        - net.ifnames=0
+      systemExtensions:
+        officialExtensions:
+          - siderolabs/intel-ucode
+          - siderolabs/i915-ucode
+          - siderolabs/iscsi-tools
+          - siderolabs/gasket-driver
+worker:
+  schematic:
+    customization:
+      extraKernelArgs:
+        - net.ifnames=0
+      systemExtensions:
+        officialExtensions:
+          - siderolabs/intel-ucode
+          - siderolabs/i915-ucode
+          - siderolabs/iscsi-tools
+          - siderolabs/gasket-driver

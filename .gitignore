@@ -1,0 +1,10 @@
+# Ignore any talosconfigs
+**/*talosconfig*
+
+# .age-keys contains decrypted private keys for age
+**/.age-keys
+
+# ensure sopsifier files don't leak
+**/.decrypted~*
+
+**/.DS_Store
