@@ -1,0 +1,82 @@
+---
+fail_fast: false
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+  - repo: https://github.com/Lucas-C/pre-commit-hooks
+    rev: v1.3.1
+    hooks:
+      - id: remove-crlf
+      - id: remove-tabs
+  - repo: https://github.com/sirosen/fix-smartquotes
+    rev: 0.2.0
+    hooks:
+      - id: fix-smartquotes
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.28.0
+    hooks:
+      - args:
+          - --config-file
+          - .github/lint/.yamllint.yaml
+        id: yamllint
+  - repo: https://github.com/k8s-at-home/sops-pre-commit
+    rev: v2.1.1
+    hooks:
+      - id: forbid-secrets
+  # - repo: https://github.com/rtrox/pre-commit-kustomize-check
+  #   rev: v4.5.8
+  #   hooks:
+  #     - id: kustomize_check
+  #       name: kustomize-crds
+  #       files: ((^|/)cluster-cd/crds/.*.(ya?ml)$)
+  #       args: [cluster-cd/crds]
+  #       verbose: false
+  #     - id: kustomize_check
+  #       name: kustomize-sources
+  #       files: ((^|/)cluster-cd/sources/.*.(ya?ml)$)
+  #       args: [cluster-cd/sources]
+  #       verbose: false
+  #     - id: kustomize_check
+  #       name: kustomize-x86-system
+  #       files: ((^|/)cluster-cd/system/.*.(ya?ml)$)
+  #       args: [cluster-cd/system/x86]
+  #       verbose: false
+  #     - id: kustomize_check
+  #       name: kustomize-x86-infra
+  #       files: ((^|/)cluster-cd/infra/.*.(ya?ml)$)
+  #       args: [cluster-cd/infra/x86]
+  #       verbose: false
+  #     - id: kustomize_check
+  #       name: kustomize-x86-apps
+  #       files: ((^|/)cluster-cd/apps/.*.(ya?ml)$)
+  #       args: [cluster-cd/apps/x86]
+  #       verbose: false
+  #     - id: kustomize_check
+  #       name: kustomize-sid-system
+  #       files: ((^|/)cluster-cd/system/.*.(ya?ml)$)
+  #       args: [cluster-cd/system/rpi4-sidero]
+  #       verbose: false
+  #     - id: kustomize_check
+  #       name: kustomize-sid-apps
+  #       files: ((^|/)cluster-cd/apps/.*(ya?ml)$)
+  #       args: [cluster-cd/apps/rpi4-sidero]
+  #       verbose: false
+  #     - id: kustomize_check
+  #       name: kustomize-cho-system
+  #       files: ((^|/)cluster-cd/system/.*.(ya?ml)$)
+  #       args: [cluster-cd/system/chongus]
+  #       verbose: false
+  #     - id: kustomize_check
+  #       name: kustomize-cho-infra
+  #       files: ((^|/)cluster-cd/infra/.*.(ya?ml)$)
+  #       args: [cluster-cd/infra/chongus]
+  #       verbose: false
+  #     - id: kustomize_check
+  #       name: kustomize-cho-apps
+  #       files: (cluster-cd/apps/.*.(ya?ml)$)
+  #       args: [cluster-cd/apps/chongus]
+  #       verbose: false
