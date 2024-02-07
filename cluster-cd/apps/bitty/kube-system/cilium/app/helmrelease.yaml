@@ -42,7 +42,7 @@ spec:
           enabled: true
           className: "internal-nginx"
           hosts:
-            - &host hubble-main.bjw-s.dev
+            - &host hubble.${CLUSTER_NAME}.${SECRET_DOMAIN}
           tls:
             - hosts:
                 - *host
