@@ -1,0 +1,44 @@
+controller:
+  replicaCount: 3
+  updateStrategy:
+    type: RollingUpdate
+
+  service:
+    annotations:
+      io.cilium/lb-ipam-ips: "${INGRESS_NGINX_IPV4},${INGRESS_NGINX_IPV6}"
+      metallb.universe.tf/loadBalancerIPs: "${INGRESS_NGINX_IPV4},${INGRESS_NGINX_IPV6}"
+    ipFamilyPolicy: "PreferDualStack"
+    ipFamilies:
+      - "IPv4"
+      - "IPv6"
+  ingressClassResource:
+    default: true
+  enableTLSPassthrough: true
+  allowSnippetAnnotations: true
+  enableAnnotationValidations: true
+  extraArgs:
+    enable-ssl-passthrough: true
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+  config:
+    block-user-agents: "GPTBot,~*GPTBot*,ChatGPT-User,~*ChatGPT-User*,Google-Extended,~*Google-Extended*,CCBot,~*CCBot*,Omgilibot,~*Omgilibot*,FacebookBot,~*FacebookBot*" # taken from https://github.com/superseriousbusiness/gotosocial/blob/main/internal/web/robots.go
+    enable-real-ip: true
+    keep-alive: 120
+    keep-alive-requests: 10000
+    ssl-protocols: "TLSv1.3 TLSv1.2"
+    hide-headers: Server,X-Powered-By
+    proxy-buffer-size: "1024k"
+    proxy-buffers: "4 512k"
+    proxy-busy-buffer-size: "1024k"
+    forwarded-for-header: proxy_protocol
+    log-format-escape-json: "true"
+    log-format-upstream: >
+      {"timestamp": "$time_iso8601", "requestID": "$req_id", "proxyUpstreamName":
+      "$proxy_upstream_name", "proxyAlternativeUpstreamName": "$proxy_alternative_upstream_name","upstreamStatus":
+      "$upstream_status", "upstreamAddr": "$upstream_addr","httpRequest":{"requestMethod":
+      "$request_method", "requestUrl": "$host$request_uri", "status": $status,"requestSize":
+      "$request_length", "responseSize": "$upstream_response_length", "userAgent": "$http_user_agent",
+      "remoteIp": "$remote_addr", "referer": "$http_referer", "latency": "$upstream_response_time s",
+      "protocol":"$server_protocol", "x-forwarded-for": "$http_x_forwarded_for", "x-real-ip": "$http_x_real_ip"}}

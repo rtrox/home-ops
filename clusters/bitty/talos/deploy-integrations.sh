@@ -2,6 +2,10 @@
 # shellcheck disable=2312
 pushd integrations >/dev/null 2>&1 || exit 1
 
+if [ -z "${IPV6_POD_CIDR}" ]; then
+  echo "env var IPV6_POD_CIDR is not set"
+  exit 1
+fi
 rm -rf cni/charts
 envsubst < ../../../../cluster-cd/apps/bitty/kube-system/cilium/app/values.yaml > cni/values.yaml
 kustomize build --enable-helm cni | kubectl apply -f -

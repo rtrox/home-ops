@@ -1,0 +1,55 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: ingress-nginx-external
+  namespace: ingress
+spec:
+  interval: 5m
+  timeout: 10m
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  chart:
+    spec:
+      chart: ingress-nginx
+      version: 4.9.1
+      sourceRef:
+        kind: HelmRepository
+        name: ingress-nginx
+        namespace: flux-system
+      interval: 5m
+  values:
+    ingressClassResource:
+      default: false
+      name: nginx-external
+      controllerValue: "k8s.io/nginx-external"
+    addmissionWebhooks:
+      objectSelector:
+        matchExpressions:
+          - key: ingress-class
+            operator: In
+            values:
+              - "nginx-external"
+    controller:
+      service:
+        type: ClusterIP
+      extraArgs:
+        ingress-class: "nginx-external"
+        controller-class: "k8s.io/nginx-external"
+      topologySpreadConstraints:
+        - maxSkew: 2
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/instance: nginx-external
+              app.kubernetes.io/component: controller
+    defaultBackend:
+      enabled: false
+  valuesFrom:
+    - kind: ConfigMap
+      name: ingress-nginx-values

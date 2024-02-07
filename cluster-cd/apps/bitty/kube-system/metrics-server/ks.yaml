@@ -11,7 +11,7 @@ spec:
     labels:
       app.kubernetes.io/name: *appname
   interval: 10m
-  path: "./cluster-cd/apps/bitty/kube-system/metrics-server/app"
+  path: "./cluster-cd/apps/base/metrics-server"
   prune: true
   sourceRef:
     kind: GitRepository

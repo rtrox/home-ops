@@ -76,6 +76,7 @@ controlPlane:
         controllerManager:
           extraArgs:
             node-cidr-mask-size-ipv6: "72"
+            feature-gates: MultiCIDRServiceAllocator=true
 
     - |-
       machine:
@@ -118,7 +119,7 @@ controlPlane:
       machine:
         kubelet:
           extraArgs:
-            feature-gates: GracefulNodeShutdown=true,NewVolumeManagerReconstruction=false,MultiCIDRServiceAllocator=true
+            feature-gates: GracefulNodeShutdown=true,NewVolumeManagerReconstruction=false
             rotate-server-certificates: "true"
           extraConfig:
             maxPods: 150
