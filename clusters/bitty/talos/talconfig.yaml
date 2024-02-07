@@ -16,10 +16,9 @@ clusterPodNets:
   - ${ipv6PodNet}
 clusterSvcNets:
   - 10.96.0.0/12
-  - ${ipv6SvcNet}
+  # - ${ipv6SvcNet}
 
 additionalApiServerCertSans: &san
-  - ${clusterEndpointIP}
   - ${clusterName}.${clusterDNSSuffix}
   - "127.0.0.1" # KubePrism
 additionalMachineCertSans: *san
@@ -60,29 +59,43 @@ nodes:
 
 controlPlane:
   patches:
-    # Kubelet configuration
+    # Enable KubePrism
     - |-
       machine:
-        kubelet:
+        features:
+          kubePrism:
+            enabled: true
+            port: 7445
+
+    # Cluster configuration
+    - |-
+      cluster:
+        allowSchedulingOnMasters: true
+        proxy:
+          disabled: true
+        controllerManager:
           extraArgs:
-            feature-gates: GracefulNodeShutdown=true,NewVolumeManagerReconstruction=false
-            rotate-server-certificates: "true"
-          extraConfig:
-            maxPods: 150
+            node-cidr-mask-size-ipv6: "72"
 
     - |-
       machine:
         network:
-          extraHostEntries:
-            - ip: ${clusterEndpointIP}
-              aliases:
-                - ${clusterName}.${clusterDNSSuffix}
           interfaces:
             - deviceSelector:
                 busPath: "0"
               dhcp: true
-              vip:
-                ip: ${clusterEndpointIP}
+
+    # Configure containerd
+    - |-
+      machine:
+        files:
+          - op: create
+            path: /etc/cri/conf.d/20-customization.part
+            content: |
+              [plugins]
+                [plugins."io.containerd.grpc.v1.cri"]
+                  enable_unprivileged_ports = true
+                  enable_unprivileged_icmp = true
 
     - |-
       machine:
@@ -99,6 +112,16 @@ controlPlane:
               rsize=131072
               wsize=131072
               nconnect=8
+
+    # Kubelet configuration
+    - |-
+      machine:
+        kubelet:
+          extraArgs:
+            feature-gates: GracefulNodeShutdown=true,NewVolumeManagerReconstruction=false,MultiCIDRServiceAllocator=true
+            rotate-server-certificates: "true"
+          extraConfig:
+            maxPods: 150
 
     # Custom sysctls
     - |-
