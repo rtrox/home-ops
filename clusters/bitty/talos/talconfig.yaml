@@ -13,10 +13,10 @@ cniConfig:
 
 clusterPodNets:
   - 10.244.0.0/16
-  - 2001:0470:e899:9951::/64
+  - ${ipv6PodNet}
 clusterSvcNets:
   - 10.96.0.0/12
-  - 2001:0470:e899:9951:cafe:1::/112
+  - ${ipv6SvcNet}
 
 additionalApiServerCertSans: &san
   - ${clusterEndpointIP}
@@ -26,28 +26,37 @@ additionalMachineCertSans: *san
 
 nodes:
   - hostname: node01.${clusterName}.${clusterDNSSuffix}
-    ipAddress: 172.17.1.11
+    ipAddress: 172.17.2.1
     controlPlane: true
-    installDisk: /dev/nvme0n1
+    installDiskSelector:
+      type: nvme
     machineSpec:
       mode: metal
       arch: amd64
+      secureboot: true
+      useUKI: true
 
   - hostname: node02.${clusterName}.${clusterDNSSuffix}
-    ipAddress: 172.17.1.12
+    ipAddress: 172.17.2.2
     controlPlane: true
-    installDisk: /dev/sda
+    installDiskSelector:
+      type: nvme
     machineSpec:
       mode: metal
       arch: amd64
+      secureboot: true
+      useUKI: true
 
   - hostname: node03.${clusterName}.${clusterDNSSuffix}
-    ipAddress: 172.17.1.13
+    ipAddress: 172.17.2.3
     controlPlane: true
-    installDisk: /dev/sda
+    installDiskSelector:
+      type: nvme
     machineSpec:
       mode: metal
       arch: amd64
+      secureboot: true
+      useUKI: true
 
 controlPlane:
   patches:
