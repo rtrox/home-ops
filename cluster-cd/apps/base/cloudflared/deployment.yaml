@@ -1,0 +1,81 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: &name cloudflared
+spec:
+  selector:
+    matchLabels:
+      app: *name
+  replicas: 2 # You could also consider elastic scaling for this deployment
+  template:
+    metadata:
+      labels:
+        app: *name
+        app.kubernetes.io/name: *name
+        app.kubernetes.io/instance: *name
+
+    spec:
+      containers:
+        - name: cloudflared
+          resources:
+            limits:
+              cpu: 100m
+              memory: 128Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          image: cloudflare/cloudflared:2024.2.0
+          args:
+            - tunnel
+            - --config
+            - /etc/cloudflared/config/config.yaml
+            - run
+            - "$(TUNNEL_ID)"
+          env:
+            - name: NO_AUTOUPDATE
+              value: "true"
+            - name: TUNNEL_CRED_FILE
+              value: /etc/cloudflared/creds/credentials.json
+            - name: TUNNEL_METRICS
+              value: 0.0.0.0:8080
+            - name: TUNNEL_TRANSPORT_PROTOCOL
+              value: auto
+            - name: TUNNEL_ID
+              valueFrom:
+                secretKeyRef:
+                  name: cloudflared-secret
+                  key: TunnelID
+          livenessProbe: &probe
+            httpGet:
+              path: /ready
+              port: 8080
+            failureThreshold: 3
+            initialDelaySeconds: 0
+            timeoutSeconds: 1
+            periodSeconds: 10
+          readinessProbe: *probe
+          startupProbe: *probe
+          ports:
+            - containerPort: 8080
+              name: metrics
+          volumeMounts:
+            - name: config
+              mountPath: /etc/cloudflared/config
+              readOnly: true
+            # Each tunnel has an associated "credentials file" which authorizes machines
+            # to run the tunnel. cloudflared will read this file from its local filesystem,
+            # and it'll be stored in a k8s secret.
+            - name: creds
+              mountPath: /etc/cloudflared/creds
+              readOnly: true
+      volumes:
+        - name: creds
+          secret:
+            secretName: cloudflared-secret
+        - name: config
+          configMap:
+            name: cloudflared-configmap
+            items:
+              - key: config.yaml
+                path: config.yaml
