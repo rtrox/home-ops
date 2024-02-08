@@ -23,23 +23,26 @@ spec:
         namespace: flux-system
       interval: 5m
   values:
-    ingressClassResource:
-      default: false
-      name: nginx-external
-      controllerValue: "k8s.io/nginx-external"
-    addmissionWebhooks:
-      objectSelector:
-        matchExpressions:
-          - key: ingress-class
-            operator: In
-            values:
-              - "nginx-external"
+    fullNameOverride: nginx-external
+
     controller:
       service:
         type: ClusterIP
-      extraArgs:
-        ingress-class: "nginx-external"
-        controller-class: "k8s.io/nginx-external"
+        ipFamilyPolicy: "RequireDualStack"
+        ipFamilies:
+          - "IPv4"
+          - "IPv6"
+      ingressClassResource:
+        default: false
+        name: nginx-external
+        controllerValue: "k8s.io/nginx-external"
+      admissionWebhooks:
+        objectSelector:
+          matchExpressions:
+            - key: ingress-class
+              operator: In
+              values:
+                - "nginx-external"
       topologySpreadConstraints:
         - maxSkew: 2
           topologyKey: kubernetes.io/hostname

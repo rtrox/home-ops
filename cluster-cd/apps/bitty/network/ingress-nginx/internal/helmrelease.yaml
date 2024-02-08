@@ -24,6 +24,15 @@ spec:
       interval: 5m
   values:
     controller:
+      service:
+        annotations:
+          lbipam.cilium.io/ips: "${INGRESS_NGINX_IPV4},${INGRESS_NGINX_IPV6}"
+        ipFamilyPolicy: "RequireDualStack"
+        ipFamilies:
+          - "IPv4"
+          - "IPv6"
+      ingressClassResource:
+        default: true
       topologySpreadConstraints:
         - maxSkew: 2
           topologyKey: kubernetes.io/hostname

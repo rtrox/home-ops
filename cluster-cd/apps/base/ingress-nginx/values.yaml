@@ -2,16 +2,6 @@ controller:
   replicaCount: 3
   updateStrategy:
     type: RollingUpdate
-
-  service:
-    annotations:
-      lbipam.cilium.io/ips: "${INGRESS_NGINX_IPV4},${INGRESS_NGINX_IPV6}"
-    ipFamilyPolicy: "RequireDualStack"
-    ipFamilies:
-      - "IPv4"
-      - "IPv6"
-  ingressClassResource:
-    default: true
   enableTLSPassthrough: true
   allowSnippetAnnotations: true
   enableAnnotationValidations: true
