@@ -1,0 +1,57 @@
+apiVersion: externaldns.k8s.io/v1alpha1
+kind: DNSEndpoint
+metadata:
+    name: cloudflared-tunnel
+spec:
+    endpoints:
+        - dnsName: ENC[AES256_GCM,data:f75otHYizFdedS57dB/fwH0=,iv:7Mfom2jrj8umiieTj6GftA5SERo5ZGBVPec4+zGf9ds=,tag:esrjeRslzyrbIzXa3x0hUA==,type:str]
+          recordType: CNAME
+          targets:
+            - ENC[AES256_GCM,data:VSD1rCC6NLeUVcYzfhV7pUgvE2vYu4UJ3jw3yfvnBFS16vgMtbi0Hj3Cnk82Li2qguKgSnI=,iv:GVTJFTNOZFrEDJ8zSdsmVs8FW6jjFPyYNzqnea5dwUQ=,tag:FxEbzs+179XPORz1aoIqUQ==,type:str]
+sops:
+    kms: []
+    gcp_kms: []
+    azure_kv: []
+    hc_vault: []
+    age:
+        - recipient: age1tlcrn569jdueg5f73rdg9l859783m0t7ekjawpxa9t70qzafpa8s0tfk9a
+          enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBESEN3WHVsdFVLRlFzc2U5
+            bk4yTlZHbkd6T3ZPVGN5RVlHVjRxMERKd1VFCnUrZ1NYY0ZSYzc4TFFxenh2Vzk3
+            Qm91R2tWZGxYUGFKaldCKzliSXB5V00KLS0tIEp1dDZNQ0YvQnN6R2VZd2xMRjdn
+            OGwxWnpkUUl2dFNqM1lxb3llV3RqT3cKNeercTb1U03GBbNcIsnNqRl+qzht3l2m
+            7HRF2+LFyKz7lZuXWMBda1mBiKpaF2C3id3Mwj29cBmfCH38ScgDVw==
+            -----END AGE ENCRYPTED FILE-----
+        - recipient: age1ptsqml5nfm2rq004uprw4wf4ghc965cygut4n7ejkt0esfxr7a7sxpmz5m
+          enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBqTUhQTURqajA5WVJkaFAr
+            OWc0Z1ZoajdqdFBPYVl4SzgrejB1N2hIQ1hVCnVJeGFpaFpyOE02bm1Tb0dObjhx
+            eGplZGtZVUhyUDVCN1R6RVRJNUU4SG8KLS0tIGw3VEpFeklnQVhscWNNaS9oYUlC
+            WlVCRTBBb0o0UURoZ3UzMnd4WWRlcEkKUgdA8E5BcmLgiIaVOVXAf9IvUTM+5lc7
+            jgl+xW0uaxMm9YD4BjiyM/Qz2upRluEtqs4j4yJ6bihkndd5KZQQlg==
+            -----END AGE ENCRYPTED FILE-----
+        - recipient: age1ns2r38fd24cpfmhmn3qeu8x28nrq6ehjdc72yz4q44sxk8aej9vqtr5jue
+          enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBFT2xSSUZudFRvWFc4eEp2
+            OGM3YmdLN0NqektFbGVtREg1U0xJKzY2ZW5RCmhSTFlEMW83R2JmMzM2KzQ4VzVa
+            cFRFRHBDNWJPM0NtckI2aWZ5TExOLzQKLS0tIFRhYk4xR2RyckJpVVMyZ3pHS0Vu
+            WkdhYlkwMCtaNEl0VGpnMzg4N3VOTGMK1Zu5VV9fqjdsL1zcNtd68tyoioNkovGM
+            hY4nqie+FUJRckJGwAKThawKYG/ihoOtIScVblWIAqmmzgdJ2Pw8Aw==
+            -----END AGE ENCRYPTED FILE-----
+        - recipient: age15pw0dy5kn2pqs6hxy9g9g8x60trqxlcj6sdv3uveu8wlc23uya6ssunxp7
+          enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBONEtHcjk5d3VDbWRINE85
+            Z3BkWTd5VVJTSFdSQWhaRHN6ZExLR1RWTWtJClpJWGc4S0NmOG44S01rUEFJS3pB
+            Tkw0T1FpSEg2dWJpKzVTYmd1SGk2RHMKLS0tIEN3T0NWdVZpYlovSFBXalRxMjI5
+            L3NUM1duVmljUEVpOGJGYlVXaGpVeFEKwE8UBpDgJ0LChsoymitvMqXrTQ0aIAea
+            yhllPaHFlPhYmlvbO2kJlGbaTdhM3ri62qxv2RX88HuDXn+uMEpbEg==
+            -----END AGE ENCRYPTED FILE-----
+    lastmodified: "2024-02-08T21:47:09Z"
+    mac: ENC[AES256_GCM,data:hSE/zXYKRmChEVFZ89jCXR1IC70PVA3u91VOTjYUaPO8EHLJjmh9rkAnfar7dmUMEUQ19cFeC6byX4QMc4A8/jaQRBu8Nt+XCzJdH2/sHJjI+ECzolNkLnAwd+yyxqbur/a2oRs86a6CB9qfVdFn7w2u8LNlsw7IS3i2xliMgsM=,iv:5O6oimb+nNDnSZ3hTU75Cgvt++D+bhhzhMdAM/1fqM4=,tag:dUfifjWhfbMEFuAQjf/DGg==,type:str]
+    pgp: []
+    encrypted_regex: ^(data|stringData|dnsName|targets)$
+    version: 3.7.3

@@ -8,7 +8,7 @@ creation_rules:
       age1ns2r38fd24cpfmhmn3qeu8x28nrq6ehjdc72yz4q44sxk8aej9vqtr5jue,
       age15pw0dy5kn2pqs6hxy9g9g8x60trqxlcj6sdv3uveu8wlc23uya6ssunxp7
   - path_regex: .*\.bty\.ya?ml
-    encrypted_regex: "^(data|stringData)$"
+    encrypted_regex: "^(data|stringData|dnsName|targets)$"
     # bitty flux, Ubuntu WSL (desk), work macbook, Ubuntu WSL (laptop)
     age: >-
       age1tlcrn569jdueg5f73rdg9l859783m0t7ekjawpxa9t70qzafpa8s0tfk9a,
@@ -16,7 +16,7 @@ creation_rules:
       age1ns2r38fd24cpfmhmn3qeu8x28nrq6ehjdc72yz4q44sxk8aej9vqtr5jue,
       age15pw0dy5kn2pqs6hxy9g9g8x60trqxlcj6sdv3uveu8wlc23uya6ssunxp7
   - path_regex: .*\.cho\.ya?ml
-    encrypted_regex: "^(data|stringData)$"
+    encrypted_regex: "^(data|stringData|dnsName|targets)$"
     # chongus flux, Ubuntu WSL (desk), work macbook, Ubuntu WSL (laptop)
     age: >-
       age1ay8ky5ce59vkz740uzp2tr2r22sqwez9804wdv32rrd6q5tawc3q0ugvp3,
