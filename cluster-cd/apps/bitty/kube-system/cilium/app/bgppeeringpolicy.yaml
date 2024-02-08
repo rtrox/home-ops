@@ -16,3 +16,5 @@ spec: # CiliumBGPPeeringPolicySpec
       neighbors: # []CiliumBGPNeighbor
         - peerAddress: "${NETWORK_BGP_PEER}/32"
           peerASN: 64512
+        - peerAddress: "${NETWORK_BGP_PEER_V6}/128"
+          peerASN: 64512
