@@ -5,8 +5,7 @@ controller:
 
   service:
     annotations:
-      io.cilium/lb-ipam-ips: "${INGRESS_NGINX_IPV4},${INGRESS_NGINX_IPV6}"
-      metallb.universe.tf/loadBalancerIPs: "${INGRESS_NGINX_IPV4},${INGRESS_NGINX_IPV6}"
+      lbipam.cilium.io/ips: "${INGRESS_NGINX_IPV4},${INGRESS_NGINX_IPV6}"
     ipFamilyPolicy: "RequireDualStack"
     ipFamilies:
       - "IPv4"
