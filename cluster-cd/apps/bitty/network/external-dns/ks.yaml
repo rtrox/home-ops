@@ -3,7 +3,7 @@
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: &appname external-dns
+  name: &appname external-dns-shared
   namespace: flux-system
 spec:
   targetNamespace: network
@@ -11,11 +11,52 @@ spec:
     labels:
       app.kubernetes.io/name: *appname
   interval: 10m
-  path: "./cluster-cd/apps/bitty/network/external-dns/app"
+  path: "./cluster-cd/apps/bitty/network/external-dns/shared"
   prune: true
   sourceRef:
     kind: GitRepository
     name: home-ops-cd
   dependsOn:
     - name: external-secrets-stores
+  wait: false
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/fluxcd-community/flux2-schemas/main/kustomization-kustomize-v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: &appname external-dns-local
+  namespace: flux-system
+spec:
+  targetNamespace: network
+  commonMetadata:
+    labels:
+      app.kubernetes.io/name: *appname
+  interval: 10m
+  path: "./cluster-cd/apps/bitty/network/external-dns/local"
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: home-ops-cd
+  dependsOn:
+    - name: external-dns-shared
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/fluxcd-community/flux2-schemas/main/kustomization-kustomize-v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: &appname external-dns-proxied
+  namespace: flux-system
+spec:
+  targetNamespace: network
+  commonMetadata:
+    labels:
+      app.kubernetes.io/name: *appname
+  interval: 10m
+  path: "./cluster-cd/apps/bitty/network/external-dns/proxied"
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: home-ops-cd
+  dependsOn:
+    - name: external-dns-shared
   wait: false
