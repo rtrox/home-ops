@@ -38,14 +38,7 @@ spec:
             enabled: true
 
       ui:
-        ingress:
-          enabled: true
-          className: "nginx"
-          hosts:
-            - &host hubble.${CLUSTER_NAME}.${SECRET_DOMAIN}
-          tls:
-            - hosts:
-                - *host
+        enabled: true
 
     prometheus:
       serviceMonitor:

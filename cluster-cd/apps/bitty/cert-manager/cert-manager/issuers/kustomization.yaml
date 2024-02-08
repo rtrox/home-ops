@@ -4,3 +4,4 @@ kind: Kustomization
 resources:
   - ./externalsecret.yaml
   - ./issuer-letsencrypt-staging.yaml
+  - ./issuer-letsencrypt-prod.yaml
