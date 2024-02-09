@@ -6,6 +6,7 @@ resources:
   - cilium.yaml
   - external-secrets.yaml
   - ingress-nginx.yaml
+  - intel.yaml
   - jetstack.yaml
   - kubernetes-sigs-external-dns.yaml
   - kubernetes-sigs-metrics-server.yaml
