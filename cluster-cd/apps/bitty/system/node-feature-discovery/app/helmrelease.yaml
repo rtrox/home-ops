@@ -29,8 +29,13 @@ spec:
           memory: 51Mi
 
     worker:
-      podSecurityContext:
-        privileged: true
+      config:
+        core:
+          sources: ["custom", "pci", "usb"]
+        sources:
+          usb:
+            deviceClassWhitelist: ["02", "03", "0e", "ef", "fe", "ff"]
+            deviceLabelFields: ["class", "vendor", "device"]
       resources:
         requests:
           cpu: 5m
