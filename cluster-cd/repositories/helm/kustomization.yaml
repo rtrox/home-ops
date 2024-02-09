@@ -15,5 +15,6 @@ resources:
   - kubernetes-sigs-nfd.yaml
   - piraeus.yaml
   - postfinance.yaml
+  - rook-ceph.yaml
   - stakater.yaml
   - xenitab.yaml
