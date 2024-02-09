@@ -17,11 +17,6 @@ spec:
     disable: true
   cliConfigSecretRef:
     name: tf-controller-terraform-cloud
-  runnerPodTemplate:
-    spec:
-      env:
-        - name: DOPPLER_TOKEN
-          valueFrom:
-            secretKeyRef:
-              name: &secret tf-controller-doppler
-              key: DOPPLER_TOKEN
+  varsFrom:
+    - kind: Secret
+      name: tf-controller-doppler
