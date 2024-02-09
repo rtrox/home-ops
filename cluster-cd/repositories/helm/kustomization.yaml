@@ -12,3 +12,4 @@ resources:
   - kubernetes-sigs-metrics-server.yaml
   - kubernetes-sigs-nfd.yaml
   - postfinance.yaml
+  - stakater.yaml
