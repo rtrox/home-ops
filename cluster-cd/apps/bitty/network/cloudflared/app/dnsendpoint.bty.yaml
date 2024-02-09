@@ -8,6 +8,9 @@ spec:
           recordType: CNAME
           targets:
             - ENC[AES256_GCM,data:VSD1rCC6NLeUVcYzfhV7pUgvE2vYu4UJ3jw3yfvnBFS16vgMtbi0Hj3Cnk82Li2qguKgSnI=,iv:GVTJFTNOZFrEDJ8zSdsmVs8FW6jjFPyYNzqnea5dwUQ=,tag:FxEbzs+179XPORz1aoIqUQ==,type:str]
+          providerSpecific:
+            - name: external-dns.alpha.kubernetes.io/cloudflare-proxied
+              value: "true"
 sops:
     kms: []
     gcp_kms: []
@@ -50,8 +53,8 @@ sops:
             L3NUM1duVmljUEVpOGJGYlVXaGpVeFEKwE8UBpDgJ0LChsoymitvMqXrTQ0aIAea
             yhllPaHFlPhYmlvbO2kJlGbaTdhM3ri62qxv2RX88HuDXn+uMEpbEg==
             -----END AGE ENCRYPTED FILE-----
-    lastmodified: "2024-02-08T21:47:09Z"
-    mac: ENC[AES256_GCM,data:hSE/zXYKRmChEVFZ89jCXR1IC70PVA3u91VOTjYUaPO8EHLJjmh9rkAnfar7dmUMEUQ19cFeC6byX4QMc4A8/jaQRBu8Nt+XCzJdH2/sHJjI+ECzolNkLnAwd+yyxqbur/a2oRs86a6CB9qfVdFn7w2u8LNlsw7IS3i2xliMgsM=,iv:5O6oimb+nNDnSZ3hTU75Cgvt++D+bhhzhMdAM/1fqM4=,tag:dUfifjWhfbMEFuAQjf/DGg==,type:str]
+    lastmodified: "2024-02-09T00:16:02Z"
+    mac: ENC[AES256_GCM,data:3Xd7TBGN0l9tzmhnLywNmGL0fQ4yNouPJzIEJn4Kwvsd+u8vCdk2q0X3xkJGr2MNReWzFmyvZeXFXvVnR70WOYCeFmea/DznPVDsUAk8RNg7GFhIWTwGgDL46yZWte5L9lEupGZM9IKFvABjUUW7AzWY1LV5Lb0L5jCMFHzeJKw=,iv:jgheSTzziUIjo6CZ+s08cYVglAH9XPfC6ADxb8T2k+s=,tag:33dITbY+FHT9LFAzeYVdYA==,type:str]
     pgp: []
     encrypted_regex: ^(data|stringData|dnsName|targets)$
     version: 3.7.3

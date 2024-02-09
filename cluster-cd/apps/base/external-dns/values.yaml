@@ -8,7 +8,6 @@ env:
 extraArgs:
   - --crd-source-apiversion=externaldns.k8s.io/v1alpha1
   - --crd-source-kind=DNSEndpoint
-  - --ingress-class=nginx
 
 podAnnotations:
   secret.reloader.stakater.com/reload: externaldns-cloudflare-token
@@ -31,8 +30,8 @@ sources:
   - ingress
   - crd
 
-txtOwnerId: bitty
-txtPrefix: "k8s.bty."
+txtOwnerId: ${CLUSTER_NAME}
+txtPrefix: "k8s."
 
 postRenderers:
   - kustomize:

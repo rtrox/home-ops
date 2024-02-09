@@ -26,6 +26,8 @@ spec:
     fullNameOverride: nginx-external
 
     controller:
+      extraArgs:
+        default-ssl-certificate: "network/wildcard-tls"
       service:
         type: ClusterIP
         ipFamilyPolicy: "RequireDualStack"

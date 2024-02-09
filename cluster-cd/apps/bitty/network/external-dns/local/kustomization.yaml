@@ -5,3 +5,4 @@ kind: Kustomization
 resources:
   - ../../../../base/external-dns
   - helmrelease.yaml
+  - externalsecret.yaml
