@@ -1,0 +1,14 @@
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/source.toolkit.fluxcd.io/gitrepository_v1.json
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: terraform-record
+  namespace: flux-system
+spec:
+  interval: 30m
+  url: ssh://git@github.com/rtrox/terraform-record
+  ref:
+    branch: main
+  secretRef:
+    name: terraform-record-github-deploy-key

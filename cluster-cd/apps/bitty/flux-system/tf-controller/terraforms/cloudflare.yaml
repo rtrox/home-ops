@@ -1,0 +1,27 @@
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/infra.contrib.fluxcd.io/terraform_v1alpha2.json
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: cloudflare
+spec:
+  suspend: false
+  approvePlan: auto
+  interval: 12h
+  path: ./cloudflare
+  sourceRef:
+    kind: GitRepository
+    name: terraform-record
+    namespace: flux-system
+  backendConfig:
+    disable: true
+  cliConfigSecretRef:
+    name: tf-controller-terraform-cloud
+  runnerPodTemplate:
+    spec:
+      env:
+        - name: DOPPLER_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: &secret tf-controller-doppler
+              key: DOPPLER_TOKEN

@@ -17,4 +17,5 @@ resources:
   - postfinance.yaml
   - rook-ceph.yaml
   - stakater.yaml
+  - weaveworks.yaml
   - xenitab.yaml
