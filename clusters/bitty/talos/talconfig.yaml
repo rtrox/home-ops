@@ -59,6 +59,11 @@ nodes:
 
 controlPlane:
   patches:
+    # Disable search domain everywhere
+    - |-
+      machine:
+        network:
+          disableSearchDomain: true
     # Enable KubePrism
     - |-
       machine:

@@ -1,0 +1,232 @@
+---
+fullnameOverride: prometheus
+
+alertmanager:
+  enabled: true
+  alertmanagerSpec:
+    storage:
+      volumeClaimTemplate:
+        spec:
+          resources:
+            requests:
+              storage: 1Gi
+  config:
+    receivers:
+      - name: "null"
+      - name: discord
+        slack_configs:
+          - channel: "#x86kube-alarms"
+            username: Prometheus
+            icon_url: "https://avatars3.githubusercontent.com/u/3380462"
+            send_resolved: true
+            color: '{{ template "slack.monzo.color" . }}'
+            title: '{{ template "slack.monzo.title" . }}'
+            text: >-
+              {{ range .Alerts -}}
+                **Alert:** {{ .Annotations.title }}{{ if .Labels.severity }} - `{{ .Labels.severity }}`{{ end }}
+              **Description:**
+              {{- if .Annotations.message }}
+                  {{ .Annotations.message }}
+              {{- end }}
+              {{- if .Annotations.description }}
+                  {{ .Annotations.description }}
+              {{- end }}
+              **Details:**
+                {{ range .Labels.SortedPairs }} • *{{ .Name }}:* `{{ .Value }}`
+                {{ end }}
+              {{ end }}
+      - name: alertmanager-discord-webhook
+        webhook_configs:
+          - url: "http://alertmanager-discord.monitoring.svc.cluster.local/alerts"
+            send_resolved: true
+            max_alerts: 10
+    route:
+      routes:
+        - matchers:
+            - alertname =~ "InfoInhibitor|Watchdog"
+          receiver: "null"
+        - continue: true
+          matchers:
+            - severity =~ "warning|critical"
+          receiver: discord
+          group_by:
+            - alertname
+            - severity
+        - matchers:
+            - severity =~ "warning|critical"
+          receiver: alertmanager-discord-webhook
+          group_by:
+            - alertname
+            - severity
+          continue: true
+  templateFiles:
+    alert-silence.tmpl: |-
+      # This builds the silence URL.  We exclude the alertname in the range
+      # to avoid the issue of having trailing comma separator (%2C) at the end
+      # of the generated URL
+      {{ define "__alert_silence_link" -}}
+          {{ .ExternalURL }}/#/silences/new?filter=%7B
+          {{- range .CommonLabels.SortedPairs -}}
+              {{- if ne .Name "alertname" -}}
+                  {{- .Name }}%3D"{{- .Value -}}"%2C%20
+              {{- end -}}
+          {{- end -}}
+          alertname%3D"{{ .CommonLabels.alertname }}"%7D
+      {{- end }}
+    alert-severity.tmpl: |-
+      {{ define "__alert_severity_prefix" -}}
+      {{ if ne .Status "firing" -}}
+        :thumbsup:
+      {{- else if eq .Labels.severity "critical" -}}
+      :fire:
+      {{- else if eq .Labels.severity "warning" -}}
+      :warning:
+      {{- else -}}
+      :question:
+      {{- end }}
+      {{- end }}
+    alert-severity-prefix-title.tmpl: |-
+      {{ define "__alert_severity_prefix_title" -}}
+      {{ if ne .Status "firing" -}}
+      :lgtm:
+      {{- else if eq .CommonLabels.severity "critical" -}}
+      :fire:
+      {{- else if eq .CommonLabels.severity "warning" -}}
+      :warning:
+      {{- else if eq .CommonLabels.severity "info" -}}
+      :information_source:
+      {{- else -}}
+      :question:
+      {{- end }}
+      {{- end }}
+    alert-title.tmpl: |-
+      {{/* First line of Slack alerts */}}
+      {{ define "slack.monzo.title" -}}
+          [{{ .Status | toUpper -}}
+          {{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{- end -}}
+          ] {{ template "__alert_severity_prefix_title" . }} {{ if ne
+            .CommonAnnotations.summary ""}}{{ .CommonAnnotations.summary }}{{
+            else }}{{ .CommonLabels.alertname }}{{ end }}
+      {{- end }}
+    alert-color.tmpl: |-
+      {{/* Color of Slack attachment (appears as line next to alert )*/}}
+      {{ define "slack.monzo.color" -}}
+          {{ if eq .Status "firing" -}}
+              {{ if eq .CommonLabels.severity "warning" -}}
+                  warning
+              {{- else if eq .CommonLabels.severity "critical" -}}
+                  danger
+              {{- else -}}
+                  #439FE0
+              {{- end -}}
+          {{ else -}}
+          good
+          {{- end }}
+      {{- end }}
+    user-emoji.tmpl: |-
+      {{/* Emoji to display as user icon (custom emoji supported!) */}}
+      {{ define "slack.monzo.icon_emoji" }}:prometheus:{{ end }}
+    alert-text.tmpl: |-
+      {{/* The test to display in the alert */}}
+      {{ define "slack.monzo.text" -}}
+          {{ range .Alerts }}
+              {{- if .Annotations.message }}
+                  {{ .Annotations.message }}
+              {{- end }}
+              {{- if .Annotations.description }}
+                  {{ .Annotations.description }}
+              {{- end }}
+          {{- end }}
+      {{- end }}
+    link-button.tmpl: |-
+      {{ define "slack.monzo.link_button_text" -}}
+          {{- if .CommonAnnotations.link_text -}}
+              {{- .CommonAnnotations.link_text -}}
+          {{- else -}}
+              Link
+          {{- end }} :link:
+      {{- end }}
+  ingress:
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+      kubernetes.io/tls-acme: "true"
+      ingress: "externaldns"
+    enabled: true
+    hosts:
+      - &am_host "am.${SECRET_DOMAIN}"
+    ingressClassName: nginx
+    pathType: Prefix
+    tls:
+      - hosts:
+          - *am_host
+        secretName: alertmanager-tls
+  serviceAccount:
+    create: true
+    name: alertmanager
+
+grafana:
+  enabled: false
+
+kubeProxy:
+  enabled: false
+kubeControllerManager:
+  enabled: false
+kubeScheduler:
+  enabled: false
+nodeExporter:
+  enabled: true
+  serviceMonitor:
+    relabelings:
+      - action: replace
+        regex: (.*)
+        replacement: $1
+        sourceLabels:
+          - __meta_kubernetes_pod_node_name
+        targetLabel: kubernetes_node
+
+prometheus:
+  monitor:
+    honorLabels: true
+  thanosService:
+    enabled: true
+  thanosServiceMonitor:
+    enabled: true
+  ingress:
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+      kubernetes.io/tls-acme: "true"
+      ingress: externaldns
+    enabled: true
+    hosts:
+      - &prom_host "prom.${SECRET_DOMAIN}"
+    ingressClassName: nginx
+    pathType: Prefix
+    tls:
+      - hosts:
+          - *prom_host
+        secretName: prometheus-tls
+  prometheusSpec:
+    retention: 12h
+    replicaExternalLabelName: replica
+    securityContext:
+      fsGroup: 0
+      runAsGroup: 0
+      runAsNonRoot: false
+      runAsUser: 0
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          resources:
+            requests:
+              storage: 50Gi
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    ruleSelectorNilUsesHelmValues: false
+    probeSelectorNilUsesHelmValues: false
+    externalLabels:
+      cluster: ${CLUSTER_NAME}
+    thanos:
+      image: quay.io/thanos/thanos:v0.34.0
+      # renovate: datasource=docker depName=quay.io/thanos/thanos
+      version: "v0.34.0"
+    walCompression: true

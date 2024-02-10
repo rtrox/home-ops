@@ -17,6 +17,7 @@ resources:
   - kubernetes-sigs-nfd.yaml
   - piraeus.yaml
   - postfinance.yaml
+  - prometheus-community.yaml
   - rook-ceph.yaml
   - stakater.yaml
   - weaveworks.yaml
