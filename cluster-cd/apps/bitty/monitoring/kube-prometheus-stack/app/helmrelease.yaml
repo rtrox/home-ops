@@ -20,6 +20,9 @@ spec:
     remediation:
       retries: 3
     cleanupOnFail: true
+  dependsOn:
+    - name: rook-ceph-cluster
+      namespace: rook-ceph
   valuesFrom:
     - kind: ConfigMap
       name: kube-prometheus-stack-values
