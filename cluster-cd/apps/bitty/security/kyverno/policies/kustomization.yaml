@@ -4,3 +4,4 @@ kind: Kustomization
 resources:
   - ./generate-gatus.yaml
   - ./force-dual-stack-services.yaml
+  - ./remove-cpu-limits.yaml
