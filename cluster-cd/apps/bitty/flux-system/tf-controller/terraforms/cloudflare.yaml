@@ -13,8 +13,10 @@ spec:
     kind: GitRepository
     name: terraform-record
     namespace: flux-system
-  backendConfig:
-    disable: true
+  cloud:
+    organization: rtrox
+    workspaces:
+      name: arpa-home-cloudflare
   cliConfigSecretRef:
     name: tf-controller-terraform-cloud
   varsFrom:
