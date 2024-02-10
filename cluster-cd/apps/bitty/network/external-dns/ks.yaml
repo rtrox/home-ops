@@ -16,3 +16,5 @@ spec:
   sourceRef:
     kind: GitRepository
     name: home-ops-cd
+  dependsOn:
+    - name: external-secrets-stores
