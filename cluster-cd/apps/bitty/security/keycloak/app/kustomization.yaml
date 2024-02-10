@@ -4,4 +4,4 @@ kind: Kustomization
 
 resources:
   - ../../../../base/keycloak
-  - helm-release.yaml
+  - helmrelease.yaml

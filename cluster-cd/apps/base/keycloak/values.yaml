@@ -33,7 +33,7 @@ dbchecker:
 
 database:
   vendor: "postgres"
-  hostname: "postgres-rw.database.svc.cluster.local"
+  hostname: "postgres16-rw.database.svc.cluster.local"
   port: "5432"
   database: "keycloak"
   user: "keycloak"

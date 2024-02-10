@@ -6,6 +6,7 @@ resources:
   - bjw-s.yaml
   - cilium.yaml
   - cloudnative-pg.yaml
+  - codecentric.yaml
   - external-secrets.yaml
   - ingress-nginx.yaml
   - intel.yaml
