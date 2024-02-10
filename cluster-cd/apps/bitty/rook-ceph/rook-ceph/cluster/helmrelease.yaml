@@ -35,9 +35,19 @@ spec:
       namespace: rook-ceph
   values:
     cephClusterSpec:
+      network:
+        provider: host
+      crashCollector:
+        disable: false
+      dashboard:
+        enabled: true
+        urlPrefix: /
+      storage:
       storage:
         useAllNodes: true
         useAllDevices: true
         config:
           osdsPerDevice: "1"
           diskFilter: ^sda
+        nodes: []
+
