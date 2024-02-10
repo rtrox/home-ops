@@ -31,5 +31,5 @@ spec:
       enabled: true
       serviceMonitor:
         enabled: true
-    branchPlanner:
-      enabled: true
+    # branchPlanner:
+    #   enabled: true
