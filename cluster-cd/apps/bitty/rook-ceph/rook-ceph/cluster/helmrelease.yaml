@@ -29,9 +29,9 @@ spec:
       name: rook-ceph-cluster-values
       valuesKey: values.yaml
   dependsOn:
-    - name: nginx-internal
-      namespace: ingress-nginx
-    - name: rook-ceph
+    - name: ingress-nginx
+      namespace: network
+    - name: rook-ceph-operator
       namespace: rook-ceph
   values:
     cephClusterSpec:
@@ -43,11 +43,9 @@ spec:
         enabled: true
         urlPrefix: /
       storage:
-      storage:
         useAllNodes: true
         useAllDevices: true
         config:
           osdsPerDevice: "1"
           diskFilter: ^sda
         nodes: []
-
