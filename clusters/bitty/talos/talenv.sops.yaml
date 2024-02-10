@@ -1,5 +1,5 @@
 clusterName: ENC[AES256_GCM,data:eAkgEVY=,iv:C/2BXCtvI/rvVETHFfWJf8MdMF3cRV8AaIyCBrmX4co=,tag:K3EVYJNxWyizRHjpBk0IhQ==,type:str]
-clusterDNSSuffix: ENC[AES256_GCM,data:loq1IMlZiPBu,iv:bjXJyekCM3nqpiAL0+82UL2OrQgYDp/Gfk4P70SDRyc=,tag:AKcx2l7+hFJMyl4fqeP6hg==,type:str]
+clusterDNSSuffix: ENC[AES256_GCM,data:a8pk3rwrU7M=,iv:SKY8e0YsjjV+CEDPXQn0WqBD11fsCAG+BkoYa6tQj6Y=,tag:BsH7oOp+rB+0HejCnwvWRA==,type:str]
 ipv6PodNet: ENC[AES256_GCM,data:OmQVo5dcpPMijHojtLRgocuhv30//plR,iv:TQvDmIOpl4FPdV3UZ90Vl9TSd48slwEa1yTRQTO8oRw=,tag:iSxstTA2pfGJPOolXR6mqA==,type:str]
 ipv6SvcNet: ENC[AES256_GCM,data:lmpH9xvPhB5H1ds7zQJfUuxuABNZnOhvc4L845EORRk=,iv:NQ7KJJ9LwIQ55BGftcBDOhwxatm10++knY5j2nQKXSg=,tag:A5oqJq8faWUrdd5iSB2mSQ==,type:str]
 sops:
@@ -35,8 +35,8 @@ sops:
             ZXNMZDB0NFlPUTJrMXZhbDRwU0s3R0UK5g+mHjLTUpM4yPvp8Im6XAZ24K+pvVpj
             fR25Q1p8rYgPfSMkobjRU7L4uFoC5Cf6QJh9Nf7crCbzpiftrWX9UQ==
             -----END AGE ENCRYPTED FILE-----
-    lastmodified: "2024-02-07T03:54:57Z"
-    mac: ENC[AES256_GCM,data:dzKBOGtW/2I76oVzFHTtOOx1Iyj9rNbdYBPIwyKLR0NBk+3ajqusTqC0IO5NiSFpfcBq/e/nOpo10GrQKyi3mFJlB0lvIqDZQT3bDZqfi+0+vKqZ27iHjldsRPaCCsg558s2KS3Uh2jnNvFAWkFkGHRjljMeVehf1kUbK+t3GYg=,iv:BLEZIZw7OOpvQWU4nickYY+N67M5627en1nTqgXOWe8=,tag:q2oCzMKMubVgmpDUPB94jA==,type:str]
+    lastmodified: "2024-02-10T21:27:50Z"
+    mac: ENC[AES256_GCM,data:Nd2EStNQ0KuduJvGocZLjIw3WiHXFf284fsaHHprS19tcMVtrRnSC1g9zTWGU4ifOWgyX2znwVE03EOUQn+fObtYv4KCaSnGd1YVWqy+dHGPW25y5Nda1McSUTc2QtbKYYJZ9snmE0elPCm4P1XWStLh9L43NMFRs0YthVdksuE=,iv:lQzEr9EAf/PWtuZIfVCfQIH/TNUxyTTFzpIT9ha1L8g=,tag:DbpJFhm3xISvwVTG8gyFyg==,type:str]
     pgp: []
     unencrypted_regex: ^(kind)$
     version: 3.8.0

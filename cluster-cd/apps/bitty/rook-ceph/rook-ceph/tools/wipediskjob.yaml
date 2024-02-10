@@ -1,0 +1,78 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "wipe-disk-node01"
+  namespace: "rook-ceph"
+spec:
+  ttlSecondsAfterFinished: 3600
+  template:
+    spec:
+      automountServiceAccountToken: false
+      restartPolicy: Never
+      nodeName: node01
+      containers:
+        - name: disk-wipe
+          image: ghcr.io/onedr0p/alpine:3.17.3@sha256:999384960b6114496a5e4036e945141c205d064ce23b87326bd3f8d878c5a9d4
+          securityContext:
+            privileged: true
+          resources: {}
+          command: ["/bin/sh", "-c"]
+          args:
+            - apk add --no-cache sgdisk util-linux parted;
+              sgdisk --zap-all /dev/sda;
+              blkdiscard /dev/sda;
+              dd if=/dev/zero bs=1M count=10000 oflag=direct of=/dev/sda;
+              partprobe /dev/sda;
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "wipe-disk-node02"
+  namespace: "rook-ceph"
+spec:
+  ttlSecondsAfterFinished: 3600
+  template:
+    spec:
+      automountServiceAccountToken: false
+      restartPolicy: Never
+      nodeName: node02
+      containers:
+        - name: disk-wipe
+          image: ghcr.io/onedr0p/alpine:3.17.3@sha256:999384960b6114496a5e4036e945141c205d064ce23b87326bd3f8d878c5a9d4
+          securityContext:
+            privileged: true
+          resources: {}
+          command: ["/bin/sh", "-c"]
+          args:
+            - apk add --no-cache sgdisk util-linux parted;
+              sgdisk --zap-all /dev/sda;
+              blkdiscard /dev/sda;
+              dd if=/dev/zero bs=1M count=10000 oflag=direct of=/dev/sda;
+              partprobe /dev/sda;
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "wipe-disk-node03"
+  namespace: "rook-ceph"
+spec:
+  ttlSecondsAfterFinished: 3600
+  template:
+    spec:
+      automountServiceAccountToken: false
+      restartPolicy: Never
+      nodeName: node03
+      containers:
+        - name: disk-wipe
+          image: ghcr.io/onedr0p/alpine:3.17.3@sha256:999384960b6114496a5e4036e945141c205d064ce23b87326bd3f8d878c5a9d4
+          securityContext:
+            privileged: true
+          resources: {}
+          command: ["/bin/sh", "-c"]
+          args:
+            - apk add --no-cache sgdisk util-linux parted;
+              sgdisk --zap-all /dev/sda;
+              blkdiscard /dev/sda;
+              dd if=/dev/zero bs=1M count=10000 oflag=direct of=/dev/sda;
+              partprobe /dev/sda;

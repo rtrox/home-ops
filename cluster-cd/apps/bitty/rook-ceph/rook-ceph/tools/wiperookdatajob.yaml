@@ -1,0 +1,87 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "wipe-rook-data-job-node01"
+  namespace: "rook-ceph"
+spec:
+  ttlSecondsAfterFinished: 3600
+  template:
+    spec:
+      automountServiceAccountToken: false
+      restartPolicy: Never
+      nodeName: node01
+      containers:
+        - name: disk-wipe
+          image: ghcr.io/onedr0p/alpine:3.17.3@sha256:999384960b6114496a5e4036e945141c205d064ce23b87326bd3f8d878c5a9d4
+          securityContext:
+            privileged: true
+          resources: {}
+          command: ["/bin/sh", "-c"]
+          args:
+            - rm -rf /mnt/host_var/lib/rook
+          volumeMounts:
+            - mountPath: /mnt/host_var
+              name: host-var
+      volumes:
+        - name: host-var
+          hostPath:
+            path: /var
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "wipe-rook-data-job-node02"
+  namespace: "rook-ceph"
+spec:
+  ttlSecondsAfterFinished: 3600
+  template:
+    spec:
+      automountServiceAccountToken: false
+      restartPolicy: Never
+      nodeName: node02
+      containers:
+        - name: disk-wipe
+          image: ghcr.io/onedr0p/alpine:3.17.3@sha256:999384960b6114496a5e4036e945141c205d064ce23b87326bd3f8d878c5a9d4
+          securityContext:
+            privileged: true
+          resources: {}
+          command: ["/bin/sh", "-c"]
+          args:
+            - rm -rf /mnt/host_var/lib/rook
+          volumeMounts:
+            - mountPath: /mnt/host_var
+              name: host-var
+      volumes:
+        - name: host-var
+          hostPath:
+            path: /var
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "wipe-rook-data-job-node03"
+  namespace: "rook-ceph"
+spec:
+  ttlSecondsAfterFinished: 3600
+  template:
+    spec:
+      automountServiceAccountToken: false
+      restartPolicy: Never
+      nodeName: node02
+      containers:
+        - name: disk-wipe
+          image: ghcr.io/onedr0p/alpine:3.17.3@sha256:999384960b6114496a5e4036e945141c205d064ce23b87326bd3f8d878c5a9d4
+          securityContext:
+            privileged: true
+          resources: {}
+          command: ["/bin/sh", "-c"]
+          args:
+            - rm -rf /mnt/host_var/lib/rook
+          volumeMounts:
+            - mountPath: /mnt/host_var
+              name: host-var
+      volumes:
+        - name: host-var
+          hostPath:
+            path: /var
