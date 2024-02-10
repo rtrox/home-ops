@@ -6,11 +6,12 @@ metadata:
   name: &appname kube-prometheus-stack
   namespace: flux-system
 spec:
-  targetNamespace: kube-system
+  targetNamespace: monitoring
   commonMetadata:
     labels:
       app.kubernetes.io/name: *appname
   interval: 10m
+  timeout: 4m
   path: "./cluster-cd/apps/bitty/monitoring/kube-prometheus-stack/app"
   prune: true
   sourceRef:

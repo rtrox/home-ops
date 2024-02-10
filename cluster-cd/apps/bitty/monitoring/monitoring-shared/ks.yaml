@@ -6,7 +6,7 @@ metadata:
   name: &appname monitoring-shared
   namespace: flux-system
 spec:
-  targetNamespace: kube-system
+  targetNamespace: monitoring
   commonMetadata:
     labels:
       app.kubernetes.io/name: *appname
