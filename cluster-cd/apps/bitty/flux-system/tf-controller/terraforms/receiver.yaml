@@ -2,7 +2,7 @@
 apiVersion: notification.toolkit.fluxcd.io/v1
 kind: Receiver
 metadata:
-  name: flux-system
+  name: terraform-record
   namespace: flux-system
 spec:
   type: github
