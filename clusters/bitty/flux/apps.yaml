@@ -36,6 +36,23 @@ spec:
             substituteFrom:
               - kind: Secret
                 name: cluster-secrets
+          patches:
+            - patch: |-
+                apiVersion: v1
+                kind: Service
+                metadata:
+                  name: not-used
+                  namespace: not-used
+                spec:
+                  ipFamilies:
+                    - IPv4
+                    - IPv6
+                  ipFamilyPolicy: RequireDualStack
+              target:
+                group: v1
+                kind: Service
+                labelSelector: force-dual-stack.flux.home.arpa/disabled notin (true)
+
       target:
         group: kustomize.toolkit.fluxcd.io
         kind: Kustomization
