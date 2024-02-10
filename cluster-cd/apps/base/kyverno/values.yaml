@@ -1,0 +1,77 @@
+crds:
+  install: true
+grafana:
+  enabled: true
+admissionController:
+  replicas: 3
+  rbac:
+    clusterRole:
+      extraResources:
+        - apiGroups:
+            - ""
+          resources:
+            - pods
+          verbs:
+            - create
+            - update
+            - delete
+        - apiGroups:
+            - ""
+          resources:
+            - services
+          verbs:
+            - create
+            - update
+            - delete
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: DoNotSchedule
+      labelSelector:
+        matchLabels:
+          app.kubernetes.io/instance: "{{ .Release.Name }}"
+          app.kubernetes.io/component: admission-controller
+  serviceMonitor:
+    enabled: true
+backgroundController:
+  rbac:
+    clusterRole:
+      extraResources:
+        - apiGroups:
+            - ""
+          resources:
+            - pods
+          verbs:
+            - create
+            - update
+            - patch
+            - delete
+            - get
+            - list
+        - apiGroups:
+            - ""
+          resources:
+            - services
+          verbs:
+            - create
+            - update
+            - delete
+  resources:
+    requests:
+      cpu: 100m
+    limits:
+      memory: 1Gi
+  serviceMonitor:
+    enabled: true
+cleanupController:
+  serviceMonitor:
+    enabled: true
+reportsController:
+  serviceMonitor:
+    enabled: true
+config:
+  webhooks:
+    - objectSelector:
+        matchExpressions:
+          - key: webhooks.kyverno.io/exclude
+            operator: DoesNotExist
