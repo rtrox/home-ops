@@ -28,6 +28,11 @@ spec:
     - kind: ConfigMap
       name: rook-ceph-cluster-values
       valuesKey: values.yaml
+  dependsOn:
+    - name: nginx-internal
+      namespace: ingress-nginx
+    - name: rook-ceph
+      namespace: rook-ceph
   values:
     cephClusterSpec:
       storage:
