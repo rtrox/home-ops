@@ -41,8 +41,8 @@ spec:
       wal:
         compression: bzip2
         maxParallel: 8
-      destinationPath: ${CNPG_BACKUP_BLAZE_BUCKET}
-      endpointURL: ${CNPG_BACKUP_BLAZE_ENDPOINT}
+      destinationPath: s3://k8s-bitty-rtrox-io-cnpg-backup/
+      endpointURL: https://s3.us-west-004.backblazeb2.com/
       # Note: serverName version needs to be inclemented
       # when recovering from an existing cnpg cluster
       serverName: &currentCluster postgres16-v1
