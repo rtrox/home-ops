@@ -1,0 +1,23 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: monitoring
+
+# Modified From: https://github.com/fluxcd/flux2/tree/main/manifests/monitoring/monitoring-config
+# Docs: https://fluxcd.io/flux/guides/monitoring/
+
+resources:
+  - podmonitor.yaml
+  - prometheusrule.yaml
+
+configMapGenerator:
+  - name: flux-grafana-dashboards
+    files:
+      - dashboards/control-plane.json
+      - dashboards/cluster.json
+      - dashboards/logs.json
+    options:
+      labels:
+        grafana_dashboard: "1"
+        app.kubernetes.io/part-of: flux
+        app.kubernetes.io/component: monitoring

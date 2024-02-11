@@ -4,3 +4,4 @@ kind: Kustomization
 resources:
   - ./cluster-webhook/ks.yaml
   - ./tf-controller/ks.yaml
+  - ./monitoring/ks.yaml
