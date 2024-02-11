@@ -4,7 +4,7 @@ monitoring:
 ingress:
   dashboard:
     annotations:
-      cert-manager.io/cluster-issuer: letsencrypt-prod
+      cert-manager.io/cluster-issuer: letsencrypt-staging
       nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
       kubernetes.io/tls-acme: "true"
       ingress: externaldns
@@ -49,7 +49,6 @@ cephBlockPoolsVolumeSnapshotClass:
   name: csi-ceph-blockpool
   isDefault: false
   deletionPolicy: Delete
-
 # cephFileSystems:
 #   - name: ceph-filesystem
 #     spec:
@@ -91,34 +90,34 @@ cephBlockPoolsVolumeSnapshotClass:
 #   isDefault: false
 #   deletionPolicy: Delete
 
-cephObjectStores:
-  - name: ceph-objectstore
-    spec:
-      metadataPool:
-        failureDomain: host
-        replicated:
-          size: 3
-      dataPool:
-        failureDomain: host
-        erasureCoded:
-          dataChunks: 2
-          codingChunks: 1
-      preservePoolsOnDelete: true
-      gateway:
-        port: 80
-        resources:
-          requests:
-            cpu: 3000m
-            memory: 3Gi
-          limits:
-            memory: 6Gi
-        instances: 1
-      healthCheck:
-        bucket:
-          interval: 60s
-    storageClass:
-      enabled: true
-      name: ceph-bucket
-      reclaimPolicy: Delete
-      parameters:
-        region: us-west-2
+# cephObjectStores:
+#   - name: ceph-objectstore
+#     spec:
+#       metadataPool:
+#         failureDomain: host
+#         replicated:
+#           size: 3
+#       dataPool:
+#         failureDomain: host
+#         erasureCoded:
+#           dataChunks: 2
+#           codingChunks: 1
+#       preservePoolsOnDelete: true
+#       gateway:
+#         port: 80
+#         resources:
+#           requests:
+#             cpu: 3000m
+#             memory: 3Gi
+#           limits:
+#             memory: 6Gi
+#         instances: 1
+#       healthCheck:
+#         bucket:
+#           interval: 60s
+#     storageClass:
+#       enabled: true
+#       name: ceph-bucket
+#       reclaimPolicy: Delete
+#       parameters:
+#         region: us-west-2

@@ -148,7 +148,7 @@ alertmanager:
       {{- end }}
   ingress:
     annotations:
-      cert-manager.io/cluster-issuer: letsencrypt-prod
+      cert-manager.io/cluster-issuer: letsencrypt-staging
       kubernetes.io/tls-acme: "true"
       ingress: "externaldns"
     enabled: true
@@ -193,7 +193,7 @@ prometheus:
     enabled: true
   ingress:
     annotations:
-      cert-manager.io/cluster-issuer: letsencrypt-prod
+      cert-manager.io/cluster-issuer: letsencrypt-staging
       kubernetes.io/tls-acme: "true"
       ingress: externaldns
     enabled: true

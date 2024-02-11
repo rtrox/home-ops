@@ -6,7 +6,7 @@ metadata:
 spec:
   secretName: "wildcard-tls"
   issuerRef:
-    name: letsencrypt-prod
+    name: letsencrypt-staging
     kind: ClusterIssuer
   commonName: "${SECRET_DOMAIN}"
   dnsNames:
