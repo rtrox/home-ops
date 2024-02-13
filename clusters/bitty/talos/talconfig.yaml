@@ -20,7 +20,7 @@ clusterSvcNets:
 
 additionalApiServerCertSans: &san
   - ${clusterName}.${clusterDNSSuffix}
-  - 127.0.0.1   # KubePrism
+  - 127.0.0.1 # KubePrism
 additionalMachineCertSans: *san
 
 nodes:
@@ -103,6 +103,8 @@ controlPlane:
                   enable_unprivileged_ports = true
                   enable_unprivileged_icmp = true
 
+    # NFS Mount Configuration
+    # Todo: return to 4.2 after migrating off synology
     - |-
       machine:
         files:
@@ -111,7 +113,7 @@ controlPlane:
             permissions: 0o644
             content: |
               [ NFSMount_Global_Options ]
-              nfsvers=4.2
+              nfsvers=4.1
               hard=True
               noatime=True
               nodiratime=True
