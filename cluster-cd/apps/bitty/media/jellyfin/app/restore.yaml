@@ -32,4 +32,4 @@ spec:
     repository: jellyfin-volsync-b2-chongus-restore-secret
     # Use an existing PVC, don't provision a new one
     destinationPVC: ${APP}
-    copyMethod: Direct
+    copyMethod: Snapshot

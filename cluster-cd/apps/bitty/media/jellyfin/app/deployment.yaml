@@ -27,6 +27,7 @@ spec:
         backup.velero.io/backup-volumes: config
         backup.velero.io/backup-volumes-excludes: media
     spec:
+      replicas: 0
       securityContext:
         runAsUser: 568
         runAsGroup: 568
