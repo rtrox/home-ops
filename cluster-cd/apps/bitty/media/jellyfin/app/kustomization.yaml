@@ -6,4 +6,4 @@ resources:
   - ./deployment.yaml
   - ./service.yaml
   - ./ingress.yaml
-  - ../../../../templates/volsync
+  - ../../../../base/_templates/volsync
