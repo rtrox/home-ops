@@ -10,7 +10,7 @@ spec:
   commonMetadata:
     labels:
       app.kubernetes.io/name: *appname
-  path: "./cluster-cd/apps/bitty/system/descheduler/app"
+  path: ./cluster-cd/apps/bitty/system/descheduler/app
   sourceRef:
     kind: GitRepository
     name: home-ops-cd

@@ -15,7 +15,7 @@ spec:
   enableSuperuserAccess: true
   postgresql:
     parameters:
-      max_connections: "600"
+      max_connections: '600'
       max_slot_wal_keep_size: 10GB
       shared_buffers: 512MB
   resources:
@@ -27,15 +27,11 @@ spec:
     enablePodMonitor: true
     # Ref: https://github.com/cloudnative-pg/cloudnative-pg/issues/2501
     podMonitorMetricRelabelings:
-      - {
-          sourceLabels: ["cluster"],
-          targetLabel: cnpg_cluster,
-          action: replace,
-        }
-      - { regex: cluster, action: labeldrop }
+      - {sourceLabels: [cluster], targetLabel: cnpg_cluster, action: replace}
+      - {regex: cluster, action: labeldrop}
   backup:
     retentionPolicy: 14d
-    barmanObjectStore: &barmanObjectStore
+    barmanObjectStore:
       data:
         compression: bzip2
       wal:

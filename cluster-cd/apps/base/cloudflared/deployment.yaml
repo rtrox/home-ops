@@ -31,10 +31,10 @@ spec:
             - --config
             - /etc/cloudflared/config/config.yaml
             - run
-            - "$(TUNNEL_ID)"
+            - $(TUNNEL_ID)
           env:
             - name: NO_AUTOUPDATE
-              value: "true"
+              value: 'true'
             - name: TUNNEL_CRED_FILE
               value: /etc/cloudflared/creds/credentials.json
             - name: TUNNEL_METRICS

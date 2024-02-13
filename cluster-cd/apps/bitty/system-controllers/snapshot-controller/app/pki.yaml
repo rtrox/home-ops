@@ -16,7 +16,7 @@ spec:
   issuerRef:
     name: snapshot-controller-webhook-selfsign
     kind: Issuer
-  commonName: "ca.k8s-ycl.cert-manager"
+  commonName: ca.k8s-ycl.cert-manager
   isCA: true
 ---
 apiVersion: cert-manager.io/v1

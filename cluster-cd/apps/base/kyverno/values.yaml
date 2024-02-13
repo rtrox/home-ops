@@ -1,3 +1,4 @@
+---
 crds:
   install: true
 grafana:
@@ -8,7 +9,7 @@ admissionController:
     clusterRole:
       extraResources:
         - apiGroups:
-            - ""
+            - ''
           resources:
             - pods
           verbs:
@@ -16,7 +17,7 @@ admissionController:
             - update
             - delete
         - apiGroups:
-            - ""
+            - ''
           resources:
             - services
           verbs:
@@ -29,7 +30,7 @@ admissionController:
       whenUnsatisfiable: DoNotSchedule
       labelSelector:
         matchLabels:
-          app.kubernetes.io/instance: "{{ .Release.Name }}"
+          app.kubernetes.io/instance: '{{ .Release.Name }}'
           app.kubernetes.io/component: admission-controller
   serviceMonitor:
     enabled: true
@@ -38,7 +39,7 @@ backgroundController:
     clusterRole:
       extraResources:
         - apiGroups:
-            - ""
+            - ''
           resources:
             - pods
           verbs:
@@ -49,7 +50,7 @@ backgroundController:
             - get
             - list
         - apiGroups:
-            - ""
+            - ''
           resources:
             - services
           verbs:

@@ -1,3 +1,4 @@
+---
 env:
   - name: CF_API_TOKEN
     valueFrom:
@@ -31,7 +32,7 @@ sources:
   - crd
 
 txtOwnerId: ${CLUSTER_NAME}
-txtPrefix: "k8s."
+txtPrefix: k8s.
 
 postRenderers:
   - kustomize:

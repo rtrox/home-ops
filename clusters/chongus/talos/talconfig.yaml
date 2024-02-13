@@ -1,7 +1,7 @@
 ---
 # yaml-language-server: $schema=https://raw.githubusercontent.com/budimanjojo/talhelper/master/pkg/config/schemas/talconfig.json
 clusterName: ${clusterName}
-endpoint: "https://${clusterName}.${clusterDNSSuffix}:6443"
+endpoint: https://${clusterName}.${clusterDNSSuffix}:6443
 allowSchedulingOnMasters: true
 # renovate: depName=ghcr.io/siderolabs/installer datasource=docker extractVersion=^(?<version>.*)$
 talosVersion: v1.6.4
@@ -21,7 +21,7 @@ clusterSvcNets:
 additionalApiServerCertSans: &san
   - ${clusterEndpointIP}
   - ${clusterName}.${clusterDNSSuffix}
-  - "127.0.0.1" # KubePrism
+  - 127.0.0.1   # KubePrism
 additionalMachineCertSans: *san
 
 nodes:

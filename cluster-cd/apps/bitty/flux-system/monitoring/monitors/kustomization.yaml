@@ -18,6 +18,6 @@ configMapGenerator:
       - dashboards/logs.json
     options:
       labels:
-        grafana_dashboard: "1"
+        grafana_dashboard: '1'
         app.kubernetes.io/part-of: flux
         app.kubernetes.io/component: monitoring

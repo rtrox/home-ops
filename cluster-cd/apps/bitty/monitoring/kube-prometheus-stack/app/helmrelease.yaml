@@ -32,4 +32,4 @@ spec:
     alertmanager:
       config:
         global:
-          slack_api_url: "${SECRET_DISCORD_ALERT_WEBHOOK_URL}/slack"
+          slack_api_url: ${SECRET_DISCORD_ALERT_WEBHOOK_URL}/slack

@@ -1,3 +1,4 @@
+---
 monitoring:
   enabled: true
   createPrometheusRules: true
@@ -5,12 +6,12 @@ ingress:
   dashboard:
     annotations:
       cert-manager.io/cluster-issuer: letsencrypt-staging
-      nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
-      kubernetes.io/tls-acme: "true"
+      nginx.ingress.kubernetes.io/backend-protocol: HTTPS
+      kubernetes.io/tls-acme: 'true'
       ingress: externaldns
-    ingressClassName: "nginx"
+    ingressClassName: nginx
     host:
-      name: &host "rook.${SECRET_DOMAIN}"
+      name: &host rook.${SECRET_DOMAIN}
       path: /
     tls:
       - hosts:
@@ -34,7 +35,7 @@ cephBlockPools:
       reclaimPolicy: Delete
       allowVolumeExpansion: true
       parameters:
-        imageFormat: "2"
+        imageFormat: '2'
         imageFeatures: layering
         csi.storage.k8s.io/provisioner-secret-name: rook-csi-rbd-provisioner
         csi.storage.k8s.io/provisioner-secret-namespace: rook-ceph

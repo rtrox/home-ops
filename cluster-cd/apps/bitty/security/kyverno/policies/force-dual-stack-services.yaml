@@ -25,12 +25,12 @@ spec:
               kinds:
                 - Service
               annotations:
-                kyverno.io/exclude: "true"
+                kyverno.io/exclude: 'true'
           - resources:
               kinds:
                 - Service
               annotations:
-                dualstack.kyverno.home.arpa/disabled: "true"
+                dualstack.kyverno.home.arpa/disabled: 'true'
       mutate:
         patchStrategicMerge:
           spec:

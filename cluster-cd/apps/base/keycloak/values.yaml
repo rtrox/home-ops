@@ -1,18 +1,19 @@
+---
 replicas: 2
 image:
   repository: quay.io/keycloak/keycloak
-  tag: "23.0.6"
+  tag: 23.0.6
 
 command:
-  - "/opt/keycloak/bin/kc.sh"
-  - "--verbose"
-  - "start"
-  - "--http-enabled=true"
-  - "--http-port=8080"
-  - "--hostname-strict=false"
-  - "--hostname-strict-https=false"
-  - "--spi-events-listener-jboss-logging-success-level=info"
-  - "--spi-events-listener-jboss-logging-error-level=warn"
+  - /opt/keycloak/bin/kc.sh
+  - --verbose
+  - start
+  - --http-enabled=true
+  - --http-port=8080
+  - --hostname-strict=false
+  - --hostname-strict-https=false
+  - --spi-events-listener-jboss-logging-success-level=info
+  - --spi-events-listener-jboss-logging-error-level=warn
 
 extraEnv: |
   - name: JAVA_OPTS_APPEND
@@ -32,12 +33,12 @@ dbchecker:
   enabled: true
 
 database:
-  vendor: "postgres"
-  hostname: "postgres16-rw.database.svc.cluster.local"
-  port: "5432"
-  database: "keycloak"
-  user: "keycloak"
-  existingSecret: "keycloak-secret"
+  vendor: postgres
+  hostname: postgres16-rw.database.svc.cluster.local
+  port: '5432'
+  database: keycloak
+  user: keycloak
+  existingSecret: keycloak-secret
 
 extraInitContainers: |
   - name: initdb
@@ -60,17 +61,17 @@ ingress:
   enabled: true
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-staging
-    kubernetes.io/tls-acme: "true"
-    ingress: "externaldns"
+    kubernetes.io/tls-acme: 'true'
+    ingress: externaldns
   rules:
-    - host: "auth.${SECRET_DOMAIN}"
+    - host: auth.${SECRET_DOMAIN}
       paths:
-        - path: "/"
+        - path: /
           pathType: Prefix
   tls:
     - hosts:
-        - "auth.${SECRET_DOMAIN}"
-      secretName: "auth-tls"
+        - auth.${SECRET_DOMAIN}
+      secretName: auth-tls
 
 serviceMonitor:
   enabled: true

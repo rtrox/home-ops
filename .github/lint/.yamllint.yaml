@@ -1,0 +1,30 @@
+---
+ignore: |
+  .vscode/
+  gotk-components.yaml
+  provision/sidero/custom/cni/cilium-base-install.yaml
+  provision/terraform/modules/rke2_cluster/templates/kube-vip.yaml
+  provision/terraform/modules/rke2_cluster/templates/cilium-install.yaml
+  provision/terraform/modules/rke2_cluster/templates/rke2-config.yaml
+  *.x86.yaml
+  *.x86-raw.yaml
+  *.cho.yaml
+  *.cho-raw.yaml
+  *.sid.yaml
+  *.sid-raw.yaml
+extends: default
+rules:
+  truthy:
+    allowed-values: ['true', 'false']
+  comments:
+    min-spaces-from-content: 1
+  line-length: disable
+  braces:
+    min-spaces-inside: 0
+    max-spaces-inside: 1
+  brackets:
+    min-spaces-inside: 0
+    max-spaces-inside: 0
+  indentation:
+    spaces: 2
+    indent-sequences: true

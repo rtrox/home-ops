@@ -27,24 +27,24 @@ spec:
 
     controller:
       extraArgs:
-        default-ssl-certificate: "network/wildcard-tls"
+        default-ssl-certificate: network/wildcard-tls
       service:
         type: ClusterIP
-        ipFamilyPolicy: "RequireDualStack"
+        ipFamilyPolicy: RequireDualStack
         ipFamilies:
-          - "IPv4"
-          - "IPv6"
+          - IPv4
+          - IPv6
       ingressClassResource:
         default: false
         name: nginx-external
-        controllerValue: "k8s.io/nginx-external"
+        controllerValue: k8s.io/nginx-external
       admissionWebhooks:
         objectSelector:
           matchExpressions:
             - key: ingress-class
               operator: In
               values:
-                - "nginx-external"
+                - nginx-external
       topologySpreadConstraints:
         - maxSkew: 2
           topologyKey: kubernetes.io/hostname

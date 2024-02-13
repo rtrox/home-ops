@@ -1,3 +1,4 @@
+---
 replicas: 2
 kind: Deployment
 deschedulerPolicyAPIVersion: descheduler/v1alpha2

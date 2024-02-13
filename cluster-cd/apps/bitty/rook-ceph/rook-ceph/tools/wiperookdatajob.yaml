@@ -2,8 +2,8 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: "wipe-rook-data-job-node01"
-  namespace: "rook-ceph"
+  name: wipe-rook-data-job-node01
+  namespace: rook-ceph
 spec:
   ttlSecondsAfterFinished: 3600
   template:
@@ -17,7 +17,7 @@ spec:
           securityContext:
             privileged: true
           resources: {}
-          command: ["/bin/sh", "-c"]
+          command: [/bin/sh, -c]
           args:
             - rm -rf /mnt/host_var/lib/rook
           volumeMounts:
@@ -31,8 +31,8 @@ spec:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: "wipe-rook-data-job-node02"
-  namespace: "rook-ceph"
+  name: wipe-rook-data-job-node02
+  namespace: rook-ceph
 spec:
   ttlSecondsAfterFinished: 3600
   template:
@@ -46,7 +46,7 @@ spec:
           securityContext:
             privileged: true
           resources: {}
-          command: ["/bin/sh", "-c"]
+          command: [/bin/sh, -c]
           args:
             - rm -rf /mnt/host_var/lib/rook
           volumeMounts:
@@ -60,8 +60,8 @@ spec:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: "wipe-rook-data-job-node03"
-  namespace: "rook-ceph"
+  name: wipe-rook-data-job-node03
+  namespace: rook-ceph
 spec:
   ttlSecondsAfterFinished: 3600
   template:
@@ -75,7 +75,7 @@ spec:
           securityContext:
             privileged: true
           resources: {}
-          command: ["/bin/sh", "-c"]
+          command: [/bin/sh, -c]
           args:
             - rm -rf /mnt/host_var/lib/rook
           volumeMounts:

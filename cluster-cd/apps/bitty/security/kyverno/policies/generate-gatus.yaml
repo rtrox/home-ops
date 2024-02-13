@@ -22,35 +22,35 @@ spec:
               kinds:
                 - Ingress
               annotations:
-                gatus.io/enabled: "true"
+                gatus.io/enabled: 'true'
       context:
         - name: GATUS_HOST
           variable:
             value: '{{ request.object.metadata.annotations."gatus.io/host" || request.object.spec.rules[0].host }}'
-            jmesPath: "to_string(@)"
+            jmesPath: to_string(@)
         - name: GATUS_NAME
           variable:
             value: '{{ request.object.metadata.annotations."gatus.io/name" || request.object.metadata.name }}'
-            jmesPath: "to_string(@)"
+            jmesPath: to_string(@)
         - name: GATUS_PATH
           variable:
-            value: '{{ request.object.metadata.annotations."gatus.io/path" || '''' }}'
-            jmesPath: "to_string(@) || ''"
+            value: "{{ request.object.metadata.annotations.\"gatus.io/path\" || '' }}"
+            jmesPath: to_string(@) || ''
         - name: GATUS_STATUS_CODE
           variable:
             value: '{{ request.object.metadata.annotations."gatus.io/status-code" || `200` }}'
-            jmesPath: "to_string(@)"
+            jmesPath: to_string(@)
       generate:
         apiVersion: v1
         kind: ConfigMap
-        name: "{{ request.object.metadata.name }}-gatus-ep"
-        namespace: "{{ request.object.metadata.namespace }}"
+        name: '{{ request.object.metadata.name }}-gatus-ep'
+        namespace: '{{ request.object.metadata.namespace }}'
         synchronize: true
         data:
           kind: ConfigMap
           metadata:
             labels:
-              gatus.io/enabled: "true"
+              gatus.io/enabled: 'true'
           data:
             config.yaml: |-
               ---

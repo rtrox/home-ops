@@ -5,7 +5,7 @@ ingress:
     originRequest: &origin-request
       originServerName: bty-ext.${SECRET_DOMAIN}
       noTLSVerify: true
-  - hostname: "*.${SECRET_DOMAIN}"
+  - hostname: '*.${SECRET_DOMAIN}'
     originRequest: *origin-request
     service: *ingress-svc
   - service: http_status:404

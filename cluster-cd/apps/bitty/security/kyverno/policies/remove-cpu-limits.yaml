@@ -22,7 +22,7 @@ spec:
                 - Pod
       mutate:
         foreach:
-          - list: "request.object.spec.containers"
+          - list: request.object.spec.containers
             patchesJson6902: |-
               - path: /spec/containers/{{elementIndex}}/resources/limits/cpu
                 op: remove
@@ -34,12 +34,12 @@ spec:
                 - Pod
       preconditions:
         all:
-          - key: "{{ request.object.spec.initContainers[] || `[]` | length(@) }}"
+          - key: '{{ request.object.spec.initContainers[] || `[]` | length(@) }}'
             operator: GreaterThanOrEquals
             value: 1
       mutate:
         foreach:
-          - list: "request.object.spec.initContainers"
+          - list: request.object.spec.initContainers
             patchesJson6902: |-
               - path: /spec/initContainers/{{elementIndex}}/resources/limits/cpu
                 op: remove

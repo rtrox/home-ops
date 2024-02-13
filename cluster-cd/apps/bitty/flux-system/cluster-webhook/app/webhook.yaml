@@ -21,9 +21,9 @@ metadata:
   namespace: flux-system
   annotations:
     external-dns.alpha.kubernetes.io/target: bty-ext.${SECRET_DOMAIN}
-    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: 'true'
     cert-manager.io/cluster-issuer: letsencrypt-staging
-    kubernetes.io/tls-acme: "true"
+    kubernetes.io/tls-acme: 'true'
 spec:
   ingressClassName: nginx-external
   rules:
@@ -41,7 +41,6 @@ spec:
     - hosts:
         - *host
       secretName: webhook-receiver-tls
-
 ---
 apiVersion: notification.toolkit.fluxcd.io/v1
 kind: Receiver
@@ -51,8 +50,8 @@ metadata:
 spec:
   type: github
   events:
-    - "ping"
-    - "push"
+    - ping
+    - push
   secretRef:
     name: cluster-webhook-token
   resources:

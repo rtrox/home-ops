@@ -11,7 +11,7 @@ spec:
     labels:
       app.kubernetes.io/name: *appname
   interval: 10m
-  path: "./cluster-cd/apps/bitty/cert-manager/cert-manager/app"
+  path: ./cluster-cd/apps/bitty/cert-manager/cert-manager/app
   prune: true
   sourceRef:
     kind: GitRepository
@@ -30,7 +30,7 @@ spec:
     labels:
       app.kubernetes.io/name: *appname
   interval: 10m
-  path: "./cluster-cd/apps/bitty/cert-manager/cert-manager/issuers"
+  path: ./cluster-cd/apps/bitty/cert-manager/cert-manager/issuers
   prune: true
   sourceRef:
     kind: GitRepository

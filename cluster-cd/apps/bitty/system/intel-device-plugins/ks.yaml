@@ -10,7 +10,7 @@ spec:
   commonMetadata:
     labels:
       app.kubernetes.io/name: *appname
-  path: "./cluster-cd/apps/bitty/system/intel-device-plugins/operator"
+  path: ./cluster-cd/apps/bitty/system/intel-device-plugins/operator
   sourceRef:
     kind: GitRepository
     name: home-ops-cd
@@ -31,7 +31,7 @@ spec:
   commonMetadata:
     labels:
       app.kubernetes.io/name: *appname
-  path: "./cluster-cd/apps/bitty/system/intel-device-plugins/gpu"
+  path: ./cluster-cd/apps/bitty/system/intel-device-plugins/gpu
   sourceRef:
     kind: GitRepository
     name: home-ops-cd

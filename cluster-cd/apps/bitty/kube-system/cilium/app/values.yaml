@@ -40,10 +40,10 @@ l7Proxy: true
 enableCnpStatusUpdates: true
 endpointStatus:
   enabled: true
-  status: "policy"
+  status: policy
 
 ipam:
-  mode: "kubernetes"
+  mode: kubernetes
 
 ingressController:
   enabled: false

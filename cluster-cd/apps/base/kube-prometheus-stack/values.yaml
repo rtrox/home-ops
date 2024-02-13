@@ -12,12 +12,12 @@ alertmanager:
               storage: 1Gi
   config:
     receivers:
-      - name: "null"
+      - name: 'null'
       - name: discord
         slack_configs:
-          - channel: "#x86kube-alarms"
+          - channel: '#x86kube-alarms'
             username: Prometheus
-            icon_url: "https://avatars3.githubusercontent.com/u/3380462"
+            icon_url: https://avatars3.githubusercontent.com/u/3380462
             send_resolved: true
             color: '{{ template "slack.monzo.color" . }}'
             title: '{{ template "slack.monzo.title" . }}'
@@ -37,14 +37,14 @@ alertmanager:
               {{ end }}
       - name: alertmanager-discord-webhook
         webhook_configs:
-          - url: "http://alertmanager-discord.monitoring.svc.cluster.local/alerts"
+          - url: http://alertmanager-discord.monitoring.svc.cluster.local/alerts
             send_resolved: true
             max_alerts: 10
     route:
       routes:
         - matchers:
             - alertname =~ "InfoInhibitor|Watchdog"
-          receiver: "null"
+          receiver: 'null'
         - continue: true
           matchers:
             - severity =~ "warning|critical"
@@ -149,11 +149,11 @@ alertmanager:
   ingress:
     annotations:
       cert-manager.io/cluster-issuer: letsencrypt-staging
-      kubernetes.io/tls-acme: "true"
-      ingress: "externaldns"
+      kubernetes.io/tls-acme: 'true'
+      ingress: externaldns
     enabled: true
     hosts:
-      - &am_host "am.${SECRET_DOMAIN}"
+      - &am_host am.${SECRET_DOMAIN}
     ingressClassName: nginx
     pathType: Prefix
     tls:
@@ -194,11 +194,11 @@ prometheus:
   ingress:
     annotations:
       cert-manager.io/cluster-issuer: letsencrypt-staging
-      kubernetes.io/tls-acme: "true"
+      kubernetes.io/tls-acme: 'true'
       ingress: externaldns
     enabled: true
     hosts:
-      - &prom_host "prom.${SECRET_DOMAIN}"
+      - &prom_host prom.${SECRET_DOMAIN}
     ingressClassName: nginx
     pathType: Prefix
     tls:
@@ -228,5 +228,5 @@ prometheus:
     thanos:
       image: quay.io/thanos/thanos:v0.34.0
       # renovate: datasource=docker depName=quay.io/thanos/thanos
-      version: "v0.34.0"
+      version: v0.34.0
     walCompression: true
