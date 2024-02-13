@@ -35,7 +35,7 @@ dbchecker:
 database:
   vendor: postgres
   hostname: postgres16-rw.database.svc.cluster.local
-  port: '5432'
+  port: "5432"
   database: keycloak
   user: keycloak
   existingSecret: keycloak-secret
@@ -60,8 +60,8 @@ extraInitContainers: |
 ingress:
   enabled: true
   annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-staging
-    kubernetes.io/tls-acme: 'true'
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    kubernetes.io/tls-acme: "true"
     ingress: externaldns
   rules:
     - host: auth.${SECRET_DOMAIN}

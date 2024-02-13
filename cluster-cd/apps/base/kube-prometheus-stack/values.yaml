@@ -12,10 +12,10 @@ alertmanager:
               storage: 1Gi
   config:
     receivers:
-      - name: 'null'
+      - name: "null"
       - name: discord
         slack_configs:
-          - channel: '#x86kube-alarms'
+          - channel: "#x86kube-alarms"
             username: Prometheus
             icon_url: https://avatars3.githubusercontent.com/u/3380462
             send_resolved: true
@@ -44,7 +44,7 @@ alertmanager:
       routes:
         - matchers:
             - alertname =~ "InfoInhibitor|Watchdog"
-          receiver: 'null'
+          receiver: "null"
         - continue: true
           matchers:
             - severity =~ "warning|critical"
@@ -148,8 +148,8 @@ alertmanager:
       {{- end }}
   ingress:
     annotations:
-      cert-manager.io/cluster-issuer: letsencrypt-staging
-      kubernetes.io/tls-acme: 'true'
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+      kubernetes.io/tls-acme: "true"
       ingress: externaldns
     enabled: true
     hosts:
@@ -193,8 +193,8 @@ prometheus:
     enabled: true
   ingress:
     annotations:
-      cert-manager.io/cluster-issuer: letsencrypt-staging
-      kubernetes.io/tls-acme: 'true'
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+      kubernetes.io/tls-acme: "true"
       ingress: externaldns
     enabled: true
     hosts:
