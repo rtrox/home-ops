@@ -5,10 +5,10 @@ kind: Kustomization
 namespace: home
 
 resources:
-  # - deployment.yaml
+  - deployment.yaml
   - service.yaml
   - ingress.yaml
-  - restore.yaml
+  # - restore.yaml
   - code-ingress.yaml
   - service-monitor.yaml
   - prometheus-rule.yaml
