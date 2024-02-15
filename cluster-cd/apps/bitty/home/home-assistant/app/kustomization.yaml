@@ -5,13 +5,12 @@ kind: Kustomization
 namespace: home
 
 resources:
-  # - deployment.yaml
+  - deployment.yaml
   - service.yaml
   - ingress.yaml
   - code-ingress.yaml
   - service-monitor.yaml
   - prometheus-rule.yaml
-  - restore.yaml
   - ../../../../base/_templates/volsync
 
 images:
