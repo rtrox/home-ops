@@ -37,9 +37,6 @@ spec:
           envFrom: &envFrom
             - secretRef:
                 name: home-assistant-secret
-          env:
-            - name: INIT_POSTGRES_SUPER_PASS
-              value: ${POSTGRES_SUPER_PASSWORD}
       containers:
         - name: home-assistant
           image: ghcr.io/onedr0p/home-assistant:2023.9.3
