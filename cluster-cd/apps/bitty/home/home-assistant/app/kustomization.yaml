@@ -8,7 +8,6 @@ resources:
   - deployment.yaml
   - service.yaml
   - ingress.yaml
-  # - restore.yaml
   - code-ingress.yaml
   - service-monitor.yaml
   - prometheus-rule.yaml

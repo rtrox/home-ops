@@ -1,0 +1,29 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: zwave-ws
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    kubernetes.io/ingress.class: nginx
+    kubernetes.io/tls-acme: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600" # Increase these to prevent socket closure
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600" # due to inactivity
+    ingress: "externaldns"
+spec:
+  tls:
+    - hosts:
+        - &host zwave-ws.${SECRET_DOMAIN}
+      secretName: zwave-ws-tls
+  rules:
+    - host: *host
+      http:
+        paths:
+          - pathType: Prefix
+            path: "/"
+            backend:
+              service:
+                name: zwave
+                port:
+                  name: ws

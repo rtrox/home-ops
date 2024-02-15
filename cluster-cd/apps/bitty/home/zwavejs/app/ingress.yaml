@@ -1,0 +1,26 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: zwave
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    kubernetes.io/tls-acme: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    ingress: "externaldns"
+spec:
+  tls:
+    - hosts:
+        - &host zwave.${SECRET_DOMAIN}
+      secretName: zwave-tls
+  rules:
+    - host: *host
+      http:
+        paths:
+          - pathType: Prefix
+            path: "/"
+            backend:
+              service:
+                name: zwave
+                port:
+                  name: http
