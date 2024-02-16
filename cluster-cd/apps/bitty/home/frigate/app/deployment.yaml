@@ -20,7 +20,7 @@ spec:
     spec:
       initContainers:
         - name: config
-          image: ghcr.io/onedr0p/alpine:latest
+          image: ghcr.io/onedr0p/alpine:3.19.1
           command: ["sh", "-c"]
           args:
             - |
@@ -32,6 +32,9 @@ spec:
               value: ${FRIGATE_LB_IPV4}
             - name: FRIGATE_LB_IPV6
               value: ${FRIGATE_LB_IPV6}
+          envFrom:
+            - secretRef:
+                name: frigate-secret
           volumeMounts:
             - name: mounted-config
               mountPath: /config
@@ -78,7 +81,7 @@ spec:
           readinessProbe: *probe
           resources:
             limits:
-              memory: 40000Mi
+              memory: 4000Mi
               gpu.intel.com/i915: 1
             requests:
               memory: 2000Mi
