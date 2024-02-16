@@ -27,7 +27,8 @@ spec:
               cp /tmp/config/config.yml /config/config.yml
               echo "FRIGATE_SERVICE_HOST: $${FRIGATE_SERVICE_HOST}"
               echo "FRIGATE_SERVICE_PORT_WEBRTCTCP: $${FRIGATE_SERVICE_PORT_WEBRTCTCP}"
-              echo "FRIGATE_LB_IP: $${FRIGATE_LB_IP}"
+              echo "FRIGATE_LB_IPV4: $${FRIGATE_LB_IPV4}"
+              echo "FRIGATE_LB_IPV6: $${FRIGATE_LB_IPV6}"
               sed -i "s/FRIGATE_SERVICE_HOST/$${FRIGATE_SERVICE_HOST}/" /config/config.yml
               sed -i "s/FRIGATE_SERVICE_PORT_WEBRTCTCP/$${FRIGATE_SERVICE_PORT_WEBRTCTCP}/" /config/config.yml
               sed -i "s/FRIGATE_LB_IPV4/$${FRIGATE_LB_IPV4}/" /config/config.yml
@@ -51,17 +52,12 @@ spec:
             - name: TZ
               value: ${LOCAL_TZ}
             - name: LIBVA_DRIVER_NAME
-              value: i965
+              value: i915
             - name: FRIGATE_MQTT_USER
-              valueFrom:
-                secretKeyRef:
-                  name: mosquitto-secret
-                  key: frigate_username
-            - name: FRIGATE_MQTT_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: mosquitto-secret
-                  key: frigate_password
+              value: frigate
+          envFrom:
+            - secretRef:
+                name: frigate-secret
           ports:
             - containerPort: 5000
               name: http
