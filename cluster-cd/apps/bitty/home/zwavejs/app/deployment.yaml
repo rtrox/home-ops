@@ -15,8 +15,6 @@ spec:
         app.kubernetes.io/instance: zwavejs
         app.kubernetes.io/name: zwavejs
         app.kubernetes.io/part-of: zwavejs
-      annotations:
-        backup.velero.io/backup-volumes: zwave-data
     spec:
       containers:
         - name: zwave
@@ -62,7 +60,7 @@ spec:
             type: CharDevice
         - name: zwave-data
           persistentVolumeClaim:
-            claimName: zwave-data
+            claimName: zwavejs
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
