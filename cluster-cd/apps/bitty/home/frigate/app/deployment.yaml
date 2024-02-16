@@ -20,19 +20,11 @@ spec:
     spec:
       initContainers:
         - name: config
-          image: alpine
+          image: ghcr.io/onedr0p/alpine:latest
           command: ["sh", "-c"]
           args:
             - |
-              cp /tmp/config/config.yml /config/config.yml
-              echo "FRIGATE_SERVICE_HOST: $${FRIGATE_SERVICE_HOST}"
-              echo "FRIGATE_SERVICE_PORT_WEBRTCTCP: $${FRIGATE_SERVICE_PORT_WEBRTCTCP}"
-              echo "FRIGATE_LB_IPV4: $${FRIGATE_LB_IPV4}"
-              echo "FRIGATE_LB_IPV6: $${FRIGATE_LB_IPV6}"
-              sed -i "s/FRIGATE_SERVICE_HOST/$${FRIGATE_SERVICE_HOST}/" /config/config.yml
-              sed -i "s/FRIGATE_SERVICE_PORT_WEBRTCTCP/$${FRIGATE_SERVICE_PORT_WEBRTCTCP}/" /config/config.yml
-              sed -i "s/FRIGATE_LB_IPV4/$${FRIGATE_LB_IPV4}/" /config/config.yml
-              sed -i "s/FRIGATE_LB_IPV6/$${FRIGATE_LB_IPV6}/" /config/config.yml
+              envsubst < /tmp/config/config.yml > /config/config.yml
               echo "Config:"
               cat /config/config.yml
           env:

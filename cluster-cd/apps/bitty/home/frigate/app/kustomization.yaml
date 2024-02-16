@@ -17,7 +17,12 @@ configMapGenerator:
     namespace: home
     files:
       - config.yml=./config/config.yml
+generatorOptions:
+  annotations:
+    kustomize.toolkit.fluxcd.io/substitute: disabled
 
 images:
   - name: ghcr.io/blakeblackshear/frigate
     newTag: "0.13.0"
+  - name: ghcr.io/onedr0p/alpine
+    newTag: "3.19.1"
