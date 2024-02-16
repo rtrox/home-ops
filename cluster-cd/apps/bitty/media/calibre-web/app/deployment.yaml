@@ -1,0 +1,77 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: &name calibre-web
+    app.kubernetes.io/instance: *name
+    app.kubernetes.io/component: *name
+    app.kubernetes.io/part-of: *name
+    k8s-app: *name
+  name: *name
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: *name
+      app.kubernetes.io/instance: *name
+      app.kubernentes.io/component: *name
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: *name
+        app.kubernetes.io/instance: *name
+        app.kubernentes.io/component: *name
+      annotations:
+        backup.velero.io/backup-volumes: config
+        backup.velero.io/backup-volumes-excludes: books,cache
+    spec:
+      securityContext:
+        runAsUser: 568
+        runAsGroup: 568
+        fsGroup: 568
+        fsGroupChangePolicy: "OnRootMismatch"
+        supplementalGroups:
+          - 65539
+      containers:
+        - name: calibre
+          # image: ghcr.io/bjw-s/calibre-web:0.6.19@sha256:2090b8d6ae43d56435b0dc27b9c3bc1bf43500d1b268a0eecfe890b1d6b03e72
+          image: ghcr.io/rtrox/calibre-web:nightly-2024-12-01
+          imagePullPolicy: IfNotPresent
+          resources:
+            limits:
+              memory: 8192Mi
+            requests:
+              memory: 4096Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            seccompProfile:
+              type: RuntimeDefault
+            capabilities:
+              drop:
+                - ALL
+          ports:
+            - name: http
+              containerPort: 8083
+              protocol: TCP
+          env:
+            - name: CACHE_DIR
+              value: /cache
+          volumeMounts:
+            - mountPath: /config
+              name: config
+            - mountPath: /media/books
+              name: books
+            - mountPath: /cache
+              name: cache
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: calibre-web
+        - name: books
+          nfs:
+            server: ${NFS_SERVER}
+            path: /volume1/media/books
+        - name: cache
+          emptyDir: {}

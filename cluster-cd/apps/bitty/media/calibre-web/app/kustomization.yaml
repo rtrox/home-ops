@@ -12,10 +12,9 @@ resources:
   - ../../../../base/_templates/volsync
 
 images:
-  # TODO: non-nightly image to let renovate pick it up
-  - name: ghcr.io/linuxserver/calibre
-    newTag: version-v6.4.0
+  - name: ghcr.io/bjw-s/calibre-web
+    newTag: 0.6.21@sha256:dbb30259fcff7531118f06976c49cfaae93363cf7c42c9fb000298761721d113
 
 commonLabels:
-  app.kubernetes.io/part-of: calibre
-  k8s-app: calibre
+  app.kubernetes.io/part-of: calibre-web
+  k8s-app: calibre-web
