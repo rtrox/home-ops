@@ -32,12 +32,14 @@ spec:
           reloader.stakater.com/auto: "true"
         initContainers:
           01-init-config:
-            image: public.ecr.aws/docker/library/eclipse-mosquitto:2.0.18
+            image:
+              repository: public.ecr.aws/docker/library/eclipse-mosquitto
+              tag: 2.0.18@sha256:3ca250db0a572948e255531c1863debdbcad1488a381820f2516eed7c1d5a7e8
             imagePullPolicy: IfNotPresent
             command: ["/bin/sh", "-c"]
             args:
               [
-                "cp /data/mosquitto_secret/* /data/external_config/ && mosquitto_passwd -U /data/external_config/mosquitto_pwd",
+                "cp /tmp/secret/* /mosquitto/external_config/ && mosquitto_passwd -U /mosquitto/external_config/mosquitto_pwd",
               ]
             volumeMounts:
               - { name: secret-file, mountPath: /data/mosquitto_secret }
@@ -82,16 +84,20 @@ spec:
         enabled: true
         type: configMap
         name: mosquitto-configmap # overriden by kustomizeconfig
-        mountPath: /mosquitto/config/mosquitto.conf
-        subPath: mosquitto.conf
+        advancedMounts:
+          main:
+            main:
+              - path: /mosquitto/config/mosquitto.conf
+                subPath: mosquitto.conf
       secret-file:
-        enabled: true
         type: secret
         name: mosquitto-secret
-        subPath: mosquitto_pwd
-        mountPath: /data/mosquitto_secret/mosquitto_pwd
+        advancedMounts:
+          main:
+            init-config:
+              - path: /tmp/secret
         readOnly: true
       external-config:
-        enabled: true
         type: emptyDir
-        mountPath: /mosquitto/external_config
+        globalMounts:
+          - path: /mosquitto/external_config
