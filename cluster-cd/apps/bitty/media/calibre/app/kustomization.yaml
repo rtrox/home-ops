@@ -5,10 +5,10 @@ kind: Kustomization
 namespace: default
 
 resources:
-  # - deployment.yaml
+  - deployment.yaml
   - service.yaml
   - ingress.yaml
-  - restore.yaml
+  # - restore.yaml
   - ../../../../base/_templates/volsync
 
 images:
