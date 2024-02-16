@@ -91,7 +91,7 @@ spec:
         name: mosquitto-secret
         advancedMounts:
           main:
-            init-config:
+            01-init-config:
               - path: /tmp/secret
         readOnly: true
       external-config:
