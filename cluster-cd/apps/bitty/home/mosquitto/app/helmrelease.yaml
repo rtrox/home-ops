@@ -10,7 +10,7 @@ spec:
   chart:
     spec:
       chart: app-template
-      version: 2.5.0
+      version: 2.6.0
       sourceRef:
         kind: HelmRepository
         name: bjw-s
@@ -41,9 +41,6 @@ spec:
               [
                 "cp /tmp/secret/* /mosquitto/external_config/ && mosquitto_passwd -U /mosquitto/external_config/mosquitto_pwd",
               ]
-            volumeMounts:
-              - { name: secret-file, mountPath: /data/mosquitto_secret }
-              - { name: external-config, mountPath: /data/external_config }
         containers:
           main:
             image:
