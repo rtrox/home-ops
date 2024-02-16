@@ -4,6 +4,7 @@ kind: Kustomization
 namespace: home
 
 resources:
+  - claim.yaml
   - helmrelease.yaml
   - externalsecret.yaml
 

@@ -26,47 +26,58 @@ spec:
   uninstall:
     keepHistory: false
   values:
-    initContainers:
-      01-init-config:
-        image: public.ecr.aws/docker/library/eclipse-mosquitto:2.0.18
-        imagePullPolicy: IfNotPresent
-        command: ["/bin/sh", "-c"]
-        args:
-          [
-            "cp /data/mosquitto_secret/* /data/external_config/ && mosquitto_passwd -U /data/external_config/mosquitto_pwd",
-          ]
-        volumeMounts:
-          - { name: secret-file, mountPath: /data/mosquitto_secret }
-          - { name: external-config, mountPath: /data/external_config }
-    controller:
-      type: statefulset
-      annotations:
-        reloader.stakater.com/auto: "true"
-    image:
-      repository: public.ecr.aws/docker/library/eclipse-mosquitto
-      tag: 2.0.18
+    controllers:
+      main:
+        annotations:
+          reloader.stakater.com/auto: "true"
+        initContainers:
+          01-init-config:
+            image: public.ecr.aws/docker/library/eclipse-mosquitto:2.0.18
+            imagePullPolicy: IfNotPresent
+            command: ["/bin/sh", "-c"]
+            args:
+              [
+                "cp /data/mosquitto_secret/* /data/external_config/ && mosquitto_passwd -U /data/external_config/mosquitto_pwd",
+              ]
+            volumeMounts:
+              - { name: secret-file, mountPath: /data/mosquitto_secret }
+              - { name: external-config, mountPath: /data/external_config }
+        containers:
+          main:
+            image:
+              repository: public.ecr.aws/docker/library/eclipse-mosquitto
+              tag: 2.0.18@sha256:3ca250db0a572948e255531c1863debdbcad1488a381820f2516eed7c1d5a7e8
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities: { drop: ["ALL"] }
+            resources:
+              requests:
+                cpu: 10m
+              limits:
+                memory: 16Mi
+        pod:
+          securityContext:
+            runAsUser: 568
+            runAsGroup: 568
+            fsGroup: 568
+            fsGroupChangePolicy: OnRootMismatch
     service:
       main:
         type: LoadBalancer
         annotations:
           external-dns.alpha.kubernetes.io/hostname: mqtt.${SECRET_DOMAIN}
-          io.cilium/lb-ipam-ips: ${MOSQUITTO_LB_IP}
+          io.cilium/lb-ipam-ips: ${MOSQUITTO_LB_IPV4},${MOSQUITTO_LB_IPV6}
         externalTrafficPolicy: Cluster
         ports:
           http:
             port: 1883
-    podSecurityContext:
-      runAsUser: 568
-      runAsGroup: 568
-      fsGroup: 568
-      fsGroupChangePolicy: OnRootMismatch
-    volumeClaimTemplates:
-      - name: config
-        mountPath: /data
-        accessMode: ReadWriteOnce
-        size: 512Mi
-        storageClass: ceph-block
     persistence:
+      config:
+        enabled: true
+        existingClaim: mosquitto
+        globalMounts:
+          - path: /data
       config-file:
         enabled: true
         type: configMap
@@ -84,9 +95,3 @@ spec:
         enabled: true
         type: emptyDir
         mountPath: /mosquitto/external_config
-    resources:
-      requests:
-        cpu: 10m
-        memory: 50Mi
-      limits:
-        memory: 150Mi
