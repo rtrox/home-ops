@@ -68,32 +68,32 @@ ui:
 go2rtc:
   rtsp:
     username: "admin"
-    password: ${FRIGATE_RTSP_PASSWORD}
+    password: {FRIGATE_RTSP_PASSWORD}
   streams:
     carport_hq:
-      - ${CARPORT_CAM_PATH_HQ}#backchannel=0
+      - {FRIGATE_CARPORT_CAM_PATH_HQ}#backchannel=0
       # WebRTC can't handle h.265, and it needs opus or PCMU/PCMA audio
       - "ffmpeg:carport_hq#audio=opus"
     carport_lq:
-      - ${CARPORT_CAM_PATH_LQ}#backchannel=0
+      - {FRIGATE_CARPORT_CAM_PATH_LQ}#backchannel=0
       - "ffmpeg:caport_lq#audio=opus"
     frontdoor_hq:
-      - ${FRONTDOOR_CAM_PATH_HQ}#backchannel=0
+      - {FRIGATE_FRONTDOOR_CAM_PATH_HQ}#backchannel=0
       - "ffmpeg:frontdoor_hq#audio=opus"
     frontdoor_lq:
-      - ${FRONTDOOR_CAM_PATH_LQ}#backchannel=0
+      - {FRIGATE_FRONTDOOR_CAM_PATH_LQ}#backchannel=0
       - "ffmpeg:frontdoor_lq#audio=opus"
     backdoor_hq:
-      - ${BACKDOOR_CAM_PATH_HQ}#backchannel=0
+      - {FRIGATE_BACKDOOR_CAM_PATH_HQ}#backchannel=0
       - "ffmpeg:backdoor_hq#audio=opus"
     backdoor_lq:
-      - ${BACKDOOR_CAM_PATH_LQ}#backchannel=0
+      - {FRIGATE_BACKDOOR_CAM_PATH_LQ}#backchannel=0
       - "ffmpeg:backdoor_lq#audio=opus"
     cosmo_cam_hq:
-      - ${COSMO_CAM_PATH_HQ}#backchannel=0
+      - {FRIGATE_COSMO_CAM_PATH_HQ}#backchannel=0
       - "ffmpeg:cosmo_cam_hq#audio=opus"
     cosmo_cam_lq:
-      - ${COSMO_CAM_PATH_LQ}#backchannel=0
+      - {FRIGATE_COSMO_CAM_PATH_LQ}#backchannel=0
       - "ffmpeg:cosmo_cam_hq#audio=opus"
   webrtc:
     candidates:
