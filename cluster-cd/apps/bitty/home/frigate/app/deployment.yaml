@@ -30,12 +30,15 @@ spec:
               echo "FRIGATE_LB_IP: $${FRIGATE_LB_IP}"
               sed -i "s/FRIGATE_SERVICE_HOST/$${FRIGATE_SERVICE_HOST}/" /config/config.yml
               sed -i "s/FRIGATE_SERVICE_PORT_WEBRTCTCP/$${FRIGATE_SERVICE_PORT_WEBRTCTCP}/" /config/config.yml
-              sed -i "s/FRIGATE_LB_IP/$${FRIGATE_LB_IP}/" /config/config.yml
+              sed -i "s/FRIGATE_LB_IPV4/$${FRIGATE_LB_IPV4}/" /config/config.yml
+              sed -i "s/FRIGATE_LB_IPV6/$${FRIGATE_LB_IPV6}/" /config/config.yml
               echo "Config:"
               cat /config/config.yml
           env:
-            - name: FRIGATE_LB_IP
-              value: ${FRIGATE_LB_IP}
+            - name: FRIGATE_LB_IPV4
+              value: ${FRIGATE_LB_IPV4}
+            - name: FRIGATE_LB_IPV6
+              value: ${FRIGATE_LB_IPV6}
           volumeMounts:
             - name: mounted-config
               mountPath: /config

@@ -7,8 +7,7 @@ metadata:
     app.kubernetes.io/name: *name
     app.kubernetes.io/instance: *name
   annotations:
-    io.cilium/lb-ipam-ips: "${FRIGATE_LB_IP}"
-    metallb.universe.tf/loadBalancerIPs: "${FRIGATE_LB_IP}"
+    lbipam.cilium.io/ips: ${FRIGATE_NGINX_IPV4},${FRIGATE_NGINX_IPV6}
 spec:
   type: LoadBalancer
   ports:
