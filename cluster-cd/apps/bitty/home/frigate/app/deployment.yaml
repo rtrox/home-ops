@@ -1,0 +1,136 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: &name frigate
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: *name
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        name: *name
+        app: *name
+        app.kubernetes.io/instance: *name
+        app.kubernetes.io/name: *name
+        app.kubernetes.io/part-of: *name
+    spec:
+      initContainers:
+        - name: config
+          image: alpine
+          command: ["sh", "-c"]
+          args:
+            - |
+              cp /tmp/config/config.yml /config/config.yml
+              echo "FRIGATE_SERVICE_HOST: $${FRIGATE_SERVICE_HOST}"
+              echo "FRIGATE_SERVICE_PORT_WEBRTCTCP: $${FRIGATE_SERVICE_PORT_WEBRTCTCP}"
+              echo "FRIGATE_LB_IP: $${FRIGATE_LB_IP}"
+              sed -i "s/FRIGATE_SERVICE_HOST/$${FRIGATE_SERVICE_HOST}/" /config/config.yml
+              sed -i "s/FRIGATE_SERVICE_PORT_WEBRTCTCP/$${FRIGATE_SERVICE_PORT_WEBRTCTCP}/" /config/config.yml
+              sed -i "s/FRIGATE_LB_IP/$${FRIGATE_LB_IP}/" /config/config.yml
+              echo "Config:"
+              cat /config/config.yml
+          env:
+            - name: FRIGATE_LB_IP
+              value: ${FRIGATE_LB_IP}
+          volumeMounts:
+            - name: mounted-config
+              mountPath: /config
+            - name: frigate-config
+              mountPath: /tmp/config
+      containers:
+        - name: frigate
+          image: ghcr.io/blakeblackshear/frigate:0.13.1
+          env:
+            - name: TZ
+              value: ${LOCAL_TZ}
+            - name: LIBVA_DRIVER_NAME
+              value: i965
+            - name: FRIGATE_MQTT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: mosquitto-secret
+                  key: frigate_username
+            - name: FRIGATE_MQTT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mosquitto-secret
+                  key: frigate_password
+          ports:
+            - containerPort: 5000
+              name: http
+              protocol: TCP
+            - containerPort: 8554
+              name: rtsp
+              protocol: TCP
+            - containerPort: 1984
+              name: go2rtc
+              protocol: TCP
+            - containerPort: 8555
+              name: webrtctcp
+              protocol: TCP
+            - containerPort: 8555
+              name: webrtcudp
+              protocol: UDP
+          livenessProbe: &probe
+            httpGet:
+              path: /api/version
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 0
+            failureThreshold: 5
+            timeoutSeconds: 1
+            periodSeconds: 10
+          readinessProbe: *probe
+          resources:
+            limits:
+              memory: 40000Mi
+              gpu.intel.com/i915: 1
+            requests:
+              memory: 2000Mi
+              gpu.intel.com/i915: 1
+          securityContext:
+            allowPrivilegeEscalation: true
+            privileged: true
+          volumeMounts:
+            - mountPath: /dev/bus/usb
+              name: usb
+            - mountPath: /dev/shm
+              name: cache
+              medium: Memory
+            - mountPath: /media
+              name: media
+            - mountPath: /data
+              name: frigate-data
+            - mountPath: /config
+              name: mounted-config
+      volumes:
+        - name: usb
+          hostPath:
+            path: /dev/bus/usb
+            type: Directory
+        - name: cache
+          emptyDir: {}
+        - name: frigate-data
+          persistentVolumeClaim:
+            claimName: frigate-data
+        - name: media
+          persistentVolumeClaim:
+            claimName: frigate-media
+        - name: mounted-config
+          emptyDir: {}
+        - name: frigate-config
+          configMap:
+            name: frigate-config
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: google.feature.node.kubernetes.io/coral
+                    operator: In
+                    values:
+                      - "true"

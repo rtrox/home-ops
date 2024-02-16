@@ -1,0 +1,37 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: &name frigate
+  labels:
+    app.kubernetes.io/name: *name
+    app.kubernetes.io/instance: *name
+  annotations:
+    io.cilium/lb-ipam-ips: "${FRIGATE_LB_IP}"
+    metallb.universe.tf/loadBalancerIPs: "${FRIGATE_LB_IP}"
+spec:
+  type: LoadBalancer
+  ports:
+    - name: http
+      port: 5000
+      protocol: TCP
+      targetPort: http
+    - name: rtsp
+      port: 8554
+      protocol: TCP
+      targetPort: rtsp
+    - name: go2rtc
+      port: 1984
+      protocol: TCP
+      targetPort: go2rtc
+    - name: webrtctcp
+      port: 8555
+      protocol: TCP
+      targetPort: webrtctcp
+    - name: webrtcudp
+      port: 8555
+      protocol: UDP
+      targetPort: webrtcudp
+  selector:
+    app.kubernetes.io/name: *name
+    app.kubernetes.io/instance: *name

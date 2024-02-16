@@ -4,7 +4,7 @@ kind: Kustomization
 namespace: home
 
 resources:
-  # - deployment.yaml
+  - deployment.yaml
   - ingress.yaml
   - service.yaml
   - ingress-ws.yaml
