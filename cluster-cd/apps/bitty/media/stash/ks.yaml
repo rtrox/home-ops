@@ -11,7 +11,7 @@ spec:
     labels:
       app.kubernetes.io/name: *app
   dependsOn:
-    - name: cert-manager-issuers
+    - name: rook-ceph-cluster
   path: ./cluster-cd/apps/bitty/media/stash/app
   prune: true
   sourceRef:
