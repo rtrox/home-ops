@@ -1,0 +1,18 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  # - deployment.yaml
+  - service.yaml
+  - ingress.yaml
+  - ../../../../base/_templates/volsync
+  - restore.yaml
+
+images:
+  - name: stashapp/stash
+    newTag: v0.24.3@sha256:9ba5be09e52a91d7d4387dfd7367f1d6524981e4cf8fcb95101ac28110aa4310
+
+commonLabels:
+  app.kubernetes.io/part-of: stash
+  k8s-app: stash

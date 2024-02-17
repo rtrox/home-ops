@@ -1,0 +1,117 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: &name stash
+    app.kubernetes.io/instance: *name
+    app.kubernetes.io/component: *name
+    app.kubernetes.io/part-of: *name
+    k8s-app: *name
+  name: *name
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: *name
+      app.kubernetes.io/instance: *name
+      app.kubernentes.io/component: *name
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: *name
+        app.kubernetes.io/instance: *name
+        app.kubernentes.io/component: *name
+    spec:
+      runtimeClassName: nvidia
+      containers:
+        - name: stash
+          image: stashapp/stash:v0.23.1@sha256:96d4e778a9fb7199da28983413c9767617bafc69db781bf7d00cd2667344b76d
+          imagePullPolicy: IfNotPresent
+          resources:
+            limits:
+              memory: 4Gi
+              nvidia.com/gpu: 1
+            requests:
+              memory: 4Gi
+              nvidia.com/gpu: 1
+          securityContext:
+            seccompProfile:
+              type: RuntimeDefault
+            capabilities:
+              drop:
+                - ALL
+          ports:
+            - name: http
+              containerPort: 9999
+          env:
+            - name: TZ
+              value: ${LOCAL_TZ}
+            - name: STASH_STASH
+              value: /media/
+            - name: STASH_GENERATED
+              value: /generated/
+            - name: STASH_METADATA
+              value: /metadata/
+            - name: STASH_CACHE
+              value: /cache/
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 10
+            failureThreshold: 5
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 10
+            failureThreshold: 5
+            timeoutSeconds: 2
+          startupProbe:
+            httpGet:
+              path: /
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 10
+            failureThreshold: 5
+            timeoutSeconds: 2
+          volumeMounts:
+            - mountPath: /root/.stash
+              name: config
+            - mountPath: /media
+              name: media
+            - mountPath: /generated
+              name: generated
+            - mountPath: /cache
+              name: cache
+            - name: metadata
+              mountPath: /metadata
+            - name: blobs
+              mountPath: /blobs
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: stash
+        - name: media
+          nfs:
+            server: ${NFS_SERVER}
+            path: /volume1/media/.homework/library/
+        - name: generated
+          nfs:
+            server: ${NFS_SERVER}
+            path: /volume1/media/.homework/generated/
+        - name: metadata
+          nfs:
+            server: ${NFS_SERVER}
+            path: /volume1/media/.homework/metadata/
+        - name: blobs
+          nfs:
+            server: ${NFS_SERVER}
+            path: /volume1/media/.homework/blobs/
+        - name: cache
+          emptyDir: {}
