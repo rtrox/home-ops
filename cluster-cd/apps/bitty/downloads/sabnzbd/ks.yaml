@@ -12,7 +12,7 @@ spec:
       app.kubernetes.io/name: *app
   dependsOn:
     - name: rook-ceph-cluster
-  path: ./cluster-cd/apps/bitty/media/sabnzbd/app
+  path: ./cluster-cd/apps/bitty/downloads/sabnzbd/app
   prune: true
   sourceRef:
     kind: GitRepository
