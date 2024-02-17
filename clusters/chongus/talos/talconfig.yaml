@@ -13,28 +13,27 @@ cniConfig:
 
 clusterPodNets:
   - 10.244.0.0/16
-  - 2001:0470:e899:9951::/64
+  - ${ipv6PodNet}
 clusterSvcNets:
   - 10.96.0.0/12
-  - 2001:0470:e899:9951:cafe:1::/112
+  - ${ipv6SvcNet}
 
 additionalApiServerCertSans: &san
-  - ${clusterEndpointIP}
   - ${clusterName}.${clusterDNSSuffix}
-  - 127.0.0.1   # KubePrism
+  - 127.0.0.1 # KubePrism
 additionalMachineCertSans: *san
 
 nodes:
   - hostname: node01.${clusterName}.${clusterDNSSuffix}
-    ipAddress: 172.17.1.11
+    ipAddress: 172.18.2.1
     controlPlane: true
-    installDisk: /dev/nvme0n1
+    installDisk: /dev/sda
     machineSpec:
       mode: metal
       arch: amd64
 
   - hostname: node02.${clusterName}.${clusterDNSSuffix}
-    ipAddress: 172.17.1.12
+    ipAddress: 172.18.2.2
     controlPlane: true
     installDisk: /dev/sda
     machineSpec:
@@ -42,7 +41,7 @@ nodes:
       arch: amd64
 
   - hostname: node03.${clusterName}.${clusterDNSSuffix}
-    ipAddress: 172.17.1.13
+    ipAddress: 172.18.2.3
     controlPlane: true
     installDisk: /dev/sda
     machineSpec:
@@ -51,6 +50,68 @@ nodes:
 
 controlPlane:
   patches:
+    # Disable search domain everywhere
+    - |-
+      machine:
+        network:
+          disableSearchDomain: true
+    # Enable KubePrism
+    - |-
+      machine:
+        features:
+          kubePrism:
+            enabled: true
+            port: 7445
+
+    # Cluster configuration
+    - |-
+      cluster:
+        allowSchedulingOnMasters: true
+        proxy:
+          disabled: true
+        controllerManager:
+          extraArgs:
+            node-cidr-mask-size-ipv6: "72"
+            feature-gates: MultiCIDRServiceAllocator=true
+
+    - |-
+      machine:
+        network:
+          interfaces:
+            - deviceSelector:
+                busPath: "0*"
+              dhcp: true
+
+    # Configure containerd
+    - |-
+      machine:
+        files:
+          - op: create
+            path: /etc/cri/conf.d/20-customization.part
+            content: |
+              [plugins]
+                [plugins."io.containerd.grpc.v1.cri"]
+                  enable_unprivileged_ports = true
+                  enable_unprivileged_icmp = true
+
+    # NFS Mount Configuration
+    # Todo: return to 4.2 after migrating off synology
+    - |-
+      machine:
+        files:
+          - op: overwrite
+            path: /etc/nfsmount.conf
+            permissions: 0o644
+            content: |
+              [ NFSMount_Global_Options ]
+              nfsvers=4.1
+              hard=True
+              noatime=True
+              nodiratime=True
+              rsize=131072
+              wsize=131072
+              nconnect=8
+
     # Kubelet configuration
     - |-
       machine:
@@ -60,36 +121,6 @@ controlPlane:
             rotate-server-certificates: "true"
           extraConfig:
             maxPods: 150
-
-    - |-
-      machine:
-        network:
-          extraHostEntries:
-            - ip: ${clusterEndpointIP}
-              aliases:
-                - ${clusterName}.${clusterDNSSuffix}
-          interfaces:
-            - deviceSelector:
-                busPath: "0"
-              dhcp: true
-              vip:
-                ip: ${clusterEndpointIP}
-
-    - |-
-      machine:
-        files:
-          - op: overwrite
-            path: /etc/nfsmount.conf
-            permissions: 0o644
-            content: |
-              [ NFSMount_Global_Options ]
-              nfsvers=4.2
-              hard=True
-              noatime=True
-              nodiratime=True
-              rsize=131072
-              wsize=131072
-              nconnect=8
 
     # Custom sysctls
     - |-
@@ -118,6 +149,8 @@ controlPlane:
           - siderolabs/i915-ucode
           - siderolabs/iscsi-tools
           - siderolabs/gasket-driver
+          - siderolabs/nonfree-kmod-nvidia
+          - siderolabs/nvidia-container-toolkit
 worker:
   schematic:
     customization:
@@ -129,3 +162,5 @@ worker:
           - siderolabs/i915-ucode
           - siderolabs/iscsi-tools
           - siderolabs/gasket-driver
+          - siderolabs/nonfree-kmod-nvidia
+          - siderolabs/nvidia-container-toolkit
