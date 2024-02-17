@@ -55,30 +55,30 @@ spec:
               value: /metadata/
             - name: STASH_CACHE
               value: /cache/
-          livenessProbe:
-            httpGet:
-              path: /
-              port: http
-              scheme: HTTP
-            initialDelaySeconds: 10
-            failureThreshold: 5
-            timeoutSeconds: 2
-          readinessProbe:
-            httpGet:
-              path: /
-              port: http
-              scheme: HTTP
-            initialDelaySeconds: 10
-            failureThreshold: 5
-            timeoutSeconds: 2
-          startupProbe:
-            httpGet:
-              path: /
-              port: http
-              scheme: HTTP
-            initialDelaySeconds: 10
-            failureThreshold: 5
-            timeoutSeconds: 2
+          # livenessProbe:
+          #   httpGet:
+          #     path: /
+          #     port: http
+          #     scheme: HTTP
+          #   initialDelaySeconds: 10
+          #   failureThreshold: 5
+          #   timeoutSeconds: 2
+          # readinessProbe:
+          #   httpGet:
+          #     path: /
+          #     port: http
+          #     scheme: HTTP
+          #   initialDelaySeconds: 10
+          #   failureThreshold: 5
+          #   timeoutSeconds: 2
+          # startupProbe:
+          #   httpGet:
+          #     path: /
+          #     port: http
+          #     scheme: HTTP
+          #   initialDelaySeconds: 10
+          #   failureThreshold: 5
+          #   timeoutSeconds: 2
           volumeMounts:
             - mountPath: /root/.stash
               name: config
