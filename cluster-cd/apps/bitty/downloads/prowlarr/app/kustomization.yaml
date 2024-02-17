@@ -5,8 +5,8 @@ kind: Kustomization
 namespace: downloads
 
 resources:
-  # - deployment.yaml
-  - service.yaml
+  - deployment.yaml
+  # - service.yaml
   - servicemonitor.yaml
   - ingress.yaml
   - restore.yaml
