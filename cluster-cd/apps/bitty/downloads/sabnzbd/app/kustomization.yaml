@@ -7,6 +7,7 @@ namespace: downloads
 resources:
   - deployment.yaml
   # - restore.yaml
+  - externalsecret.yaml
   - service.yaml
   - servicemonitor.yaml
   - ingress.yaml
