@@ -6,4 +6,3 @@ namespace: vpn
 
 resources:
   - helmrelease.yaml
-  - downloads-namespace.yaml

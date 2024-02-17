@@ -48,8 +48,6 @@ spec:
       secret.reloader.stakater.com/reload: pod-gateway-config
 
     DNS: 10.3.0.1
-    routed_namespaces:
-      - downloads
 
     settings:
       NOT_ROUTED_TO_GATEWAY_CIDRS: 10.244.0.0/16 10.96.0.0/12 192.168.0.0/16 172.16.0.0/12
