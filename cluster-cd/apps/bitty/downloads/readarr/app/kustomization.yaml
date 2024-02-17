@@ -11,7 +11,7 @@ resources:
   - ingress.yaml
   - externalsecret.yaml
   - ../../../../base/_templates/volsync
-  - restore.yaml
+  # - restore.yaml
 
 images:
   # TODO: non-nightly image to let renovate pick it up

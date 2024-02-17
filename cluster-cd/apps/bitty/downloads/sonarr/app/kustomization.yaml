@@ -5,13 +5,13 @@ kind: Kustomization
 namespace: downloads
 
 resources:
-  # - deployment.yaml
+  - deployment.yaml
   - service.yaml
   - servicemonitor.yaml
   - ingress.yaml
   - externalsecret.yaml
   - ../../../../base/_templates/volsync
-  - restore.yaml
+  # - restore.yaml
 
 images:
   - name: ghcr.io/onedr0p/sonarr-develop
