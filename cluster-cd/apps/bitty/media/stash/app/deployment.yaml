@@ -24,7 +24,6 @@ spec:
         app.kubernetes.io/instance: *name
         app.kubernentes.io/component: *name
     spec:
-      runtimeClassName: nvidia
       containers:
         - name: stash
           image: stashapp/stash:v0.23.1@sha256:96d4e778a9fb7199da28983413c9767617bafc69db781bf7d00cd2667344b76d
@@ -32,10 +31,10 @@ spec:
           resources:
             limits:
               memory: 4Gi
-              nvidia.com/gpu: 1
+              gpu.intel.com/i915: 1
             requests:
               memory: 4Gi
-              nvidia.com/gpu: 1
+              gpu.intel.com/i915: 1
           securityContext:
             seccompProfile:
               type: RuntimeDefault

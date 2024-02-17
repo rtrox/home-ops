@@ -1,0 +1,27 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: recovery
+  namespace: kube-system
+spec:
+  containers:
+    - name: ubuntu
+      image: ubuntu
+      command: [cp, /hostRoot/system/state/config.yaml, /backup/config.yaml]
+      volumeMounts:
+        - mountPath: /hostRoot
+          name: root
+          readOnly: true
+        - mountPath: /backup
+          name: backup
+          readOnly: false
+  volumes:
+    - name: root
+      hostPath:
+        path: /
+        type: Directory
+    - name: backup
+      nfs:
+        server: ${NFS_SERVER}
+        path: /volume1/backup/
