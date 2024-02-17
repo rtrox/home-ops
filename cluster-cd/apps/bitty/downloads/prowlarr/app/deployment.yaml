@@ -88,25 +88,6 @@ spec:
           volumeMounts:
             - mountPath: /config
               name: config
-        - image: ubuntu:bionic
-          name: fsfreeze
-          securityContext:
-            privileged: true
-            runAsUser: 0
-            runAsGroup: 0
-          volumeMounts:
-            - mountPath: "/config"
-              name: config
-              readOnly: false
-          command:
-            - "/bin/bash"
-            - "-c"
-            - "sleep infinity"
-          resources:
-            limits:
-              memory: 256Mi
-            requests:
-              memory: 64Mi
         - name: exportarr
           // TODO: pin once a new release is available.
           image: ghcr.io/onedr0p/exportarr:v1.4.0

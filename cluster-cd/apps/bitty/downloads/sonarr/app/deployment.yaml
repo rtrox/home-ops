@@ -27,12 +27,6 @@ spec:
         app.kubernetes.io/instance: *name
         app.kubernentes.io/component: *name
         setGateway: "true"
-      annotations:
-        backup.velero.io/backup-volumes: config
-        pre.hook.backup.velero.io/container: fsfreeze
-        pre.hook.backup.velero.io/command: '["/sbin/fsfreeze", "--freeze", "/config"]'
-        post.hook.backup.velero.io/container: fsfreeze
-        post.hook.backup.velero.io/command: '["/sbin/fsfreeze", "--unfreeze", "/config"]'
     spec:
       securityContext:
         fsGroup: 568
@@ -148,25 +142,6 @@ spec:
               port: metrics
             failureThreshold: 5
             periodSeconds: 10
-        - image: ubuntu:bionic
-          name: fsfreeze
-          securityContext:
-            privileged: true
-            runAsUser: 0
-            runAsGroup: 0
-          resources:
-            limits:
-              memory: 256Mi
-            requests:
-              memory: 64Mi
-          volumeMounts:
-            - mountPath: "/config"
-              name: config
-              readOnly: false
-          command:
-            - "/bin/bash"
-            - "-c"
-            - "sleep infinity"
       volumes:
         - name: config
           persistentVolumeClaim:

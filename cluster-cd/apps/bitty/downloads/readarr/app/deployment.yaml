@@ -24,13 +24,6 @@ spec:
         app.kubernetes.io/instance: *name
         app.kubernentes.io/component: *name
         setGateway: "true"
-      annotations:
-        backup.velero.io/backup-volumes-excludes: media
-        backup.velero.io/backup-volumes: config
-        pre.hook.backup.velero.io/container: fsfreeze
-        pre.hook.backup.velero.io/command: '["/sbin/fsfreeze", "--freeze", "/config"]'
-        post.hook.backup.velero.io/container: fsfreeze
-        post.hook.backup.velero.io/command: '["/sbin/fsfreeze", "--unfreeze", "/config"]'
     spec:
       securityContext:
         fsGroup: 568
@@ -101,25 +94,6 @@ spec:
               name: config
             - mountPath: /media
               name: media
-        - image: ubuntu:bionic
-          name: fsfreeze
-          resources:
-            limits:
-              memory: 256Mi
-            requests:
-              memory: 64Mi
-          securityContext:
-            privileged: true
-            runAsUser: 0
-            runAsGroup: 0
-          volumeMounts:
-            - mountPath: "/config"
-              name: config
-              readOnly: false
-          command:
-            - "/bin/bash"
-            - "-c"
-            - "sleep infinity"
         - name: exportarr
           image: ghcr.io/onedr0p/exportarr:v1.4.0
           securityContext:
