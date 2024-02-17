@@ -24,6 +24,25 @@ spec:
         app.kubernetes.io/instance: *name
         app.kubernentes.io/component: *name
     spec:
+      initContainers:
+        - name: ensure-ipv6-access
+          image: ghcr.io/onedr0p/alpine:rolling
+          imagePullPolicy: IfNotPresent
+          command:
+            - "sh"
+            - "-c"
+            - 'sed -i "s/^dangerous_allow_public_without_auth:.*$/dangerous_allow_public_without_auth: true/" /root/.stash/config.yml || true'
+          securityContext:
+            seccompProfile:
+              type: RuntimeDefault
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            limits:
+              memory: 16Mi
+            requests:
+              memory: 16Mi
       containers:
         - name: stash
           image: stashapp/stash:v0.23.1@sha256:96d4e778a9fb7199da28983413c9767617bafc69db781bf7d00cd2667344b76d
