@@ -1,0 +1,18 @@
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: recyclarr-allow-egress
+  namespace: downloads
+spec:
+  endpointSelector:
+    matchLabels:
+      k8s-app: recyclarr
+  egress:
+    - toEntities:
+        - cluster
+        - world
+  ingress:
+    - fromEntities:
+        - cluster
+        - world
