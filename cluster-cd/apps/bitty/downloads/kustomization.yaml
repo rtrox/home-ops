@@ -8,3 +8,6 @@ resources:
   - volsyncnetworkpolicy.yaml
   - sabnzbd/ks.yaml
   - prowlarr/ks.yaml
+  - readarr/ks.yaml
+  - sonarr/ks.yaml
+  - radarr/ks.yaml

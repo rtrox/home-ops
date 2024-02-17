@@ -1,0 +1,22 @@
+---
+# Only one ServiceMonitor needed, it will pick
+# up any pod matched by the Service
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app.kubernetes.io/component: sonarr
+    app.kubernetes.io/instance: &name sonarr
+    app.kubernetes.io/name: *name
+    app.kubernetes.io/part-of: *name
+    jobLabel: *name
+  name: *name
+spec:
+  endpoints:
+    - port: metrics
+      scheme: http
+  jobLabel: jobLabel
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: *name
+      app.kubernetes.io/instance: *name
