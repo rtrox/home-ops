@@ -1,0 +1,21 @@
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: in-cluster-egress-only
+  namespace: downloads
+spec:
+  endpointSelector:
+    matchLabels: {}
+  egress:
+    - toCIDR:
+        - 10.0.0.0/8
+    - toEntities:
+        - cluster
+  ingress:
+    - fromCIDR:
+        - 172.16.0.0/12
+        - 192.168.0.0/16
+        - 10.0.0.0/8
+    - fromEntities:
+        - cluster

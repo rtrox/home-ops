@@ -1,0 +1,29 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    kubernetes.io/tls-acme: "true"
+    ingress: "externaldns"
+  labels:
+    app.kubernetes.io/instance: &name sabnzbd
+    app.kubernetes.io/name: *name
+  name: *name
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: &host sab.${SECRET_DOMAIN}
+      http:
+        paths:
+          - backend:
+              service:
+                name: *name
+                port:
+                  name: http
+            path: /
+            pathType: Prefix
+  tls:
+    - hosts:
+        - *host
+      secretName: sabnzbd-tls

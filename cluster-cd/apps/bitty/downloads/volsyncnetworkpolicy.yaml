@@ -1,0 +1,33 @@
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: volsync-b2-destinations-only
+  namespace: downloads
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/created-by: volsync
+  egress:
+    - toCIDR:
+        - 10.0.0.0/8
+        # Source: https://help.backblaze.com/hc/en-us/articles/217664588-Backblaze-IP-Address-List
+        - 206.190.208.0/21
+        - 104.153.232.0/21
+        - 149.137.128.0/20
+        - 45.11.36.0/22
+        - 2605:72c0::/32
+    - toEntities:
+        - cluster
+  ingress:
+    - fromCIDR:
+        - 172.16.0.0/12
+        - 192.168.0.0/16
+        - 10.0.0.0/8
+        - 206.190.208.0/21
+        - 104.153.232.0/21
+        - 149.137.128.0/20
+        - 45.11.36.0/22
+        - 2605:72c0::/32
+    - fromEntities:
+        - cluster

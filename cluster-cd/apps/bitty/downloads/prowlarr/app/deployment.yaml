@@ -1,0 +1,145 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: &name prowlarr
+    app.kubernetes.io/instance: *name
+    app.kubernetes.io/component: *name
+    app.kubernetes.io/part-of: *name
+    k8s-app: *name
+  name: *name
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: *name
+      app.kubernetes.io/instance: *name
+      app.kubernentes.io/component: *name
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: *name
+        app.kubernetes.io/instance: *name
+        app.kubernentes.io/component: *name
+        setGateway: "true"
+      annotations:
+        secret.reloader.stakater.com/reload: auto
+    spec:
+      securityContext:
+        fsGroup: 568
+        fsGroupChangePolicy: "OnRootMismatch"
+      containers:
+        - name: prowlarr
+          image: ghcr.io/onedr0p/prowlarr-nightly:1.5.2.3447
+          imagePullPolicy: IfNotPresent
+          resources:
+            limits:
+              memory: 1Gi
+            requests:
+              memory: 250Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsUser: 568
+            runAsGroup: 568
+            seccompProfile:
+              type: RuntimeDefault
+            capabilities:
+              drop:
+                - ALL
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: TZ
+              value: ${LOCAL_TZ}
+            - name: PROWLARR__PORT
+              value: "8080"
+            - name: PROWLARR_INSTANCE_NAME
+              value: Prowlarr
+          envFrom:
+            - secretRef:
+                name: prowlarr-secret
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 10
+            failureThreshold: 5
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 10
+            failureThreshold: 5
+            timeoutSeconds: 2
+          startupProbe:
+            httpGet:
+              path: /
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 10
+            failureThreshold: 5
+            timeoutSeconds: 2
+          volumeMounts:
+            - mountPath: /config
+              name: config
+        - image: ubuntu:bionic
+          name: fsfreeze
+          securityContext:
+            privileged: true
+            runAsUser: 0
+            runAsGroup: 0
+          volumeMounts:
+            - mountPath: "/config"
+              name: config
+              readOnly: false
+          command:
+            - "/bin/bash"
+            - "-c"
+            - "sleep infinity"
+          resources:
+            limits:
+              memory: 256Mi
+            requests:
+              memory: 64Mi
+        - name: exportarr
+          // TODO: pin once a new release is available.
+          image: ghcr.io/onedr0p/exportarr:v1.4.0
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsUser: 568
+            runAsGroup: 568
+            seccompProfile:
+              type: RuntimeDefault
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            limits:
+              memory: 256Mi
+            requests:
+              memory: 64Mi
+          args:
+            - prowlarr
+          env:
+            - name: PORT
+              value: "8081"
+            - name: URL
+              value: http://localhost:8080
+            - name: ENABLE_ADDITIONAL_METRICS
+              value: "true"
+            - name: APIKEY
+              valueFrom:
+                secretKeyRef:
+                  name: prowlarr-secret
+                  key: PROWLARR__API_KEY
+      volumes:
+        # TODO: NFS Volumes
+        - name: config
+          persistentVolumeClaim:
+            claimName: prowlarr
