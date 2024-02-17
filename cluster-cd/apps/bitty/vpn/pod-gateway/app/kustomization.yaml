@@ -6,3 +6,4 @@ namespace: vpn
 
 resources:
   - helmrelease.yaml
+  - externalsecret.yaml
