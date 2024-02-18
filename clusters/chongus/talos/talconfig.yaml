@@ -131,7 +131,17 @@ controlPlane:
         sysctls:
           fs.inotify.max_user_watches: "1048576"
           fs.inotify.max_user_instances: "8192"
+          net.core.bpf_jit_harden: 1
 
+    # Add Kernel Modules
+    - |-
+      machine:
+        kernel:
+          modules:
+            - name: "nvidia"
+            - name: "nvidia_uvm"
+            - name: "nvidia_drm"
+            - name: "nvidia_modeset"
     # Enable K8s Talos API Access
     - |-
       machine:
