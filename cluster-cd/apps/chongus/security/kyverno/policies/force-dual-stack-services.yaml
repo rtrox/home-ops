@@ -1,0 +1,40 @@
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: add-dualstack-to-services
+  annotations:
+    policies.kyverno.io/title: Add Dual Stack to Services
+    policies.kyverno.io/category: IPv6
+    policies.kyverno.io/severity: low
+    policies.kyverno.io/subject: Service
+    policies.kyverno.io/description: >-
+      Kubernetes defaults to SingleStack for services. This policy sets
+      the ipFamilies and IpFamilyPolicyto DualStack for all services.
+spec:
+  rules:
+    - name: add-dualstack-to-services
+      match:
+        any:
+          - resources:
+              kinds:
+                - Service
+      exclude:
+        any:
+          - resources:
+              kinds:
+                - Service
+              annotations:
+                kyverno.io/exclude: 'true'
+          - resources:
+              kinds:
+                - Service
+              annotations:
+                dualstack.kyverno.home.arpa/disabled: 'true'
+      mutate:
+        patchStrategicMerge:
+          spec:
+            ipFamilies:
+              - IPv4
+              - IPv6
+            ipFamilyPolicy: PreferDualStack
