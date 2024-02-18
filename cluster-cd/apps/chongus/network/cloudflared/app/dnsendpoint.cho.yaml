@@ -4,7 +4,7 @@ metadata:
     name: cloudflared-tunnel
 spec:
     endpoints:
-        - dnsName: ENC[AES256_GCM,data:tYNWdZvobJZhbC8/fTJxrQNn+TvOvk2x,iv:RJMiG26uP8vlfL78u/jwQBGhv2vTG/T3P/yJkVCoLhU=,tag:gRrsQBQ1TSWB6FMq3p89Xg==,type:str]
+        - dnsName: ENC[AES256_GCM,data:S2d43KycYB5tT0HP9q2hN5q0wRFWZoZm,iv:rRoSeLgQXSKO6CP02tKDBb7xmAEEP6tLl9i/PsfFgmg=,tag:HMeh8Jg+WuJhBAv2ZY6bEg==,type:str]
           recordType: CNAME
           targets:
             - ENC[AES256_GCM,data:rt9Xy4S3Pi/QAbfM1G7JzCdfzSBf/ptHgiGr4OHQF5o7mbdo/Yb4oeEVtRuO7XxRXj3Mmj0=,iv:2mufDQwvivXo9fCZ43xa1LSKjcLUnu3l9R476RwM4Mk=,tag:MONvnXhkoJhK0RtC3pUBuw==,type:str]
@@ -53,8 +53,8 @@ sops:
             QmxSRTQwNm1XR3NPR1ZMdCtWNnJQcFEKmrwmUAZja6UmWABDRzY1WU7eA0vfCYh7
             X7Z4kZtO66JuCwWK37J0vP+z3aDLM6CcYPQIw9YSaP5iA4fZQJMw0Q==
             -----END AGE ENCRYPTED FILE-----
-    lastmodified: "2024-02-18T06:13:31Z"
-    mac: ENC[AES256_GCM,data:1beBznPny3fZ2Bvrgk9NCwlbImL95PBO0wSQXQgwZSTpd+aysFIQAEeWQddYYbJaxGuLfqwEVJBi0wz0uHl4/tygR4fUCf2Q3eRphl5OSFVO+9I9D/pIDYRxxiFA5IU/z91Dehag9xEQwH9Zqp9bOesMMUDlc9WfAvITrEy8wPs=,iv:v6J8FWglM74R4CefrcjrG8Q68iQLmCXMI8Vfm3hn3uw=,tag:SsWAjKqv2FoBU7USUWboow==,type:str]
+    lastmodified: "2024-02-18T06:20:27Z"
+    mac: ENC[AES256_GCM,data:lephGV4S0bmRL0R/Y5pRKwPw0d6uQSWI89es6TAB0MHznFkjOJbiEZfiZNKdULNBY2tFqyul4FxB5vraZZ3Jp1NvDGB07LLGlg5EkKgzJDlu4856picfcCalPaO8MRU9hZMAVqBLAg+DbT0gB1YuCZb7Y4uUjIq+StFzD4R9/8U=,iv:c/YKSzG+XAOnksIXc0LUJaK9fL1sDrwdtKKKNYwQttk=,tag:eMJMO6FFvAuGktBEPZjw2A==,type:str]
     pgp: []
     encrypted_regex: ^(data|stringData|dnsName|targets)$
     version: 3.8.1
