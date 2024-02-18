@@ -10,7 +10,7 @@ spec:
   commonMetadata:
     labels:
       app.kubernetes.io/name: *app
-  path: ./cluster-cd/apps/bitty/rook-ceph/rook-ceph/app
+  path: ./cluster-cd/apps/${CLUSTER_NAME}/rook-ceph/rook-ceph/app
   prune: false # never should be deleted
   sourceRef:
     kind: GitRepository
@@ -33,7 +33,7 @@ spec:
   commonMetadata:
     labels:
       app.kubernetes.io/name: *app
-  path: ./cluster-cd/apps/bitty/rook-ceph/rook-ceph/cluster
+  path: ./cluster-cd/apps/${CLUSTER_NAME}/rook-ceph/rook-ceph/cluster
   prune: false # never should be deleted
   sourceRef:
     kind: GitRepository

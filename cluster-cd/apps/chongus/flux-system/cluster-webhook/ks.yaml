@@ -11,7 +11,7 @@ spec:
     labels:
       app.kubernetes.io/name: *appname
   interval: 10m
-  path: ./cluster-cd/apps/chongus/flux-system/cluster-webhook/app
+  path: ./cluster-cd/apps/${CLUSTER_NAME}/flux-system/cluster-webhook/app
   prune: true
   sourceRef:
     kind: GitRepository

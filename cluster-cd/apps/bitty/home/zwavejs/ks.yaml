@@ -10,7 +10,7 @@ spec:
   commonMetadata:
     labels:
       app.kubernetes.io/name: *app
-  path: ./cluster-cd/apps/bitty/home/zwavejs/app
+  path: ./cluster-cd/apps/${CLUSTER_NAME}/home/zwavejs/app
   prune: false # never should be deleted
   sourceRef:
     kind: GitRepository

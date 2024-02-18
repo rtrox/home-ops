@@ -12,7 +12,7 @@ spec:
       app.kubernetes.io/name: *app
   dependsOn:
     - name: cert-manager-issuers
-  path: ./cluster-cd/apps/bitty/media/calibre-web/app
+  path: ./cluster-cd/apps/${CLUSTER_NAME}/media/calibre-web/app
   prune: true
   sourceRef:
     kind: GitRepository

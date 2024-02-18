@@ -12,7 +12,7 @@ spec:
       app.kubernetes.io/name: *app
   dependsOn:
     - name: rook-ceph-cluster
-  path: ./cluster-cd/apps/bitty/media/stash/app
+  path: ./cluster-cd/apps/${CLUSTER_NAME}/media/stash/app
   prune: true
   sourceRef:
     kind: GitRepository

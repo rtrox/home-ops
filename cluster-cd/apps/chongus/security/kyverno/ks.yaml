@@ -6,7 +6,7 @@ metadata:
   namespace: flux-system
 spec:
   targetNamespace: security
-  path: ./cluster-cd/apps/chongus/security/kyverno/app
+  path: ./cluster-cd/apps/${CLUSTER_NAME}/security/kyverno/app
   prune: true
   sourceRef:
     kind: GitRepository
@@ -25,7 +25,7 @@ spec:
   targetNamespace: security
   dependsOn:
     - name: kyverno
-  path: ./cluster-cd/apps/chongus/security/kyverno/policies
+  path: ./cluster-cd/apps/${CLUSTER_NAME}/security/kyverno/policies
   prune: true
   sourceRef:
     kind: GitRepository

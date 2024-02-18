@@ -12,7 +12,7 @@ spec:
       app.kubernetes.io/name: *app
   dependsOn:
     - name: external-secrets-stores
-  path: ./cluster-cd/apps/bitty/database/cloudnative-pg/app
+  path: ./cluster-cd/apps/${CLUSTER_NAME}/database/cloudnative-pg/app
   prune: true
   sourceRef:
     kind: GitRepository
@@ -35,7 +35,7 @@ spec:
       app.kubernetes.io/name: *app
   dependsOn:
     - name: cloudnative-pg
-  path: ./cluster-cd/apps/bitty/database/cloudnative-pg/cluster
+  path: ./cluster-cd/apps/${CLUSTER_NAME}/database/cloudnative-pg/cluster
   prune: true
   sourceRef:
     kind: GitRepository

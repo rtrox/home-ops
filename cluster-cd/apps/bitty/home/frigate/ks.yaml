@@ -10,7 +10,7 @@ spec:
   commonMetadata:
     labels:
       app.kubernetes.io/name: *app
-  path: ./cluster-cd/apps/bitty/home/frigate/app
+  path: ./cluster-cd/apps/${CLUSTER_NAME}/home/frigate/app
   prune: false # never should be deleted
   sourceRef:
     kind: GitRepository
