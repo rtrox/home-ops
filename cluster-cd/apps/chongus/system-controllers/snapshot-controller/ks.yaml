@@ -11,7 +11,7 @@ spec:
     labels:
       app.kubernetes.io/name: *appname
   interval: 10m
-  path: ./cluster-cd/apps/bitty/system-controllers/snapshot-controller/app
+  path: ./cluster-cd/apps/chongus/system-controllers/snapshot-controller/app
   prune: true
   sourceRef:
     kind: GitRepository

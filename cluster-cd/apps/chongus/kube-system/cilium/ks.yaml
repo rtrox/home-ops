@@ -13,7 +13,7 @@ spec:
     labels:
       app.kubernetes.io/name: *appname
   interval: 10m
-  path: ./cluster-cd/apps/bitty/kube-system/cilium/app
+  path: ./cluster-cd/apps/chongus/kube-system/cilium/app
   prune: true
   sourceRef:
     kind: GitRepository
@@ -33,7 +33,7 @@ spec:
       app.kubernetes.io/name: cilium
       app.kubernetes.io/component: ingress
   interval: 10m
-  path: ./cluster-cd/apps/bitty/kube-system/cilium/ingress
+  path: ./cluster-cd/apps/chongus/kube-system/cilium/ingress
   prune: true
   sourceRef:
     kind: GitRepository

@@ -27,7 +27,8 @@ nodes:
   - hostname: node01.${clusterName}.${clusterDNSSuffix}
     ipAddress: 172.18.2.1
     controlPlane: true
-    installDisk: /dev/sda
+    installDiskSelector:
+      size: < 500GB
     machineSpec:
       mode: metal
       arch: amd64
@@ -35,7 +36,8 @@ nodes:
   - hostname: node02.${clusterName}.${clusterDNSSuffix}
     ipAddress: 172.18.2.2
     controlPlane: true
-    installDisk: /dev/sda
+    installDiskSelector:
+      size: < 500GB
     machineSpec:
       mode: metal
       arch: amd64
@@ -43,7 +45,8 @@ nodes:
   - hostname: node03.${clusterName}.${clusterDNSSuffix}
     ipAddress: 172.18.2.3
     controlPlane: true
-    installDisk: /dev/sda
+    installDiskSelector:
+      size: < 500GB
     machineSpec:
       mode: metal
       arch: amd64
