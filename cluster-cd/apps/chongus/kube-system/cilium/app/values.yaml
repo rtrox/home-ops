@@ -1,7 +1,7 @@
 ---
 cluster:
-  name: bitty
-  id: 1
+  name: chongus
+  id: 2
 
 cni:
   exclusive: false

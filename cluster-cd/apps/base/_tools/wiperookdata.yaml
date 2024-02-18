@@ -3,7 +3,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: "wipe-rook-data-job-node01"
-  namespace: "rook-ceph"
+  namespace: "kube-system"
 spec:
   ttlSecondsAfterFinished: 3600
   template:
@@ -32,7 +32,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: "wipe-rook-data-job-node02"
-  namespace: "rook-ceph"
+  namespace: "kube-system"
 spec:
   ttlSecondsAfterFinished: 3600
   template:
@@ -61,7 +61,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: "wipe-rook-data-job-node03"
-  namespace: "rook-ceph"
+  namespace: "kube-system"
 spec:
   ttlSecondsAfterFinished: 3600
   template:
