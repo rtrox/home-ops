@@ -11,7 +11,7 @@ ingress:
       ingress: externaldns
     ingressClassName: nginx
     host:
-      name: &host rook.${SECRET_DOMAIN}
+      name: &host rook.${CLUSTER_NAME}.${SECRET_DOMAIN}
       path: /
     tls:
       - hosts:
