@@ -43,7 +43,7 @@ spec:
           imagePullPolicy: IfNotPresent
           resources:
             limits:
-              cpu: 1
+              cpu: 50m
               memory: 4Gi
             requests:
               memory: 512Mi
@@ -95,7 +95,7 @@ spec:
           imagePullPolicy: IfNotPresent
           resources:
             limits:
-              cpu: 1
+              cpu: 10m
               memory: 512Mi
           workingDir: /config
           args:
