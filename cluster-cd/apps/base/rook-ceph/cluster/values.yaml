@@ -76,7 +76,7 @@ cephObjectStores:
         port: 80
         resources:
           requests:
-            cpu: 3000m
+            cpu: 300m
             memory: 3Gi
           limits:
             memory: 6Gi
