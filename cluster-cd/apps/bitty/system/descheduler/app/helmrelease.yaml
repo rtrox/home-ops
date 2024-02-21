@@ -18,3 +18,7 @@ spec:
     - kind: ConfigMap
       name: descheduler-values
       valuesKey: values.yaml
+  values:
+    resources:
+      requests:
+        cpu: 10m

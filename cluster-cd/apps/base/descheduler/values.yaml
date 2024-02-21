@@ -32,6 +32,16 @@ deschedulerPolicy:
             - RemovePodsViolatingInterPodAntiAffinity
             - RemovePodsViolatingNodeAffinity
             - RemovePodsViolatingNodeTaints
+affinity:
+  podAntiAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchExpressions:
+            - key: app.kubernetes.io/name
+              operator: In
+              values:
+                - descheduler
+        topologyKey: "kubernetes.io/hostname"
 service:
   enabled: true
 serviceMonitor:
