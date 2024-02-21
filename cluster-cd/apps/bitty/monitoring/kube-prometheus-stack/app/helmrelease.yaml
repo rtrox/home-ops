@@ -38,8 +38,6 @@ spec:
     - kind: ConfigMap
       name: kube-prometheus-stack-values
     - kind: ConfigMap
-      name: thanos-cluster-values
-    - kind: ConfigMap
       name: bucket-thanos
       valuesKey: BUCKET_NAME
       targetPath: prometheus.prometheusSpec.thanos.objectStorageConfig.secret.config.bucket
