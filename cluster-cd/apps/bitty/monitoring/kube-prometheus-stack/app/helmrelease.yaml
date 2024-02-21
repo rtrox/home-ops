@@ -30,6 +30,8 @@ spec:
           objectStorageConfig:
             secret:
               type: s3
+              config:
+                insecure: true
     alertmanager:
       config:
         global:
