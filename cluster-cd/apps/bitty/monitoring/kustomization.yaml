@@ -8,3 +8,4 @@ resources:
   # Flux-Kustomizations
   - ./monitoring-shared/ks.yaml
   - ./kube-prometheus-stack/ks.yaml
+  - ./thanos/ks.yaml

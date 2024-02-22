@@ -1,0 +1,65 @@
+---
+image:
+  registry: quay.io
+  repository: thanos/thanos
+  tag: v0.34.1
+query:
+  enabled: true
+  replicaCount: 2
+  replicaLabels:
+    - replica
+  dnsDiscovery:
+    sidecarsService: prometheus-thanos-discovery
+    sidecarsNamespace: monitoring
+  ingress:
+    enabled: true
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+      kubernetes.io/tls-acme: "true"
+      ingress: externaldns
+    hostname: thanos-query.${SECRET_DOMAIN}
+    tls: true
+queryFrontend:
+  enabled: false
+bucketweb:
+  enabled: true
+compactor:
+  enabled: true
+  extraFlags:
+    - --compact.concurrency=4
+    - --delete-delay=30m
+  retentionResolutionRaw: 30d
+  retentionResolution5m: 120d
+  retentionResolution1h: 10y
+  persistence:
+    enabled: false
+storegateway:
+  podSecurityContext:
+    enabled: true
+    fsGroup: 0
+  containerSecurityContext:
+    enabled: true
+    runAsUser: 0
+    runAsNonRoot: false
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+  enabled: true
+  persistence:
+    enabled: true
+    size: 40Gi
+  resources:
+    requests:
+      memory: 5Gi
+    limits:
+      memory: 7Gi
+ruler:
+  enabled: false
+metrics:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+existingObjstoreSecret: ""
+objstoreConfig:
+  type: s3
+  config:
+    insecure: true
