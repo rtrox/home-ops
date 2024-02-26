@@ -5,4 +5,4 @@ kind: Kustomization
 resources:
   - ./claim.yaml
   - ./b2.yaml
-  # - ./minio.yaml
+  - ./minio.yaml
