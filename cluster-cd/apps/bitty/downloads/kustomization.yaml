@@ -10,5 +10,5 @@ resources:
   - prowlarr/ks.yaml
   - readarr/ks.yaml
   - sonarr/ks.yaml
-  # - radarr/ks.yaml
+  - radarr/ks.yaml
   - recyclarr/ks.yaml
