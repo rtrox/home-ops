@@ -31,7 +31,7 @@ spec:
           command:
             - "sh"
             - "-c"
-            - 'sed -i "s/^dangerous_allow_public_without_auth:.*$/dangerous_allow_public_without_auth: true/" /root/.stash/config.yml || true'
+            - 'sed -i "s/^dangerous_allow_public_without_auth:.*$/dangerous_allow_public_without_auth: true/" /root/.stash/config.yml 2>&1 || true'
           securityContext:
             seccompProfile:
               type: RuntimeDefault
@@ -43,6 +43,9 @@ spec:
               memory: 16Mi
             requests:
               memory: 16Mi
+          volumeMounts:
+            - mountPath: /root/.stash
+              name: config
       containers:
         - name: stash
           image: stashapp/stash:v0.23.1@sha256:96d4e778a9fb7199da28983413c9767617bafc69db781bf7d00cd2667344b76d
