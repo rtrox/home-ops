@@ -9,4 +9,4 @@ resources:
   - ./calibre/ks.yaml
   - ./calibre-web/ks.yaml
   - ./jellyfin/ks.yaml
-  - ./stash/ks.yaml
+  # - ./stash/ks.yaml
