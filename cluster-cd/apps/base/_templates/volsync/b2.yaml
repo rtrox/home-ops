@@ -14,12 +14,16 @@ spec:
       engineVersion: v2
       data:
         RESTIC_REPOSITORY: "s3:{{ .endpoint }}/{{ .bucket }}/${CLUSTER_NAME}/${APP}"
-        RESTIC_PASSWORD: "{{ .restic_password }}"
+        RESTIC_PASSWORD: "{{ .RESTIC_PASSWORD }}"
         AWS_ACCESS_KEY_ID: "{{ .application_key_id }}"
         AWS_SECRET_ACCESS_KEY: "{{ .application_key }}"
   dataFrom:
     - extract:
         key: VOLSYNC_BACKBLAZE_BUCKET
+  data:
+    - secretKey: RESTIC_PASSWORD
+      remoteRef:
+        key: RESTIC_PASSWORD
 ---
 # yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/volsync.backube/replicationsource_v1alpha1.json
 apiVersion: volsync.backube/v1alpha1
