@@ -101,6 +101,6 @@ spec:
         - name: media
           nfs:
             server: ${NFS_SERVER}
-            path: /volume1/media
+            path: /mnt/rusty/media
         - name: transcodes
           emptyDir: {}

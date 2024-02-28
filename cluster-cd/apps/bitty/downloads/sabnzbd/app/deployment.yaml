@@ -96,10 +96,6 @@ spec:
           volumeMounts:
             - mountPath: /config
               name: config
-            - mountPath: /incomplete
-              name: incomplete
-            - mountPath: /downloads
-              name: downloads
             - mountPath: /media
               name: media
         - name: sabnzbd-exporter
@@ -138,13 +134,7 @@ spec:
         - name: config
           persistentVolumeClaim:
             claimName: sabnzbd
-        - name: downloads
-          nfs:
-            server: ${NFS_SERVER}
-            path: /volume1/downloads
         - name: media
           nfs:
             server: ${NFS_SERVER}
-            path: /volume1/media
-        - name: incomplete
-          emptyDir: {}
+            path: /mnt/rusty/media

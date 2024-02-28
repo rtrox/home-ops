@@ -72,6 +72,6 @@ spec:
         - name: books
           nfs:
             server: ${NFS_SERVER}
-            path: /volume1/media/books
+            path: /mnt/rusty/media/books
         - name: cache
           emptyDir: {}

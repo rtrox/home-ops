@@ -121,18 +121,18 @@ spec:
         - name: media
           nfs:
             server: ${NFS_SERVER}
-            path: /volume1/media/.homework/library/
+            path: /mnt/rusty/media/.homework/library/
         - name: generated
           nfs:
             server: ${NFS_SERVER}
-            path: /volume1/media/.homework/generated/
+            path: /mnt/rusty/media/.homework/generated/
         - name: metadata
           nfs:
             server: ${NFS_SERVER}
-            path: /volume1/media/.homework/metadata/
+            path: /mnt/rusty/media/.homework/metadata/
         - name: blobs
           nfs:
             server: ${NFS_SERVER}
-            path: /volume1/media/.homework/blobs/
+            path: /mnt/rusty/media/.homework/blobs/
         - name: cache
           emptyDir: {}
