@@ -3,6 +3,7 @@ fullnameOverride: prometheus
 
 alertmanager:
   enabled: true
+
   alertmanagerSpec:
     storage:
       volumeClaimTemplate:
@@ -10,6 +11,7 @@ alertmanager:
           resources:
             requests:
               storage: 1Gi
+
   config:
     global:
       slack_api_url: ${SECRET_DISCORD_ALERT_WEBHOOK_URL}/slack
