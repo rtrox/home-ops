@@ -39,19 +39,19 @@ spec:
   valuesFrom:
     - kind: ConfigMap
       name: kube-prometheus-stack-values
-    - kind: ConfigMap
-      name: bucket-thanos
-      valuesKey: BUCKET_NAME
+    - kind: Secret
+      name: prometheus-minio-bucket
+      valuesKey: BUCKET
       targetPath: prometheus.prometheusSpec.thanos.objectStorageConfig.secret.config.bucket
-    - kind: ConfigMap
-      name: bucket-thanos
-      valuesKey: BUCKET_HOST
+    - kind: Secret
+      name: prometheus-minio-bucket
+      valuesKey: ENDPOINT
       targetPath: prometheus.prometheusSpec.thanos.objectStorageConfig.secret.config.endpoint
     - kind: Secret
-      name: bucket-thanos
+      name: prometheus-minio-bucket
       valuesKey: AWS_ACCESS_KEY_ID
       targetPath: prometheus.prometheusSpec.thanos.objectStorageConfig.secret.config.access_key
     - kind: Secret
-      name: bucket-thanos
+      name: prometheus-minio-bucket
       valuesKey: AWS_SECRET_ACCESS_KEY
       targetPath: prometheus.prometheusSpec.thanos.objectStorageConfig.secret.config.secret_key

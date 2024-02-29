@@ -5,4 +5,4 @@ kind: Kustomization
 resources:
   - ../../../../base/kube-prometheus-stack
   - helmrelease.yaml
-  # - externalsecret.yaml
+  - externalsecret.yaml
