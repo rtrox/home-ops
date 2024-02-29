@@ -157,7 +157,7 @@ alertmanager:
       ingress: externaldns
     enabled: true
     hosts:
-      - &am_host am.${SECRET_DOMAIN}
+      - &am_host am-${CLUSTER_NAME}.${SECRET_DOMAIN}
     ingressClassName: nginx
     pathType: Prefix
     tls:
@@ -202,7 +202,7 @@ prometheus:
       ingress: externaldns
     enabled: true
     hosts:
-      - &prom_host prom.${SECRET_DOMAIN}
+      - &prom_host prom-${CLUSTER_NAME}.${SECRET_DOMAIN}
     ingressClassName: nginx
     pathType: Prefix
     tls:
