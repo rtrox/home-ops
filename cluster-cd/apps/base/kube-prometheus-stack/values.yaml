@@ -11,6 +11,8 @@ alertmanager:
             requests:
               storage: 1Gi
   config:
+    global:
+      slack_api_url: ${SECRET_DISCORD_ALERT_WEBHOOK_URL}/slack
     receivers:
       - name: "null"
       - name: discord
@@ -229,4 +231,9 @@ prometheus:
       image: quay.io/thanos/thanos:v0.34.0
       # renovate: datasource=docker depName=quay.io/thanos/thanos
       version: v0.34.0
+      objectStorageConfig:
+        secret:
+          type: s3
+          config:
+            insecure: true
     walCompression: true

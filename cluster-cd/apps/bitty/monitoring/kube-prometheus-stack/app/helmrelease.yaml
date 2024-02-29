@@ -23,19 +23,6 @@ spec:
   dependsOn:
     - name: rook-ceph-cluster
       namespace: rook-ceph
-  values:
-    prometheus:
-      prometheusSpec:
-        thanos:
-          objectStorageConfig:
-            secret:
-              type: s3
-              config:
-                insecure: true
-    alertmanager:
-      config:
-        global:
-          slack_api_url: ${SECRET_DISCORD_ALERT_WEBHOOK_URL}/slack
   valuesFrom:
     - kind: ConfigMap
       name: kube-prometheus-stack-values
