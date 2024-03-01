@@ -5,13 +5,10 @@ kind: Kustomization
 namespace: downloads
 
 resources:
-  - deployment.yaml
-  - service.yaml
-  - ingress.yaml
+  - helmrelease.yaml
   - ../../../../base/_templates/volsync
   # - restore.yaml
 
 images:
-  # TODO: non-nightly image to let renovate pick it up
   - name: ghcr.io/koush/scrypted
     newTag: 18-jammy-full-v0.93.0
