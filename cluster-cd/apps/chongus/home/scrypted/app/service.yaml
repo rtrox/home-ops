@@ -10,10 +10,10 @@ spec:
   type: ClusterIP
   ports:
     - name: http
-      port: 8080
+      port: 11080
       protocol: TCP
-    - name: metrics
-      port: 8081
+    - name: rebroadcast
+      port: 34135
       protocol: TCP
   selector:
     app.kubernetes.io/name: *name

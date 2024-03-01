@@ -6,8 +6,4 @@ resources:
   # Pre Flux-Kustomizations
   - ./namespace.yaml
   # Flux-Kustomizations
-  - ./home-assistant/ks.yaml
-  - ./zwavejs/ks.yaml
-  - ./frigate/ks.yaml
-  - ./mosquitto/ks.yaml
-  - ./garbage-api/ks.yaml
+  - ./scrypted/ks.yaml

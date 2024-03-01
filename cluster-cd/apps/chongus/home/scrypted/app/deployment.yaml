@@ -63,10 +63,14 @@ spec:
           readinessProbe: *probes
           startupProbe: *probes
           volumeMounts:
-            - mountPath: /config
+            - mountPath: /server/volume
               name: config
             - mountPath: /recs
               name: data
+            - mountPath: /.npm
+              name: npm-cache
+            - mountPath: /.cache
+              name: cache
       volumes:
         - name: config
           persistentVolumeClaim:
@@ -74,7 +78,7 @@ spec:
         - name: data
           nfs:
             server: ${NFS_SERVER}
-            path: /mnt/rusty/scrypted
+            path: /mnt/rusty/nvr
         - name: npm-cache
           emptyDir: {}
         - name: cache
