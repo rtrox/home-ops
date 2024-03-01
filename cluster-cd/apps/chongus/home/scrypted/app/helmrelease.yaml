@@ -25,9 +25,8 @@ spec:
           reloader.stakater.com/auto: "true"
 
         pod:
-          pod:
-            hostNetwork: true
-            dnsPolicy: ClusterFirstWithHostNet
+          hostNetwork: true
+          dnsPolicy: ClusterFirstWithHostNet
           nodeSelector:
             google.feature.node.kubernetes.io/coral: "true"
             nvidia.feature.node.kubernetes.io/nvidia-gpu: "true"
