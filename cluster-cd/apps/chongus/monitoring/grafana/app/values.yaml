@@ -73,16 +73,15 @@ grafana.ini:
     enabled: true
     name: Keycloak
     allow_sign_up: true
-    client_id: ${GRAFANA_KEYCLOAK_CLIENT_ID}
-    client_secret: ${GRAFANA_KEYCLOAK_CLIENT_SECRET}
     scopes: "openid email profile offline_access roles"
     auth_url: https://auth.${SECRET_DOMAIN}/auth/realms/${KEYCLOAK_REALM}/protocol/openid-connect/auth
     token_url: https://auth.${SECRET_DOMAIN}/auth/realms/${KEYCLOAK_REALM}/protocol/openid-connect/token
     api_url: https://auth.${SECRET_DOMAIN}/auth/realms/${KEYCLOAK_REALM}/protocol/openid-connect/userinfo
     allow_assign_grafana_admin: true
-    login_attribute_path: username
     email_attribute_path: email
-    role_attribute_path: "contains(grafana.roles[*], 'grafana-server-admin') && 'GrafanaAdmin' || contains(grafana.roles[*], 'grafana-admin') && 'Admin' || contains(grafana.roles[*], 'grafana-editor') && 'Editor' || 'Viewer'"
+    login_attribute_path: username
+    name_attribute_path: full_name
+    # role_attribute_path: "contains(grafana.roles[*], 'grafana-server-admin') && 'GrafanaAdmin' || contains(grafana.roles[*], 'grafana-admin') && 'Admin' || contains(grafana.roles[*], 'grafana-editor') && 'Editor' || 'Viewer'"
   analytics:
     check_for_updates: false
     check_for_plugin_updates: false

@@ -1,0 +1,81 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: &name scrypted
+    app.kubernetes.io/instance: *name
+    app.kubernetes.io/component: *name
+    app.kubernetes.io/part-of: *name
+    k8s-app: *name
+  name: *name
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: *name
+      app.kubernetes.io/instance: *name
+      app.kubernentes.io/component: *name
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: *name
+        app.kubernetes.io/instance: *name
+        app.kubernentes.io/component: *name
+    spec:
+      securityContext:
+        fsGroup: 568
+        fsGroupChangePolicy: "OnRootMismatch"
+        supplementalGroups:
+          - 100
+      containers:
+        - name: scrypted
+          image: ghcr.io/koush/scrypted:18-jammy-full-v0.93.0
+          imagePullPolicy: IfNotPresent
+          resources:
+            limits:
+              memory: 8Gi
+            requests:
+              memory: 1Gi
+          securityContext:
+            runAs: 568
+            runAsGroup: 568
+            allowPrivilegeEscalation: false
+            seccompProfile:
+              type: RuntimeDefault
+            capabilities:
+              drop:
+                - ALL
+          ports:
+            - name: http
+              containerPort: 11080
+            - name: rebroadcast
+              containerPort: 34135
+          livenessProbe: &probes
+            httpGet:
+              path: /
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 10
+            failureThreshold: 5
+            timeoutSeconds: 2
+          readinessProbe: *probes
+          startupProbe: *probes
+          volumeMounts:
+            - mountPath: /config
+              name: config
+            - mountPath: /recs
+              name: data
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: scrypted
+        - name: data
+          nfs:
+            server: ${NFS_SERVER}
+            path: /mnt/rusty/scrypted
+        - name: npm-cache
+          emptyDir: {}
+        - name: cache
+          emptyDir: {}
