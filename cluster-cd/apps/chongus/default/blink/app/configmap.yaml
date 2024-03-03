@@ -7,7 +7,6 @@ metadata:
 data:
   PORT: "3000"
   AUTO_MIGRATE: "1"
-  NODE_ENV: development
   REDIS_URL: redis://blink-redis.default.svc.cluster.local:6379
   HOMEPAGE: https://${SHORTLINK_DOMAIN}/app
   BASE_URL: https://${SHORTLINK_DOMAIN}
