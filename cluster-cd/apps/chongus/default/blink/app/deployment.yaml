@@ -42,7 +42,7 @@ spec:
             - configMapRef:
                 name: blink-env
           ports:
-            - containerPort: 5432
+            - containerPort: 3000
               name: http
               protocol: TCP
           livenessProbe: &probe
