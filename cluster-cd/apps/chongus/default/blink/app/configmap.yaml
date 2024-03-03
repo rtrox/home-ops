@@ -1,0 +1,30 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: default
+  name: blink-env
+data:
+  PORT: "3000"
+  AUTO_MIGRATE: "1"
+  REDIS_URL: redis://blink-redis.default.svc.cluster.local:6379
+  HOMEPAGE: https://${SHORTLINK_DOMAIN}
+  BASE_URL: https://${SHORTLINK_DOMAIN}
+  SESSION_DURATION: "9 hours"
+  TRUST_PROXY: "loopback,linklocal,uniquelocal"
+  RATE_LIMIT_SHORT_WINDOW: "1 min"
+  RATE_LIMIT_SHORT_MAX: "100"
+  RATE_LIMIT_LONG_WINDOW: "15 min"
+  RATE_LIMIT_LONG_MAX: "200"
+  LINK_TIMEOUT: "15 seconds"
+  CACHE_MAX_AGE: "10 years"
+  OIDC_ISSUER_BASE_URL: https://auth.${SECRET_DOMAIN}/auth/realms/${KEYCLOAK_REALM}/.well-known/openid-configuration
+  OIDC_HTTP_TIMEOUT: 15 seconds
+  OAUTH2_ENABLED: "true"
+  OAUTH2_JWT_ALGORITHMS: RS256
+  OAUTH2_JWT_AUDIENCE: https://${SHORTLINK_DOMAIN}
+  OAUTH2_JWT_ISSUER: https://${SHORTLINK_DOMAIN}
+  OAUTH2_JWKS_HTTP_TIMEOUT: "15 seconds"
+  OAUTH2_JWKS_REQUESTS_PER_MINUTE: "10"
+  OAUTH2_DEFAULT_SCOPE: "user:create user:read link:*"
+  REACT_APP_BASE_URL: https://${SHORTLINK_DOMAIN}
