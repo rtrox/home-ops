@@ -19,7 +19,6 @@ data:
   LINK_TIMEOUT: "15 seconds"
   CACHE_MAX_AGE: "10 years"
   OIDC_ISSUER_BASE_URL: https://auth.${SECRET_DOMAIN}/auth/realms/${KEYCLOAK_REALM}/.well-known/openid-configuration
-  OIDC_TOKEN_ENDPOINT_AUTH_METHOD: client_secret_basic
   OIDC_HTTP_TIMEOUT: 15 seconds
   OAUTH2_ENABLED: "true"
   OAUTH2_JWT_ALGORITHMS: RS256
