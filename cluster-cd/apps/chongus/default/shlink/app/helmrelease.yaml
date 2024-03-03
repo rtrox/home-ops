@@ -1,0 +1,129 @@
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2beta2.json
+apiVersion: helm.toolkit.fluxcd.io/v2beta2
+kind: HelmRelease
+metadata:
+  name: &app shlink
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: app-template
+      version: 2.6.0
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  uninstall:
+    keepHistory: false
+  dependsOn:
+    - name: redis
+      namespace: database
+  values:
+    controllers:
+      main:
+        replicas: 2
+        strategy: RollingUpdate
+        annotations:
+          reloader.stakater.com/auto: "true"
+        initContainers:
+          init-db:
+            image:
+              repository: ghcr.io/onedr0p/postgres-init
+              tag: 16
+            envFrom: &envFrom
+              - secretRef:
+                  name: shlink-secret
+        containers:
+          main:
+            image:
+              repository: ghcr.io/shlinkio/shlink
+              tag: 4.0.0@sha256:e03f43a18fea4edb846dad28aecd093cf0a6afb2b147eb6defb867c2ca54679d
+            env:
+              DEFAULT_DOMAIN: &host ${SHORTLINK_DOMAIN}
+              DISABLE_TRACKING_FROM: 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
+              IS_HTTPS_ENABLED: "true"
+              PORT: &port 80
+              REDIS_PUB_SUB_ENABLED: "true"
+              REDIS_SENTINEL_SERVICE: redis-master
+              REDIS_SERVERS:
+                "redis-node-0.redis-headless.database.svc.cluster.local:26379,\
+                redis-node-1.redis-headless.database.svc.cluster.local:26379,\
+                redis-node-2.redis-headless.database.svc.cluster.local:26379"
+              SHELL_VERBOSITY: 3
+              TASK_WORKER_NUM: 4
+              TIMEZONE: ${LOCAL_TZ}
+              WEB_WORKER_NUM: 1
+            envFrom: *envFrom
+            probes:
+              liveness: &probes
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /rest/health
+                    port: *port
+                  initialDelaySeconds: 0
+                  periodSeconds: 10
+                  timeoutSeconds: 1
+                  failureThreshold: 3
+              readiness: *probes
+              startup:
+                enabled: false
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities: { drop: ["ALL"] }
+            resources:
+              requests:
+                cpu: 10m
+              limits:
+                memory: 512Mi
+        pod:
+          securityContext:
+            runAsUser: 1001
+            runAsGroup: 1001
+            runAsNonRoot: true
+          topologySpreadConstraints:
+            - maxSkew: 1
+              topologyKey: kubernetes.io/hostname
+              whenUnsatisfiable: DoNotSchedule
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: *app
+    service:
+      main:
+        ports:
+          http:
+            port: *port
+    ingress:
+      main:
+        enabled: true
+        className: nginx-external
+        annotations:
+          external-dns.alpha.kubernetes.io/target: ext-cho.${SECRET_DOMAIN}
+          external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+        hosts:
+          - host: *host
+            paths:
+              - path: /
+                service:
+                  name: main
+                  port: http
+        tls:
+          - hosts:
+              - *host
+    persistence:
+      tmp:
+        type: emptyDir
+      tmp-data:
+        type: emptyDir
+        globalMounts:
+          - path: /etc/shlink/data
