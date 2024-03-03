@@ -21,3 +21,26 @@ spec:
   interval: 30m
   retryInterval: 1m
   timeout: 5m
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/kustomize.toolkit.fluxcd.io/kustomization_v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: &app shlink-web
+  namespace: flux-system
+spec:
+  targetNamespace: default
+  commonMetadata:
+    labels:
+      app.kubernetes.io/name: *app
+  dependsOn:
+    - name: shlink
+  path: ./cluster-cd/apps/${CLUSTER_NAME}/default/shlink/web
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: home-ops-cd
+  wait: true
+  interval: 30m
+  retryInterval: 1m
+  timeout: 5m

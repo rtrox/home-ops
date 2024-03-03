@@ -108,7 +108,7 @@ spec:
         enabled: true
         className: nginx-external
         annotations:
-          external-dns.alpha.kubernetes.io/target: ext-cho.${SECRET_DOMAIN}
+          external-dns.alpha.kubernetes.io/target: cho-ext.${SECRET_DOMAIN}
           external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
         hosts:
           - host: *host
