@@ -47,7 +47,7 @@ spec:
               protocol: TCP
           livenessProbe: &probe
             httpGet:
-              path: /
+              path: /health
               port: http
               scheme: HTTP
             initialDelaySeconds: 0
