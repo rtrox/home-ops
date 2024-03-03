@@ -1,0 +1,122 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/fluxcd-community/flux2-schemas/main/helmrelease-helm-v2beta2.json
+apiVersion: helm.toolkit.fluxcd.io/v2beta2
+kind: HelmRelease
+metadata:
+  name: paperless
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: app-template
+      version: 2.6.0
+      interval: 30m
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+
+  values:
+    controllers:
+      main:
+        annotations:
+          reloader.stakater.com/auto: "true"
+
+        pod:
+          securityContext:
+            supplementalGroups:
+              - 65542 # gladius:external-services
+
+        containers:
+          main:
+            image:
+              repository: ghcr.io/paperless-ngx/paperless-ngx
+              tag: 2.5.4
+            env:
+              # Configure application
+              PAPERLESS_APPS: allauth.socialaccount.providers.openid_connect
+              PAPERLESS_SECRET_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: paperless-secret
+                    key: PAPERLESS_SECRET_KEY
+              PAPERLESS_URL: https://paper.${SECRET_DOMAIN}
+              PAPERLESS_PORT: "8000"
+              PAPERLESS_TIME_ZONE: ${LOCAL_TZ}
+              PAPERLESS_WEBSERVER_WORKERS: "2"
+              PAPERLESS_TASK_WORKERS: "2"
+              # Configure Remote User auth
+              PAPERLESS_ACCOUNT_ALLOW_SIGNUPS: "false"
+              PAPERLESS_SOCIALACCOUNT_ALLOW_SIGNUPS: "true"
+              PAPERLESS_SOCIALACCOUNT_PROVIDERS:
+                valueFrom:
+                  secretKeyRef:
+                    name: paperless-secret
+                    key: PAPERLESS_SOCIALACCOUNT_PROVIDERS
+              # Configure folders
+              PAPERLESS_CONSUMPTION_DIR: /data/nas/incoming
+              PAPERLESS_DATA_DIR: /data/local/data
+              PAPERLESS_EXPORT_DIR: /data/nas/export
+              PAPERLESS_MEDIA_ROOT: /data/local/media
+              # Configure folder importer
+              PAPERLESS_CONSUMER_POLLING: "60"
+              PAPERLESS_CONSUMER_RECURSIVE: "true"
+              PAPERLESS_CONSUMER_SUBDIRS_AS_TAGS: "true"
+              # Configure OCR
+              PAPERLESS_OCR_LANGUAGES: nld
+              PAPERLESS_OCR_LANGUAGE: nld
+              # Configure redis integration
+              PAPERLESS_REDIS: redis://paperless-redis.default.svc.cluster.local:6379
+              # Configure admin user
+              PAPERLESS_ADMIN_USER:
+                valueFrom:
+                  secretKeyRef:
+                    name: paperless-secret
+                    key: PAPERLESS_ADMIN_USER
+              PAPERLESS_ADMIN_PASSWORD:
+                valueFrom:
+                  secretKeyRef:
+                    name: paperless-secret
+                    key: PAPERLESS_ADMIN_PASSWORD
+            resources:
+              requests:
+                cpu: 11m
+                memory: 2048Mi
+              limits:
+                memory: 2048Mi
+
+    service:
+      main:
+        ports:
+          http:
+            port: 8000
+
+    ingress:
+      main:
+        enabled: true
+        className: "nginx"
+        hosts:
+          - host: &host "paper.${SECRET_DOMAIN}"
+            paths:
+              - path: /
+                service:
+                  name: main
+                  port: http
+        tls:
+          - hosts:
+              - *host
+
+    persistence:
+      data:
+        enabled: true
+        existingClaim: "${APP}"
+        advancedMounts:
+          main:
+            main:
+              - path: /data/local
+      nas:
+        type: nfs
+        server: ${NFS_SERVER}
+        path: /mnt/zippy/shared/paperless
+        globalMounts:
+          - path: /data/nas
