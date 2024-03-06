@@ -57,7 +57,7 @@ spec:
               PAPERLESS_CONSUMPTION_DIR: /data/nas/incoming
               PAPERLESS_DATA_DIR: /data/local/data
               PAPERLESS_EXPORT_DIR: /data/nas/export
-              PAPERLESS_MEDIA_ROOT: /data/local/media
+              PAPERLESS_MEDIA_ROOT: /data/docs
               # Configure folder importer
               PAPERLESS_CONSUMER_POLLING: "60"
               PAPERLESS_CONSUMER_RECURSIVE: "true"
@@ -114,6 +114,12 @@ spec:
           main:
             main:
               - path: /data/local
+      docs:
+        type: nfs
+        server: ${NFS_SERVER}
+        path: /mnt/rusty/documents
+        globalMounts:
+          - path: /data/docs
       nas:
         type: nfs
         server: ${NFS_SERVER}
