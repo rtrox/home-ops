@@ -68,8 +68,8 @@ spec:
               # Configure redis integration
               PAPERLESS_REDIS: redis://paperless-redis.default.svc.cluster.local:6379
               PAPERLESS_TIKA_ENABLED: "true"
-              PAPERLESS_TIKA_ENDPOINT: "http://tika.default.svc.cluster.local"
-              PAPERLESS_TIKA_GOTENBERG_ENDPOINT: "http://gotenberg.default.svc.cluster.local"
+              PAPERLESS_TIKA_ENDPOINT: "http://paperless-tika.default.svc.cluster.local"
+              PAPERLESS_TIKA_GOTENBERG_ENDPOINT: "http://paperless-gotenberg.default.svc.cluster.local"
               # Configure admin user
               PAPERLESS_ADMIN_USER:
                 valueFrom:
