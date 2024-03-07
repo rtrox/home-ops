@@ -68,8 +68,8 @@ spec:
               # Configure redis integration
               PAPERLESS_REDIS: redis://paperless-redis.default.svc.cluster.local:6379
               PAPERLESS_TIKA_ENABLED: "true"
-              PAPERLESS_TIKA_ENDPOINT: "http://tika.paperless-ngx.svc.cluster.local"
-              PAPERLESS_TIKA_GOTENBERG_ENDPOINT: "http://gotenberg.paperless-ngx.svc.cluster.local"
+              PAPERLESS_TIKA_ENDPOINT: "http://tika.default.svc.cluster.local"
+              PAPERLESS_TIKA_GOTENBERG_ENDPOINT: "http://gotenberg.default.svc.cluster.local"
               # Configure admin user
               PAPERLESS_ADMIN_USER:
                 valueFrom:
@@ -96,7 +96,6 @@ spec:
             image:
               repository: "ghcr.io/paperless-ngx/tika"
               tag: "2.9.1-full@sha256:7ecb42cd7c213b3beaf024c0f1ff00f7ee7e7b932af93e0450c8bcd606dbe120"
-            securityContext: *sc
             resources:
               requests:
                 cpu: "10m"
@@ -112,8 +111,12 @@ spec:
             image:
               repository: "docker.io/gotenberg/gotenberg"
               tag: "8.2.1@sha256:c2d027ee9b0b3032a6698600db86b948bdfab1c56a479a362a656d3a66958dfd"
-            command: ["gotenberg", "--chromium-disable-javascript=true", "--chromium-allow-list=file:///tmp/.*"]
-            securityContext: *sc
+            command:
+              [
+                "gotenberg",
+                "--chromium-disable-javascript=true",
+                "--chromium-allow-list=file:///tmp/.*",
+              ]
             resources:
               requests:
                 cpu: "10m"
