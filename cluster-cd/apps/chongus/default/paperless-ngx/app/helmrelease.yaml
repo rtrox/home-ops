@@ -67,6 +67,9 @@ spec:
               PAPERLESS_OCR_LANGUAGE: nld
               # Configure redis integration
               PAPERLESS_REDIS: redis://paperless-redis.default.svc.cluster.local:6379
+              PAPERLESS_TIKA_ENABLED: "true"
+              PAPERLESS_TIKA_ENDPOINT: "http://tika.paperless-ngx.svc.cluster.local"
+              PAPERLESS_TIKA_GOTENBERG_ENDPOINT: "http://gotenberg.paperless-ngx.svc.cluster.local"
               # Configure admin user
               PAPERLESS_ADMIN_USER:
                 valueFrom:
@@ -85,11 +88,57 @@ spec:
               limits:
                 memory: 2048Mi
 
+      tika:
+        type: deployment
+        replicas: 1
+        containers:
+          main:
+            image:
+              repository: "ghcr.io/paperless-ngx/tika"
+              tag: "2.9.1-full@sha256:7ecb42cd7c213b3beaf024c0f1ff00f7ee7e7b932af93e0450c8bcd606dbe120"
+            securityContext: *sc
+            resources:
+              requests:
+                cpu: "10m"
+                memory: "256Mi"
+              limits:
+                cpu: "3000m"
+                memory: "6000Mi"
+      gotenberg:
+        type: deployment
+        replicas: 1
+        containers:
+          main:
+            image:
+              repository: "docker.io/gotenberg/gotenberg"
+              tag: "8.2.1@sha256:c2d027ee9b0b3032a6698600db86b948bdfab1c56a479a362a656d3a66958dfd"
+            command: ["gotenberg", "--chromium-disable-javascript=true", "--chromium-allow-list=file:///tmp/.*"]
+            securityContext: *sc
+            resources:
+              requests:
+                cpu: "10m"
+                memory: "64Mi"
+              limits:
+                cpu: "3000m"
+                memory: "6000Mi"
+
     service:
       main:
         ports:
           http:
             port: 8000
+      tika:
+        controller: "tika"
+        ports:
+          tika:
+            port: 80
+            targetPort: 9998
+      gotenberg:
+        controller: "gotenberg"
+        ports:
+          gotenberg:
+            port: 80
+            targetPort: 3000
 
     ingress:
       main:
