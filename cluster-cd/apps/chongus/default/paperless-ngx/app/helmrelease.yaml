@@ -90,7 +90,7 @@ spec:
                 cpu: 11m
                 memory: 2048Mi
               limits:
-                memory: 2048Mi
+                memory: 8096Mi
 
       tika:
         type: deployment
