@@ -59,8 +59,8 @@ spec:
               PAPERLESS_EXPORT_DIR: /data/nas/export
               PAPERLESS_MEDIA_ROOT: /data/docs
               # Configure folder importer
-              # PAPERLESS_CONSUMER_POLLING: "5"
-              # PAPERLESS_CONSUMER_POLLING_RETRY_COUNT: "60"
+              PAPERLESS_CONSUMER_POLLING: "5"
+              PAPERLESS_CONSUMER_POLLING_RETRY_COUNT: "120"
               PAPERLESS_CONSUMER_RECURSIVE: "true"
               PAPERLESS_CONSUMER_SUBDIRS_AS_TAGS: "true"
               # Configure OCR
