@@ -60,28 +60,27 @@ spec:
       enabled: true
       portal:
         - aai-loaders
-        - aai-signal-transmission
-        - better-victory-screen
-        - BottleneckLite
-        - compaktcircuit
-        - DeadlockLargerLamp
-        - even-distribution
-        - far-reach
-        - flib
-        - FNEI
-        - Honk
+        # - aai-signal-transmission
+        # - better-victory-screen
+        # - BottleneckLite
+        # - compaktcircuit
+        # - DeadlockLargerLamp
+        # - even-distribution
+        # - far-reach
+        # - flib
+        # - FNEI
         - Krastorio2Assets # Required for Ultracube
-        - Milestones
-        - nixie-tubes
-        - pushbutton
-        - safefill
+        # - Milestones
+        # - nixie-tubes
+        # - pushbutton
+        # - safefill
         - simhelper
-        - textplates
+        # - textplates
         - Ultracube
 
-      unofficial:
-        - url: "https://github.com/Suprcheese/Squeak-Through/archive/refs/tags/1.8.2.zip"
-          name: "Squeak Through_1.8.2.zip"
+      # unofficial:
+      #   - url: "https://github.com/Suprcheese/Squeak-Through/archive/refs/tags/1.8.2.zip"
+      #     name: "Squeak Through_1.8.2.zip"
 
     account:
       accountSecret: "factorio-account"
