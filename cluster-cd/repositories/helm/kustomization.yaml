@@ -10,6 +10,7 @@ resources:
   - cloudnative-pg.yaml
   - codecentric.yaml
   - external-secrets.yaml
+  - factorio-server-charts.yaml
   - grafana.yaml
   - ingress-nginx.yaml
   - intel.yaml

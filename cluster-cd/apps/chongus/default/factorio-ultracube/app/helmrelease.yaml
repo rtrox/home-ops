@@ -1,0 +1,90 @@
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: &app factorio-ultracube
+  namespace: default
+spec:
+  interval: 15m
+  chart:
+    spec:
+      chart: factorio-server-charts
+      version: 1.2.5
+      sourceRef:
+        kind: HelmRepository
+        name: factorio-server-charts
+        namespace: flux-system
+  valuesFrom:
+    - kind: Secret
+      name: factorio-ultracube
+      valuesKey: admin_whitelist
+      targetPath: admin_list
+
+  values:
+    fullnameOverride: *app
+
+    # making sure the game doesnt auto update on redeploy
+    # https://hub.docker.com/r/factoriotools/factorio/
+    image:
+      tag: 1.1.104
+
+    service:
+      type: LoadBalancer
+      port: 34197
+      annotations:
+        lbipam.cilium.io/ips: ${FACTORIO_LB_IPV4}
+        io.cilium/lb-ipam-sharing-key: *app
+    rcon:
+      port: 19197
+      type: LoadBalancer
+      passwordSecret: &secret factorio-ultracube
+      annotations:
+        lbipam.cilium.io/ips: ${FACTORIO_LB_IPV4}
+        io.cilium/lb-ipam-sharing-key: *app
+
+    persistence:
+      enabled: true
+      dataDir:
+        existingClaim: *app
+    factorioServer:
+      save_name: factorio-ultracube
+
+    server_settings:
+      name: 🧊 Ultracube! 🧊
+      tags:
+        - modded
+      visibility:
+        public: false
+      require_user_verification: true
+
+    mods:
+      enabled: true
+      portal:
+        - aai-loaders
+        - aai-signal-transmission
+        - simhelper
+        - flib
+        - Krastorio2Assets # Required for Ultracube
+        - Ultracube
+        - far-reach
+        - even-distribution
+        - better-victory-screen
+        - compaktcircuit
+        - DeadlockLargerLamp
+        - nixie-tubes
+        - pushbutton
+        - safefill
+        - textplates
+        - FNEI
+        - BottleneckLite
+        - Milestones
+        - Honk
+      unofficial:
+        - url: "https://github.com/Suprcheese/Squeak-Through/archive/refs/tags/1.8.2.zip"
+          name: "Squeak Through_1.8.2.zip"
+
+    account:
+      accountSecret: "factorio-account"
+
+    serverPassword:
+      # Existing Secret containing a `game_password` data entry
+      passwordSecret: *secret

@@ -5,3 +5,4 @@ resources:
   - ./atuin/ks.yaml
   - ./paperless-ngx/ks.yaml
   - ./shlink/ks.yaml
+  - ./factorio-ultracube/ks.yaml
