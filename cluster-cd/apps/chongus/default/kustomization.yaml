@@ -6,4 +6,4 @@ resources:
   - ./paperless-ngx/ks.yaml
   - ./shlink/ks.yaml
   - ./factorio-ultracube/ks.yaml
-  # - ./factorio-space-ex/ks.yaml
+  - ./factorio-space-ex/ks.yaml

@@ -32,14 +32,14 @@ spec:
       port: 34197
       annotations:
         lbipam.cilium.io/ips: ${FACTORIO_LB_IPV4}
-        io.cilium/lb-ipam-sharing-key: *app
+        io.cilium/lb-ipam-ips: factorio
     rcon:
       port: 19197
       type: LoadBalancer
       passwordSecret: &secret factorio-space-ex
       annotations:
         lbipam.cilium.io/ips: ${FACTORIO_LB_IPV4}
-        io.cilium/lb-ipam-sharing-key: *app
+        io.cilium/lb-ipam-ips: factorio
 
     persistence:
       enabled: true
@@ -47,6 +47,7 @@ spec:
         existingClaim: *app
     factorioServer:
       save_name: factorio-space-ex
+      update_mods_on_start: true
 
     server_settings:
       name: 🌌 Space Exploration! 🌌
