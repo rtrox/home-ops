@@ -28,7 +28,7 @@ spec:
     # making sure the game doesnt auto update on redeploy
     # https://hub.docker.com/r/factoriotools/factorio/
     image:
-      tag: 1.1.104
+      tag: 1.1.107
 
     service:
       type: LoadBalancer
