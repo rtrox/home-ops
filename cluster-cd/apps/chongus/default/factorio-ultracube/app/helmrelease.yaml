@@ -55,6 +55,7 @@ spec:
       visibility:
         public: false
       require_user_verification: true
+      auto_pause: false
 
     mods:
       enabled: true
@@ -81,9 +82,6 @@ spec:
       unofficial:
         - url: "https://github.com/Suprcheese/Squeak-Through/archive/refs/tags/1.8.2.zip"
           name: "Squeak Through_1.8.2.zip"
-    import_save:
-      enabled: true
-      source_url: "https://f004.backblazeb2.com/file/public-test-rtrox/Ultracube.zip"
     account:
       accountSecret: "factorio-account"
 
