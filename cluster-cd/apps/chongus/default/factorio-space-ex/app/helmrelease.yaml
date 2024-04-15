@@ -18,7 +18,10 @@ spec:
       name: factorio-space-ex
       valuesKey: admin_whitelist
       targetPath: admin_list
-
+    - kind: Secret
+      name: factorio-space-ex
+      valuesKey: admin_whitelist
+      targetPath: white_list
   values:
     fullnameOverride: *app
 
