@@ -50,7 +50,6 @@ spec:
         existingClaim: *app
     factorioServer:
       save_name: factorio-space-ex
-      update_mods_on_start: true
 
     server_settings:
       name: 🌌 Space Exploration! 🌌
