@@ -77,6 +77,7 @@ spec:
         - RecipeBook
         # QOL
         - even-distribution
+        - far-reach
         - AutoTrash
         - LogisticRequestManager
         - BottleneckLite
@@ -121,7 +122,8 @@ spec:
 
     map_gen_settings:
       water: 1.5
-      starting_area: 2
+      starting_area: 1
+      peaceful_mode: true
       autoplace_controls:
         hot:
           size: 0.5
@@ -130,6 +132,9 @@ spec:
       property_expression_names:
         control-setting:moisture:bias: "0.05"
         control-setting:aux:bias: "-0.35"
+    import_save:
+      enabled: true
+      source_url: "http://172.16.254.12::9000/public-stuff-temp/Space%20Exploration%20Multiplayer%20MapGen.zip"
 
     account:
       accountSecret: "factorio-account"
