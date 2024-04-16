@@ -134,7 +134,7 @@ spec:
         control-setting:aux:bias: "-0.35"
     import_save:
       enabled: true
-      source_url: "http://172.16.254.12::9000/public-stuff-temp/Space%20Exploration%20Multiplayer%20MapGen.zip"
+      source_url: "http://172.16.254.12:9000/public-stuff-temp/Space%20Exploration%20Multiplayer%20MapGen.zip"
 
     account:
       accountSecret: "factorio-account"
