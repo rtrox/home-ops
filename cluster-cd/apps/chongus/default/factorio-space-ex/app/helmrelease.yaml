@@ -129,6 +129,30 @@ spec:
           size: 0.5
         cold:
           size: 0.5
+        coal:
+          frequency: 1
+          size: 1
+          richness: 1
+        stone:
+          frequency: 1
+          size: 1
+          richness: 1
+        copper-ore:
+          frequency: 1
+          size: 1
+          richness: 1
+        iron-ore:
+          frequency: 1
+          size: 1
+          richness: 1
+        uranium-ore:
+          frequency: 1
+          size: 1
+          richness: 1
+        crude-oil:
+          frequency: 1
+          size: 1
+          richness: 1
       property_expression_names:
         control-setting:moisture:bias: "0.05"
         control-setting:aux:bias: "-0.35"
