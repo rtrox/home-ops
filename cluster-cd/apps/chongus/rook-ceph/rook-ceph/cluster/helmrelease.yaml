@@ -47,5 +47,4 @@ spec:
         useAllDevices: true
         config:
           osdsPerDevice: "1"
-          diskFilter: ^sd.
         nodes: []
