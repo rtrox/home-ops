@@ -39,11 +39,6 @@ alertmanager:
                 {{ range .Labels.SortedPairs }} • *{{ .Name }}:* `{{ .Value }}`
                 {{ end }}
               {{ end }}
-      - name: alertmanager-discord-webhook
-        webhook_configs:
-          - url: http://alertmanager-discord.monitoring.svc.cluster.local/alerts
-            send_resolved: true
-            max_alerts: 10
     route:
       routes:
         - matchers:
