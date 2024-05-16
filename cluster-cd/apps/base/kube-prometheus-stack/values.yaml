@@ -51,13 +51,6 @@ alertmanager:
           group_by:
             - alertname
             - severity
-        - matchers:
-            - severity =~ "warning|critical"
-          receiver: alertmanager-discord-webhook
-          group_by:
-            - alertname
-            - severity
-          continue: true
   templateFiles:
     alert-silence.tmpl: |-
       # This builds the silence URL.  We exclude the alertname in the range
