@@ -34,7 +34,7 @@ spec:
           - 100
       containers:
         - name: sabnzbd
-          image: ghcr.io/onedr0p/sabnzbd:3.7.1@sha256:e1a805ab246712b2c9a834b88ffefd77aba89b2ffcfdf1a9535333fcb4a60f91
+          image: ghcr.io/onedr0p/sabnzbd:3.7.2@sha256:cbc7bdb5c70c75dc07eb7c2f967dfb74c48c4cf2531c28e81cff8d72f76cfc8c
           imagePullPolicy: IfNotPresent
           resources:
             limits:
