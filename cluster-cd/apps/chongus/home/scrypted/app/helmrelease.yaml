@@ -19,6 +19,7 @@ spec:
   values:
     defaultPodOptions:
       runtimeClassName: nvidia
+      enableServiceLinks: true
     controllers:
       main:
         annotations:
@@ -52,6 +53,7 @@ spec:
 
     service:
       main:
+        controller: main
         ports:
           http:
             port: 11080

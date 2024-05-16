@@ -27,6 +27,8 @@ spec:
     - name: redis
       namespace: database
   values:
+    defaultPodOptions:
+      enableServiceLinks: true
     controllers:
       main:
         replicas: 2
@@ -100,6 +102,7 @@ spec:
                   app.kubernetes.io/name: *app
     service:
       main:
+        controller: main
         ports:
           http:
             port: *port

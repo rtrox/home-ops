@@ -17,6 +17,8 @@ spec:
         namespace: flux-system
 
   values:
+    defaultPodOptions:
+      enableServiceLinks: true
     controllers:
       main:
         containers:
@@ -33,6 +35,7 @@ spec:
 
     service:
       main:
+        controller: main
         ports:
           http:
             enabled: false

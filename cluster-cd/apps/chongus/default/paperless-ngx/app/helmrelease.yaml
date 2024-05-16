@@ -17,6 +17,8 @@ spec:
         namespace: flux-system
 
   values:
+    defaultPodOptions:
+      enableServiceLinks: true
     controllers:
       main:
         annotations:
@@ -131,6 +133,7 @@ spec:
 
     service:
       main:
+        controller: main
         ports:
           http:
             port: 8000
