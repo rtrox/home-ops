@@ -32,7 +32,7 @@ spec:
           - 100
       containers:
         - name: readarr
-          image: ghcr.io/onedr0p/readarr-develop:0.1.6.1867
+          image: ghcr.io/onedr0p/readarr-develop:0.3.26.2526
           imagePullPolicy: IfNotPresent
           resources:
             limits:
