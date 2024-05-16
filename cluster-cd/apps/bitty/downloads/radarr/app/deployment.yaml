@@ -39,7 +39,7 @@ spec:
           - 100
       containers:
         - name: radarr
-          image: ghcr.io/onedr0p/radarr-develop:4.3.1.6822@sha256:8b3167caff215443e1fd0cdcb417f85dc307faa97a216479df2c4257487c369e
+          image: ghcr.io/onedr0p/radarr-develop:5.6.0.8846@sha256:b3137a2b451683d834627bf6997460f26eb864757b1ffb5eb6544a8ba6d432ef
           imagePullPolicy: IfNotPresent
           resources:
             limits:
