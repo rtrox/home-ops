@@ -17,7 +17,7 @@ images:
   - name: ghcr.io/onedr0p/sabnzbd
     newTag: 4.2.2@sha256:5b1f15c8d25afa2342505492486361d4ecf14449e1453aeea45cd7c1e5eeb63a
   - name: ghcr.io/onedr0p/exportarr
-    newTag: v1.6.1
+    newTag: v2.0.1
 
 commonLabels:
   app.kubernetes.io/part-of: sabnzbd
