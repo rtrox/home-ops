@@ -26,3 +26,12 @@ spec:
     runtimeClassName: nvidia
     nodeSelector:
       nvidia.feature.node.kubernetes.io/nvidia-gpu: "true"
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: nvidia.feature.node.kubernetes.io/nvidia-gpu
+                  operator: In
+                  values:
+                    - "true"
