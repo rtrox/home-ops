@@ -99,7 +99,7 @@ spec:
           main:
             image:
               repository: "ghcr.io/paperless-ngx/tika"
-              tag: "2.9.1-full@sha256:7ecb42cd7c213b3beaf024c0f1ff00f7ee7e7b932af93e0450c8bcd606dbe120"
+              tag: "2.9.1-full@sha256:d59c38244949a418ef16be676eeea770e1616b45986661847d373f4de048a37e"
             resources:
               requests:
                 cpu: "10m"
