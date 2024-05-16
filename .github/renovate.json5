@@ -1,6 +1,8 @@
 {
   $schema: "https://docs.renovatebot.com/renovate-schema.json",
   extends: [
+    "github>rtrox/renovate-config",
+    "github>rtrox/renovate-config:automerge-github-actions",
     "github>rtrox/home-ops//.github/renovate/allowedVersions.json5",
     "github>rtrox/home-ops//.github/renovate/autoMerge.json5",
     "github>rtrox/home-ops//.github/renovate/versioning.json5",
