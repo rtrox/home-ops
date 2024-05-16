@@ -1,0 +1,15 @@
+---
+# Area
+area/ci:
+  - changed-files:
+      - any-glob-to-any-file: ".github/**/*"
+area/kubernetes:
+  - changed-files:
+      - any-glob-to-any-file: "cluster-cd/**/*"
+# Cluster
+cluster/bitty:
+  - changed-files:
+      - any-glob-to-any-file: cluster-cd/apps/bitty/**/*
+cluster/chongus:
+  - changed-files:
+      - any-glob-to-any-file: cluster-cd/apps/chongus/**/*
