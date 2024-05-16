@@ -144,7 +144,7 @@ spec:
               port: metrics
             failureThreshold: 5
             periodSeconds: 10
-        - image: ubuntu:bionic
+        - image: ubuntu:noble
           name: fsfreeze
           securityContext:
             privileged: true
