@@ -18,7 +18,7 @@ images:
   - name: ghcr.io/onedr0p/prowlarr-nightly
     newTag: "1.13.2.4251"
   - name: ghcr.io/onedr0p/exportarr
-    newTag: v1.6.1
+    newTag: v2.0.1
 
 commonLabels:
   app.kubernetes.io/part-of: prowlarr
