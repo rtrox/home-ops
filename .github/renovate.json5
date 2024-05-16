@@ -10,6 +10,7 @@
     "github>rtrox/home-ops//.github/renovate/clusters.json5",
     "github>rtrox/home-ops//.github/renovate/grafanaDashboards.json5",
   ],
+
   ignorePaths: [".archive/**"],
   flux: {
     fileMatch: ["^cluster-cd/.+\\.ya?ml$"],
