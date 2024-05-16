@@ -16,7 +16,7 @@ resources:
 images:
   # TODO: non-nightly image to let renovate pick it up
   - name: ghcr.io/onedr0p/radarr-develop
-    newTag: "5.3.4.8567"
+    newTag: "5.6.0.8846"
   - name: ghcr.io/onedr0p/exportarr
     newTag: v1.6.1
 commonLabels:
