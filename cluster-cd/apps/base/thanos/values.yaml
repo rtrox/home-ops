@@ -33,6 +33,9 @@ compactor:
   retentionResolution1h: 10y
   persistence:
     enabled: false
+  resources:
+    limits:
+      ephemeral-storage: 10Gi
 storegateway:
   podSecurityContext:
     enabled: true
