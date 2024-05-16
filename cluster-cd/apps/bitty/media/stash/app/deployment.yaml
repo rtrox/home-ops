@@ -48,7 +48,7 @@ spec:
               name: config
       containers:
         - name: stash
-          image: stashapp/stash:v0.23.1@sha256:96d4e778a9fb7199da28983413c9767617bafc69db781bf7d00cd2667344b76d
+          image: stashapp/stash:v0.25.1@sha256:6b8814b61e4fe77bc910bec858dd45e0970c8af6f439c066317ae68f03af4f91
           imagePullPolicy: IfNotPresent
           resources:
             limits:
