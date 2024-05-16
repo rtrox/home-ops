@@ -56,7 +56,7 @@ spec:
         controller: main
         ports:
           http:
-            port: 11080
+            port: &port 11080
           rebroadcast:
             port: 34135
 
@@ -69,8 +69,8 @@ spec:
             paths:
               - path: /
                 service:
-                  name: main
-                  port: http
+                  identifier: main
+                  port: *port
         tls:
           - hosts:
               - *host
