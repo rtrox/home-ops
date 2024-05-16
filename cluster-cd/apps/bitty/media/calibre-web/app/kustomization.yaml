@@ -13,7 +13,7 @@ resources:
 
 images:
   - name: ghcr.io/bjw-s/calibre-web
-    newTag: 0.6.21@sha256:dbb30259fcff7531118f06976c49cfaae93363cf7c42c9fb000298761721d113
+    newTag: 0.6.21@sha256:52229ded14d1cd527ec3fb58ca9b0332459c2b0919e79d9c5dad4610f6ccf601
 
 commonLabels:
   app.kubernetes.io/part-of: calibre-web
