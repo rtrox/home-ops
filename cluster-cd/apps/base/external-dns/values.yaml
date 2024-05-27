@@ -19,9 +19,9 @@ provider: cloudflare
 resources:
   requests:
     cpu: 13m
-    memory: 128M
+    memory: 256M
   limits:
-    memory: 128M
+    memory: 256M
 
 serviceMonitor:
   enabled: true
