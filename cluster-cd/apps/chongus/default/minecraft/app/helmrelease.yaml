@@ -58,7 +58,7 @@ spec:
       eula: true
       version: 1.20.1
       type: CURSEFORGE
-      cfServerMod: "https://mediafilez.forgecdn.net/files/5418/297/Better%20MC%20%5BFORGE%5D%201.20.1%20v28.zip"
+      cfServerMod: "https://mediafilez.forgecdn.net/files/5418/541/BMC4_FORGE_1.20.1_Server_Pack_v28.zip"
       forceReDownload: true
       jvmXXOpts: "-XX:MaxRAMPercentage=75"
       memory: 4096M
