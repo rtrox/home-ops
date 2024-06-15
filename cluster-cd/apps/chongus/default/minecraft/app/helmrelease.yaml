@@ -56,9 +56,9 @@ spec:
       lbipam.cilium.io/ips: ${MINECRAFT_LB_IPV4}
     minecraftServer:
       eula: true
-      version: 1.20.6
-      type: FORGE
-      forgeVersion: 48.1.0
+      version: 1.20.1
+      type: CURSEFORGE
+      cfServerMod: "https://mediafilez.forgecdn.net/files/5418/297/Better%20MC%20%5BFORGE%5D%201.20.1%20v28.zip"
       forceReDownload: true
       jvmXXOpts: "-XX:MaxRAMPercentage=75"
       memory: 4096M
@@ -69,15 +69,10 @@ spec:
       onlineMode: true
       ops: "swyytch"
       icon: "https://uxwing.com/wp-content/themes/uxwing/download/brands-and-social-media/kubernetes-icon.png"
-      motd: "\u00A7f Vanilla+ Minecraft \u00A7o\u00A79Powered by Kubernetes"
+      motd: "\u00A79[BETTERMC] \u00A7fVanilla+ Minecraft \u00A7o\u00A79Powered by Kubernetes"
       worldSaveName: VanillaPlus
       modUrls:
         - "https://mediafilez.forgecdn.net/files/5258/539/Prometheus-Exporter-1.20.2-forge-1.1.0.jar"
-        - "https://mediafilez.forgecdn.net/files/5418/252/Quark-4.0-458.jar"
-        - "https://mediafilez.forgecdn.net/files/5338/457/MouseTweaks-forge-mc1.20.1-2.25.1.jar"
-        - "https://mediafilez.forgecdn.net/files/5419/575/jei-1.20.1-forge-15.3.0.7.jar"
-        - "https://mediafilez.forgecdn.net/files/5341/697/NaturesCompass-1.20.6-1.11.6-forge.jar"
-        - "https://mediafilez.forgecdn.net/files/5413/926/journeymap-1.20.6-5.9.30-forge.jar"
       rcon:
         enabled: true
         serviceType: ClusterIP
