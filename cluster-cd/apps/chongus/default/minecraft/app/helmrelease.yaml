@@ -77,7 +77,7 @@ spec:
         serviceType: ClusterIP
       autoCurseForge:
         apiKey:
-          existingSecret: minecraft-${APP}-secret
+          existingSecret: *secret
           secretKey: cf-api-key
         # Unique id of modpack, can be used instead of url
         slug: create-perfect-world
