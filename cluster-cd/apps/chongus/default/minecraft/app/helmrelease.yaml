@@ -66,8 +66,8 @@ spec:
       spawnProtection: 0
       gameMode: survival
       pvp: default
-      onlineMode: true
-      ops: "swyytch"
+      onlineMode: false
+      ops: "swyyytch"
       icon: "https://media.forgecdn.net/avatars/thumbnails/885/73/256/256/638320128884278582.png"
       motd: "\u00A79[Create] \u00A7f Create: Perfect World \u00A7o\u00A79Powered by Kubernetes"
       worldSaveName: VanillaPlus
