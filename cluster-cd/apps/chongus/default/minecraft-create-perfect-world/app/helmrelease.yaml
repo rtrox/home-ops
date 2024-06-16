@@ -40,7 +40,7 @@ spec:
       runAsUser: &uid 568
       fsGroup: *uid
     livenessProbe:
-      initialDelaySeconds: 300
+      initialDelaySeconds: 900
       periodSeconds: 30
     readinessProbe:
       initialDelaySeconds: 300
