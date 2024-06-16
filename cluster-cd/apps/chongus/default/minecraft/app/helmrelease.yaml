@@ -82,6 +82,8 @@ spec:
         # Unique id of modpack, can be used instead of url
         slug: create-perfect-world
       serviceType: LoadBalancer
+      extraServiceSpec:
+        publishNotReadyAddresses: true
       extraPorts:
         - name: metrics
           containerPort: 19565
