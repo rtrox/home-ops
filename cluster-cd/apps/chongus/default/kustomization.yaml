@@ -7,4 +7,4 @@ resources:
   - ./shlink/ks.yaml
   - ./factorio-ultracube/ks.yaml
   - ./factorio-space-ex/ks.yaml
-  - ./minecraft/ks.yaml
+  - ./minecraft-create-perfect-world/ks.yaml
