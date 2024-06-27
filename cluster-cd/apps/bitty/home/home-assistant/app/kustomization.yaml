@@ -16,7 +16,7 @@ resources:
 
 images:
   - name: ghcr.io/onedr0p/home-assistant
-    newTag: "2024.5.3"
+    newTag: "2023.4.1"
   - name: ghcr.io/onedr0p/postgres-init
     newTag: "16.3"
   - name: codercom/code-server
