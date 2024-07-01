@@ -65,7 +65,7 @@ spec:
       difficulty: hard
       spawnProtection: 0
       gameMode: survival
-      levelSeed: 787419271612053211
+      levelSeed: "787419271612053211"
       pvp: default
       onlineMode: true
       ops: "swyyytch"
