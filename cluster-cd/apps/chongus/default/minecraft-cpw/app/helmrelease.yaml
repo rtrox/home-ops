@@ -70,7 +70,7 @@ spec:
       onlineMode: true
       ops: "swyyytch"
       icon: "https://media.forgecdn.net/avatars/thumbnails/885/73/256/256/638320128884278582.png"
-      motd: "\u00A79[Vanilla+] \u00A7f Create: Perfect World \u00A7o\u00A79Powered by Kubernetes"
+      motd: "\u00A79[Create] \u00A7f Perfect World \u00A7o\u00A79Powered by K8s"
       worldSaveName: CreatePerfectWorld
       # modUrls:
       #   - "https://mediafilez.forgecdn.net/files/5258/539/Prometheus-Exporter-1.20.2-forge-1.1.0.jar"
