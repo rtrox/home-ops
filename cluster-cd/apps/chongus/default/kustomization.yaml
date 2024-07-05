@@ -8,3 +8,4 @@ resources:
   - ./factorio-ultracube/ks.yaml
   - ./factorio-space-ex/ks.yaml
   - ./minecraft-cpw/ks.yaml
+  - ./minecraft/ks.yaml

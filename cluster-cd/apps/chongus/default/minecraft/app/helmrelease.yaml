@@ -1,0 +1,89 @@
+apiVersion: helm.toolkit.fluxcd.io/v2beta2
+kind: HelmRelease
+metadata:
+  name: &app minecraft-cpw
+spec:
+  interval: 30m
+  chart:
+    spec:
+      # renovate: registryUrl=https://itzg.github.io/minecraft-server-charts/
+      chart: minecraft
+      version: 4.19.0
+      sourceRef:
+        kind: HelmRepository
+        name: itzg
+        namespace: flux-system
+  maxHistory: 2
+  timeout: 15m
+  install:
+    createNamespace: true
+    timeout: 15m
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    timeout: 15m
+    remediation:
+      retries: 3
+  uninstall:
+    keepHistory: false
+  values:
+    deploymentAnnotations:
+      secret.reloader.stakater.com/reload: &secret minecraft
+    image:
+      repository: ghcr.io/itzg/minecraft-server
+      tag: java17
+    resources:
+      requests:
+        cpu: 1000m
+        memory: 16Gi
+      limits:
+        memory: 16Gi
+    securityContext:
+      runAsUser: &uid 568
+      fsGroup: *uid
+    livenessProbe:
+      initialDelaySeconds: 600
+      periodSeconds: 30
+    readinessProbe:
+      initialDelaySeconds: 300
+      periodSeconds: 30
+    extraEnv:
+      TZ: "America/Los_Angeles"
+    persistence:
+      dataDir:
+        enabled: true
+        existingClaim: *app
+    serviceAnnotations:
+      mc-router.itzg.me/externalServerName: "mc2.${SECRET_DOMAIN}"
+    minecraftServer:
+      eula: true
+      version: 1.21
+      type: NEOFORGE
+      forceReDownload: true
+      jvmOpts: "-Djava.net.preferIPv4Stack=true"
+      jvmXXOpts: "-XX:MaxRAMPercentage=75"
+      memory: 4096M
+      difficulty: normal
+      spawnProtection: 0
+      gameMode: survival
+      levelSeed: "-332789579092084096"
+      pvp: default
+      onlineMode: true
+      ops: "swyyytch"
+      icon: "https://media.forgecdn.net/avatars/thumbnails/885/73/256/256/638320128884278582.png"
+      motd: "\u00A79[Vanilla] \u00A7f Minecraft 1.21 Server \u00A7o\u00A79Powered by K8s"
+      worldSaveName: Vanilla
+      modUrls:
+        - https://mediafilez.forgecdn.net/files/5467/361/SimpleBackups-1.21-4.0.2.jar
+      rcon:
+        enabled: true
+        serviceType: ClusterIP
+      serviceType: LoadBalancer
+      extraServiceSpec:
+        publishNotReadyAddresses: true
+  valuesFrom:
+    - kind: Secret
+      name: *secret
+      valuesKey: RCON_PASSWORD
+      targetPath: minecraftServer.rcon.password
