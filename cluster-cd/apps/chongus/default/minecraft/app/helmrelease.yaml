@@ -50,6 +50,7 @@ spec:
       periodSeconds: 30
     extraEnv:
       TZ: "America/Los_Angeles"
+      NEOFORGE_VERSION: "beta"
     persistence:
       dataDir:
         enabled: true
