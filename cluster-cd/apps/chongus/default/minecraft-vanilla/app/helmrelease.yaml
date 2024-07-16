@@ -78,6 +78,7 @@ spec:
         - https://cdn.modrinth.com/data/wwcspvkr/versions/C73KkDD6/textile_backup-3.1.3-1.21.jar
         - https://cdn.modrinth.com/data/yn9u3ypm/versions/qtHZSwwl/graves-3.4.1%2B1.21.jar
         - https://cdn.modrinth.com/data/abooMhox/versions/astoQXO2/treeharvester-1.21.0-8.9.jar
+        - https://cdn.modrinth.com/data/qpPoAL6m/versions/AQi6tDVy/trade-cycling-fabric-1.21-1.0.12.jar
         - https://cdn.modrinth.com/data/P7dR8mSH/versions/Y0cpssyN/fabric-api-0.100.6%2B1.21.jar ## Fabric API
         - https://cdn.modrinth.com/data/xGdtZczs/versions/Bbj5Ts5L/polymer-bundled-0.9.4%2B1.21.jar ## Dependency for Graves
         - https://mediafilez.forgecdn.net/files/5424/575/cloth-config-15.0.127-fabric.jar ## Dependency for Textile Backup
