@@ -65,7 +65,7 @@ spec:
       jvmOpts: "-Djava.net.preferIPv4Stack=true"
       jvmXXOpts: "-XX:MaxRAMPercentage=75"
       memory: 4096M
-      difficulty: normal
+      difficulty: hard
       spawnProtection: 0
       gameMode: survival
       levelSeed: "1890611819"
