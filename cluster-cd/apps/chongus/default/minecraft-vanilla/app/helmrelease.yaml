@@ -87,6 +87,7 @@ spec:
         - https://cdn.modrinth.com/data/e0M1UDsY/versions/ZaTRzQs8/collective-1.21.0-7.70.jar ## Dependency for Tree Harvester
         - https://cdn.modrinth.com/data/gvQqBUqZ/versions/my7uONjU/lithium-fabric-mc1.21-0.12.7.jar ## General Optimization of Game Logic
         - https://cdn.modrinth.com/data/nxrXbh5K/versions/jSJ8G6z8/viewdistancefix-fabric-1.21-1.0.2.jar ## Tricks Server into matching client's view distance
+        - https://cdn.modrinth.com/data/KuNKN7d2/versions/W8V2bkLB/noisium-fabric-2.2.1%2Bmc1.21.jar ## Speeds up world generation
       rcon:
         enabled: true
         serviceType: ClusterIP
