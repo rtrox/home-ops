@@ -51,6 +51,7 @@ spec:
       periodSeconds: 30
     extraEnv:
       TZ: "America/Los_Angeles"
+      SYNC_CHUNK_WRITES: "false"
     persistence:
       dataDir:
         enabled: true
@@ -63,10 +64,11 @@ spec:
       type: FABRIC
       forceReDownload: true
       jvmOpts: "-Djava.net.preferIPv4Stack=true"
-      jvmXXOpts: "-XX:MaxRAMPercentage=75"
-      memory: 4096M
+      jvmXXOpts: "--add-modules=jdk.incubator.vector -XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=200 -XX:+UnlockExperimentalVMOptions -XX:+DisableExplicitGC -XX:+AlwaysPreTouch -XX:G1HeapWastePercent=5 -XX:G1MixedGCCountTarget=4 -XX:InitiatingHeapOccupancyPercent=15 -XX:G1MixedGCLiveThresholdPercent=90 -XX:G1RSetUpdatingPauseTimePercent=5 -XX:SurvivorRatio=32 -XX:+PerfDisableSharedMem -XX:MaxTenuringThreshold=1 -Dusing.aikars.flags=https://mcflags.emc.gs -Daikars.new.flags=true -XX:G1NewSizePercent=40 -XX:G1MaxNewSizePercent=50 -XX:G1HeapRegionSize=16M -XX:G1ReservePercent=15"
+      memory: 16384M
       difficulty: hard
       spawnProtection: 0
+      viewDistance: 32
       gameMode: survival
       levelSeed: "1890611819"
       pvp: default
@@ -83,6 +85,8 @@ spec:
         - https://cdn.modrinth.com/data/xGdtZczs/versions/Bbj5Ts5L/polymer-bundled-0.9.4%2B1.21.jar ## Dependency for Graves
         - https://mediafilez.forgecdn.net/files/5424/575/cloth-config-15.0.127-fabric.jar ## Dependency for Textile Backup
         - https://cdn.modrinth.com/data/e0M1UDsY/versions/ZaTRzQs8/collective-1.21.0-7.70.jar ## Dependency for Tree Harvester
+        - https://cdn.modrinth.com/data/gvQqBUqZ/versions/my7uONjU/lithium-fabric-mc1.21-0.12.7.jar ## General Optimization of Game Logic
+        - https://cdn.modrinth.com/data/nxrXbh5K/versions/jSJ8G6z8/viewdistancefix-fabric-1.21-1.0.2.jar ## Tricks Server into matching client's view distance
       rcon:
         enabled: true
         serviceType: ClusterIP
