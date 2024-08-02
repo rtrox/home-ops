@@ -154,10 +154,6 @@ dashboards:
       datasource:
         - { name: DS_PROMETHEUS, value: "Prometheus (${CLUSTER_NAME})" }
         - { name: VAR_REPLICATIONDESTNAME, value: .*-dst }
-    minecraft-fabric:
-      gnetId: 14492
-      revision: 2
-      datasource: Prometheus (${CLUSTER_NAME})
 datasources:
   datasources.yaml:
     apiVersion: 1
