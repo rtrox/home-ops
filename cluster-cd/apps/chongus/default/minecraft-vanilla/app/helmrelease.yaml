@@ -90,9 +90,17 @@ spec:
         - https://cdn.modrinth.com/data/nxrXbh5K/versions/jSJ8G6z8/viewdistancefix-fabric-1.21-1.0.2.jar ## Tricks Server into matching client's view distance
         - https://cdn.modrinth.com/data/KuNKN7d2/versions/W8V2bkLB/noisium-fabric-2.2.1%2Bmc1.21.jar ## Speeds up world generation
         - https://cdn.modrinth.com/data/VSNURh3q/versions/oIlNIzsC/c2me-fabric-mc1.21-0.2.0%2Balpha.11.107.jar ## Speeds up worldgen, io, etc by allowing multiple cpu threads
+        - https://cdn.modrinth.com/data/dbVXHSlv/versions/YcE9H1C5/fabricexporter-1.0.11.jar ## Exports metrics to Prometheus
       rcon:
         enabled: true
         serviceType: ClusterIP
+      extraPorts:
+        - name: metrics
+          containerPort: 25585
+          protocol: TCP
+          service:
+            enabled: true
+            embedded: true
       serviceType: LoadBalancer
       extraServiceSpec:
         publishNotReadyAddresses: true
