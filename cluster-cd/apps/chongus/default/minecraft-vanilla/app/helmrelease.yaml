@@ -75,6 +75,7 @@ spec:
       onlineMode: true
       ops: "swyyytch"
       motd: "\u00A79[Vanilla] \u00A7f Minecraft 1.21 Server \u00A7o\u00A79Powered by K8s"
+      maxWorldSize: 229999984 # Reset to minecraft default
       worldSaveName: Vanilla
       modUrls:
         - https://cdn.modrinth.com/data/wwcspvkr/versions/C73KkDD6/textile_backup-3.1.3-1.21.jar
