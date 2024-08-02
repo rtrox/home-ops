@@ -13,6 +13,9 @@ spec:
   endpoints:
     - port: metrics
       scheme: http
+      relabelings:
+        - targetLabel: game
+          replacement: minecraft
   jobLabel: jobLabel
   selector:
     matchLabels:
