@@ -7,3 +7,14 @@ resources:
   - ./externalsecret.yaml
   - ./servicemonitor.yaml
   - ../../../../base/_templates/volsync
+
+configMapGenerator:
+  - name: cert-manager-values
+    files:
+      - minecraft-fabric.json=./dashboards/minecraft-fabric.json
+generatorOptions:
+  disableNameSuffixHash: true
+  labels:
+    grafana_dashboard: "1"
+  annotations:
+    kustomize.toolkit.fluxcd.io/substitute: disabled
