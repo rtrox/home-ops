@@ -15,7 +15,51 @@ dashboardProviders:
           path: /var/lib/grafana/dashboards/default
         orgId: 1
         type: file
+      - name: kubernetes
+        disableDeletion: false
+        editable: true
+        folder: "Kubernetes"
+        options:
+          path: /var/lib/grafana/dashboards/default/kubernetes
+        orgId: 1
+        type: file
 dashboards:
+  kubernetes:
+    kubernetes-api-server:
+      # renovate: depName="Kubernetes / System / API Server"
+      gnetId: 15761
+      revision: 17
+      datasource: Prometheus (${CLUSTER_NAME})
+    kubernetes-coredns:
+      # renovate: depName="Kubernetes / System / CoreDNS"
+      gnetId: 15762
+      revision: 18
+      datasource: Prometheus (${CLUSTER_NAME})
+    kubernetes-global:
+      # renovate: depName="Kubernetes / Views / Global"
+      gnetId: 15757
+      revision: 37
+      datasource: Prometheus (${CLUSTER_NAME})
+    kubernetes-namespaces:
+      # renovate: depName="Kubernetes / Views / Namespaces"
+      gnetId: 15758
+      revision: 35
+      datasource: Prometheus (${CLUSTER_NAME})
+    kubernetes-nodes:
+      # renovate: depName="Kubernetes / Views / Nodes"
+      gnetId: 15759
+      revision: 29
+      datasource: Prometheus (${CLUSTER_NAME})
+    kubernetes-pods:
+      # renovate: depName="Kubernetes / Views / Pods"
+      gnetId: 15760
+      revision: 28
+      datasource: Prometheus (${CLUSTER_NAME})
+    kubernetes-volumes:
+      # renovate: depName="K8s / Storage / Volumes / Cluster"
+      gnetId: 13646
+      revision: 2
+      datasource: "Prometheus (${CLUSTER_NAME})"
   default:
     ceph-cluster:
       # renovate: depName="Ceph Cluster"
@@ -55,45 +99,6 @@ dashboards:
     flux-control-plane:
       url: https://raw.githubusercontent.com/fluxcd/flux2-monitoring-example/main/monitoring/configs/dashboards/control-plane.json
       datasource: Prometheus (${CLUSTER_NAME})
-    kubernetes-api-server:
-      # renovate: depName="Kubernetes / System / API Server"
-      gnetId: 15761
-      revision: 17
-      datasource: Prometheus (${CLUSTER_NAME})
-    kubernetes-coredns:
-      # renovate: depName="Kubernetes / System / CoreDNS"
-      gnetId: 15762
-      revision: 18
-      datasource: Prometheus (${CLUSTER_NAME})
-    kubernetes-global:
-      # renovate: depName="Kubernetes / Views / Global"
-      gnetId: 15757
-      revision: 37
-      datasource: Prometheus (${CLUSTER_NAME})
-    kubernetes-namespaces:
-      # renovate: depName="Kubernetes / Views / Namespaces"
-      gnetId: 15758
-      revision: 35
-      datasource: Prometheus (${CLUSTER_NAME})
-    kubernetes-nodes:
-      # renovate: depName="Kubernetes / Views / Nodes"
-      gnetId: 15759
-      revision: 29
-      datasource: Prometheus (${CLUSTER_NAME})
-    kubernetes-pods:
-      # renovate: depName="Kubernetes / Views / Pods"
-      gnetId: 15760
-      revision: 28
-      datasource: Prometheus (${CLUSTER_NAME})
-    kubernetes-volumes:
-      # renovate: depName="K8s / Storage / Volumes / Cluster"
-      gnetId: 11454
-      revision: 14
-      datasource:
-        - {
-            name: DS_OPENSHIFT_PROMETHEUS,
-            value: "Prometheus (${CLUSTER_NAME})",
-          }
     nginx:
       url: https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/grafana/dashboards/nginx.json
       datasource: Prometheus (${CLUSTER_NAME})
