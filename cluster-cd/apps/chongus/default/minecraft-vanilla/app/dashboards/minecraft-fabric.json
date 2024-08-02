@@ -168,7 +168,6 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "fixedColor": "blue",
             "mode": "fixed"
           },
           "mappings": [],
@@ -178,31 +177,35 @@
               {
                 "color": "green",
                 "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
               }
             ]
-          }
+          },
+          "unit": "string"
         },
         "overrides": []
       },
       "gridPos": {
-        "h": 5,
+        "h": 3,
         "w": 4,
         "x": 12,
         "y": 0
       },
-      "id": 15,
+      "id": 26,
       "options": {
-        "colorMode": "background",
+        "colorMode": "value",
         "graphMode": "area",
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
           "calcs": ["lastNotNull"],
-          "fields": "",
+          "fields": "/^vendor$/",
           "values": false
         },
         "showPercentChange": false,
-        "text": {},
         "textMode": "auto",
         "wideLayout": true
       },
@@ -213,15 +216,17 @@
             "type": "prometheus",
             "uid": "P2AF30C786CBB33F1"
           },
-          "exemplar": true,
-          "expr": "sum(minecraft_entities{instance=~\"$instance\",job=~\"$job\"})",
-          "interval": "",
-          "legendFormat": "",
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "max(jvm_info) by (runtime, vendor, version)",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "__auto",
+          "range": false,
           "refId": "A"
         }
       ],
-      "title": "Loaded Entities",
-      "transparent": true,
+      "title": "JVM Vendor",
       "type": "stat"
     },
     {
@@ -386,17 +391,17 @@
               }
             ]
           },
-          "unit": "string"
+          "unit": "dateTimeAsIsoNoDateIfToday"
         },
         "overrides": []
       },
       "gridPos": {
         "h": 3,
-        "w": 4,
+        "w": 12,
         "x": 12,
-        "y": 5
+        "y": 3
       },
-      "id": 26,
+      "id": 25,
       "options": {
         "colorMode": "value",
         "graphMode": "area",
@@ -404,7 +409,7 @@
         "orientation": "auto",
         "reduceOptions": {
           "calcs": ["lastNotNull"],
-          "fields": "/^vendor$/",
+          "fields": "",
           "values": false
         },
         "showPercentChange": false,
@@ -420,15 +425,27 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "max(jvm_info) by (runtime, vendor, version)",
-          "format": "table",
+          "expr": "min(process_start_time_seconds{job=~\"$job\"} * 1000) by (job)",
           "instant": true,
           "legendFormat": "__auto",
           "range": false,
           "refId": "A"
         }
       ],
-      "title": "JVM Vendor",
+      "title": "Start Time",
+      "transformations": [
+        {
+          "id": "rowsToFields",
+          "options": {
+            "mappings": [
+              {
+                "fieldName": "minecraft-vanilla-minecraft",
+                "handlerKey": "field.label"
+              }
+            ]
+          }
+        }
+      ],
       "type": "stat"
     },
     {
@@ -677,6 +694,7 @@
       "fieldConfig": {
         "defaults": {
           "color": {
+            "fixedColor": "blue",
             "mode": "fixed"
           },
           "mappings": [],
@@ -686,26 +704,21 @@
               {
                 "color": "green",
                 "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
               }
             ]
-          },
-          "unit": "dateTimeAsIsoNoDateIfToday"
+          }
         },
         "overrides": []
       },
       "gridPos": {
-        "h": 3,
-        "w": 12,
+        "h": 5,
+        "w": 4,
         "x": 12,
-        "y": 8
+        "y": 6
       },
-      "id": 25,
+      "id": 15,
       "options": {
-        "colorMode": "value",
+        "colorMode": "background",
         "graphMode": "area",
         "justifyMode": "auto",
         "orientation": "auto",
@@ -715,6 +728,71 @@
           "values": false
         },
         "showPercentChange": false,
+        "text": {},
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "10.4.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "P2AF30C786CBB33F1"
+          },
+          "exemplar": true,
+          "expr": "sum(minecraft_entities{instance=~\"$instance\",job=~\"$job\"})",
+          "interval": "",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "title": "Loaded Entities",
+      "transparent": true,
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P2AF30C786CBB33F1"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "blue",
+            "mode": "fixed"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 16,
+        "y": 6
+      },
+      "id": 20,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "text": {},
         "textMode": "auto",
         "wideLayout": true
       },
@@ -726,28 +804,82 @@
             "uid": "P2AF30C786CBB33F1"
           },
           "editorMode": "code",
-          "exemplar": false,
-          "expr": "min(process_start_time_seconds{job=~\"$job\"} * 1000) by (job)",
-          "instant": true,
-          "legendFormat": "__auto",
-          "range": false,
+          "exemplar": true,
+          "expr": "sum(minecraft_loaded_chunks{job=~\"$job\", instance=~\"$instance\"})",
+          "interval": "",
+          "legendFormat": "",
+          "range": true,
           "refId": "A"
         }
       ],
-      "title": "Start Time",
-      "transformations": [
-        {
-          "id": "rowsToFields",
-          "options": {
-            "mappings": [
+      "title": "Loaded Chunks",
+      "transparent": true,
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P2AF30C786CBB33F1"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "blue",
+            "mode": "fixed"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
               {
-                "fieldName": "minecraft-vanilla-minecraft",
-                "handlerKey": "field.label"
+                "color": "green",
+                "value": null
               }
             ]
           }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 20,
+        "y": 6
+      },
+      "id": 21,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "text": {},
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "10.4.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "P2AF30C786CBB33F1"
+          },
+          "editorMode": "code",
+          "exemplar": true,
+          "expr": "sum(max(minecraft_total_loaded_chunks{job=~\"$job\"}) by (world, job))",
+          "interval": "",
+          "legendFormat": "",
+          "range": true,
+          "refId": "A"
         }
       ],
+      "title": "Total Loaded Chunks",
+      "transparent": true,
       "type": "stat"
     },
     {
@@ -906,138 +1038,6 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "fixedColor": "blue",
-            "mode": "fixed"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 5,
-        "w": 4,
-        "x": 16,
-        "y": 11
-      },
-      "id": 20,
-      "options": {
-        "colorMode": "background",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": ["lastNotNull"],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "text": {},
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "10.4.1",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "P2AF30C786CBB33F1"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "sum(minecraft_loaded_chunks{job=~\"$job\", instance=~\"$instance\"})",
-          "interval": "",
-          "legendFormat": "",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "Loaded Chunks",
-      "transparent": true,
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "P2AF30C786CBB33F1"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "fixedColor": "blue",
-            "mode": "fixed"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 5,
-        "w": 4,
-        "x": 20,
-        "y": 11
-      },
-      "id": 21,
-      "options": {
-        "colorMode": "background",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": ["lastNotNull"],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "text": {},
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "10.4.1",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "P2AF30C786CBB33F1"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "sum(max(minecraft_total_loaded_chunks{job=~\"$job\"}) by (world, job))",
-          "interval": "",
-          "legendFormat": "",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "Total Loaded Chunks",
-      "transparent": true,
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "P2AF30C786CBB33F1"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
             "mode": "thresholds"
           },
           "mappings": [],
@@ -1066,7 +1066,7 @@
         "h": 5,
         "w": 4,
         "x": 16,
-        "y": 16
+        "y": 11
       },
       "id": 14,
       "options": {
@@ -1110,7 +1110,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 21
+        "y": 16
       },
       "id": 32,
       "panels": [
@@ -1608,7 +1608,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 22
+        "y": 17
       },
       "id": 33,
       "panels": [
@@ -1877,7 +1877,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 23
+        "y": 18
       },
       "id": 34,
       "title": "JVM Stats",
@@ -1944,7 +1944,7 @@
         "h": 10,
         "w": 6,
         "x": 0,
-        "y": 24
+        "y": 19
       },
       "id": 30,
       "options": {
@@ -2063,7 +2063,7 @@
         "h": 10,
         "w": 6,
         "x": 6,
-        "y": 24
+        "y": 19
       },
       "id": 31,
       "options": {
@@ -2184,7 +2184,7 @@
         "h": 5,
         "w": 4,
         "x": 12,
-        "y": 24
+        "y": 19
       },
       "id": 35,
       "options": {
@@ -2306,7 +2306,7 @@
         "h": 5,
         "w": 4,
         "x": 16,
-        "y": 24
+        "y": 19
       },
       "id": 36,
       "options": {
@@ -2428,7 +2428,7 @@
         "h": 5,
         "w": 4,
         "x": 20,
-        "y": 24
+        "y": 19
       },
       "id": 38,
       "options": {
@@ -2549,7 +2549,7 @@
         "h": 5,
         "w": 4,
         "x": 12,
-        "y": 29
+        "y": 24
       },
       "id": 40,
       "options": {
@@ -2670,7 +2670,7 @@
         "h": 5,
         "w": 4,
         "x": 16,
-        "y": 29
+        "y": 24
       },
       "id": 37,
       "options": {
@@ -2791,7 +2791,7 @@
         "h": 5,
         "w": 4,
         "x": 20,
-        "y": 29
+        "y": 24
       },
       "id": 39,
       "options": {
@@ -2910,7 +2910,7 @@
         "h": 14,
         "w": 4,
         "x": 0,
-        "y": 34
+        "y": 29
       },
       "id": 41,
       "options": {
@@ -3017,7 +3017,7 @@
         "h": 7,
         "w": 10,
         "x": 4,
-        "y": 34
+        "y": 29
       },
       "id": 42,
       "options": {
@@ -3114,7 +3114,7 @@
         "h": 7,
         "w": 10,
         "x": 14,
-        "y": 34
+        "y": 29
       },
       "id": 44,
       "options": {
@@ -3206,7 +3206,7 @@
         "h": 7,
         "w": 10,
         "x": 4,
-        "y": 41
+        "y": 36
       },
       "id": 43,
       "options": {
