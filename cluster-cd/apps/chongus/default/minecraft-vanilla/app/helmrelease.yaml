@@ -98,10 +98,10 @@ spec:
         - name: metrics
           containerPort: 25585
           protocol: TCP
-          port: 25585
           service:
             enabled: true
             embedded: true
+            port: 25585
           ingress:
             enabled: false
       serviceType: LoadBalancer
