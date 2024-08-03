@@ -11,7 +11,7 @@ spec:
         spec:
           containers:
             - name: rcon
-              image: itzg/rcon
+              image: itzg/minecraft-server
               imagePullPolicy: IfNotPresent
               command:
                 - rcon-cli
@@ -32,7 +32,7 @@ spec:
         spec:
           containers:
             - name: rcon
-              image: itzg/rcon
+              image: itzg/minecraft-server
               imagePullPolicy: IfNotPresent
               command:
                 - rcon-cli
@@ -53,7 +53,7 @@ spec:
         spec:
           containers:
             - name: rcon
-              image: itzg/rcon
+              image: itzg/minecraft-server
               imagePullPolicy: IfNotPresent
               command:
                 - rcon-cli
@@ -74,7 +74,7 @@ spec:
         spec:
           containers:
             - name: rcon
-              image: itzg/rcon
+              image: itzg/minecraft-server
               imagePullPolicy: IfNotPresent
               command:
                 - rcon-cli
@@ -95,7 +95,7 @@ spec:
         spec:
           containers:
             - name: rcon
-              image: itzg/rcon
+              image: itzg/minecraft-server
               imagePullPolicy: IfNotPresent
               command:
                 - rcon-cli
