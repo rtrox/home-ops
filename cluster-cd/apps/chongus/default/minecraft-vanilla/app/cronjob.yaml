@@ -14,7 +14,8 @@ spec:
               image: itzg/minecraft-server
               imagePullPolicy: IfNotPresent
               command:
-                - bash -c
+                - bash
+                - -c
                 - 'rcon-cli --host minecraft-vanilla-minecraft-rcon --port "25575" --password $$RCON_PASSWORD say "The server will restart in 30 minutes"'
               envFrom:
                 - secretRef:
@@ -36,7 +37,8 @@ spec:
               image: itzg/minecraft-server
               imagePullPolicy: IfNotPresent
               command:
-                - bash -c
+                - bash
+                - -c
                 - 'rcon-cli --host minecraft-vanilla-minecraft-rcon --port "25575" --password $$RCON_PASSWORD say "The server will restart in 15 minutes"'
               envFrom:
                 - secretRef:
@@ -58,7 +60,8 @@ spec:
               image: itzg/minecraft-server
               imagePullPolicy: IfNotPresent
               command:
-                - bash -c
+                - bash
+                - -c
                 - 'rcon-cli --host minecraft-vanilla-minecraft-rcon --port "25575" --password $$RCON_PASSWORD say "The server will restart in 5 minutes"'
               envFrom:
                 - secretRef:
@@ -80,7 +83,8 @@ spec:
               image: itzg/minecraft-server
               imagePullPolicy: IfNotPresent
               command:
-                - bash -c
+                - bash
+                - -c
                 - 'rcon-cli --host minecraft-vanilla-minecraft-rcon --port "25575" --password $$RCON_PASSWORD say "The server will restart in 1 minutes"'
               envFrom:
                 - secretRef:
@@ -102,7 +106,8 @@ spec:
               image: itzg/minecraft-server
               imagePullPolicy: IfNotPresent
               command:
-                - bash -c
+                - bash
+                - -c
                 - 'rcon-cli --host minecraft-vanilla-minecraft-rcon --port "25575" --password $$RCON_PASSWORD stop'
               envFrom:
                 - secretRef:
