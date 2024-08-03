@@ -6,6 +6,7 @@ resources:
   - ./helmrelease.yaml
   - ./externalsecret.yaml
   - ./servicemonitor.yaml
+  - ./cronjob.yaml
   - ../../../../base/_templates/volsync
 
 configMapGenerator:
