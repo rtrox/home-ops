@@ -14,15 +14,8 @@ spec:
               image: itzg/minecraft-server
               imagePullPolicy: IfNotPresent
               command:
-                - rcon-cli
-                - --host
-                - minecraft-vanilla-minecraft-rcon
-                - --port
-                - "25575"
-                - --password
-                - $$RCON_PASSWORD
-                - say
-                - "The server will restart in 30 minutes"
+                - bash -c
+                - 'rcon-cli --host minecraft-vanilla-minecraft-rcon --port "25575" --password $$RCON_PASSWORD say "The server will restart in 30 minutes"'
               envFrom:
                 - secretRef:
                     name: minecraft
@@ -43,15 +36,8 @@ spec:
               image: itzg/minecraft-server
               imagePullPolicy: IfNotPresent
               command:
-                - rcon-cli
-                - --host
-                - minecraft-vanilla-minecraft-rcon
-                - --port
-                - "25575"
-                - --password
-                - $$RCON_PASSWORD
-                - say
-                - "The server will restart in 15 minutes"
+                - bash -c
+                - 'rcon-cli --host minecraft-vanilla-minecraft-rcon --port "25575" --password $$RCON_PASSWORD say "The server will restart in 15 minutes"'
               envFrom:
                 - secretRef:
                     name: minecraft
@@ -72,15 +58,8 @@ spec:
               image: itzg/minecraft-server
               imagePullPolicy: IfNotPresent
               command:
-                - rcon-cli
-                - --host
-                - minecraft-vanilla-minecraft-rcon
-                - --port
-                - "25575"
-                - --password
-                - $$RCON_PASSWORD
-                - say
-                - "The server will restart in 5 minutes"
+                - bash -c
+                - 'rcon-cli --host minecraft-vanilla-minecraft-rcon --port "25575" --password $$RCON_PASSWORD say "The server will restart in 5 minutes"'
               envFrom:
                 - secretRef:
                     name: minecraft
@@ -101,15 +80,8 @@ spec:
               image: itzg/minecraft-server
               imagePullPolicy: IfNotPresent
               command:
-                - rcon-cli
-                - --host
-                - minecraft-vanilla-minecraft-rcon
-                - --port
-                - "25575"
-                - --password
-                - $$RCON_PASSWORD
-                - say
-                - "The server will restart in 5 minutes"
+                - bash -c
+                - 'rcon-cli --host minecraft-vanilla-minecraft-rcon --port "25575" --password $$RCON_PASSWORD say "The server will restart in 1 minutes"'
               envFrom:
                 - secretRef:
                     name: minecraft
@@ -130,14 +102,8 @@ spec:
               image: itzg/minecraft-server
               imagePullPolicy: IfNotPresent
               command:
-                - rcon-cli
-                - --host
-                - minecraft-vanilla-minecraft-rcon
-                - --port
-                - "25575"
-                - --password
-                - $$RCON_PASSWORD
-                - stop
+                - bash -c
+                - 'rcon-cli --host minecraft-vanilla-minecraft-rcon --port "25575" --password $$RCON_PASSWORD stop'
               envFrom:
                 - secretRef:
                     name: minecraft
