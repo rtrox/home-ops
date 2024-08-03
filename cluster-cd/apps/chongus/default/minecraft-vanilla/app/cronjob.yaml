@@ -15,9 +15,12 @@ spec:
               imagePullPolicy: IfNotPresent
               command:
                 - rcon-cli
-                - --host minecraft-vanilla-minecraft-rcon
-                - --port 25575
-                - say "The server will restart in 30 minutes"
+                - --host
+                - minecraft-vanilla-minecraft-rcon
+                - --port
+                - "25575"
+                - say
+                - "The server will restart in 30 minutes"
           restartPolicy: OnFailure
 ---
 apiVersion: batch/v1
@@ -36,9 +39,12 @@ spec:
               imagePullPolicy: IfNotPresent
               command:
                 - rcon-cli
-                - --host minecraft-vanilla-minecraft-rcon
-                - --port 25575
-                - say "The server will restart in 15 minutes"
+                - --host
+                - minecraft-vanilla-minecraft-rcon
+                - --port
+                - "25575"
+                - say
+                - "The server will restart in 15 minutes"
           restartPolicy: OnFailure
 ---
 apiVersion: batch/v1
@@ -57,9 +63,12 @@ spec:
               imagePullPolicy: IfNotPresent
               command:
                 - rcon-cli
-                - --host minecraft-vanilla-minecraft-rcon
-                - --port 25575
-                - say "The server will restart in 5 minutes"
+                - --host
+                - minecraft-vanilla-minecraft-rcon
+                - --port
+                - "25575"
+                - say
+                - "The server will restart in 5 minutes"
           restartPolicy: OnFailure
 ---
 apiVersion: batch/v1
@@ -78,9 +87,12 @@ spec:
               imagePullPolicy: IfNotPresent
               command:
                 - rcon-cli
-                - --host minecraft-vanilla-minecraft-rcon
-                - --port 25575
-                - say "The server will restart in 5 minutes"
+                - --host
+                - minecraft-vanilla-minecraft-rcon
+                - --port
+                - "25575"
+                - say
+                - "The server will restart in 5 minutes"
           restartPolicy: OnFailure
 ---
 apiVersion: batch/v1
@@ -99,7 +111,9 @@ spec:
               imagePullPolicy: IfNotPresent
               command:
                 - rcon-cli
-                - --host minecraft-vanilla-minecraft-rcon
-                - --port 25575
+                - --host
+                - minecraft-vanilla-minecraft-rcon
+                - --port
+                - "25575"
                 - stop
           restartPolicy: OnFailure
