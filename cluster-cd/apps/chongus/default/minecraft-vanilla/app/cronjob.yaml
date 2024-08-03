@@ -19,8 +19,13 @@ spec:
                 - minecraft-vanilla-minecraft-rcon
                 - --port
                 - "25575"
+                - --password
+                - $$RCON_PASSWORD
                 - say
                 - "The server will restart in 30 minutes"
+              envFrom:
+                - secretRef:
+                    name: minecraft
           restartPolicy: OnFailure
 ---
 apiVersion: batch/v1
@@ -43,8 +48,13 @@ spec:
                 - minecraft-vanilla-minecraft-rcon
                 - --port
                 - "25575"
+                - --password
+                - $$RCON_PASSWORD
                 - say
                 - "The server will restart in 15 minutes"
+              envFrom:
+                - secretRef:
+                    name: minecraft
           restartPolicy: OnFailure
 ---
 apiVersion: batch/v1
@@ -67,8 +77,13 @@ spec:
                 - minecraft-vanilla-minecraft-rcon
                 - --port
                 - "25575"
+                - --password
+                - $$RCON_PASSWORD
                 - say
                 - "The server will restart in 5 minutes"
+              envFrom:
+                - secretRef:
+                    name: minecraft
           restartPolicy: OnFailure
 ---
 apiVersion: batch/v1
@@ -91,8 +106,13 @@ spec:
                 - minecraft-vanilla-minecraft-rcon
                 - --port
                 - "25575"
+                - --password
+                - $$RCON_PASSWORD
                 - say
                 - "The server will restart in 5 minutes"
+              envFrom:
+                - secretRef:
+                    name: minecraft
           restartPolicy: OnFailure
 ---
 apiVersion: batch/v1
@@ -115,5 +135,10 @@ spec:
                 - minecraft-vanilla-minecraft-rcon
                 - --port
                 - "25575"
+                - --password
+                - $$RCON_PASSWORD
                 - stop
+              envFrom:
+                - secretRef:
+                    name: minecraft
           restartPolicy: OnFailure
