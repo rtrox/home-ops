@@ -35,7 +35,6 @@ spec:
             image:
               repository: public.ecr.aws/docker/library/eclipse-mosquitto
               tag: 2.0.18@sha256:761147236a85bd0c33208ac55bb8e1026f7d74b6eeec7f95b25aebae49e01555
-            imagePullPolicy: IfNotPresent
             command: ["/bin/sh", "-c"]
             args:
               [
@@ -64,6 +63,7 @@ spec:
     service:
       main:
         type: LoadBalancer
+        controller: main
         annotations:
           external-dns.alpha.kubernetes.io/hostname: mqtt.${SECRET_DOMAIN}
           io.cilium/lb-ipam-ips: ${MOSQUITTO_LB_IPV4},${MOSQUITTO_LB_IPV6}
@@ -93,7 +93,6 @@ spec:
           main:
             01-init-config:
               - path: /tmp/secret
-        readOnly: true
       external-config:
         type: emptyDir
         globalMounts:
