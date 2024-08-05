@@ -34,6 +34,11 @@ compactor:
   persistence:
     enabled: true
     size: 16Gi
+  resources:
+    requests:
+      memory: 192Mi # Default
+    limits:
+      memory: 1Gi
 storegateway:
   podSecurityContext:
     enabled: true
