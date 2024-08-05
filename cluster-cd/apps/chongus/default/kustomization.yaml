@@ -5,7 +5,7 @@ resources:
   - ./atuin/ks.yaml
   - ./paperless-ngx/ks.yaml
   - ./shlink/ks.yaml
-  - ./factorio-ultracube/ks.yaml
+  # - ./factorio-ultracube/ks.yaml
   - ./factorio-space-ex/ks.yaml
-  - ./minecraft-cpw/ks.yaml
+  # - ./minecraft-cpw/ks.yaml
   - ./minecraft-vanilla/ks.yaml
