@@ -8,6 +8,7 @@ command:
   - --http-enabled=true
   - --http-port=8080
   - --hostname-strict=false
+  - --hostname=https://auth.${SECRET_DOMAIN}/auth
   - --spi-events-listener-jboss-logging-success-level=info
   - --spi-events-listener-jboss-logging-error-level=warn
 
