@@ -33,7 +33,7 @@ spec:
         # fsGroup: 1000
       containers:
         - name: calibre
-          image: ghcr.io/linuxserver/calibre:7.10.0
+          image: ghcr.io/linuxserver/calibre:7.16.0
           imagePullPolicy: IfNotPresent
           resources:
             limits:
