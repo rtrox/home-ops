@@ -1,8 +1,5 @@
 ---
 replicas: 2
-image:
-  repository: quay.io/keycloak/keycloak
-  tag: 24.0.4
 
 command:
   - /opt/keycloak/bin/kc.sh
