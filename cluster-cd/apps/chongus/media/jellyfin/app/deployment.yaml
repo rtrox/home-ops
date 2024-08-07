@@ -38,7 +38,7 @@ spec:
           - 100
       containers:
         - name: jellyfin
-          image: jellyfin/jellyfin:10.9.7
+          image: jellyfin/jellyfin:10.9.9
           imagePullPolicy: IfNotPresent
           resources:
             limits:
