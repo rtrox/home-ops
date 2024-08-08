@@ -10,4 +10,4 @@ resources:
   - ./kube-prometheus-stack/ks.yaml
   - ./thanos/ks.yaml
   - ./grafana/ks.yaml
-  - ./ping_exporter/ks.yaml
+  - ./ping-exporter/ks.yaml
