@@ -5,4 +5,3 @@ kind: Kustomization
 resources:
   - ../../../../base/ping-exporter
   - helmrelease.yaml
-  - externalsecret.yaml
