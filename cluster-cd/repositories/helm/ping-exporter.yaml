@@ -1,0 +1,11 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/fluxcd-community/flux2-schemas/main/helmrepository-source-v1beta2.json
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: ping-exporter
+  namespace: flux-system
+spec:
+  interval: 30m
+  url: https://raw.githubusercontent.com/czerwonk/ping_exporter/main/dist/charts/
+  timeout: 3m
