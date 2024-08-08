@@ -23,6 +23,7 @@ resources:
   - kyverno.yaml
   - nvidia-device-plugin.yaml
   - openebs.yaml
+  - ping-exporter.yaml
   - piraeus.yaml
   - postfinance.yaml
   - prometheus-community.yaml
