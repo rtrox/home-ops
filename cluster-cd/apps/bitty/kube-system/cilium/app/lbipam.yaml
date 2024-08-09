@@ -4,6 +4,6 @@ kind: CiliumLoadBalancerIPPool
 metadata:
   name: main-pool
 spec:
-  cidrs:
+  blocks:
     - cidr: ${IPV4_LB_POOL}
     - cidr: ${IPV6_LB_POOL}
