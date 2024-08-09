@@ -13,6 +13,7 @@ spec:
   endpoints:
     - port: metrics
       scheme: http
+      path: /metrics
   jobLabel: jobLabel
   selector:
     matchLabels:
