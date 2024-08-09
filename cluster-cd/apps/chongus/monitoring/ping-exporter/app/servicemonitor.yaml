@@ -11,7 +11,7 @@ metadata:
   name: ping-exporter
 spec:
   endpoints:
-    - port: metrics
+    - port: http
       scheme: http
       path: /metrics
   jobLabel: jobLabel
