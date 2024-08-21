@@ -37,7 +37,7 @@ spec:
       wal:
         compression: bzip2
         maxParallel: 8
-      destinationPath: s3://k8s-${CLUSTER_NAME}-rtrox-io-cnpg/
+      destinationPath: s3://k8s-rtrox-io-${CLUSTER_NAME}-cnpg/
       endpointURL: ${MINIO_ENDPOINT}
       # Note: serverName version needs to be inclemented
       # when recovering from an existing cnpg cluster
