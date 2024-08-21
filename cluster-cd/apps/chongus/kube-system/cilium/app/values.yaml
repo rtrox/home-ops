@@ -52,11 +52,11 @@ ingressController:
 operator:
   rollOutPods: true
 
-ipv6:
-  enabled: true
+# ipv6:
+#   enabled: true
 autoDirectNodeRoutes: true
 ipv4NativeRoutingCIDR: 10.244.0.0/16
-ipv6NativeRoutingCIDR: ${IPV6_POD_CIDR}
+# ipv6NativeRoutingCIDR: ${IPV6_POD_CIDR}
 routingMode: native
 containerRuntime:
   integration: containerd
