@@ -8,6 +8,7 @@ resources:
   # Flux-Kustomizations
   - ./home-assistant/ks.yaml
   - ./zwavejs/ks.yaml
-  - ./frigate/ks.yaml
+  - ./scrypted/ks.yaml
+  # - ./frigate/ks.yaml
   - ./mosquitto/ks.yaml
   - ./garbage-api/ks.yaml
