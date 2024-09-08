@@ -49,12 +49,12 @@ spec:
               PAPERLESS_TASK_WORKERS: "2"
               # Configure Remote User auth
               PAPERLESS_ACCOUNT_ALLOW_SIGNUPS: "false"
-              PAPERLESS_SOCIALACCOUNT_ALLOW_SIGNUPS: "true"
-              PAPERLESS_SOCIALACCOUNT_PROVIDERS:
-                valueFrom:
-                  secretKeyRef:
-                    name: paperless-secret
-                    key: PAPERLESS_SOCIALACCOUNT_PROVIDERS
+              # PAPERLESS_SOCIALACCOUNT_ALLOW_SIGNUPS: "true"
+              # PAPERLESS_SOCIALACCOUNT_PROVIDERS:
+              #   valueFrom:
+              #     secretKeyRef:
+              #       name: paperless-secret
+              #       key: PAPERLESS_SOCIALACCOUNT_PROVIDERS
               # Configure folders
               PAPERLESS_CONSUMPTION_DIR: /data/nas/incoming
               PAPERLESS_DATA_DIR: /data/local/data
