@@ -18,7 +18,7 @@ spec:
 
   values:
     defaultPodOptions:
-      runtimeClassName: nvidia
+      # runtimeClassName: nvidia
       enableServiceLinks: true
     controllers:
       main:
@@ -30,7 +30,7 @@ spec:
           dnsPolicy: ClusterFirstWithHostNet
           nodeSelector:
             google.feature.node.kubernetes.io/coral: "true"
-            nvidia.feature.node.kubernetes.io/nvidia-gpu: "true"
+            # nvidia.feature.node.kubernetes.io/nvidia-gpu: "true"
           securityContext:
             supplementalGroups:
               - 65542 # gladius:external-services
