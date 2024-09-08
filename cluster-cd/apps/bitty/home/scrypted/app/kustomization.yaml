@@ -5,7 +5,7 @@ kind: Kustomization
 resources:
   - helmrelease.yaml
   - ../../../../base/_templates/volsync
-  - restore.yaml
+  # - restore.yaml
 
 images:
   - name: ghcr.io/koush/scrypted
