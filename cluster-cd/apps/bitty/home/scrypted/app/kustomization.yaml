@@ -6,6 +6,7 @@ resources:
   - helmrelease.yaml
   - ../../../../base/_templates/volsync
   # - restore.yaml
+  - restore-fix.yaml
 
 images:
   - name: ghcr.io/koush/scrypted
