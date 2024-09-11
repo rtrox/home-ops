@@ -11,7 +11,7 @@ spec:
     # Use an existing PVC, don't provision a new one
     destinationPVC: ${APP}
     copyMethod: Snapshot
-    restoreAsOf: "2024-09-10T20:00:0-00:00"
+    restoreAsOf: "2024-09-10T20:00:00-00:00"
     moverSecurityContext:
       runAsUser: 568
       runAsGroup: 568
