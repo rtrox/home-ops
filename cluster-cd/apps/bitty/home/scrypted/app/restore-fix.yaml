@@ -5,7 +5,7 @@ metadata:
   name: scrypted-destination
 spec:
   trigger:
-    manual: restore-scrypted-once-to-fix-broken-pvc-2
+    manual: restore-scrypted-once-to-fix-broken-pvc-3
   restic:
     repository: scrypted-volsync-minio-secret
     # Use an existing PVC, don't provision a new one
