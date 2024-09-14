@@ -25,7 +25,7 @@ additionalMachineCertSans: *san
 
 nodes:
   - hostname: node01.${clusterName}.${clusterDNSSuffix}
-    ipAddress: 172.17.2.1
+    ipAddress: 172.30.21.1
     controlPlane: true
     installDiskSelector:
       type: nvme
@@ -36,7 +36,7 @@ nodes:
       useUKI: true
 
   - hostname: node02.${clusterName}.${clusterDNSSuffix}
-    ipAddress: 172.17.2.2
+    ipAddress: 172.30.21.2
     controlPlane: true
     installDiskSelector:
       type: nvme
@@ -47,7 +47,7 @@ nodes:
       useUKI: true
 
   - hostname: node03.${clusterName}.${clusterDNSSuffix}
-    ipAddress: 172.17.2.3
+    ipAddress: 172.30.21.3
     controlPlane: true
     installDiskSelector:
       type: nvme

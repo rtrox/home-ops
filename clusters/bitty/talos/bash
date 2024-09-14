@@ -1,1 +1,0 @@
-talosctl bootstrap --talosconfig=./clusterconfig/talosconfig --nodes=172.17.2.1;
