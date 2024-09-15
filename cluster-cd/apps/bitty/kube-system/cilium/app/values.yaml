@@ -86,6 +86,11 @@ hubble:
       enabled: false
     rollOutPods: true
 
+envoy:
+  enabled: false
+
+enableRuntimeDeviceDetection: true
+
 securityContext:
   capabilities:
     ciliumAgent:

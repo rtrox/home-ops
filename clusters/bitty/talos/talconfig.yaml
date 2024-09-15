@@ -4,7 +4,7 @@ clusterName: ${clusterName}
 endpoint: https://${clusterName}.${clusterDNSSuffix}:6443
 allowSchedulingOnMasters: true
 # renovate: depName=ghcr.io/siderolabs/installer datasource=docker extractVersion=^(?<version>.*)$
-talosVersion: v1.7.5
+talosVersion: v1.7.6
 # renovate: depName=kubernetes/kubernetes datasource=github-releases extractVersion=^v(?<version>.*)$
 kubernetesVersion: 1.30.3
 
@@ -32,8 +32,8 @@ nodes:
     machineSpec:
       mode: metal
       arch: amd64
-      secureboot: true
-      useUKI: true
+      # secureboot: true
+      # useUKI: true
 
   - hostname: node02.${clusterName}.${clusterDNSSuffix}
     ipAddress: 172.30.21.2
@@ -43,8 +43,8 @@ nodes:
     machineSpec:
       mode: metal
       arch: amd64
-      secureboot: true
-      useUKI: true
+      # secureboot: true
+      # useUKI: true
 
   - hostname: node03.${clusterName}.${clusterDNSSuffix}
     ipAddress: 172.30.21.3
@@ -54,8 +54,8 @@ nodes:
     machineSpec:
       mode: metal
       arch: amd64
-      secureboot: true
-      useUKI: true
+      # secureboot: true
+      # useUKI: true
 
 controlPlane:
   patches:
@@ -113,7 +113,7 @@ controlPlane:
             permissions: 0o644
             content: |
               [ NFSMount_Global_Options ]
-              nfsvers=4.1
+              nfsvers=4.2
               hard=True
               noatime=True
               nodiratime=True
@@ -126,7 +126,6 @@ controlPlane:
       machine:
         kubelet:
           extraArgs:
-            feature-gates: GracefulNodeShutdown=true,NewVolumeManagerReconstruction=false
             rotate-server-certificates: "true"
           extraConfig:
             maxPods: 150
