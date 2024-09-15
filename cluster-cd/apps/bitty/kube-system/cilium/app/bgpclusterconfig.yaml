@@ -16,8 +16,12 @@ spec:
           peerAddress: ${NETWORK_BGP_PEER}
           peerConfigRef:
             name: "cilium-peer-ipv4"
+
+    - name: "instance-64513"
+      localASN: 64513
+      peers:
         - name: "peer-ipv6"
-          peerASN: 64512
+          peerASN: 64513
           peerAddress: ${NETWORK_BGP_PEER_V6}
           peerConfigRef:
             name: "cilium-peer-ipv6"
