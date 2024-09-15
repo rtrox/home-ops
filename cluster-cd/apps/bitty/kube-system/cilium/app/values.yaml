@@ -10,7 +10,7 @@ bgp:
   enabled: false
   announce:
     loadbalancerIP: true
-    podCIDR: false
+    podCIDR: true
 
 bgpControlPlane:
   enabled: true
