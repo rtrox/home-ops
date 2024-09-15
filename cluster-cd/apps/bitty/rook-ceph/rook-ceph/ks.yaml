@@ -41,6 +41,11 @@ spec:
   dependsOn:
     - name: rook-ceph
     - name: snapshot-controller
+  healthChecks:
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: never-going-to-exist
+      namespace: rook-ceph
   wait: true
   interval: 30m
   retryInterval: 1m
