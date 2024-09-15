@@ -64,6 +64,7 @@ controlPlane:
       machine:
         network:
           disableSearchDomain: true
+
     # Enable KubePrism
     - |-
       machine:
@@ -129,6 +130,10 @@ controlPlane:
             rotate-server-certificates: "true"
           extraConfig:
             maxPods: 150
+          nodeIP:
+            validSubnets:
+              - 172.16.0.0/12
+              - 2001:470:e899:100::/64
 
     # Custom sysctls
     - |-
