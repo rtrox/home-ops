@@ -15,9 +15,9 @@ spec:
           peerASN: 64512
           peerAddress: ${NETWORK_BGP_PEER}
           peerConfigRef:
-            name: "cilium-peer"
+            name: "cilium-peer-ipv4"
         - name: "peer-ipv6"
           peerASN: 64512
           peerAddress: ${NETWORK_BGP_PEER_V6}
           peerConfigRef:
-            name: "cilium-peer"
+            name: "cilium-peer-ipv6"
