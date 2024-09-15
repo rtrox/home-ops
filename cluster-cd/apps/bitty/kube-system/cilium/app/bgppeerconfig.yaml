@@ -16,6 +16,11 @@ spec:
       advertisements:
         matchLabels:
           advertise: "bgp"
+    - afi: ipv6
+      safi: unicast
+      advertisements:
+        matchLabels:
+          advertise: "bgp"
 ---
 apiVersion: cilium.io/v2alpha1
 kind: CiliumBGPPeerConfig
@@ -30,6 +35,11 @@ spec:
     restartTimeSeconds: 15
   families:
     - afi: ipv6
+      safi: unicast
+      advertisements:
+        matchLabels:
+          advertise: "bgp"
+    - afi: ipv4
       safi: unicast
       advertisements:
         matchLabels:
