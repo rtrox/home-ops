@@ -54,7 +54,7 @@ spec:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: "wipe-disk-node03-sda"
+  name: "wipe-disk-node03-sdb"
   namespace: "system"
 spec:
   ttlSecondsAfterFinished: 3600
@@ -72,7 +72,7 @@ spec:
           command: ["/bin/sh", "-c"]
           args:
             - apk add --no-cache sgdisk util-linux parted;
-              sgdisk --zap-all /dev/sda;
-              blkdiscard /dev/sda;
-              dd if=/dev/zero bs=1M count=10000 oflag=direct of=/dev/sda;
-              partprobe /dev/sda;
+              sgdisk --zap-all /dev/sdb;
+              blkdiscard /dev/sdb;
+              dd if=/dev/zero bs=1M count=10000 oflag=direct of=/dev/sdb;
+              partprobe /dev/sdb;
