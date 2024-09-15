@@ -13,3 +13,6 @@ spec:
         addresses:
           - ExternalIP
           - LoadBalancerIP
+      selector:
+        matchExpressions:
+          - { key: somekey, operator: NotIn, values: [somenonexistentvalue] }
