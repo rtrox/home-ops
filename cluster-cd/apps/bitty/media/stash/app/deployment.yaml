@@ -26,7 +26,7 @@ spec:
     spec:
       initContainers:
         - name: ensure-ipv6-access
-          image: ghcr.io/onedr0p/alpine:rolling
+          image: alpine:3.19.4
           imagePullPolicy: IfNotPresent
           command:
             - "sh"
