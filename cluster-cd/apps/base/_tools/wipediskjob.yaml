@@ -3,7 +3,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: "wipe-disk-node01-sda"
-  namespace: "system"
+  namespace: "kube-system"
 spec:
   ttlSecondsAfterFinished: 3600
   template:
@@ -29,7 +29,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: "wipe-disk-node02-sda"
-  namespace: "system"
+  namespace: "kube-system"
 spec:
   ttlSecondsAfterFinished: 3600
   template:
@@ -54,8 +54,8 @@ spec:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: "wipe-disk-node03-sdb"
-  namespace: "system"
+  name: "wipe-disk-node03-sda"
+  namespace: "kube-system"
 spec:
   ttlSecondsAfterFinished: 3600
   template:
@@ -72,7 +72,7 @@ spec:
           command: ["/bin/sh", "-c"]
           args:
             - apk add --no-cache sgdisk util-linux parted;
-              sgdisk --zap-all /dev/sdb;
-              blkdiscard /dev/sdb;
-              dd if=/dev/zero bs=1M count=10000 oflag=direct of=/dev/sdb;
-              partprobe /dev/sdb;
+              sgdisk --zap-all /dev/sda;
+              blkdiscard /dev/sda;
+              dd if=/dev/zero bs=1M count=10000 oflag=direct of=/dev/sda;
+              partprobe /dev/sda;
