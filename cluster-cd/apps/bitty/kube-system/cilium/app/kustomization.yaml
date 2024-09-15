@@ -6,9 +6,9 @@ resources:
   - ./helmrelease.yaml
   # - ./bgppeeringpolicy.yaml
   - ./lbipam.yaml
-  - ./bgpadvertisements.yaml
-  - ./bgppeerconfig.yaml
-  - ./bgpclusterconfig.yaml
+  # - ./bgpadvertisements.yaml
+  # - ./bgppeerconfig.yaml
+  # - ./bgpclusterconfig.yaml
 
 configMapGenerator:
   - name: cilium-values
