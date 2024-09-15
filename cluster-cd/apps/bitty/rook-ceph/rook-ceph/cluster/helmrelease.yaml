@@ -10,7 +10,7 @@ spec:
   chart:
     spec:
       chart: rook-ceph-cluster
-      version: v1.15
+      version: v1.14.9
       sourceRef:
         kind: HelmRepository
         name: rook-ceph
@@ -55,7 +55,7 @@ spec:
             cpu: 442m
             memory: 2Gi
           limits:
-            memory: 6Gi
+            memory: 8Gi
         mgr-sidecar:
           requests:
             cpu: 49m
