@@ -13,7 +13,7 @@ spec:
       nodeName: node01
       containers:
         - name: disk-wipe
-          image: ghcr.io/onedr0p/alpine:3.19.1@sha256:3fbc581cb0fe29830376161ae026e2a765dcc11e1747477fe9ebf155720b8638
+          image: alpine:3.19.1
           securityContext:
             privileged: true
           resources: {}
@@ -42,7 +42,7 @@ spec:
       nodeName: node02
       containers:
         - name: disk-wipe
-          image: ghcr.io/onedr0p/alpine:3.19.1@sha256:3fbc581cb0fe29830376161ae026e2a765dcc11e1747477fe9ebf155720b8638
+          image: alpine:3.19.1
           securityContext:
             privileged: true
           resources: {}
@@ -71,7 +71,7 @@ spec:
       nodeName: node03
       containers:
         - name: disk-wipe
-          image: ghcr.io/onedr0p/alpine:3.19.1@sha256:3fbc581cb0fe29830376161ae026e2a765dcc11e1747477fe9ebf155720b8638
+          image: alpine:3.19.1
           securityContext:
             privileged: true
           resources: {}

@@ -2,7 +2,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: "wipe-disk-node01-sdc"
+  name: "wipe-disk-node01-sda"
   namespace: "system"
 spec:
   ttlSecondsAfterFinished: 3600
@@ -13,22 +13,22 @@ spec:
       nodeName: node01
       containers:
         - name: disk-wipe
-          image: ghcr.io/onedr0p/alpine:3.19.1@sha256:3fbc581cb0fe29830376161ae026e2a765dcc11e1747477fe9ebf155720b8638
+          image: alpine:3.19.1
           securityContext:
             privileged: true
           resources: {}
           command: ["/bin/sh", "-c"]
           args:
             - apk add --no-cache sgdisk util-linux parted;
-              sgdisk --zap-all /dev/sdc;
-              blkdiscard /dev/sdc;
-              dd if=/dev/zero bs=1M count=10000 oflag=direct of=/dev/sdc;
-              partprobe /dev/sdc;
+              sgdisk --zap-all /dev/sda;
+              blkdiscard /dev/sda;
+              dd if=/dev/zero bs=1M count=10000 oflag=direct of=/dev/sda;
+              partprobe /dev/sda;
 ---
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: "wipe-disk-node02-sdc"
+  name: "wipe-disk-node02-sda"
   namespace: "system"
 spec:
   ttlSecondsAfterFinished: 3600
@@ -39,22 +39,22 @@ spec:
       nodeName: node02
       containers:
         - name: disk-wipe
-          image: ghcr.io/onedr0p/alpine:3.19.1@sha256:3fbc581cb0fe29830376161ae026e2a765dcc11e1747477fe9ebf155720b8638
+          image: alpine:3.19.1
           securityContext:
             privileged: true
           resources: {}
           command: ["/bin/sh", "-c"]
           args:
             - apk add --no-cache sgdisk util-linux parted;
-              sgdisk --zap-all /dev/sdc;
-              blkdiscard /dev/sdc;
-              dd if=/dev/zero bs=1M count=10000 oflag=direct of=/dev/sdc;
-              partprobe /dev/sdc;
+              sgdisk --zap-all /dev/sda;
+              blkdiscard /dev/sda;
+              dd if=/dev/zero bs=1M count=10000 oflag=direct of=/dev/sda;
+              partprobe /dev/sda;
 ---
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: "wipe-disk-node03-sdc"
+  name: "wipe-disk-node03-sda"
   namespace: "system"
 spec:
   ttlSecondsAfterFinished: 3600
@@ -65,92 +65,14 @@ spec:
       nodeName: node03
       containers:
         - name: disk-wipe
-          image: ghcr.io/onedr0p/alpine:3.19.1@sha256:3fbc581cb0fe29830376161ae026e2a765dcc11e1747477fe9ebf155720b8638
+          image: alpine:3.19.1
           securityContext:
             privileged: true
           resources: {}
           command: ["/bin/sh", "-c"]
           args:
             - apk add --no-cache sgdisk util-linux parted;
-              sgdisk --zap-all /dev/sdc;
-              blkdiscard /dev/sdc;
-              dd if=/dev/zero bs=1M count=10000 oflag=direct of=/dev/sdc;
-              partprobe /dev/sdc;
----
-apiVersion: batch/v1
-kind: Job
-metadata:
-  name: "wipe-disk-node01-sdd"
-  namespace: "system"
-spec:
-  ttlSecondsAfterFinished: 3600
-  template:
-    spec:
-      automountServiceAccountToken: false
-      restartPolicy: Never
-      nodeName: node01
-      containers:
-        - name: disk-wipe
-          image: ghcr.io/onedr0p/alpine:3.19.1@sha256:3fbc581cb0fe29830376161ae026e2a765dcc11e1747477fe9ebf155720b8638
-          securityContext:
-            privileged: true
-          resources: {}
-          command: ["/bin/sh", "-c"]
-          args:
-            - apk add --no-cache sgdisk util-linux parted;
-              sgdisk --zap-all /dev/sdd;
-              blkdiscard /dev/sdd;
-              dd if=/dev/zero bs=1M count=10000 oflag=direct of=/dev/sdd;
-              partprobe /dev/sdd;
----
-apiVersion: batch/v1
-kind: Job
-metadata:
-  name: "wipe-disk-node02-sdd"
-  namespace: "system"
-spec:
-  ttlSecondsAfterFinished: 3600
-  template:
-    spec:
-      automountServiceAccountToken: false
-      restartPolicy: Never
-      nodeName: node02
-      containers:
-        - name: disk-wipe
-          image: ghcr.io/onedr0p/alpine:3.19.1@sha256:3fbc581cb0fe29830376161ae026e2a765dcc11e1747477fe9ebf155720b8638
-          securityContext:
-            privileged: true
-          resources: {}
-          command: ["/bin/sh", "-c"]
-          args:
-            - apk add --no-cache sgdisk util-linux parted;
-              sgdisk --zap-all /dev/sdd;
-              blkdiscard /dev/sdd;
-              dd if=/dev/zero bs=1M count=10000 oflag=direct of=/dev/sdd;
-              partprobe /dev/sdd;
----
-apiVersion: batch/v1
-kind: Job
-metadata:
-  name: "wipe-disk-node03-sdd"
-  namespace: "system"
-spec:
-  ttlSecondsAfterFinished: 3600
-  template:
-    spec:
-      automountServiceAccountToken: false
-      restartPolicy: Never
-      nodeName: node03
-      containers:
-        - name: disk-wipe
-          image: ghcr.io/onedr0p/alpine:3.19.1@sha256:3fbc581cb0fe29830376161ae026e2a765dcc11e1747477fe9ebf155720b8638
-          securityContext:
-            privileged: true
-          resources: {}
-          command: ["/bin/sh", "-c"]
-          args:
-            - apk add --no-cache sgdisk util-linux parted;
-              sgdisk --zap-all /dev/sdd;
-              blkdiscard /dev/sdd;
-              dd if=/dev/zero bs=1M count=10000 oflag=direct of=/dev/sdd;
-              partprobe /dev/sdd;
+              sgdisk --zap-all /dev/sda;
+              blkdiscard /dev/sda;
+              dd if=/dev/zero bs=1M count=10000 oflag=direct of=/dev/sda;
+              partprobe /dev/sda;
