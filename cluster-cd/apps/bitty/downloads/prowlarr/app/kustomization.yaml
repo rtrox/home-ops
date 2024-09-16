@@ -16,7 +16,7 @@ resources:
 images:
   # TODO: non-nightly image to let renovate pick it up
   - name: ghcr.io/onedr0p/prowlarr-nightly
-    newTag: "1.21.2.4648"
+    newTag: "1.24.2.4744"
   - name: ghcr.io/onedr0p/exportarr
     newTag: v2.0.1
 
