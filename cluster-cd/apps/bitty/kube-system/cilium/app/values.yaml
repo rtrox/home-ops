@@ -15,7 +15,7 @@ cni:
 # bgpControlPlane:
 #   enabled: true
 
-l2announcement:
+l2announcements:
   enabled: true
 
 k8sServiceHost: localhost
