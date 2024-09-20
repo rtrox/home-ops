@@ -19,7 +19,7 @@ spec:
           restartPolicy: OnFailure
           initContainers:
             - name: render-configs
-              image: ghcr.io/onedr0p/alpine:3.19.1
+              image: alpine:3.19.1
               env:
                 - name: COMPlus_EnableDiagnostics
                   value: "0"
