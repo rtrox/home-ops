@@ -43,7 +43,7 @@ spec:
             privileged: true
       containers:
         - name: prowlarr
-          image: ghcr.io/onedr0p/prowlarr-nightly:1.23.1
+          image: ghcr.io/onedr0p/prowlarr:1.23.1
           imagePullPolicy: IfNotPresent
           resources:
             limits:
