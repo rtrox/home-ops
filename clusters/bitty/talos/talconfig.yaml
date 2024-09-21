@@ -13,10 +13,10 @@ cniConfig:
 
 clusterPodNets:
   - 10.244.0.0/16
-  - ${ipv6PodNet}
+#  - ${ipv6PodNet}
 clusterSvcNets:
   - 10.96.0.0/12
-  - ${ipv6SvcNet}
+#  - ${ipv6SvcNet}
 
 additionalApiServerCertSans: &san
   - ${clusterName}.${clusterDNSSuffix}
@@ -79,10 +79,6 @@ controlPlane:
         allowSchedulingOnMasters: true
         proxy:
           disabled: true
-        controllerManager:
-          extraArgs:
-            node-cidr-mask-size-ipv6: "72"
-            feature-gates: MultiCIDRServiceAllocator=true
 
     - |-
       machine:

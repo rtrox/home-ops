@@ -23,7 +23,6 @@ spec:
         app.kubernetes.io/name: *name
         app.kubernetes.io/instance: *name
         app.kubernentes.io/component: *name
-        setGateway: "true"
     spec:
       securityContext:
         fsGroup: 568
