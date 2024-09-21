@@ -25,7 +25,7 @@ additionalMachineCertSans: *san
 
 nodes:
   - hostname: node01.${clusterName}.${clusterDNSSuffix}
-    ipAddress: 172.18.2.1
+    ipAddress: 172.30.11.1
     controlPlane: true
     installDiskSelector:
       size: < 500GB
@@ -34,7 +34,7 @@ nodes:
       arch: amd64
 
   - hostname: node02.${clusterName}.${clusterDNSSuffix}
-    ipAddress: 172.18.2.2
+    ipAddress: 172.30.11.2
     controlPlane: true
     installDiskSelector:
       size: < 500GB
@@ -43,7 +43,7 @@ nodes:
       arch: amd64
 
   - hostname: node03.${clusterName}.${clusterDNSSuffix}
-    ipAddress: 172.18.2.3
+    ipAddress: 172.30.11.3
     controlPlane: true
     installDiskSelector:
       size: < 500GB
@@ -124,6 +124,10 @@ controlPlane:
             rotate-server-certificates: "true"
           extraConfig:
             maxPods: 150
+          nodeIP:
+            validSubnets:
+              - 172.16.0.0/12
+              - 2001:470:e899:100::/64
 
     # Custom sysctls
     - |-
