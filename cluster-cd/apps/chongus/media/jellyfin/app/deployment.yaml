@@ -42,7 +42,7 @@ spec:
           imagePullPolicy: IfNotPresent
           resources:
             limits:
-              memory: 8Gi
+              memory: 32Gi
               nvidia.com/gpu: 1
             requests:
               memory: 4Gi
