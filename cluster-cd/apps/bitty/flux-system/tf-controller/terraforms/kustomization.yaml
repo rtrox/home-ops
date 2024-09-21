@@ -6,7 +6,7 @@ resources:
   - ./cloudflare.yaml
   - ./backblaze.yaml
   - ./minio.yaml
-  # - ./keycloak.yaml
+  - ./keycloak.yaml
   - ./externalsecret.yaml
   - ./gitrepository.yaml
   - ./receiver.yaml
