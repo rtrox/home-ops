@@ -4,7 +4,7 @@ kind: Kustomization
 
 resources:
   - namespace.yaml
-  - networkpolicy.yaml
+  # - networkpolicy.yaml
   - volsyncnetworkpolicy.yaml
   - sabnzbd/ks.yaml
   - prowlarr/ks.yaml
