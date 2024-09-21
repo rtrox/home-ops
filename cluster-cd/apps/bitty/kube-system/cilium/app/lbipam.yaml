@@ -6,4 +6,4 @@ metadata:
 spec:
   blocks:
     - cidr: ${IPV4_LB_POOL}
-    - cidr: ${IPV6_LB_POOL}
+#    - cidr: ${IPV6_LB_POOL}
