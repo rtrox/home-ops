@@ -4,7 +4,7 @@ kind: Kustomization
 
 resources:
   - ./helmrelease.yaml
-  - ./bgppeeringpolicy.yaml
+  # - ./bgppeeringpolicy.yaml # Disable in favor of static routes
   - ./lbipam.yaml
 
 configMapGenerator:
