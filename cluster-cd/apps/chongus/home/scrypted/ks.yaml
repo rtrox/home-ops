@@ -11,11 +11,13 @@ spec:
     labels:
       app.kubernetes.io/name: *app
   interval: 10m
-  path: ./cluster-cd/apps/chongus/home/scrypted/app
+  path: ./cluster-cd/apps/${CLUSTER_NAME}/home/scrypted/app
   prune: true
   sourceRef:
     kind: GitRepository
     name: home-ops-cd
+  dependsOn:
+    - name: rook-ceph-cluster
   wait: true
   postBuild:
     substitute:

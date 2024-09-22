@@ -18,7 +18,7 @@ spec:
 
   values:
     defaultPodOptions:
-      runtimeClassName: nvidia
+      # runtimeClassName: nvidia
       enableServiceLinks: true
     controllers:
       main:
@@ -30,7 +30,7 @@ spec:
           dnsPolicy: ClusterFirstWithHostNet
           nodeSelector:
             google.feature.node.kubernetes.io/coral: "true"
-            nvidia.feature.node.kubernetes.io/nvidia-gpu: "true"
+            # nvidia.feature.node.kubernetes.io/nvidia-gpu: "true"
           securityContext:
             supplementalGroups:
               - 65542 # gladius:external-services
@@ -39,14 +39,14 @@ spec:
           main:
             image:
               repository: ghcr.io/koush/scrypted
-              tag: 18-jammy-full-v0.93.0
+              tag: v0.119.1-jammy-full
             resources:
               requests:
-                nvidia.com/gpu: 1
+                # nvidia.com/gpu: 1
                 cpu: 136m
-                memory: 1024Mi
+                memory: 512Mi
               limits:
-                nvidia.com/gpu: 1
+                # nvidia.com/gpu: 1
                 memory: 8192Mi
             securityContext:
               privileged: true

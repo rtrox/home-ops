@@ -2,13 +2,11 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-namespace: downloads
-
 resources:
   - helmrelease.yaml
   - ../../../../base/_templates/volsync
-  # - restore.yaml
+  - restore.yaml
 
 images:
   - name: ghcr.io/koush/scrypted
-    newTag: 18-jammy-full-v0.93.0
+    newTag: v0.119.1-jammy-full
