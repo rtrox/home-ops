@@ -27,12 +27,13 @@ metadata:
   name: paperless-ngx-destination
 spec:
   trigger:
-    manual: restore-paperless-ngx-once
+    manual: restore-paperless-ngx-once-fix
   restic:
     repository: paperless-ngx-volsync-b2-bitty-restore-secret
     # Use an existing PVC, don't provision a new one
     destinationPVC: ${APP}
     copyMethod: Snapshot
+    restoreAsOf: "2024-09-20T03:00:00-00:00"
     moverSecurityContext:
       runAsUser: 568
       runAsGroup: 568
