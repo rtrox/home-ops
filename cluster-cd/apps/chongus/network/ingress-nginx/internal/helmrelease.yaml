@@ -28,9 +28,11 @@ spec:
         default-ssl-certificate: network/wildcard-tls
       service:
         annotations:
-          lbipam.cilium.io/ips: ${INGRESS_NGINX_IPV4}
+          lbipam.cilium.io/ips: ${INGRESS_NGINX_IPV4},${INGRESS_NGINX_IPV6}
         ipFamilies:
           - IPv4
+          - IPv6
+        ipFamilyPolicy: PreferDualStack
       ingressClassResource:
         default: true
       topologySpreadConstraints:
