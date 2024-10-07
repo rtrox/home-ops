@@ -22,6 +22,11 @@ spec:
               image: ghcr.io/recyclarr/recyclarr:7.2.4
               args:
                 - sync
+              envFrom:
+                - secretRef:
+                    name: radarr-secret
+                - secretRef:
+                    name: sonarr-secret
               volumeMounts:
                 - name: config
                   mountPath: /config/recyclarr.yml
