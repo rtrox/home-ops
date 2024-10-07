@@ -23,7 +23,7 @@ spec:
               args:
                 - sync
               volumeMounts:
-                - name: shared
+                - name: config
                   mountPath: /config/recyclarr.yml
                   subPath: recyclarr.yml
                   readOnly: true
@@ -31,5 +31,3 @@ spec:
             - name: config
               configMap:
                 name: recyclarr-configmap
-            - name: shared
-              emptyDir: {}
