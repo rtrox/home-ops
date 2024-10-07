@@ -1,11 +1,12 @@
 ---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/recyclarr/recyclarr/master/schemas/config-schema.json
+
 # For more details on the configuration, see the Configuration Reference on the wiki here:
 # https://github.com/rcdailey/trash-updater/wiki/Configuration-Reference
-
 sonarr:
   standard:
     base_url: http://sonarr.downloads.svc.cluster.local:8080
-    api_key: ${SONARR__API_KEY}
+    api_key: !env_var SONARR__API_KEY
     delete_old_custom_formats: true
     quality_definition:
       type: series
@@ -122,7 +123,7 @@ sonarr:
 radarr:
   standard:
     base_url: http://radarr.downloads.svc.cluster.local:8080
-    api_key: ${RADARR__API_KEY}
+    api_key: !env_var RADARR__API_KEY
     delete_old_custom_formats: true
     quality_definition:
       type: movie

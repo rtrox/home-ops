@@ -17,27 +17,6 @@ spec:
         spec:
           automountServiceAccountToken: false
           restartPolicy: OnFailure
-          initContainers:
-            - name: render-configs
-              image: alpine:3.19.1
-              env:
-                - name: COMPlus_EnableDiagnostics
-                  value: "0"
-              envFrom:
-                - secretRef:
-                    name: radarr-secret
-                - secretRef:
-                    name: sonarr-secret
-              command:
-                - "/bin/bash"
-                - -c
-              args:
-                - "envsubst < /config/recyclarr.yml > /shared/recyclarr.yml"
-              volumeMounts:
-                - name: config
-                  mountPath: /config
-                - name: shared
-                  mountPath: /shared
           containers:
             - name: recyclarr
               image: ghcr.io/recyclarr/recyclarr:7.2.4
