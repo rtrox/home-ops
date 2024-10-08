@@ -59,7 +59,7 @@ spec:
       app:
         className: "nginx"
         hosts:
-          - host: echo.${CLUSTER_NAME}.${SECRET_DOMAIN}
+          - host: &host echo.${CLUSTER_NAME}.${SECRET_DOMAIN}
             paths:
               - path: /
                 service:
