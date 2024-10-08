@@ -9,14 +9,11 @@ cni:
 bgp:
   enabled: false
   announce:
-    loadbalancerIP: false
+    loadbalancerIP: true
     podCIDR: false
 
-l2announcements:
-  enabled: true
-
 bgpControlPlane:
-  enabled: false
+  enabled: true
 
 k8sServiceHost: localhost
 k8sServicePort: 7445
@@ -90,6 +87,11 @@ hubble:
     ingress:
       enabled: false
     rollOutPods: true
+
+envoy:
+  enabled: false
+endpointRoutes:
+  enabled: true
 
 securityContext:
   capabilities:
