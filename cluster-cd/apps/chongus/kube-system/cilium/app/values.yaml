@@ -9,11 +9,14 @@ cni:
 bgp:
   enabled: false
   announce:
-    loadbalancerIP: true
+    loadbalancerIP: false
     podCIDR: false
 
-bgpControlPlane:
+l2announcements:
   enabled: true
+
+bgpControlPlane:
+  enabled: false
 
 k8sServiceHost: localhost
 k8sServicePort: 7445
