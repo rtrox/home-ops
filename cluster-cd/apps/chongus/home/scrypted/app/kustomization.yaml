@@ -9,4 +9,4 @@ resources:
 
 images:
   - name: ghcr.io/koush/scrypted
-    newTag: v0.119.1-jammy-full
+    newTag: v0.121.0-jammy-full
