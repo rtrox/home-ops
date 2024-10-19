@@ -9,6 +9,9 @@ localRedirectPolicy: true
 kubeProxyReplacement: true
 kubeProxyReplacementHealthzBindAddr: 0.0.0.0:10256
 
+enableRuntimDeviceDetection: true
+devices: eth+
+
 loadBalancer:
   algorithm: maglev
   mode: dsr
