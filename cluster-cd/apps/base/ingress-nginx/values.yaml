@@ -26,7 +26,7 @@ controller:
     proxy-busy-buffer-size: 1024k
     forwarded-for-header: proxy_protocol
     # log-format-escape-json: "true"
-    log-format: '"$time_local" client=$remote_addr upstream_response_time=$upstream_response_time upstream_connect_time=$upstream_connect_time  upstream_header_time=$upstream_header_time'
+    log-format-upstream: '"$time_local" client=$remote_addr upstream_response_time=$upstream_response_time upstream_connect_time=$upstream_connect_time  upstream_header_time=$upstream_header_time'
     # log-format-upstream: >
     #   {"timestamp": "$time_iso8601", "requestID": "$req_id", "proxyUpstreamName":
     #   "$proxy_upstream_name", "proxyAlternativeUpstreamName": "$proxy_alternative_upstream_name","upstreamStatus":
