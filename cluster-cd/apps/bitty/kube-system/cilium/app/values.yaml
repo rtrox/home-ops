@@ -13,6 +13,9 @@ bgp:
     podCIDR: false
 
 bgpControlPlane:
+  enabled: false
+
+l2announcements:
   enabled: true
 
 k8sServiceHost: localhost
