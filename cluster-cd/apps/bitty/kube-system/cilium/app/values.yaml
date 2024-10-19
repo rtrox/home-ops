@@ -32,7 +32,7 @@ loadBalancer:
   mode: dsr
 
 bandwidthManager:
-  enabled: true
+  enabled: false
   bbr: true
 bpf:
   masquerade: true
