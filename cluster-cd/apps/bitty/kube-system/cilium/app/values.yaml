@@ -66,7 +66,7 @@ hubble:
 envoy:
   enabled: false
 endpointRoutes:
-  enabled: false
+  enabled: true
 
 securityContext:
   capabilities:
