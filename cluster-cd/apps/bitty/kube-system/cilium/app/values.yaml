@@ -20,7 +20,7 @@ bandwidthManager:
   enabled: true
   bbr: true
 bpf:
-  masquerade: false
+  masquerade: true
   tproxy: true
 
 ipam:
