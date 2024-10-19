@@ -3,26 +3,14 @@ cluster:
   name: chongus
   id: 2
 
-cni:
-  exclusive: false
-
-bgp:
-  enabled: false
-  announce:
-    loadbalancerIP: true
-    podCIDR: false
-
-bgpControlPlane:
-  enabled: true
-
-k8sServiceHost: localhost
-k8sServicePort: 7445
-
 rollOutCiliumPods: true
 localRedirectPolicy: true
 
 kubeProxyReplacement: true
 kubeProxyReplacementHealthzBindAddr: 0.0.0.0:10256
+
+enableRuntimDeviceDetection: true
+devices: eth+
 
 loadBalancer:
   algorithm: maglev
@@ -37,17 +25,8 @@ bpf:
 
 l7Proxy: true
 
-enableCnpStatusUpdates: true
-endpointStatus:
-  enabled: true
-  status: policy
-
 ipam:
   mode: kubernetes
-
-ingressController:
-  enabled: false
-  loadbalancerMode: shared
 
 operator:
   rollOutPods: true
@@ -60,8 +39,6 @@ autoDirectNodeRoutes: true
 ipv4NativeRoutingCIDR: 10.244.0.0/16
 ipv6NativeRoutingCIDR: ${IPV6_POD_CIDR}
 routingMode: native
-containerRuntime:
-  integration: containerd
 
 hubble:
   enabled: true

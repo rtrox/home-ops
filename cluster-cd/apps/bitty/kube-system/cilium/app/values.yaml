@@ -23,6 +23,8 @@ bpf:
   masquerade: true
   tproxy: true
 
+l7Proxy: true
+
 ipam:
   mode: kubernetes
 
@@ -31,8 +33,8 @@ operator:
 
 ipv6:
   enabled: true
-# enableIPv6BIGTCP: true
-# enableIPv4BIGTCP: true
+enableIPv6BIGTCP: true
+enableIPv4BIGTCP: true
 autoDirectNodeRoutes: true
 ipv4NativeRoutingCIDR: 10.244.0.0/16
 ipv6NativeRoutingCIDR: ${IPV6_POD_CIDR}
