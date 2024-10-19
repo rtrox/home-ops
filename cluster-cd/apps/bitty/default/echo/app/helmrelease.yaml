@@ -23,7 +23,7 @@ spec:
           reloader.stakater.com/auto: "true"
 
         containers:
-          app:
+          main:
             image:
               repository: ghcr.io/mendhak/http-https-echo
               tag: 34
@@ -57,13 +57,14 @@ spec:
 
     ingress:
       app:
+        enabled: true
         className: "nginx"
         hosts:
-          - host: &host echo.${CLUSTER_NAME}.${SECRET_DOMAIN}
+          - host: &host echo-${CLUSTER_NAME}.${SECRET_DOMAIN}
             paths:
               - path: /
                 service:
-                  identifier: app
+                  identifier: main
                   port: http
         tls:
           - hosts:
