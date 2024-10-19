@@ -51,6 +51,7 @@ spec:
     service:
       main:
         controller: echo-server
+        type: LoadBalancer
         ports:
           http:
             port: *port
@@ -60,7 +61,7 @@ spec:
         enabled: true
         className: "nginx"
         hosts:
-          - host: &host echo-${CLUSTER_NAME}.${SECRET_DOMAIN}
+          - host: &host echo.${CLUSTER_NAME}.${SECRET_DOMAIN}
             paths:
               - path: /
                 service:
