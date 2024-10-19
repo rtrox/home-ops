@@ -16,7 +16,7 @@ bgpControlPlane:
   enabled: false
 
 l2announcements:
-  enabled: true
+  enabled: false
 
 k8sServiceHost: localhost
 k8sServicePort: 7445

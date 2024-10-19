@@ -5,7 +5,7 @@ kind: Kustomization
 resources:
   - ./helmrelease.yaml
   # - ./bgppeeringpolicy.yaml
-  - ./l2announcement.yaml
+  # - ./l2announcement.yaml
   - ./lbipam.yaml
   # - ./bgpadvertisements.yaml
   # - ./bgppeerconfig.yaml
