@@ -9,7 +9,7 @@ resources:
   - service.yaml
   - ingress.yaml
   # - restore.yaml
-  - ../../../../base/_templates/volsync
+  - ../../../../base/_templates/volsync-minio-default
 
 images:
   # TODO: non-nightly image to let renovate pick it up

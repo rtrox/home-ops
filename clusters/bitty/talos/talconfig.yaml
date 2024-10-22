@@ -79,6 +79,10 @@ controlPlane:
         allowSchedulingOnMasters: true
         proxy:
           disabled: true
+        controllerManager:
+          extraArgs:
+            node-cidr-mask-size-ipv6: "72"
+            feature-gates: MultiCIDRServiceAllocator=true
 
     - |-
       machine:

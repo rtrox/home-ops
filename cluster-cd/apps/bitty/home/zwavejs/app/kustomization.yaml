@@ -9,7 +9,7 @@ resources:
   - service.yaml
   - ingress-ws.yaml
   - service-monitor.yaml
-  - ../../../../base/_templates/volsync
+  - ../../../../base/_templates/volsync-minio-default
 
 images:
   - name: ghcr.io/zwave-js/zwave-js-ui

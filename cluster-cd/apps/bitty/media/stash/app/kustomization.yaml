@@ -6,7 +6,7 @@ resources:
   - deployment.yaml
   - service.yaml
   - ingress.yaml
-  - ../../../../base/_templates/volsync
+  - ../../../../base/_templates/volsync-minio-default
   # - restore.yaml
 
 images:

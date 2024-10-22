@@ -3,6 +3,9 @@ cluster:
   name: bitty
   id: 1
 
+k8sServiceHost: localhost
+k8sServicePort: 7445
+
 rollOutCiliumPods: true
 localRedirectPolicy: true
 

@@ -12,7 +12,7 @@ resources:
   - service-monitor.yaml
   - prometheus-rule.yaml
   - externalsecret.yaml
-  - ../../../../base/_templates/volsync
+  - ../../../../base/_templates/volsync-minio-default
 
 images:
   - name: ghcr.io/onedr0p/home-assistant
