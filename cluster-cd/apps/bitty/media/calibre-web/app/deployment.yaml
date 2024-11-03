@@ -36,8 +36,7 @@ spec:
           - 65539
       containers:
         - name: calibre
-          # image: ghcr.io/bjw-s/calibre-web:0.6.19@sha256:2090b8d6ae43d56435b0dc27b9c3bc1bf43500d1b268a0eecfe890b1d6b03e72
-          image: ghcr.io/rtrox/calibre-web:nightly-2024-12-01
+          image: ghcr.io/bjw-s/calibre-web:0.6.23@sha256:4148510c5b5187accd2b34d9e6d22505f93f15a9c40b839d4f4c08c628cc0089
           imagePullPolicy: IfNotPresent
           resources:
             limits:
