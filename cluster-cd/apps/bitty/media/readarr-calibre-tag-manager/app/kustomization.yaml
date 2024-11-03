@@ -1,0 +1,21 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: default
+
+resources:
+  - deployment.yaml
+  - service.yaml
+  - ingress.yaml
+  # - restore.yaml
+  - ../../../../base/_templates/volsync-minio-default
+
+images:
+  # TODO: non-nightly image to let renovate pick it up
+  - name: ghcr.io/linuxserver/calibre
+    newTag: version-v6.4.0
+
+commonLabels:
+  app.kubernetes.io/part-of: calibre
+  k8s-app: calibre

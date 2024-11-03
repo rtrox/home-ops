@@ -10,3 +10,4 @@ resources:
   - ./calibre-web/ks.yaml
   # - ./jellyfin/ks.yaml
   - ./stash/ks.yaml
+  - ./readarr-calibre-tag-manager/ks.yaml
