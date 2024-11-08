@@ -78,16 +78,16 @@ spec:
               protocol: TCP
           args:
             - --config=/hook-config/config.yaml
-          livenessProbe: &probe
-            httpGet:
-              path: /healthz
-              port: http
-              scheme: HTTP
-            initialDelaySeconds: 10
-            failureThreshold: 5
-            timeoutSeconds: 2
-          readinessProbe: *probe
-          startupProbe: *probe
+          # livenessProbe: &probe
+          #   httpGet:
+          #     path: /healthz
+          #     port: hook
+          #     scheme: HTTP
+          #   initialDelaySeconds: 10
+          #   failureThreshold: 5
+          #   timeoutSeconds: 2
+          # readinessProbe: *probe
+          # startupProbe: *probe
           volumeMounts:
             - mountPath: /config
               name: config
