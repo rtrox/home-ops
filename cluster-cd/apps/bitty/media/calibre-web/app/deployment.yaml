@@ -64,6 +64,38 @@ spec:
               name: books
             - mountPath: /cache
               name: cache
+        - name: readarr-hook
+          image: ghcr.io/rtrox/readarr-calibre-tag-manager-dev:sha-5abfca3-20241108022324
+          imagePullPolicy: IfNotPresent
+          resources:
+            limits:
+              memory: 512Mi
+            requests:
+              memory: 256Mi
+          ports:
+            - name: hook
+              containerPort: 8080
+              protocol: TCP
+          args:
+            - --config=/hook-config/config.yaml
+          livenessProbe: &probe
+            httpGet:
+              path: /healthz
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 10
+            failureThreshold: 5
+            timeoutSeconds: 2
+          readinessProbe: *probe
+          startupProbe: *probe
+          volumeMounts:
+            - mountPath: /config
+              name: config
+            - mountPath: /media/books
+              name: books
+            - mountPath: /hook-config
+              readOnly: true
+              name: hook-config
       volumes:
         - name: config
           persistentVolumeClaim:
@@ -74,3 +106,6 @@ spec:
             path: /mnt/rusty/media/books
         - name: cache
           emptyDir: {}
+        - name: hook-config
+          secret:
+            secretName: readarr-hook-config-secret

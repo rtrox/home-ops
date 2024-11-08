@@ -12,7 +12,11 @@ spec:
     - name: http
       port: 8080
       protocol: TCP
+    - name: readarr-hook
+      port: 8081
+      protocol: TCP
   selector:
     app.kubernetes.io/name: *name
     app.kubernetes.io/instance: *name
 ---
+

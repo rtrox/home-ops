@@ -11,8 +11,10 @@ spec:
   ports:
     - name: http
       port: 8083
+    - name: hook
+      port: 8081
   selector:
-
     app.kubernetes.io/name: *name
     app.kubernetes.io/instance: *name
 ---
+
