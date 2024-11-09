@@ -164,7 +164,7 @@ spec:
             claimName: calibre-web
         - name: calibre-config
           persistentVolumeClaim:
-            claimName: calibre-backend
+            claimName: calibre
         - name: books
           nfs:
             server: ${NFS_SERVER}
