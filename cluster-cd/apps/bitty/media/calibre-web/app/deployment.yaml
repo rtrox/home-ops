@@ -117,7 +117,7 @@ spec:
             - mountPath: /cache
               name: cache
         - name: readarr-hook
-          image: ghcr.io/rtrox/readarr-calibre-tag-manager-dev:sha-c09990f-20241109164228
+          image: ghcr.io/rtrox/readarr-calibre-tag-manager-dev:sha-8c36a29-20241109175929
           imagePullPolicy: IfNotPresent
           resources:
             limits:
