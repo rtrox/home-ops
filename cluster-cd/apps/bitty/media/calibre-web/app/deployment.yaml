@@ -64,45 +64,45 @@ spec:
               name: books
             - mountPath: /cache
               name: cache
-        - name: readarr-hook
-          image: ghcr.io/rtrox/readarr-calibre-tag-manager-dev:sha-c09990f-20241109164228
-          imagePullPolicy: IfNotPresent
-          resources:
-            limits:
-              memory: 512Mi
-            requests:
-              memory: 256Mi
-          securityContext:
-            allowPrivilegeEscalation: false
-            seccompProfile:
-              type: RuntimeDefault
-            capabilities:
-              drop:
-                - ALL
-          ports:
-            - name: hook
-              containerPort: 8080
-              protocol: TCP
-          args:
-            - --config=/hook-config/config.yaml
-          # livenessProbe: &probe
-          #   httpGet:
-          #     path: /healthz
-          #     port: hook
-          #     scheme: HTTP
-          #   initialDelaySeconds: 10
-          #   failureThreshold: 5
-          #   timeoutSeconds: 2
-          # readinessProbe: *probe
-          # startupProbe: *probe
-          volumeMounts:
-            - mountPath: /config
-              name: config
-            - mountPath: /media/books
-              name: books
-            - mountPath: /hook-config
-              readOnly: true
-              name: hook-config
+        # - name: readarr-hook
+        #   image: ghcr.io/rtrox/readarr-calibre-tag-manager-dev:sha-c09990f-20241109164228
+        #   imagePullPolicy: IfNotPresent
+        #   resources:
+        #     limits:
+        #       memory: 512Mi
+        #     requests:
+        #       memory: 256Mi
+        #   securityContext:
+        #     allowPrivilegeEscalation: false
+        #     seccompProfile:
+        #       type: RuntimeDefault
+        #     capabilities:
+        #       drop:
+        #         - ALL
+        #   ports:
+        #     - name: hook
+        #       containerPort: 8080
+        #       protocol: TCP
+        #   args:
+        #     - --config=/hook-config/config.yaml
+        #   # livenessProbe: &probe
+        #   #   httpGet:
+        #   #     path: /healthz
+        #   #     port: hook
+        #   #     scheme: HTTP
+        #   #   initialDelaySeconds: 10
+        #   #   failureThreshold: 5
+        #   #   timeoutSeconds: 2
+        #   # readinessProbe: *probe
+        #   # startupProbe: *probe
+        #   volumeMounts:
+        #     - mountPath: /config
+        #       name: config
+        #     - mountPath: /media/books
+        #       name: books
+        #     - mountPath: /hook-config
+        #       readOnly: true
+        #       name: hook-config
       volumes:
         - name: config
           persistentVolumeClaim:
