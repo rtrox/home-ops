@@ -28,8 +28,8 @@ spec:
         backup.velero.io/backup-volumes-excludes: books,cache
     spec:
       securityContext:
-        runAsUser: 568
-        runAsGroup: 568
+        runAsUser: 0
+        runAsGroup: 0
         fsGroup: 568
         fsGroupChangePolicy: "OnRootMismatch"
         supplementalGroups:
@@ -92,6 +92,7 @@ spec:
               memory: 4096Mi
           securityContext:
             allowPrivilegeEscalation: false
+            runAsUser: 568
             seccompProfile:
               type: RuntimeDefault
             capabilities:
@@ -121,6 +122,7 @@ spec:
         #       memory: 256Mi
         #   securityContext:
         #     allowPrivilegeEscalation: false
+        #     runAsUser: 568
         #     seccompProfile:
         #       type: RuntimeDefault
         #     capabilities:
