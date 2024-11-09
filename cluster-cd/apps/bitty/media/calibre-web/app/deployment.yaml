@@ -36,7 +36,7 @@ spec:
           - 65539
       containers:
         - name: calibre
-          image: ghcr.io/linuxserver/calibre:7.16.0
+          image: ghcr.io/linuxserver/calibre:7.20.0
           imagePullPolicy: IfNotPresent
           resources:
             limits:
@@ -45,12 +45,14 @@ spec:
               memory: 1024Mi
           securityContext:
             allowPrivilegeEscalation: false
-            runAsUser: 1000
+            runAsUser: 65534
             seccompProfile:
               type: RuntimeDefault
             capabilities:
               drop:
                 - ALL
+              add:
+                - seccomp:unconfined
           ports:
             - name: calibre
               containerPort: 8080
@@ -60,11 +62,13 @@ spec:
               protocol: TCP
           env:
             - name: PUID
-              value: "1000"
+              value: "65534"
             - name: PGID
-              value: "1000"
+              value: "65534"
             - name: TZ
               value: ${LOCAL_TZ}
+            - name: TITLE
+              value: "Calibre"
           livenessProbe: &calprobe
             httpGet:
               path: /
@@ -80,8 +84,6 @@ spec:
               name: config
             - mountPath: /media/books
               name: books
-            - mountPath: /run
-              name: run
         - name: calibre-web
           image: ghcr.io/bjw-s/calibre-web:0.6.23@sha256:8e368b0865213573c9bb286dee5a42e670787ea06fad9ae0aaf73160a077611f
           imagePullPolicy: IfNotPresent
@@ -159,8 +161,6 @@ spec:
             server: ${NFS_SERVER}
             path: /mnt/rusty/media/books
         - name: cache
-          emptyDir: {}
-        - name: run
           emptyDir: {}
         - name: hook-config
           secret:
