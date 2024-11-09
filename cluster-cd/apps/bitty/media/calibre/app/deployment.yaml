@@ -62,6 +62,10 @@ spec:
               value: "1000"
             - name: TZ
               value: ${LOCAL_TZ}
+            - name: CALIBRE_LIBRARY_PATH
+              value: /media/books
+            - name: CALIBRE_OVERRIDE_DATABASE_PATH
+              value: /config
           livenessProbe:
             httpGet:
               path: /
