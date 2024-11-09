@@ -68,7 +68,7 @@ spec:
             - name: TITLE
               value: "Calibre"
             - name: CALIBRE_OVERRIDE_DATABASE_PATH
-              value: /config
+              value: /config/library/metadata.db
           livenessProbe: &calprobe
             httpGet:
               path: /
