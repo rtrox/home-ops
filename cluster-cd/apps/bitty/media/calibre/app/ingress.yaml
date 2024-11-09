@@ -13,7 +13,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-    - host: &host books-backend.${SECRET_DOMAIN}
+    - host: &host books-backend-backup.${SECRET_DOMAIN}
       http:
         paths:
           - backend:

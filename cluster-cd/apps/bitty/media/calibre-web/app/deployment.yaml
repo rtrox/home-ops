@@ -80,6 +80,8 @@ spec:
               name: config
             - mountPath: /media/books
               name: books
+            - mountPath: /run
+              name: run
         - name: calibre-web
           image: ghcr.io/bjw-s/calibre-web:0.6.23@sha256:8e368b0865213573c9bb286dee5a42e670787ea06fad9ae0aaf73160a077611f
           imagePullPolicy: IfNotPresent
@@ -157,6 +159,8 @@ spec:
             server: ${NFS_SERVER}
             path: /mnt/rusty/media/books
         - name: cache
+          emptyDir: {}
+        - name: run
           emptyDir: {}
         - name: hook-config
           secret:
