@@ -4,7 +4,7 @@ kind: PersistentVolumeClaim
 metadata:
   name: "calibre"
 spec:
-  accessModes: ["${VOLSYNC_ACCESSMODES:-ReadWriteOnce}"]
+  accessModes: ["ReadWriteOnce"]
   dataSourceRef:
     kind: ReplicationDestination
     apiGroup: volsync.backube
@@ -12,7 +12,7 @@ spec:
   resources:
     requests:
       storage: "3Gi"
-  storageClassName: "${VOLSYNC_STORAGECLASS:-ceph-block}"
+  storageClassName: "ceph-block"
 
 ---
 # yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/external-secrets.io/externalsecret_v1beta1.json
@@ -51,16 +51,16 @@ spec:
   trigger:
     schedule: "0 * * * *"
   restic:
-    copyMethod: "${VOLSYNC_COPYMETHOD:-Snapshot}"
+    copyMethod: "Snapshot"
     pruneIntervalDays: 7
     repository: "calibre-volsync-minio-secret"
-    volumeSnapshotClassName: "${VOLSYNC_SNAPSHOTCLASS:-csi-ceph-blockpool}"
-    cacheCapacity: "${VOLSYNC_CACHE_CAPACITY:-4Gi}"
+    volumeSnapshotClassName: "csi-ceph-blockpool"
+    cacheCapacity: "4Gi"
     # TODO: Get OpenEBS working...
-    cacheStorageClassName: "${VOLSYNC_CACHE_SNAPSHOTCLASS:-ceph-block}"
-    cacheAccessModes: ["${VOLSYNC_CACHE_ACCESSMODES:-ReadWriteOnce}"]
-    storageClassName: "${VOLSYNC_STORAGECLASS:-ceph-block}"
-    accessModes: ["${VOLSYNC_ACCESSMODES:-ReadWriteOnce}"]
+    cacheStorageClassName: "ceph-block"
+    cacheAccessModes: ["ReadWriteOnce"]
+    storageClassName: "ceph-block"
+    accessModes: ["ReadWriteOnce"]
     moverSecurityContext:
       runAsUser: 568
       runAsGroup: 568
@@ -81,13 +81,13 @@ spec:
   restic:
     repository: "calibre-volsync-minio-secret"
     copyMethod: Snapshot # must be Snapshot
-    volumeSnapshotClassName: "${VOLSYNC_SNAPSHOTCLASS:-csi-ceph-blockpool}"
-    cacheStorageClassName: "${VOLSYNC_CACHE_SNAPSHOTCLASS:-ceph-block}"
-    cacheAccessModes: ["${VOLSYNC_CACHE_ACCESSMODES:-ReadWriteOnce}"]
-    cacheCapacity: "${VOLSYNC_CACHE_CAPACITY:-8Gi}"
-    storageClassName: "${VOLSYNC_STORAGECLASS:-ceph-block}"
-    accessModes: ["${VOLSYNC_ACCESSMODES:-ReadWriteOnce}"]
-    capacity: "${VOLSYNC_CAPACITY}"
+    volumeSnapshotClassName: "csi-ceph-blockpool"
+    cacheStorageClassName: "ceph-block"
+    cacheAccessModes: [ReadWriteOnce]
+    cacheCapacity: "8Gi"
+    storageClassName: "ceph-block"
+    accessModes: ["ReadWriteOnce"]
+    capacity: "3Gi"
     moverSecurityContext:
       runAsUser: 568
       runAsGroup: 568
