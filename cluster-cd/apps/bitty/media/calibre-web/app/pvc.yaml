@@ -2,13 +2,13 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: "calibre"
+  name: "calibre-backend"
 spec:
   accessModes: ["ReadWriteOnce"]
   dataSourceRef:
     kind: ReplicationDestination
     apiGroup: volsync.backube
-    name: "calibre-dst"
+    name: "calibre-backend-dst"
   resources:
     requests:
       storage: "3Gi"
@@ -19,17 +19,17 @@ spec:
 apiVersion: external-secrets.io/v1beta1
 kind: ExternalSecret
 metadata:
-  name: "calibre-volsync-minio"
+  name: "calibre-backend-volsync-minio"
 spec:
   secretStoreRef:
     kind: ClusterSecretStore
     name: doppler
   target:
-    name: "calibre-volsync-minio-secret"
+    name: "calibre-backend-volsync-minio-secret"
     template:
       engineVersion: v2
       data:
-        RESTIC_REPOSITORY: "s3:http://{{ .endpoint }}/{{ .bucket }}/calibre"
+        RESTIC_REPOSITORY: "s3:http://{{ .endpoint }}/{{ .bucket }}/calibre-backend"
         RESTIC_PASSWORD: "{{ .RESTIC_PASSWORD }}"
         AWS_ACCESS_KEY_ID: "{{ .application_key_id }}"
         AWS_SECRET_ACCESS_KEY: "{{ .application_key }}"
@@ -45,15 +45,15 @@ spec:
 apiVersion: volsync.backube/v1alpha1
 kind: ReplicationSource
 metadata:
-  name: "calibre-minio"
+  name: "calibre-backend-minio"
 spec:
-  sourcePVC: "calibre"
+  sourcePVC: "calibre-backend"
   trigger:
     schedule: "0 * * * *"
   restic:
     copyMethod: "Snapshot"
     pruneIntervalDays: 7
-    repository: "calibre-volsync-minio-secret"
+    repository: "calibre-backend-volsync-minio-secret"
     volumeSnapshotClassName: "csi-ceph-blockpool"
     cacheCapacity: "4Gi"
     # TODO: Get OpenEBS working...
@@ -74,12 +74,12 @@ spec:
 apiVersion: volsync.backube/v1alpha1
 kind: ReplicationDestination
 metadata:
-  name: "calibre-dst"
+  name: "calibre-backend-dst"
 spec:
   trigger:
     manual: restore-once
   restic:
-    repository: "calibre-volsync-minio-secret"
+    repository: "calibre-backend-volsync-minio-secret"
     copyMethod: Snapshot # must be Snapshot
     volumeSnapshotClassName: "csi-ceph-blockpool"
     cacheStorageClassName: "ceph-block"
