@@ -36,6 +36,51 @@ spec:
           - 65539
       containers:
         - name: calibre
+          image: ghcr.io/linuxserver/calibre:7.16.0
+          imagePullPolicy: IfNotPresent
+          resources:
+            limits:
+              memory: 2048Mi
+            requests:
+              memory: 1024Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsUser: 1000
+            seccompProfile:
+              type: RuntimeDefault
+            capabilities:
+              drop:
+                - ALL
+          ports:
+            - name: calibre
+              containerPort: 8080
+              protocol: TCP
+            - name: calserver
+              containerPort: 8081
+              protocol: TCP
+          env:
+            - name: PUID
+              value: "1000"
+            - name: PGID
+              value: "1000"
+            - name: TZ
+              value: ${LOCAL_TZ}
+          livenessProbe: &calprobe
+            httpGet:
+              path: /
+              port: calibre
+              scheme: HTTP
+            initialDelaySeconds: 10
+            failureThreshold: 5
+            timeoutSeconds: 2
+          readinessProbe: *calprobe
+          startupProbe: *calprobe
+          volumeMounts:
+            - mountPath: /config
+              name: config
+            - mountPath: /media/books
+              name: books
+        - name: calibre-web
           image: ghcr.io/bjw-s/calibre-web:0.6.23@sha256:8e368b0865213573c9bb286dee5a42e670787ea06fad9ae0aaf73160a077611f
           imagePullPolicy: IfNotPresent
           resources:

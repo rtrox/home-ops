@@ -9,10 +9,16 @@ metadata:
 spec:
   type: ClusterIP
   ports:
+    - name: calibre
+      port: 8080
+      protocol: TCP
+    - name: server
+      port: 8081
+      protocol: TCP
     - name: http
       port: 8083
     - name: hook
-      port: 8080
+      port: 8082
   selector:
     app.kubernetes.io/name: *name
     app.kubernetes.io/instance: *name
