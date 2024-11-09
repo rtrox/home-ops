@@ -65,13 +65,20 @@ spec:
             - mountPath: /cache
               name: cache
         - name: readarr-hook
-          image: ghcr.io/rtrox/readarr-calibre-tag-manager-dev:sha-8f28aba-20241108034929
+          image: ghcr.io/rtrox/readarr-calibre-tag-manager-dev:sha-c09990f-20241109164228
           imagePullPolicy: IfNotPresent
           resources:
             limits:
               memory: 512Mi
             requests:
               memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            seccompProfile:
+              type: RuntimeDefault
+            capabilities:
+              drop:
+                - ALL
           ports:
             - name: hook
               containerPort: 8080
