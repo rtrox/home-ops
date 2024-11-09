@@ -67,6 +67,9 @@ metadata:
     cert-manager.io/cluster-issuer: letsencrypt-prod
     kubernetes.io/tls-acme: "true"
     ingress: "externaldns"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/enable-websocket: "true"
   labels:
     app.kubernetes.io/instance: &namecal calibre-backend
     app.kubernetes.io/name: *namecal
