@@ -36,7 +36,7 @@ spec:
           - 65539
       containers:
         - name: calibre
-          image: ghcr.io/linuxserver/calibre:7.20.0
+          image: ghcr.io/linuxserver/calibre:7.21.0
           imagePullPolicy: IfNotPresent
           resources:
             limits:
@@ -45,7 +45,7 @@ spec:
               memory: 1024Mi
           securityContext:
             allowPrivilegeEscalation: false
-            runAsUser: 65534
+            runAsUser: 0
             seccompProfile:
               type: RuntimeDefault
             capabilities:
