@@ -44,13 +44,13 @@ spec:
             requests:
               memory: 1024Mi
           securityContext:
-            allowPrivilegeEscalation: false
+            # allowPrivilegeEscalation: false
             runAsUser: 0
-            seccompProfile:
-              type: RuntimeDefault
-            capabilities:
-              drop:
-                - ALL
+            # seccompProfile:
+            #   type: RuntimeDefault
+            # capabilities:
+            #   drop:
+            #     - ALL
           ports:
             - name: calibre
               containerPort: 8080
