@@ -67,8 +67,6 @@ spec:
               value: ${LOCAL_TZ}
             - name: TITLE
               value: "Calibre"
-            - name: CALIBRE_LIBRARY_PATH
-              value: /media/books
             - name: CALIBRE_OVERRIDE_DATABASE_PATH
               value: /config
           livenessProbe: &calprobe
