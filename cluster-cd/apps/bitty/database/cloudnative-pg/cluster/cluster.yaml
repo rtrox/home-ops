@@ -31,7 +31,7 @@ spec:
       - { regex: cluster, action: labeldrop }
   backup:
     retentionPolicy: 14d
-    barmanObjectStore:
+    barmanObjectStore: &barmanObjectStore
       data:
         compression: bzip2
       wal:
