@@ -11,3 +11,4 @@ resources:
   - ./thanos/ks.yaml
   - ./grafana/ks.yaml
   - ./ping-exporter/ks.yaml
+  - ./awair-exporter/ks.yaml
