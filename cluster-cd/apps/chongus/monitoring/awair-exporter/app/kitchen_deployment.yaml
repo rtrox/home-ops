@@ -43,7 +43,7 @@ spec:
             # AWAIR_HOSTNAME is the hostname we should reach out to
             # for this device [change this]
             - name: AWAIR_HOSTNAME
-              value: "${KITCHEN_IP}"
+              value: "${AWAIR_KITCHEN_IP}"
           resources:
             limits:
               memory: 256Mi
