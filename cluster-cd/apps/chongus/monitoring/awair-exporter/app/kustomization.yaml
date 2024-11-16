@@ -10,3 +10,8 @@ bases:
   - kitchen_deployment.yaml
   - office_one_deployment.yaml
   - office_two_deployment.yaml
+
+images:
+  # TODO: non-nightly image to let renovate pick it up
+  - name: rtrox/prometheus-awair-exporter
+    newTag: "v0.1.1"
