@@ -2,7 +2,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: "wipe-disk-node01-sdd"
+  name: "wipe-disk-node01-sdc"
   namespace: "kube-system"
 spec:
   ttlSecondsAfterFinished: 3600
@@ -13,22 +13,22 @@ spec:
       nodeName: node01
       containers:
         - name: disk-wipe
-          image: alpine:3.19.1
+          image: alpine:3.20.3
           securityContext:
             privileged: true
           resources: {}
           command: ["/bin/sh", "-c"]
           args:
             - apk add --no-cache sgdisk util-linux parted;
-              sgdisk --zap-all /dev/sdd;
-              blkdiscard /dev/sdd;
-              dd if=/dev/zero bs=1M count=10000 oflag=direct of=/dev/sdd;
-              partprobe /dev/sdd;
+              sgdisk --zap-all /dev/sdc;
+              blkdiscard /dev/sdc;
+              dd if=/dev/zero bs=1M count=10000 oflag=direct of=/dev/sdc;
+              partprobe /dev/sdc;
 ---
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: "wipe-disk-node02-sdd"
+  name: "wipe-disk-node02-sdc"
   namespace: "kube-system"
 spec:
   ttlSecondsAfterFinished: 3600
@@ -39,22 +39,22 @@ spec:
       nodeName: node02
       containers:
         - name: disk-wipe
-          image: alpine:3.19.1
+          image: alpine:3.20.3
           securityContext:
             privileged: true
           resources: {}
           command: ["/bin/sh", "-c"]
           args:
             - apk add --no-cache sgdisk util-linux parted;
-              sgdisk --zap-all /dev/sdd;
-              blkdiscard /dev/sdd;
-              dd if=/dev/zero bs=1M count=10000 oflag=direct of=/dev/sdd;
-              partprobe /dev/sdd;
+              sgdisk --zap-all /dev/sdc;
+              blkdiscard /dev/sdc;
+              dd if=/dev/zero bs=1M count=10000 oflag=direct of=/dev/sdc;
+              partprobe /dev/sdc;
 ---
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: "wipe-disk-node03-sdd"
+  name: "wipe-disk-node03-sdc"
   namespace: "kube-system"
 spec:
   ttlSecondsAfterFinished: 3600
@@ -65,14 +65,14 @@ spec:
       nodeName: node03
       containers:
         - name: disk-wipe
-          image: alpine:3.19.1
+          image: alpine:3.20.3
           securityContext:
             privileged: true
           resources: {}
           command: ["/bin/sh", "-c"]
           args:
             - apk add --no-cache sgdisk util-linux parted;
-              sgdisk --zap-all /dev/sdd;
-              blkdiscard /dev/sdd;
-              dd if=/dev/zero bs=1M count=10000 oflag=direct of=/dev/sdd;
-              partprobe /dev/sdd;
+              sgdisk --zap-all /dev/sdc;
+              blkdiscard /dev/sdc;
+              dd if=/dev/zero bs=1M count=10000 oflag=direct of=/dev/sdc;
+              partprobe /dev/sdc;

@@ -72,6 +72,8 @@ controlPlane:
         allowSchedulingOnMasters: true
         proxy:
           disabled: true
+        coreDNS:
+          disabled: true
         controllerManager:
           extraArgs:
             node-cidr-mask-size-ipv6: "72"
@@ -155,6 +157,13 @@ controlPlane:
               - os:admin
             allowedKubernetesNamespaces:
               - system-controllers
+    # Enable HostDNS
+    - |-
+      machine:
+        features:
+          hostDNS:
+            enabled: true
+            forwardKubeDNSToHost: false
   schematic:
     customization:
       extraKernelArgs:

@@ -20,3 +20,8 @@ fi
 kustomize build --enable-helm kubelet-csr-approver | kubectl apply -f -
 rm kubelet-csr-approver/values.yaml
 rm -rf kubelet-csr-approver/charts
+
+envsubst < ../../../../cluster-cd/apps/chongus/kube-system/coredns/app/values.yaml > coredns/values.yaml
+kustomize build --enable-helm coredns | kubectl apply -f -
+rm coredns/values.yaml
+rm -rf coredns/charts
