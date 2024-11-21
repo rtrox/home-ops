@@ -29,8 +29,6 @@ spec:
       name: rook-ceph-cluster-values
       valuesKey: values.yaml
   dependsOn:
-    - name: ingress-nginx
-      namespace: network
     - name: rook-ceph-operator
       namespace: rook-ceph
   values:

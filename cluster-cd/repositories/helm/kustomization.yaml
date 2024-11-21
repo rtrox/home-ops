@@ -9,6 +9,7 @@ resources:
   - cilium.yaml
   - cloudnative-pg.yaml
   - codecentric.yaml
+  - coredns.yaml
   - external-secrets.yaml
   - factorio-server-charts.yaml
   - grafana.yaml
