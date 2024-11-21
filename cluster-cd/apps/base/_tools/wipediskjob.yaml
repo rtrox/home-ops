@@ -2,7 +2,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: "wipe-disk-node01-sdc"
+  name: "wipe-disk-node01-sdd"
   namespace: "kube-system"
 spec:
   ttlSecondsAfterFinished: 3600
@@ -20,15 +20,15 @@ spec:
           command: ["/bin/sh", "-c"]
           args:
             - apk add --no-cache sgdisk util-linux parted;
-              sgdisk --zap-all /dev/sdc;
-              blkdiscard /dev/sdc;
-              dd if=/dev/zero bs=1M count=10000 oflag=direct of=/dev/sdc;
-              partprobe /dev/sdc;
+              sgdisk --zap-all /dev/sdd;
+              blkdiscard /dev/sdd;
+              dd if=/dev/zero bs=1M count=10000 oflag=direct of=/dev/sdd;
+              partprobe /dev/sdd;
 ---
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: "wipe-disk-node02-sdc"
+  name: "wipe-disk-node02-sdd"
   namespace: "kube-system"
 spec:
   ttlSecondsAfterFinished: 3600
@@ -46,15 +46,15 @@ spec:
           command: ["/bin/sh", "-c"]
           args:
             - apk add --no-cache sgdisk util-linux parted;
-              sgdisk --zap-all /dev/sdc;
-              blkdiscard /dev/sdc;
-              dd if=/dev/zero bs=1M count=10000 oflag=direct of=/dev/sdc;
-              partprobe /dev/sdc;
+              sgdisk --zap-all /dev/sdd;
+              blkdiscard /dev/sdd;
+              dd if=/dev/zero bs=1M count=10000 oflag=direct of=/dev/sdd;
+              partprobe /dev/sdd;
 ---
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: "wipe-disk-node03-sdc"
+  name: "wipe-disk-node03-sdd"
   namespace: "kube-system"
 spec:
   ttlSecondsAfterFinished: 3600
@@ -72,7 +72,7 @@ spec:
           command: ["/bin/sh", "-c"]
           args:
             - apk add --no-cache sgdisk util-linux parted;
-              sgdisk --zap-all /dev/sdc;
-              blkdiscard /dev/sdc;
-              dd if=/dev/zero bs=1M count=10000 oflag=direct of=/dev/sdc;
-              partprobe /dev/sdc;
+              sgdisk --zap-all /dev/sdd;
+              blkdiscard /dev/sdd;
+              dd if=/dev/zero bs=1M count=10000 oflag=direct of=/dev/sdd;
+              partprobe /dev/sdd;
