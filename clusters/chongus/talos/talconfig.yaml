@@ -4,7 +4,7 @@ clusterName: ${clusterName}
 endpoint: https://${clusterName}.${clusterDNSSuffix}:6443
 allowSchedulingOnMasters: true
 # renovate: depName=ghcr.io/siderolabs/installer datasource=docker extractVersion=^(?<version>.*)$
-talosVersion: v1.7.6
+talosVersion: v1.8.3
 # renovate: depName=kubernetes/kubernetes datasource=github-releases extractVersion=^v(?<version>.*)$
 kubernetesVersion: 1.30.3
 
@@ -165,8 +165,8 @@ controlPlane:
           - siderolabs/i915-ucode
           - siderolabs/iscsi-tools
           - siderolabs/gasket-driver
-          - siderolabs/nonfree-kmod-nvidia
-          - siderolabs/nvidia-container-toolkit
+          - siderolabs/nonfree-kmod-nvidia-production
+          - siderolabs/nvidia-container-toolkit-production
 worker:
   schematic:
     customization:
@@ -178,5 +178,5 @@ worker:
           - siderolabs/i915-ucode
           - siderolabs/iscsi-tools
           - siderolabs/gasket-driver
-          - siderolabs/nonfree-kmod-nvidia
-          - siderolabs/nvidia-container-toolkit
+          - siderolabs/nonfree-kmod-nvidia-production
+          - siderolabs/nvidia-container-toolkit-production
