@@ -42,7 +42,7 @@ spec:
               mountPath: /tmp/config
       containers:
         - name: frigate
-          image: ghcr.io/blakeblackshear/frigate:0.13.2
+          image: ghcr.io/blakeblackshear/frigate:0.14.1
           env:
             - name: TZ
               value: ${LOCAL_TZ}
