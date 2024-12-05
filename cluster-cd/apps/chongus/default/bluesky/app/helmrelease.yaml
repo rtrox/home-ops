@@ -86,7 +86,7 @@ spec:
         controller: main
         ports:
           http:
-            port: *port
+            port: &port 3000
     ingress:
       main:
         enabled: true
@@ -116,4 +116,3 @@ spec:
         existingClaim: bluesky
         globalMounts:
           - path: /pds
-
