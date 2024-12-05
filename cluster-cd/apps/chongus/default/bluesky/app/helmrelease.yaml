@@ -112,9 +112,8 @@ spec:
               - *host
               - *wildcard
     persistence:
-      tmp:
-        type: emptyDir
-      tmp-data:
-        type: emptyDir
+      pds:
+        existingClaim: bluesky
         globalMounts:
-          - path: /etc/shlink/data
+          - path: /pds
+
