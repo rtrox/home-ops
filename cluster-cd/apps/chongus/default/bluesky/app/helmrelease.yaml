@@ -23,9 +23,6 @@ spec:
       retries: 3
   uninstall:
     keepHistory: false
-  dependsOn:
-    - name: redis
-      namespace: database
   values:
     defaultPodOptions:
       enableServiceLinks: true
@@ -69,19 +66,34 @@ spec:
                 cpu: 10m
               limits:
                 memory: 4Gi
+          pdsadmin:
+            image:
+              repository: ghcr.io/rtrox/pdsadmin
+              tag: v0.4.74@sha256:1d07457e1ab5b2b53d8869d4b15b7e6eb7c49e76209500776fb196e46bddc661
+            env:
+              PDS_HOSTNAME: *host
+            envFrom:
+              - secretRef:
+                  name: bluesky-secret
+            command:
+              - /bin/bash
+              - -c
+              - "env | grep PDS_ > /pds/pds.env && sleep infinity"
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities: { drop: ["ALL"] }
+            resources:
+              requests:
+                cpu: 10m
+              limits:
+                memory: 256Mi
         pod:
           securityContext:
             runAsUser: 1001
             runAsGroup: 1001
             fsGroup: 1001
             runAsNonRoot: true
-          topologySpreadConstraints:
-            - maxSkew: 1
-              topologyKey: kubernetes.io/hostname
-              whenUnsatisfiable: DoNotSchedule
-              labelSelector:
-                matchLabels:
-                  app.kubernetes.io/name: *app
     service:
       main:
         controller: main
@@ -117,3 +129,9 @@ spec:
         existingClaim: bluesky
         globalMounts:
           - path: /pds
+      temp:
+        type: EmptyDir
+        advancedMounts:
+          main:
+            pdsadmin:
+              - path: /tmp
