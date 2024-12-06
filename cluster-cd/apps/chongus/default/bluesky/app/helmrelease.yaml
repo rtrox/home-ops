@@ -71,9 +71,9 @@ spec:
                 memory: 4Gi
         pod:
           securityContext:
-            runAsUser: 1001
-            runAsGroup: 1001
-            runAsNonRoot: true
+            runAsUser: 0
+            runAsGroup: 0
+            runAsNonRoot: false
           topologySpreadConstraints:
             - maxSkew: 1
               topologyKey: kubernetes.io/hostname
