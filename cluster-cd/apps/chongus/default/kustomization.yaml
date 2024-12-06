@@ -10,4 +10,4 @@ resources:
   # - ./minecraft-cpw/ks.yaml
   # - ./minecraft-vanilla/ks.yaml
   - ./echo/ks.yaml
-  # - ./bluesky/ks.yaml
+  - ./bluesky/ks.yaml
