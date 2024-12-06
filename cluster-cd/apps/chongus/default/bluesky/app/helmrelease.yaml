@@ -80,8 +80,10 @@ spec:
               - -c
               - "env | grep PDS_ > /pds/pds.env && sleep infinity"
             securityContext:
-              allowPrivilegeEscalation: false
+              allowPrivilegeEscalation: true
               readOnlyRootFilesystem: true
+              runAsUser: 0
+              runAsGroup: 0
               capabilities: { drop: ["ALL"] }
             resources:
               requests:
@@ -93,7 +95,6 @@ spec:
             runAsUser: 1001
             runAsGroup: 1001
             fsGroup: 1001
-            runAsNonRoot: true
     service:
       main:
         controller: main
