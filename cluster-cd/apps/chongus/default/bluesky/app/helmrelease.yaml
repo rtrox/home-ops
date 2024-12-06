@@ -130,7 +130,7 @@ spec:
         globalMounts:
           - path: /pds
       temp:
-        type: EmptyDir
+        type: emptyDir
         advancedMounts:
           main:
             pdsadmin:
