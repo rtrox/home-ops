@@ -1,0 +1,51 @@
+---
+- name: Download Cloudflared binary
+  get_url:
+    url: "{{ cloudflared_binary_url }}"
+    dest: "{{ cloudflared_binary_path }}"
+    mode: "0755"
+  register: cloudflared_downloaded
+
+- name: Verify Cloudflared installation
+  command: "{{ cloudflared_binary_path }} --version"
+  changed_when: false
+
+- name: Configure Cloudflared systemd service
+  template:
+    src: cloudflared.service.j2
+    dest: /etc/systemd/system/cloudflared.service
+    mode: "0644"
+  notify: restart cloudflared
+
+- name: Backup /etc/resolv.conf
+  copy:
+    src: /etc/resolv.conf
+    dest: /etc/resolv.conf.bak
+    remote_src: yes
+  ignore_errors: true
+
+- name: Write 127.0.0.1 as the only nameserver
+  copy:
+    content: |
+      nameserver 127.0.0.1
+    dest: /etc/resolv.conf
+    mode: "0644"
+
+- name: Prevent DHCP from overwriting /etc/resolv.conf
+  lineinfile:
+    path: /etc/dhcp/dhclient.conf
+    regexp: "^#?supersede domain-name-servers"
+    line: "supersede domain-name-servers 127.0.0.1;"
+    state: present
+    create: true
+  notify: restart networking
+
+- name: Reload systemd to pick up Cloudflared service
+  command: systemctl daemon-reload
+  changed_when: false
+
+- name: Ensure Cloudflared service is running
+  systemd:
+    name: cloudflared
+    enabled: true
+    state: started

@@ -1,0 +1,4 @@
+# defaults/main.yml
+auto_update_package: "unattended-upgrades" # For Ubuntu/Debian
+auto_update_service: "apt-daily-upgrade.timer" # For Ubuntu/Debian
+reboot_time: "09:00" # Automatic reboot time (UTC) for Ubuntu/Debian

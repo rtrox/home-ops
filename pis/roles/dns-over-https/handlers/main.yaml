@@ -1,0 +1,6 @@
+---
+- include_tasks: restart_networking.yml
+- name: restart cloudflared
+  systemd:
+    name: cloudflared
+    state: restarted

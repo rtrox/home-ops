@@ -1,0 +1,3 @@
+# defaults/main.yml
+---
+docker_version: "latest"

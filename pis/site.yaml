@@ -1,0 +1,55 @@
+---
+- name: Common configuration for all hosts
+  hosts: all
+  tasks:
+    - name: Ensure /etc/hosts has an entry for the hostname
+      lineinfile:
+        path: /etc/hosts
+        line: "127.0.0.1 {{ inventory_hostname }}"
+        state: present
+
+    - name: Check if hostname matches desired state
+      shell: hostname
+      register: current_hostname
+
+    - name: Set hostname only if it differs
+      command: hostnamectl set-hostname "{{ inventory_hostname }}"
+      when: current_hostname.stdout != inventory_hostname
+
+    - name: Ensure timezone is set to UTC
+      timezone:
+        name: UTC
+
+    - name: Ensure locale is set to US English
+      command: localectl set-locale LANG=en_US.UTF-8
+      changed_when: false
+
+    - name: Install common packages
+      apt:
+        name:
+          - htop
+          - vim
+          - dnsutils # Provides dig
+          - whois
+          - curl
+          - wget
+          - git
+          - net-tools
+          - tmux
+          - unzip
+          - python3-pip
+        state: latest
+        update_cache: yes
+
+  roles:
+    - auto-upgrade
+    - geerlingguy.docker
+    - raspi-monitor
+
+- name: Configure AdGuard Home on DNS hosts
+  hosts: dns
+  vars_files:
+    - adguard_credentials.yml
+  roles:
+    - dns-over-https # Set up DNS over HTTPs for system-wide DNS
+    - adguardhome

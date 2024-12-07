@@ -1,0 +1,38 @@
+---
+- name: Ensure required directories for AdGuard Home exist
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+  with_items:
+    - /etc/adguard/work
+    - /etc/adguard/conf
+    - /etc/adguard/ssl
+
+- name: Reload systemd daemon
+  command: systemctl daemon-reload
+
+- name: Ensure Docker service is enabled and running
+  systemd:
+    name: docker
+    enabled: true
+    state: started
+
+- name: Configure AdGuard Home using template
+  template:
+    src: AdGuardHome.yaml.j2
+    dest: /etc/adguard/conf/AdGuardHome.yaml
+    mode: "0644"
+  notify: restart adguardhome service
+
+- name: Create systemd service for AdGuard Home
+  template:
+    src: adguardhome.service.j2
+    dest: /etc/systemd/system/adguardhome.service
+  notify: restart adguardhome service
+
+- name: Enable and start the AdGuard Home service
+  systemd:
+    name: adguardhome
+    enabled: true
+    state: started

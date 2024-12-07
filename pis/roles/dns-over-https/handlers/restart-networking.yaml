@@ -1,0 +1,18 @@
+---
+- name: Check if NetworkManager is active
+  command: systemctl is-active NetworkManager
+  register: network_manager_status
+  failed_when: false
+  changed_when: false
+
+- name: Restart NetworkManager if active
+  systemd:
+    name: NetworkManager
+    state: restarted
+  when: network_manager_status.stdout == "active"
+
+- name: Restart systemd-networkd if NetworkManager is not active
+  systemd:
+    name: systemd-networkd
+    state: restarted
+  when: network_manager_status.stdout != "active"

@@ -1,0 +1,18 @@
+[Unit]
+Description=Raspi-Monitor I2C OLED Monitor
+After=docker.service
+Requires=docker.service
+
+[Service]
+TimeoutStartSec=0
+ExecStartPre=-/usr/bin/docker rm --force raspi-monitor
+ExecStart=/usr/bin/docker run --name raspi-monitor --pull always \
+    --network host \
+    --device /dev/i2c-1 \
+    ghcr.io/rtrox/raspi-monitor:latest
+ExecStop=/usr/bin/docker stop raspi-monitor
+Restart=always
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target

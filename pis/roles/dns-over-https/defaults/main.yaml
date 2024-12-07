@@ -1,0 +1,6 @@
+cloudflared_binary_url: "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-arm64"
+cloudflared_binary_path: "/usr/local/bin/cloudflared"
+cloudflared_service_port: 5053 # Port for the local DoH server
+cloudflared_upstream_dns:
+  - "https://1.1.1.1/dns-query"
+  - "https://1.0.0.1/dns-query"

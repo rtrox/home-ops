@@ -1,0 +1,36 @@
+---
+- name: Ensure I2C is enabled in raspi-config
+  command: raspi-config nonint do_i2c 0
+  changed_when: false # Avoid marking as changed unless necessary
+
+- name: Load I2C kernel module
+  modprobe:
+    name: i2c-dev
+    state: present
+
+- name: Ensure I2C kernel module is loaded on boot
+  lineinfile:
+    path: /etc/modules
+    line: i2c-dev
+    state: present
+
+- name: Reload systemd daemon
+  command: systemctl daemon-reload
+
+- name: Ensure Docker service is enabled and running
+  systemd:
+    name: docker
+    enabled: true
+    state: started
+
+- name: Create systemd service for Raspi-Monitor
+  template:
+    src: raspi-monitor.service.j2
+    dest: /etc/systemd/system/raspi-monitor.service
+  notify: restart raspi-monitor service
+
+- name: Enable and start the Raspi-Monitor service
+  systemd:
+    name: raspi-monitor
+    enabled: true
+    state: started

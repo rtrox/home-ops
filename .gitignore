@@ -22,3 +22,8 @@
 
 # Other files
 kubeconfig
+
+# Ansible Inventory files
+inventory.yml
+inventory.yaml
+inventory.ini

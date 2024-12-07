@@ -1,0 +1,37 @@
+# tasks/main.yml
+---
+- name: Ensure apt package update tool is installed (Ubuntu/Debian)
+  apt:
+    name: "{{ auto_update_package }}"
+    state: present
+  when: ansible_facts['os_family'] == 'Debian'
+
+- name: Enable automatic updates service (Ubuntu/Debian)
+  systemd:
+    name: "{{ auto_update_service }}"
+    enabled: yes
+    state: started
+  when: ansible_facts['os_family'] == 'Debian'
+
+- name: Configure automatic updates (Ubuntu/Debian)
+  copy:
+    src: "20-auto-upgrades.conf"
+    dest: "/etc/apt/apt.conf.d/20auto-upgrades"
+    mode: "0644"
+  when: ansible_facts['os_family'] == 'Debian'
+
+- name: Ensure Docker is included in auto-upgrades (Ubuntu/Debian)
+  lineinfile:
+    path: /etc/apt/apt.conf.d/50unattended-upgrades
+    regexp: '^//.*"docker-ce"'
+    line: '"docker-ce";'
+    create: yes
+  when: ansible_facts['os_family'] == 'Debian'
+
+- name: Set automatic reboot time for Ubuntu/Debian
+  lineinfile:
+    path: /etc/apt/apt.conf.d/50unattended-upgrades
+    regexp: "^//.*Unattended-Upgrade::Automatic-Reboot-Time"
+    line: 'Unattended-Upgrade::Automatic-Reboot-Time "{{ reboot_time }}";'
+    create: yes
+  when: ansible_facts['os_family'] == 'Debian'

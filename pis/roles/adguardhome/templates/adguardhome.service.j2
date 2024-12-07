@@ -1,0 +1,25 @@
+[Unit]
+Description=Adguard Home DNS Server
+After=docker.service
+Requires=docker.service
+
+[Service]
+TimeoutStartSec=0
+ExecStartPre=-/usr/bin/docker rm --force adguardhome
+ExecStart=/usr/bin/docker run --name adguardhome \
+    --restart unless-stopped \
+    -v /etc/adguard/work:/opt/adguardhome/work \
+    -v /etc/adguard/conf:/opt/adguardhome/conf \
+    -v /etc/adguard/ssl:/opt/adguardhome/ssl \
+    -p 53:53/tcp -p 53:53/udp \
+    -p 80:80/tcp -p 443:443/tcp -p 443:443/udp -p 3000:3000/tcp \
+    -p 853:853/tcp \
+    -p 784:784/udp \
+    -p 853:853/udp -p 8853:8853/udp \
+    adguard/adguardhome
+ExecStop=/usr/bin/docker stop adguardhome
+Restart=always
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
