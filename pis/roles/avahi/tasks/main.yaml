@@ -1,0 +1,25 @@
+---
+- name: Ensure Docker service is enabled and running
+  systemd:
+    name: docker
+    enabled: true
+    state: started
+
+- name: Configure Avahi Daemon Service using template
+  template:
+    src: avahi-reflector.service.j2
+    dest: /etc/systemd/system/avahi-reflector.service
+    mode: "0644"
+  notify: restart avahi-reflector service
+
+- name: Stop and Mask the Avahi Daemon Local Service
+  systemd:
+    name: avahi-daemon
+    state: stopped
+    masked: true
+
+- name: Enable and start the Avahi Reflector service
+  systemd:
+    name: avahi-reflector
+    enabled: true
+    state: started

@@ -1,0 +1,21 @@
+---
+- name: Ensure vlan package is installed
+  apt:
+    name: vlan
+    state: present
+    update_cache: yes
+
+- name: Load the 8021q kernel module
+  modprobe:
+    name: 8021q
+    state: present
+
+- name: Ensure 8021q kernel module is loaded on boot
+  lineinfile:
+    path: /etc/modules
+    line: 8021q
+    state: present
+
+- name: Create VLAN connections via NetworkManager
+  include_tasks: create_vlan.yaml
+  loop: "{{ vlan_interfaces }}"

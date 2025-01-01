@@ -1,0 +1,5 @@
+---
+- name: restart avahi-reflector service
+  systemd:
+    name: avahi-reflector
+    state: restarted

@@ -1,0 +1,27 @@
+[Unit]
+Description=Avahi Daemon mDNS Reflector
+After=docker.service
+Requires=docker.service
+
+[Service]
+TimeoutStartSec=0
+ExecStartPre=-/usr/bin/docker rm --force avahi-reflector
+ExecStart=/usr/bin/docker run --name avahi-reflector \
+    --pull always                                    \
+    --network host                                   \
+    -e SERVER_HOST_NAME={{ ansible_hostname }}       \
+    -e SERVER_USE_IPV4=yes                           \
+    -e SERVER_USE_IPV6=no                            \
+    -e RATELIMIT_INTERVAL_USEC=1000000               \
+    -e RATELIMIT_BURST=1000                          \
+    -e REFLECTOR_ENABLE_REFLECTOR=yes                \
+    -e REFLECTOR_REFLECT_IPV=no                      \
+    -e PUBLISH_PUBLISH_HINFO=no                      \
+    -e PUBLISH_WORKSTATION=no                        \
+    ghcr.io/rtrox/avahi:latest
+ExecStop=/usr/bin/docker stop avahi-reflector
+Restart=always
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target

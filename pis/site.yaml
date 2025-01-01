@@ -53,3 +53,9 @@
   roles:
     - dns-over-https # Set up DNS over HTTPs for system-wide DNS
     - adguardhome
+
+- name: Configure Avahi on Avahi Hosts
+  hosts: avahi
+  roles:
+    - vlans
+    - avahi
