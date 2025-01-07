@@ -1,0 +1,35 @@
+---
+- name: Ensure VLAN configuration file exists
+  vars:
+    connection_name: "{{ item.interface }}.{{ item.vlan_id }}"
+    config_file: "/etc/NetworkManager/system-connections/{{ connection_name }}.nmconnection"
+  template:
+    src: vlan_connection.nmconnection.j2
+    dest: "{{ config_file }}"
+    mode: "0600"
+
+- name: Reload NetworkManager configuration
+  command: nmcli connection reload
+
+- name: "[Debug] Check if the configuration file exists"
+  stat:
+    path: "/etc/NetworkManager/system-connections/{{ item.interface }}.{{ item.vlan_id }}.nmconnection"
+  register: vlan_config_status
+
+- name: Output the file existence status
+  debug:
+    var: vlan_config_status.stat.exists
+
+- name: List all available NetworkManager connections
+  command: nmcli connection show
+  register: nmcli_connections
+
+- name: Output available connections
+  debug:
+    var: nmcli_connections.stdout_lines
+
+- name: Activate VLAN connection
+  vars:
+    connection_name: "{{ item.interface }}.{{ item.vlan_id }}"
+  command: nmcli connection up "{{ connection_name }}"
+  changed_when: true

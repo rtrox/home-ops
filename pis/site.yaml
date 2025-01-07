@@ -24,22 +24,22 @@
       command: localectl set-locale LANG=en_US.UTF-8
       changed_when: false
 
-    - name: Install common packages
-      apt:
-        name:
-          - htop
-          - vim
-          - dnsutils # Provides dig
-          - whois
-          - curl
-          - wget
-          - git
-          - net-tools
-          - tmux
-          - unzip
-          - python3-pip
-        state: latest
-        update_cache: yes
+    # - name: Install common packages
+    #   apt:
+    #     name:
+    #       - htop
+    #       - vim
+    #       - dnsutils # Provides dig
+    #       - whois
+    #       - curl
+    #       - wget
+    #       - git
+    #       - net-tools
+    #       - tmux
+    #       - unzip
+    #       - python3-pip
+    #     state: latest
+    #     update_cache: yes
 
   roles:
     - auto-upgrade
@@ -51,8 +51,9 @@
   vars_files:
     - adguard_credentials.yml
   roles:
-    - dns-over-https # Set up DNS over HTTPs for system-wide DNS
-    - adguardhome
+    # - dns-over-https # Set up DNS over HTTPs for system-wide DNS
+    # - adguardhome
+    - tailscaled
 
 - name: Configure Avahi on Avahi Hosts
   hosts: avahi
