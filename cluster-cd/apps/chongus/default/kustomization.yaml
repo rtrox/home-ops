@@ -9,5 +9,6 @@ resources:
   # - ./factorio-space-ex/ks.yaml
   # - ./minecraft-cpw/ks.yaml
   # - ./minecraft-vanilla/ks.yaml
+  - ./minecraft-sf5/ks.yaml
   - ./echo/ks.yaml
   - ./bluesky/ks.yaml
