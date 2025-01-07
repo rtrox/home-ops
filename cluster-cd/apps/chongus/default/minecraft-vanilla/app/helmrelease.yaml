@@ -108,6 +108,14 @@ spec:
       serviceType: LoadBalancer
       extraServiceSpec:
         publishNotReadyAddresses: true
+    dnsPolicy: None
+    dnsConfig:
+      options:
+        - name: ndots
+          value: "1"
+      nameservers:
+        - 1.1.1.1
+        - 1.0.0.1
   valuesFrom:
     - kind: Secret
       name: *secret
