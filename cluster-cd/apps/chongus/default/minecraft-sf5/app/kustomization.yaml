@@ -5,4 +5,5 @@ kind: Kustomization
 resources:
   - ./helmrelease.yaml
   - ./externalsecret.yaml
+  - ./cronjob.yaml
   - ../../../../base/_templates/volsync-minio-default
