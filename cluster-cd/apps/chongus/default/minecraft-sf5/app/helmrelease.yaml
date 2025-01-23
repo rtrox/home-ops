@@ -56,7 +56,7 @@ spec:
         enabled: true
         existingClaim: *app
     serviceAnnotations:
-      mc-router.itzg.me/externalServerName: "mc.${SECRET_DOMAIN}"
+      external-dns.alpha.kubernetes.io/hostname: "sf5.${SECRET_DOMAIN}"
       # mcbackup:
       #   enabled: true
       #   backupInterval: 24hr
