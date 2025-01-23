@@ -31,8 +31,8 @@ spec:
           lbipam.cilium.io/ips: ${INGRESS_NGINX_IPV4}
         ipFamilies:
           - IPv4
-          - IPv6
-        ipFamilyPolicy: PreferDualStack
+          # - IPv6
+        ipFamilyPolicy: SingleStack
       ingressClassResource:
         default: true
       topologySpreadConstraints:
