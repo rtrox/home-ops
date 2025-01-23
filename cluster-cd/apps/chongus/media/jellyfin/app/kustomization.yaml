@@ -5,6 +5,6 @@ kind: Kustomization
 resources:
   - ./deployment.yaml
   - ./service.yaml
-  # - ./ingress.yaml
+  - ./ingress.yaml
   # - ./restore.yaml
   - ../../../../base/_templates/volsync-minio-default
