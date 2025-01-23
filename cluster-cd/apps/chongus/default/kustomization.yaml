@@ -4,7 +4,7 @@ kind: Kustomization
 resources:
   - ./atuin/ks.yaml
   - ./paperless-ngx/ks.yaml
-  - ./shlink/ks.yaml
+  # - ./shlink/ks.yaml
   # - ./factorio-ultracube/ks.yaml
   # - ./factorio-space-ex/ks.yaml
   # - ./minecraft-cpw/ks.yaml
