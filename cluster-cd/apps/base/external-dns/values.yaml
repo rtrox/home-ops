@@ -38,8 +38,6 @@ txtPrefix: k8s.
 
 triggerLoopOnEvent: true
 
-logLevel: debug
-
 postRenderers:
   - kustomize:
       patches:
