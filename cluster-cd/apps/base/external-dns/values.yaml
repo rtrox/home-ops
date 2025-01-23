@@ -36,10 +36,9 @@ sources:
 txtOwnerId: ${CLUSTER_NAME}
 txtPrefix: k8s.
 
-logLevel: debug
+triggerLoopOnEvent: true
 
-domainFilters:
-  - ${SECRET_DOMAIN}
+logLevel: debug
 
 postRenderers:
   - kustomize:
