@@ -7,6 +7,8 @@ env:
         key: cloudflare-token
 
 extraArgs:
+  - --crd-source-apiversion=externaldns.k8s.io/v1alpha1
+  - --crd-source-kind=DNSEndpoint
   - --cloudflare-dns-records-per-page=1000
   - --ignore-ingress-tls-spec
 
@@ -29,11 +31,15 @@ serviceMonitor:
 sources:
   - service
   - ingress
+  - crd
 
 txtOwnerId: ${CLUSTER_NAME}
 txtPrefix: k8s.
 
 logLevel: debug
+
+domainFilters:
+  - ${SECRET_DOMAIN}
 
 postRenderers:
   - kustomize:
