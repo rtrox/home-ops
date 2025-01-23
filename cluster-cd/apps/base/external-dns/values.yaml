@@ -11,7 +11,6 @@ extraArgs:
   - --crd-source-kind=DNSEndpoint
   - --cloudflare-dns-records-per-page=1000
   - --ignore-ingress-tls-spec
-  - --log-level=debug
 
 podAnnotations:
   secret.reloader.stakater.com/reload: externaldns-cloudflare-token
@@ -36,6 +35,8 @@ sources:
 
 txtOwnerId: ${CLUSTER_NAME}
 txtPrefix: k8s.
+
+logLevel: debug
 
 postRenderers:
   - kustomize:
