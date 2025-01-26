@@ -58,11 +58,9 @@ spec:
               memory: 4Gi
               gpu.intel.com/i915: 1
           securityContext:
-            seccompProfile:
-              type: RuntimeDefault
-            capabilities:
-              drop:
-                - ALL
+            privileged: true
+            runAsUser: 0
+            runAsGroup: 0
           ports:
             - name: http
               containerPort: 9999
