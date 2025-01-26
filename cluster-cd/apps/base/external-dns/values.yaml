@@ -36,8 +36,6 @@ sources:
 txtOwnerId: ${CLUSTER_NAME}
 txtPrefix: k8s.
 
-logLevel: debug
-
 triggerLoopOnEvent: true
 
 postRenderers:
