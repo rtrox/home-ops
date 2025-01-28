@@ -1,0 +1,36 @@
+---
+- name: Ensure required directories for AdGuard Home exist
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+  with_items:
+    - /etc/blocky
+
+- name: Reload systemd daemon
+  command: systemctl daemon-reload
+
+- name: Ensure Docker service is enabled and running
+  systemd:
+    name: docker
+    enabled: true
+    state: started
+
+- name: Configure Blocky Home using template
+  template:
+    src: config.yaml.j2
+    dest: /etc/blocky/config.yaml
+    mode: "0644"
+  notify: restart blocky service
+
+- name: Create systemd service for AdGuard Home
+  template:
+    src: blocky.service.j2
+    dest: /etc/systemd/system/blocky.service
+  notify: restart blocky service
+
+- name: Enable and start the AdGuard Home service
+  systemd:
+    name: blocky
+    enabled: true
+    state: started

@@ -1,0 +1,86 @@
+---
+ports:
+  dns: 53
+  http: 80
+  https: 443
+
+upstreams:
+  groups:
+    default:
+      - tcp-tls:1.1.1.1:853
+      - tcp-tls:1.0.0.1:853
+      - https://cloudflare-dns.com/dns-query
+
+ede:
+  enable: true
+
+blocking:
+  denylists:
+    ads:
+      - https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts
+  allowlists:
+    ads:
+      - |
+        comcastathena.demdex.net
+        dl.cws.xfinity.com
+        login.xfinity.com
+        oauth.xfinity.com
+        business.comcast.com
+        assets.adobedtm.com
+        static.digital.business.comcast.com
+        dpm.demdex.net
+        comcastresidentialservices.tt.omtrdc.net
+        www.reddit.com
+        discourse.pi-hole.net
+        img04.en25.com
+        xchat.xfinity.com
+        script.crazyegg.com
+        assets.bounceexchange.com
+        api.bounceexchange.com
+        events.bouncex.net
+        media.xchat.xfinity.com
+        files.slack.com
+        slack.com
+        www.kqzyfj.com
+        kqzyfj.com
+        cdn.heapanalytics.com
+        # Allow Google Ads
+        www.googleadservices.com
+        dartsearch.net
+        www.googletagmanager.com
+        www.googletagservices.com
+        ad.doubleclick.net
+        clickserve.dartsearch.net
+        t.myvisualiq.net
+        stashdb.org
+        segment.com
+        s2.bl-1.com
+
+  clientGroupsBlock:
+    default:
+      - ads
+  blockType: zeroIp
+
+clientLookup:
+  upstream:
+  singleNameOrder:
+    - 2
+    - 1
+
+caching:
+  minTime: 5m
+  cacheTimeNegative: 30m
+  prefetching: true
+
+redis:
+  address: "{{ redis_address }}"
+  required: true
+
+queryLog:
+  type: postgresql
+  target: "{{ postgres_address }}"
+  logRetentionDays: 30
+
+prometheus:
+  enable: true
+  path: /metrics

@@ -51,8 +51,8 @@
   vars_files:
     - adguard_credentials.yml
   roles:
-    # - dns-over-https # Set up DNS over HTTPs for system-wide DNS
-    # - adguardhome
+    - dns-over-https # Set up DNS over HTTPs for system-wide DNS
+    - adguardhome
     - tailscaled
 
 - name: Configure Avahi on Avahi Hosts

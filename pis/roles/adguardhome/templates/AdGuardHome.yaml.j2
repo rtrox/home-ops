@@ -73,7 +73,7 @@ dns:
   hostsfile_enabled: true
 tls:
   enabled: true
-  server_name: ns2.rtrox.io
+  server_name: {{inventory_hostname}}
   force_https: true
   port_https: 443
   port_dns_over_tls: 853
@@ -83,8 +83,8 @@ tls:
   allow_unencrypted_doh: false
   certificate_chain: ""
   private_key: ""
-  certificate_path: /opt/adguardhome/ssl/certificates/ns2.rtrox.io.crt
-  private_key_path: /opt/adguardhome/ssl/certificates/ns2.rtrox.io.key
+  certificate_path: /opt/adguardhome/ssl/certificates/{{inventory_hostname}}.crt
+  private_key_path: /opt/adguardhome/ssl/certificates/{{inventory_hostname}}.key
   strict_sni_check: false
 querylog:
   dir_path: ""
