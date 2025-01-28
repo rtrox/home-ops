@@ -1,0 +1,15 @@
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-to-redis-from-trusted-only
+  namespace: database
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: redis
+  ingress:
+    - fromCIDR:
+        - 172.30.0.0/16
+    - fromEntities:
+        - cluster

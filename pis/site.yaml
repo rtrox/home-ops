@@ -52,7 +52,7 @@
     - adguard_credentials.yml
   roles:
     - dns-over-https # Set up DNS over HTTPs for system-wide DNS
-    - adguardhome
+    - blocky
     - tailscaled
 
 - name: Configure Avahi on Avahi Hosts
