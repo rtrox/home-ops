@@ -62,7 +62,7 @@ blocking:
   blockType: zeroIp
 
 clientLookup:
-  upstream:
+  upstream: {{ blocky_upstream }}
   singleNameOrder:
     - 2
     - 1
@@ -73,12 +73,13 @@ caching:
   prefetching: true
 
 redis:
-  address: "{{ redis_address }}"
-  required: true
+  address: "{{ blocky_redis_address }}"
+  database: {{ blocky_redis_database }}
+  required: false
 
 queryLog:
   type: postgresql
-  target: "{{ postgres_address }}"
+  target: "{{ blocky_postgres_address }}"
   logRetentionDays: 30
 
 prometheus:

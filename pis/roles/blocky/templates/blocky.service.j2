@@ -11,7 +11,9 @@ ExecStart=/usr/bin/docker run --name blocky \
     --restart unless-stopped \
     -p 53:53/tcp -p 53:53/udp \
     -p 4000:4000/tcp \
-    spx01/blocky
+    -v /etc/blocky:/etc/blocky \
+    spx01/blocky \
+    --config /etc/blocky/config.yaml
 ExecStop=/usr/bin/docker stop blocky
 Restart=always
 RestartSec=5s

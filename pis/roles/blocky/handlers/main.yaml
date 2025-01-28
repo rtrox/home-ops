@@ -1,5 +1,7 @@
 ---
-- name: restart adguardhome service
+- include_tasks: restart_networking.yml
+
+- name: restart blocky service
   systemd:
-    name: adguardhome
+    name: blocky
     state: restarted

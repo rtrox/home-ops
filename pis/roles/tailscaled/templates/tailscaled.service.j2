@@ -15,6 +15,7 @@ ExecStart=/usr/bin/docker run --name=tailscaled \
     --cap-add=NET_RAW \
     --env TS_ROUTES=172.16.0.0/12 \
     --env TS_STATE_DIR=/var/lib/tailscale \
+    --env TS_EXTRA_ARGS="--advertise-tags=tag:home" \
     tailscale/tailscale
 ExecStop=/usr/bin/docker stop tailscaled
 Restart=always

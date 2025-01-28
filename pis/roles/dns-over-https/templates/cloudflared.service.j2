@@ -8,8 +8,8 @@ ExecStart={{ cloudflared_binary_path }} proxy-dns \
   --upstream {{ cloudflared_upstream_dns | join(' --upstream ') }}
 Restart=always
 RestartSec=5s
-User=nobody
-Group=nogroup
+User=root
+Group=root
 
 [Install]
 WantedBy=multi-user.target

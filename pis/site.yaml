@@ -1,6 +1,20 @@
 ---
 - name: Common configuration for all hosts
   hosts: all
+
+  pre_tasks:
+    - name: Set docker_users dynamically
+      set_fact:
+        docker_users:
+          - "{{ ansible_user }}"
+
+  roles:
+    - role: auto-upgrade
+    - role: geerlingguy.docker
+      vars:
+        docker_users: "{{ docker_users }}"
+    - role: raspi-monitor
+
   tasks:
     - name: Ensure /etc/hosts has an entry for the hostname
       lineinfile:
@@ -8,55 +22,64 @@
         line: "127.0.0.1 {{ inventory_hostname }}"
         state: present
 
-    - name: Check if hostname matches desired state
+    - name: Ensure hostname is correct
       shell: hostname
       register: current_hostname
-
-    - name: Set hostname only if it differs
+    - name: Set hostname if it differs
       command: hostnamectl set-hostname "{{ inventory_hostname }}"
       when: current_hostname.stdout != inventory_hostname
 
-    - name: Ensure timezone is set to UTC
-      timezone:
-        name: UTC
+    - name: Ensure system configuration
+      block:
+        - name: Ensure timezone is set to UTC
+          timezone:
+            name: UTC
+        - name: Ensure locale is set to US English
+          command: localectl set-locale LANG=en_US.UTF-8
+          changed_when: false
 
-    - name: Ensure locale is set to US English
-      command: localectl set-locale LANG=en_US.UTF-8
-      changed_when: false
+    - name: Install common packages
+      apt:
+        name:
+          - htop
+          - vim
+          - dnsutils # Provides dig
+          - whois
+          - curl
+          - wget
+          - git
+          - net-tools
+          - tmux
+          - unzip
+          - python3-pip
+        state: present
+        update_cache: yes
 
-    # - name: Install common packages
-    #   apt:
-    #     name:
-    #       - htop
-    #       - vim
-    #       - dnsutils # Provides dig
-    #       - whois
-    #       - curl
-    #       - wget
-    #       - git
-    #       - net-tools
-    #       - tmux
-    #       - unzip
-    #       - python3-pip
-    #     state: latest
-    #     update_cache: yes
-
-  roles:
-    - auto-upgrade
-    - geerlingguy.docker
-    - raspi-monitor
-
-- name: Configure AdGuard Home on DNS hosts
+- name: Configure DNS Server hosts
   hosts: dns
-  vars_files:
-    - adguard_credentials.yml
-  roles:
-    - dns-over-https # Set up DNS over HTTPs for system-wide DNS
-    - blocky
-    - tailscaled
 
-- name: Configure Avahi on Avahi Hosts
+  vars_files:
+    - blocky_addresses.yml
+
+  tasks:
+    - name: Configure DNS-related services
+      block:
+        - name: Set up Blocky
+          include_role:
+            name: blocky
+        - name: Enable Tailscale
+          include_role:
+            name: tailscaled
+
+- name: Configure  Avahi Hosts
   hosts: avahi
-  roles:
-    - vlans
-    - avahi
+
+  tasks:
+    - name: Configure Avahi-related services
+      block:
+        - name: Set up VLANs
+          include_role:
+            name: vlans
+        - name: Enable Avahi
+          include_role:
+            name: avahi

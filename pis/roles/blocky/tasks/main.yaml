@@ -1,5 +1,22 @@
 ---
-- name: Ensure required directories for AdGuard Home exist
+- name: System Resolvers - Write Resolvers to /etc/resolv.conf
+  template:
+    src: resolv.conf.j2
+    dest: /etc/resolv.conf
+    mode: "0644"
+    backup: true
+  when: blocky_set_system_resolvers
+
+- name: System Resolvers - Prevent DHCP from overwriting /etc/resolv.conf
+  lineinfile:
+    path: /etc/dhcp/dhclient.conf
+    regexp: "^#?supersede domain-name-servers"
+    line: supersede domain-name-servers {{ blocky_system_resolvers | join(" ") }};
+    state: present
+    create: true
+  notify: restart networking
+
+- name: Ensure required directories for Blocky exist
   file:
     path: "{{ item }}"
     state: directory
@@ -23,13 +40,13 @@
     mode: "0644"
   notify: restart blocky service
 
-- name: Create systemd service for AdGuard Home
+- name: Create systemd service for Blocky
   template:
     src: blocky.service.j2
     dest: /etc/systemd/system/blocky.service
   notify: restart blocky service
 
-- name: Enable and start the AdGuard Home service
+- name: Enable and start the Blocky service
   systemd:
     name: blocky
     enabled: true

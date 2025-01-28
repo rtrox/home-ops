@@ -1,0 +1,8 @@
+blocky_redis_address: redis
+blocky_redis_database: 0
+blocky_postgres_address: postgresql://user:pass@postgres:5432/blocky?sslmode=disable
+blocky_upstream: 192.168.0.1
+blocky_set_system_resolvers: true
+blocky_system_resolvers:
+  - 1.1.1.1
+  - 1.0.0.1
