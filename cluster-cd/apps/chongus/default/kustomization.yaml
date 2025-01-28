@@ -9,4 +9,4 @@ resources:
   - ./minecraft-vanilla/ks.yaml
   - ./paperless-ngx/ks.yaml
   # - ./minecraft-cpw/ks.yaml
-  # - ./shlink/ks.yaml
+  - ./shlink/ks.yaml
