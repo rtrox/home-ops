@@ -31,13 +31,9 @@ spec:
     master:
       persistence:
         enabled: false
-      service:
-        type: LoadBalancer
     replica:
       persistence:
         enabled: false
-      service:
-        type: LoadBalancer
     sentinel:
       enabled: true
       masterSet: redis-master
@@ -48,6 +44,8 @@ spec:
         enabled: false
       service:
         type: LoadBalancer
+        annotations:
+          external-dns.alpha.kubernetes.io/hostname: redis.${CLUSTER_NAME}.${SECRET_DOMAIN}
     networkPolicy:
       enabled: false
     metrics:
