@@ -36,6 +36,8 @@ spec:
     replica:
       persistence:
         enabled: false
+      service:
+        type: LoadBalancer
     sentinel:
       enabled: true
       masterSet: redis-master
@@ -44,6 +46,8 @@ spec:
         failureThreshold: 2
       persistence:
         enabled: false
+      service:
+        type: LoadBalancer
     networkPolicy:
       enabled: false
     metrics:
