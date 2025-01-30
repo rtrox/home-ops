@@ -27,3 +27,4 @@ spec:
       APP: *app
       VOLSYNC_CAPACITY: 1Gi
       GATUS_GROUP: downloads
+      GATUS_SUBDOMAIN: sab
