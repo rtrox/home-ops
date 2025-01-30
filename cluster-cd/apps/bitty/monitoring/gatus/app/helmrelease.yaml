@@ -99,6 +99,7 @@ spec:
             port: *port
     ingress:
       app:
+        className: nginx
         hosts:
           - host: status.${SECRET_DOMAIN}
             paths:
