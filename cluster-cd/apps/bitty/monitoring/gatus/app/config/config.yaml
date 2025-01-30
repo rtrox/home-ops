@@ -76,16 +76,6 @@ endpoints:
       - "[STATUS] == 200"
     alerts:
       - type: discord
-  - name: jellyfin
-    group: apps
-    url: https://fin.${SECRET_DOMAIN}
-    interval: 1m
-    client:
-      dns-resolver: tcp://1.1.1.1:53
-    conditions:
-      - "[STATUS] == 200"
-    alerts:
-      - type: discord
   - name: grafana
     group: apps
     url: https://graf.${SECRET_DOMAIN}
