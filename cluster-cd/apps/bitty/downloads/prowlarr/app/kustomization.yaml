@@ -12,7 +12,7 @@ resources:
   - ingress.yaml
   # - restore.yaml
   - ../../../../base/_templates/volsync-minio-default
-
+  - ../../../../base/_templates/gatus
 images:
   # TODO: non-nightly image to let renovate pick it up
   - name: ghcr.io/onedr0p/prowlarr
