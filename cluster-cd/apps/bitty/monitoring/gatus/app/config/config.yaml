@@ -26,6 +26,76 @@ connectivity:
     target: 1.1.1.1:53
     interval: 1m
 endpoints:
+  - name: jellyfin
+    group: apps
+    url: https://fin.${SECRET_DOMAIN}
+    interval: 1m
+    client:
+      dns-resolver: tcp://1.1.1.1:53
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: discord
+  - name: atuin
+    group: apps
+    url: https://atuin.${SECRET_DOMAIN}
+    interval: 1m
+    client:
+      dns-resolver: tcp://1.1.1.1:53
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: discord
+  - name: paperless
+    group: apps
+    url: https://paper.${SECRET_DOMAIN}
+    interval: 1m
+    client:
+      dns-resolver: tcp://1.1.1.1:53
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: discord
+  - name: shlink
+    group: apps
+    url: https://link.${SECRET_DOMAIN}
+    interval: 1m
+    client:
+      dns-resolver: tcp://.1.1.1:53
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: discord
+  - name: scrypted
+    group: apps
+    url: https://nvr.${SECRET_DOMAIN}
+    interval: 1m
+    client:
+      dns-resolver: tcp://1.1.1.1:53
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: discord
+  - name: jellyfin
+    group: apps
+    url: https://fin.${SECRET_DOMAIN}
+    interval: 1m
+    client:
+      dns-resolver: tcp://1.1.1.1:53
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: discord
+  - name: grafana
+    group: apps
+    url: https://graf.${SECRET_DOMAIN}
+    interval: 1m
+    client:
+      dns-resolver: tcp://1.1.1.1:53
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: discord
   - name: flux-webhook
     group: external
     url: https://flux-${CLUSTER_NAME}.${SECRET_DOMAIN}
@@ -36,7 +106,6 @@ endpoints:
       - "[STATUS] == 404"
     alerts:
       - type: discord
-
   - name: ns1.${SECRET_DOMAIN}
     group: dns
     url: ns1.${SECRET_DOMAIN}
