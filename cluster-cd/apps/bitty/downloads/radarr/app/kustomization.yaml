@@ -11,6 +11,7 @@ resources:
   - ingress.yaml
   - externalsecret.yaml
   - ../../../../base/_templates/volsync-minio-default
+  - ../../../../base/_templates/gatus
   # - restore.yaml
 
 images:

@@ -14,8 +14,6 @@ spec:
     - name: rook-ceph-cluster
     - name: external-secrets-stores
   path: ./cluster-cd/apps/${CLUSTER_NAME}/downloads/readarr/app
-  components:
-    - ../../../../../components/gatus
   prune: true
   sourceRef:
     kind: GitRepository
