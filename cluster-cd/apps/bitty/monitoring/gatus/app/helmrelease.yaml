@@ -99,7 +99,6 @@ spec:
             port: *port
     ingress:
       app:
-        className: external
         hosts:
           - host: status.${SECRET_DOMAIN}
             paths:
