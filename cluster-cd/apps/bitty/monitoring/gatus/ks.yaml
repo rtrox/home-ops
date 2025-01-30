@@ -20,3 +20,7 @@ spec:
   dependsOn:
     - name: external-secrets
   wait: true
+  postBuild:
+    substitute:
+      APP: *appname
+      VOLSYNC_CAPACITY: 5Gi
