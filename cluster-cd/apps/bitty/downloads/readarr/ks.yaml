@@ -14,6 +14,8 @@ spec:
     - name: rook-ceph-cluster
     - name: external-secrets-stores
   path: ./cluster-cd/apps/${CLUSTER_NAME}/downloads/readarr/app
+  components:
+    - ../../components/gatus
   prune: true
   sourceRef:
     kind: GitRepository
@@ -26,3 +28,5 @@ spec:
     substitute:
       APP: *app
       VOLSYNC_CAPACITY: 5Gi
+      GATUS_GROUP: downloads
+      GATUS_PATH: "/ping"

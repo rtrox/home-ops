@@ -38,7 +38,7 @@ endpoints:
       - type: discord
 
   - name: ns1.${SECRET_DOMAIN}
-    group: internal
+    group: dns
     url: ns1.${SECRET_DOMAIN}
     dns:
       query-name: "google.com"
@@ -47,7 +47,7 @@ endpoints:
       - "[CONNECTED] == true"
       - "[DNS_RCODE] == NOERROR"
   - name: ns2.${SECRET_DOMAIN}
-    group: internal
+    group: dns
     url: ns2.${SECRET_DOMAIN}
     dns:
       query-name: "google.com"
