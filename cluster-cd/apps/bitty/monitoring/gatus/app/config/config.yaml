@@ -1,0 +1,57 @@
+---
+web:
+  port: $${WEB_PORT}
+storage:
+  type: sqlite
+  path: /config/sqlite.db
+  caching: true
+metrics: true
+debug: false
+ui:
+  title: Status | Gatus
+  header: Status
+alerting:
+  discord:
+    title: "[${CLUSTER_NAME}] Gatus"
+    webhook-url: "$${DISCORD_URL}"
+    priority: 1
+    resolved-priority: 0
+    default-alert:
+      description: health-check failed
+      send-on-resolved: true
+      failure-threshold: 3
+      success-threshold: 3
+connectivity:
+  checker:
+    target: 1.1.1.1:53
+    interval: 1m
+endpoints:
+  - name: flux-webhook
+    group: external
+    url: https://flux-${CLUSTER_NAME}.${SECRET_DOMAIN}
+    interval: 1m
+    client:
+      dns-resolver: tcp://1.1.1.1:53
+    conditions:
+      - "[STATUS] == 404"
+    alerts:
+      - type: discord
+
+  - name: ns1.${SECRET_DOMAIN}
+    group: internal
+    url: ns1.${SECRET_DOMAIN}
+    dns:
+      query-name: "google.com"
+      guery-type: A
+    conditions:
+      - "[CONNECTED] == true"
+      - "[DNS_RCODE] == NOERROR"
+  - name: ns2.${SECRET_DOMAIN}
+    group: internal
+    url: ns2.${SECRET_DOMAIN}
+    dns:
+      query-name: "google.com"
+      guery-type: A
+    conditions:
+      - "[CONNECTED] == true"
+      - "[DNS_RCODE] == NOERROR"
