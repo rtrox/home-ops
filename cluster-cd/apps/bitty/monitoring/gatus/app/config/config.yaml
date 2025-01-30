@@ -42,7 +42,7 @@ endpoints:
     url: ns1.${SECRET_DOMAIN}
     dns:
       query-name: "google.com"
-      guery-type: A
+      query-type: A
     conditions:
       - "[CONNECTED] == true"
       - "[DNS_RCODE] == NOERROR"
@@ -51,7 +51,7 @@ endpoints:
     url: ns2.${SECRET_DOMAIN}
     dns:
       query-name: "google.com"
-      guery-type: A
+      query-type: A
     conditions:
       - "[CONNECTED] == true"
       - "[DNS_RCODE] == NOERROR"
