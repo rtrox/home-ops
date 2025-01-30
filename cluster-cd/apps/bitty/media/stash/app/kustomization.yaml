@@ -7,6 +7,7 @@ resources:
   - service.yaml
   - ingress.yaml
   - ../../../../base/_templates/volsync-minio-default
+  - ../../../../base/_templates/gatus
   # - restore.yaml
 
 images:

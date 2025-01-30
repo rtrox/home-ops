@@ -13,6 +13,7 @@ resources:
   - prometheus-rule.yaml
   - externalsecret.yaml
   - ../../../../base/_templates/volsync-minio-default
+  - ../../../../base/_templates/gatus
 
 images:
   - name: ghcr.io/onedr0p/home-assistant

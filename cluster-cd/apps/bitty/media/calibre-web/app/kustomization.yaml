@@ -12,6 +12,7 @@ resources:
   - externalsecret.yaml
   # - restore.yaml
   - ../../../../base/_templates/volsync-minio-default
+  - ../../../../base/_templates/gatus
 
 images:
   - name: ghcr.io/linuxserver/calibre
