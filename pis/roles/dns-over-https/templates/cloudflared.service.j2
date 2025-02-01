@@ -5,6 +5,7 @@ After=network.target
 [Service]
 ExecStart={{ cloudflared_binary_path }} proxy-dns \
   --port {{ cloudflared_service_port }} \
+  --address {{ cloudflared_service_address }} \
   --upstream {{ cloudflared_upstream_dns | join(' --upstream ') }}
 Restart=always
 RestartSec=5s

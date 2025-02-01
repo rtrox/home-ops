@@ -12,6 +12,7 @@
     state: restarted
   when: network_manager_status.stdout == "active"
   listen: "restart networking"
+
 - name: Restart systemd-networkd if NetworkManager is not active
   systemd:
     name: systemd-networkd

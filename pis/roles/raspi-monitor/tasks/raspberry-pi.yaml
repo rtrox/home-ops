@@ -1,0 +1,4 @@
+---
+- name: Ensure I2C is enabled in raspi-config
+  command: raspi-config nonint do_i2c 0
+  changed_when: false # Avoid marking as changed unless necessary

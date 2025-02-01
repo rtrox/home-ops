@@ -1,7 +1,14 @@
 ---
-- name: Ensure I2C is enabled in raspi-config
-  command: raspi-config nonint do_i2c 0
-  changed_when: false # Avoid marking as changed unless necessary
+- name: Check Hardware Version
+  command: cat /sys/firmware/devicetree/base/model
+  register: hardware_version
+  changed_when: false
+
+- include_tasks: raspberry-pi.yaml
+  when: hardware_version.stdout.find("Raspberry Pi") != -1
+
+- include_tasks: orange-pi.yaml
+  when: hardware_version.stdout.find("Orange Pi") != -1
 
 - name: Load I2C kernel module
   modprobe:
@@ -13,6 +20,12 @@
     path: /etc/modules
     line: i2c-dev
     state: present
+
+- name: Install i2c-tools package
+  apt:
+    name: i2c-tools
+    state: present
+    update_cache: yes
 
 - name: Reload systemd daemon
   command: systemctl daemon-reload

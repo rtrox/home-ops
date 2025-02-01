@@ -16,6 +16,20 @@
     create: true
   notify: restart networking
 
+- name: Check if Systemd-Resolved is active
+  command: systemctl is-active systemd-resolved
+  register: systemd_resolved_status
+  failed_when: false
+  changed_when: false
+
+- name: Disable Stub Listener to free port 53
+  lineinfile:
+    path: /etc/systemd/resolved.conf
+    line: DNSStubListener=no
+    state: present
+  when: systemd_resolved_status.stdout == "active"
+  notify: restart systemd-resolved
+
 - name: Ensure required directories for Blocky exist
   file:
     path: "{{ item }}"

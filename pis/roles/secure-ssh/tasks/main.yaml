@@ -1,0 +1,56 @@
+---
+- name: Ensure .ssh directory exists
+  file:
+    path: "/home/{{ ansible_user }}/.ssh"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0700"
+
+- name: Ensure manually defined SSH keys are up-to-date in authorized_keys
+  blockinfile:
+    path: "/home/{{ ansible_user }}/.ssh/authorized_keys"
+    marker: "# {mark} ANSIBLE MANAGED SSH KEYS"
+    block: "{{ ssh_public_keys | join('\n') }}"
+    create: yes
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0600"
+  when: ssh_public_keys is defined and ssh_public_keys | length > 0
+
+- name: Fetch GitHub SSH keys
+  uri:
+    url: "https://github.com/{{ ssh_github_username }}.keys"
+    return_content: yes
+  register: github_keys
+  when: ssh_get_public_keys_from_github and ssh_github_username is defined
+
+- name: Ensure GitHub SSH keys are up-to-date in authorized_keys
+  blockinfile:
+    path: "/home/{{ ansible_user }}/.ssh/authorized_keys"
+    marker: "# {mark} ANSIBLE MANAGED GITHUB SSH KEYS"
+    block: "{{ github_keys.content }}"
+    create: yes
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0600"
+  when: github_keys is defined
+
+- name: Verify at least one SSH key is present
+  shell: "grep -E -v '^(#|$)' /home/{{ ansible_user }}/.ssh/authorized_keys | wc -l"
+  register: ssh_key_count
+  changed_when: false
+
+- name: Fail if no SSH keys were written
+  fail:
+    msg: "No SSH keys found in /home/{{ ansible_user }}/.ssh/authorized_keys. Not disabling password authentication!"
+  when: ssh_key_count.stdout | int == 0
+
+- name: Disable password authentication in SSHD config
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "^#?PasswordAuthentication"
+    line: "PasswordAuthentication no"
+    state: present
+    backup: yes
+  notify: Restart SSH service

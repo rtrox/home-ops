@@ -10,6 +10,10 @@
 
   roles:
     - role: auto-upgrade
+    - role: secure-ssh
+      vars:
+        ssh_get_public_keys_from_github: true
+        ssh_github_username: "rtrox"
     - role: geerlingguy.docker
       vars:
         docker_users: "{{ docker_users }}"
@@ -22,9 +26,11 @@
         line: "127.0.0.1 {{ inventory_hostname }}"
         state: present
 
-    - name: Ensure hostname is correct
+    - name: Get current hostname
       shell: hostname
       register: current_hostname
+      changed_when: false
+
     - name: Set hostname if it differs
       command: hostnamectl set-hostname "{{ inventory_hostname }}"
       when: current_hostname.stdout != inventory_hostname

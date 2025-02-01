@@ -1,0 +1,19 @@
+---
+- name: Orange Pi - Read current overlays from armbianEnv.txt
+  shell: "grep -E '^overlays=' /boot/armbianEnv.txt | cut -d'=' -f2"
+  register: current_overlays
+  changed_when: false
+  ignore_errors: true
+
+- name: Orange Pi - Set fact for updated overlays list
+  set_fact:
+    updated_overlays: "{{ (current_overlays.stdout.split(',') if current_overlays.stdout else [] + [raspi_monitor_orangepi_overlay]) | unique | join(',') }}"
+
+- name: Orange Pi - Ensure overlays key is present and contains rk3588-i2c1-m4
+  lineinfile:
+    path: /boot/armbianEnv.txt
+    regexp: "^overlays="
+    line: "overlays={{ updated_overlays }}"
+    create: yes
+    backup: yes
+  notify: Reboot the system
