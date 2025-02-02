@@ -19,7 +19,7 @@ generatorOptions:
 
 images:
   - name: ghcr.io/recyclarr/recyclarr
-    newTag: 7.2.4
+    newTag: 7.4.0
 
 commonLabels:
   app.kubernetes.io/part-of: recyclarr
