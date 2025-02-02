@@ -18,5 +18,11 @@
       matchPackageNames: ["kube-prometheus-stack"],
       ignoreTests: false,
     },
+    {
+      description: "Auto merge all patches",
+      automerge: true,
+      matchUpdateTypes: ["patch"],
+      ignoreTests: false,
+    },
   ],
 }
