@@ -1,0 +1,7 @@
+keepalived_vip_address: ""
+keepalived_interface: "{{ ansible_default_ipv4.interface }}"
+keepalived_virtual_router_id: 51
+keepalived_state: MASTER
+keepalived_priority: "{{ 100 if keepalived_state == 'MASTER' else 99 }}"
+keepalived_auth_password: ""
+keepalived_docker_image: "ghcr.io/rtrox/keepalived:latest"

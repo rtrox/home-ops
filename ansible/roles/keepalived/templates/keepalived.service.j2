@@ -1,0 +1,22 @@
+[Unit]
+Description=Keepalived in Docker
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStartPre=-/usr/bin/docker stop keepalived
+ExecStartPre=-/usr/bin/docker rm keepalived
+ExecStart=/usr/bin/docker run --name keepalived \
+    --pull always \
+    --restart unless-stopped \
+    --cap-add=NET_ADMIN \
+    --cap-add=NET_BROADCAST \
+    --network host \
+    -v /etc/keepalived/keepalived.conf:/container/service/keepalived/assets/keepalived.conf:ro \
+    {{ keepalived_docker_image }}
+ExecStop=/usr/bin/docker stop keepalived
+Restart=always
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target

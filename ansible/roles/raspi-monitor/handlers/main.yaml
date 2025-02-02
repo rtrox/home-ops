@@ -1,0 +1,10 @@
+---
+- name: restart raspi-monitor service
+  systemd:
+    name: raspi-monitor
+    state: restarted
+    daemon_reload: true
+
+- name: Reboot the system
+  reboot:
+    reboot_timeout: 300

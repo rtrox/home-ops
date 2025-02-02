@@ -1,0 +1,95 @@
+---
+- name: Common configuration for all hosts
+  hosts: all
+
+  pre_tasks:
+    - name: Set docker_users dynamically
+      set_fact:
+        docker_users:
+          - "{{ ansible_user }}"
+
+  roles:
+    - role: auto-upgrade
+    - role: secure-ssh
+      vars:
+        ssh_get_public_keys_from_github: true
+        ssh_github_username: "rtrox"
+    - role: geerlingguy.docker
+      vars:
+        docker_users: "{{ docker_users }}"
+    - role: raspi-monitor
+
+  tasks:
+    - name: Ensure /etc/hosts has an entry for the hostname
+      lineinfile:
+        path: /etc/hosts
+        line: "127.0.0.1 {{ inventory_hostname }}"
+        state: present
+
+    - name: Get current hostname
+      shell: hostname
+      register: current_hostname
+      changed_when: false
+
+    - name: Set hostname if it differs
+      command: hostnamectl set-hostname "{{ inventory_hostname }}"
+      when: current_hostname.stdout != inventory_hostname
+
+    - name: Ensure system configuration
+      block:
+        - name: Ensure timezone is set to UTC
+          timezone:
+            name: UTC
+        - name: Ensure locale is set to US English
+          command: localectl set-locale LANG=en_US.UTF-8
+          changed_when: false
+
+    - name: Install common packages
+      apt:
+        name:
+          - htop
+          - vim
+          - dnsutils # Provides dig
+          - whois
+          - curl
+          - wget
+          - git
+          - net-tools
+          - tmux
+          - unzip
+          - python3-pip
+        state: present
+        update_cache: yes
+
+- name: Configure DNS Server hosts
+  hosts: dns
+
+  vars_files:
+    - blocky_secrets.yml
+    - keepalived_secrets.yaml
+
+  tasks:
+    - name: Configure DNS-related services
+      block:
+        - name: Set up Blocky
+          include_role:
+            name: blocky
+        - name: Set up Keepalived
+          include_role:
+            name: keepalived
+        - name: Enable Tailscale
+          include_role:
+            name: tailscaled
+
+- name: Configure  Avahi Hosts
+  hosts: avahi
+
+  tasks:
+    - name: Configure Avahi-related services
+      block:
+        - name: Set up VLANs
+          include_role:
+            name: vlans
+        - name: Enable Avahi
+          include_role:
+            name: avahi

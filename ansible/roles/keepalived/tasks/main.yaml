@@ -1,0 +1,31 @@
+---
+- name: "Fail if required variables are not defined"
+  fail:
+    msg: "You must define keepalived_vip_address and keepalived_auth_password in your inventory or extra vars."
+  when: keepalived_vip_address is not defined or keepalived_auth_password is not defined
+
+- name: Ensure Docker service is enabled and running
+  systemd:
+    name: docker
+    enabled: true
+    state: started
+
+- name: Create Keepalived Config Directory
+  file:
+    path: /etc/keepalived
+    state: directory
+    mode: "0755"
+
+- name: Generate Keepalived Config from Template
+  template:
+    src: keepalived.conf.j2
+    dest: /etc/keepalived/keepalived.conf
+    mode: "0644"
+  notify: restart keepalived service
+
+- name: Generate systemd Service for Keepalived
+  template:
+    src: keepalived.service.j2
+    dest: /etc/systemd/system/keepalived.service
+    mode: "0644"
+  notify: restart keepalived service

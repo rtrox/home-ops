@@ -1,0 +1,8 @@
+---
+- include_tasks: restart_networking.yml
+
+- name: restart blocky service
+  systemd:
+    name: blocky
+    state: restarted
+    daemon_reload: true
