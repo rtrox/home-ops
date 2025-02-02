@@ -1,0 +1,15 @@
+name: On PR
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+jobs:
+  # Pin to main to prevent accidental injection of malicious code
+  simple-checks:
+    uses: rtrox/home-ops/.github/workflows/simple-checks.yaml@main
