@@ -91,7 +91,7 @@ spec:
             - mountPath: /config
               name: config
         - name: vscode
-          image: codercom/code-server:4.91.1
+          image: codercom/code-server:4.96.4
           imagePullPolicy: IfNotPresent
           resources:
             limits:
