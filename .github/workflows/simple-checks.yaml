@@ -38,7 +38,7 @@ jobs:
         with:
           file_or_dir: "${{ steps.filter.outputs.yaml_files }}"
           strict: false
-          config_file: .github/lint/yamllint.yaml
+          config_file: .github/lint/.yamllint.yaml
         env:
           GITHUB_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
