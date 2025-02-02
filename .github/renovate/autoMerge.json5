@@ -24,5 +24,13 @@
       matchUpdateTypes: ["minor", "patch", "pin", "digest"],
       ignoreTests: false,
     },
+    {
+      description: "Never Automerge Cilium",
+      matchDatasources: ["helm"],
+      automerge: false,
+      matchUpdateTypes: ["minor", "patch"],
+      matchPackageNames: ["cilium"],
+      ignoreTests: false,
+    },
   ],
 }
