@@ -1,4 +1,13 @@
-vrrp_instance VI_1 {
+{% if keepalived_vip_address_v6 is defined %}
+vrrp_sync_group VI_1 {
+    group {
+        VI_1_4
+        VI_I_6
+    }
+}
+{% endif %}
+
+vrrp_instance VI_1_4 {
     state {{ keepalived_state }}
     interface {{ keepalived_interface }}
     virtual_router_id {{ keepalived_virtual_router_id }}
@@ -12,3 +21,20 @@ vrrp_instance VI_1 {
         {{ keepalived_vip_address }}
     }
 }
+
+{% if keepalived_vip_address_v6 is defined %}
+vrrp_instance VI_1_6{
+    state {{ keepalived_state }}
+    interface {{ keepalived_interface }}
+    virtual_router_id {{ keepalived_virtual_router_id }}
+    priority {{ keepalived_priority }}
+    advert_int 1
+    authentication {
+        auth_type PASS
+        auth_pass {{ keepalived_auth_password }}
+    }
+    virtual_ipaddress {
+        {{ keepalived_vip_address_v6 }}
+    }
+}
+{% endif %}
