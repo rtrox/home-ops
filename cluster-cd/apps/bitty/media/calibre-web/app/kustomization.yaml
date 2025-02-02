@@ -16,7 +16,7 @@ resources:
 
 images:
   - name: ghcr.io/linuxserver/calibre
-    newTag: "7.21.0"
+    newTag: "7.24.0"
   - name: ghcr.io/bjw-s/calibre-web
     newTag: 0.6.24@sha256:130247a83b18307621967b9d4464a15cbf99970fdd1bedddaa0d4087f4e3b269
   - name: ghcr.io/rtrox/readarr-calibre-tag-manager-dev
