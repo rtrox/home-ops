@@ -3,6 +3,9 @@ image:
   registry: quay.io
   repository: thanos/thanos
   tag: v0.37.2
+global:
+  security:
+    allowInsecureImages: true
 query:
   enabled: true
   replicaCount: 2
