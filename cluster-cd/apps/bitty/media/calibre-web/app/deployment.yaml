@@ -85,7 +85,7 @@ spec:
             - mountPath: /media/books
               name: books
         - name: calibre-web
-          image: ghcr.io/bjw-s/calibre-web:0.6.23@sha256:4f4385e4348975a15dce6180c1ceb29e6f973e9acb1891df3b5a50eb399d552e
+          image: ghcr.io/bjw-s/calibre-web:0.6.24@sha256:130247a83b18307621967b9d4464a15cbf99970fdd1bedddaa0d4087f4e3b269
           imagePullPolicy: IfNotPresent
           resources:
             limits:
