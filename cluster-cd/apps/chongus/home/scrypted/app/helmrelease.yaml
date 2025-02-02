@@ -39,7 +39,7 @@ spec:
           main:
             image:
               repository: ghcr.io/koush/scrypted
-              tag: v0.119.1-jammy-full
+              tag: v0.123.58-jammy-full
             resources:
               requests:
                 # nvidia.com/gpu: 1
