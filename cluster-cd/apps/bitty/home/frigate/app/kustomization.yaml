@@ -23,6 +23,6 @@ generatorOptions:
 
 images:
   - name: ghcr.io/blakeblackshear/frigate
-    newTag: "0.13.2"
+    newTag: "0.14.1"
   - name: ghcr.io/onedr0p/alpine
     newTag: "3.19.1"
