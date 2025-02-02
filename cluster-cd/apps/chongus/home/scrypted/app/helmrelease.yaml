@@ -54,6 +54,9 @@ spec:
     service:
       main:
         controller: main
+        type: LoadBalancer
+        annotations:
+          external-dns.alpha.kubernetes.io/hostname: "nvr-svc.${SECRET_DOMAIN}"
         ports:
           http:
             port: &port 11080
