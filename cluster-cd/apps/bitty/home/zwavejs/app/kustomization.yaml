@@ -13,4 +13,4 @@ resources:
 
 images:
   - name: ghcr.io/zwave-js/zwave-js-ui
-    newTag: 9.16.4
+    newTag: 9.30.1
