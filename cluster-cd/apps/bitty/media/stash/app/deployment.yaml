@@ -26,7 +26,7 @@ spec:
     spec:
       initContainers:
         - name: ensure-ipv6-access
-          image: alpine:3.19.4
+          image: alpine:3.21.2
           imagePullPolicy: IfNotPresent
           command:
             - "sh"
