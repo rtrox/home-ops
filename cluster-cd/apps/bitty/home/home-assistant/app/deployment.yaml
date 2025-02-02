@@ -39,7 +39,7 @@ spec:
                 name: home-assistant-secret
       containers:
         - name: home-assistant
-          image: ghcr.io/onedr0p/home-assistant:2024.7.4
+          image: ghcr.io/onedr0p/home-assistant:2024.12.5
           imagePullPolicy: IfNotPresent
           resources:
             limits:
