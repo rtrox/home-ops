@@ -32,7 +32,7 @@ spec:
         fsGroup: 568
       initContainers:
         - name: 01-init-db
-          image: ghcr.io/onedr0p/postgres-init:16.3
+          image: ghcr.io/onedr0p/postgres-init:16.6
           imagePullPolicy: IfNotPresent
           envFrom: &envFrom
             - secretRef:
