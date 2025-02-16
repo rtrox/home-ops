@@ -13,7 +13,7 @@ spec:
       nodeName: node01
       containers:
         - name: disk-wipe
-          image: alpine:3.21.2
+          image: alpine:3.21.3
           securityContext:
             privileged: true
           resources: {}
@@ -39,7 +39,7 @@ spec:
       nodeName: node02
       containers:
         - name: disk-wipe
-          image: alpine:3.21.2
+          image: alpine:3.21.3
           securityContext:
             privileged: true
           resources: {}
@@ -65,7 +65,7 @@ spec:
       nodeName: node03
       containers:
         - name: disk-wipe
-          image: alpine:3.21.2
+          image: alpine:3.21.3
           securityContext:
             privileged: true
           resources: {}
