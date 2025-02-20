@@ -21,4 +21,4 @@ images:
   - name: ghcr.io/onedr0p/postgres-init
     newTag: "16.6"
   - name: codercom/code-server
-    newTag: "4.96.4"
+    newTag: "4.97.2"
