@@ -47,7 +47,7 @@ spec:
           main:
             image:
               repository: ghcr.io/shlinkio/shlink
-              tag: 4.4.2@sha256:412eb1585fdb1e3f2006d49fd9ad1dd9cf20b1cc05624914e26c9feeea2a6b99
+              tag: 4.4.4@sha256:b8e852c02de5defd6de1003f7448ed1275c078a5132ee02fda60dff9f75e29ec
             env:
               DEFAULT_DOMAIN: &host ${SHORTLINK_DOMAIN}
               DISABLE_TRACKING_FROM: 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
