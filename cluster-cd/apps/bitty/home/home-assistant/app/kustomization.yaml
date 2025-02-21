@@ -19,6 +19,6 @@ images:
   - name: ghcr.io/onedr0p/home-assistant
     newTag: "2025.2.4"
   - name: ghcr.io/onedr0p/postgres-init
-    newTag: "16.6"
+    newTag: "16.8"
   - name: codercom/code-server
     newTag: "4.97.2"
