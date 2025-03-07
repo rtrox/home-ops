@@ -34,7 +34,7 @@ spec:
           01-init-config:
             image:
               repository: public.ecr.aws/docker/library/eclipse-mosquitto
-              tag: 2.0.20@sha256:cde1830724836aff4106fa0ee1f9eb720a5b97521c2ddea8c68aba586e7bc7a2
+              tag: 2.0.21@sha256:78dcae7eaf78fe7e5b7f5f0cedc35b0d222a5e5a2650d40c6ca1bc156af6281b
             command: ["/bin/sh", "-c"]
             args:
               [
@@ -44,7 +44,7 @@ spec:
           main:
             image:
               repository: public.ecr.aws/docker/library/eclipse-mosquitto
-              tag: 2.0.20@sha256:cde1830724836aff4106fa0ee1f9eb720a5b97521c2ddea8c68aba586e7bc7a2
+              tag: 2.0.21@sha256:78dcae7eaf78fe7e5b7f5f0cedc35b0d222a5e5a2650d40c6ca1bc156af6281b
             securityContext:
               allowPrivilegeEscalation: false
               readOnlyRootFilesystem: true
