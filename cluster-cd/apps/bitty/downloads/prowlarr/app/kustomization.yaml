@@ -15,8 +15,8 @@ resources:
   - ../../../../base/_templates/gatus
 images:
   # TODO: non-nightly image to let renovate pick it up
-  - name: ghcr.io/home-operations/prowlarr:1.32.2.4987
-    newTag: "1.32.2"
+  - name: ghcr.io/home-operations/prowlarr
+    newTag: "1.32.2.4987"
   - name: ghcr.io/onedr0p/exportarr
     newTag: v2.0.1
 
