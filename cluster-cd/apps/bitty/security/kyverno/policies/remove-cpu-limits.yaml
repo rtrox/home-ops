@@ -12,10 +12,10 @@ metadata:
       This policy removes CPU limits from all Pods.
     pod-policies.kyverno.io/autogen-controllers: none
 spec:
-  generate:
-    generateExisting: true
   rules:
     - name: remove-containers-cpu-limits
+      generate:
+        generateExisting: true
       match:
         any:
           - resources:
@@ -28,6 +28,8 @@ spec:
               - path: /spec/containers/{{elementIndex}}/resources/limits/cpu
                 op: remove
     - name: delete-initcontainers-cpu-limits
+      generate:
+        generateExisting: true
       match:
         any:
           - resources:
