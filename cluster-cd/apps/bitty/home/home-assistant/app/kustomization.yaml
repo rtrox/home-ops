@@ -19,6 +19,6 @@ images:
   - name: ghcr.io/home-operations/home-assistant
     newTag: "2025.3.4"
   - name: ghcr.io/home-operations/postgres-init
-    newTag: "17.4-r0"
+    newTag: "17.4"
   - name: codercom/code-server
     newTag: "4.98.2"
