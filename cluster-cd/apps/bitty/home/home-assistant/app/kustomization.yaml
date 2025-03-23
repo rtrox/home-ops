@@ -16,9 +16,9 @@ resources:
   - ../../../../base/_templates/gatus
 
 images:
-  - name: ghcr.io/onedr0p/home-assistant
-    newTag: "2025.3.3"
-  - name: ghcr.io/onedr0p/postgres-init
-    newTag: "17.4"
+  - name: ghcr.io/home-operations/home-assistant
+    newTag: "2025.3.4"
+  - name: ghcr.io/home-operations/postgres-init
+    newTag: "17.4-r0"
   - name: codercom/code-server
     newTag: "4.98.2"

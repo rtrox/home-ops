@@ -32,14 +32,14 @@ spec:
         fsGroup: 568
       initContainers:
         - name: 01-init-db
-          image: ghcr.io/onedr0p/postgres-init:17.4
+          image: ghcr.io/home-operations/postgres-init:17.4-r0
           imagePullPolicy: IfNotPresent
           envFrom: &envFrom
             - secretRef:
                 name: home-assistant-secret
       containers:
         - name: home-assistant
-          image: ghcr.io/onedr0p/home-assistant:2025.3.3
+          image: ghcr.io/home-operations/home-assistant:2025.3.4
           imagePullPolicy: IfNotPresent
           resources:
             limits:

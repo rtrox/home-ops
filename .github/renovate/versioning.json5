@@ -5,8 +5,8 @@
       description: "Loose versioning for non-semver packages",
       matchDatasources: ["docker"],
       matchPackageNames: [
-        "ghcr.io/onedr0p/plex",
-        "ghcr.io/onedr0p/qbittorrent",
+        "ghcr.io/home-operations/plex",
+        "ghcr.io/home-operations/qbittorrent",
         "ghcr.io/xirixiz/dsmr-reader-docker",
       ],
       versioning: "loose",
