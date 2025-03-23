@@ -42,7 +42,7 @@ spec:
       #       privileged: true
       containers:
         - name: prowlarr
-          image: ghcr.io/home-operations/prowlarr:1.32.2.4987
+          image: ghcr.io/home-operations/prowlarr:1.33.0.4994
           imagePullPolicy: IfNotPresent
           resources:
             limits:
