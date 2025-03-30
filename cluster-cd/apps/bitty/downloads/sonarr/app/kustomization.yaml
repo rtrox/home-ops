@@ -18,7 +18,7 @@ images:
   - name: ghcr.io/home-operations/sonarr
     newTag: "4.0.14.2938"
   - name: ghcr.io/onedr0p/exportarr
-    newTag: v2.0.1
+    newTag: v2.1.0
 
 commonLabels:
   app.kubernetes.io/part-of: sonarr
