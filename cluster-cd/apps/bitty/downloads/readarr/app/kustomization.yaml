@@ -16,7 +16,7 @@ resources:
 
 images:
   - name: ghcr.io/home-operations/readarr
-    newTag: "0.4.12.2753"
+    newTag: "0.4.13.2760"
   - name: ghcr.io/onedr0p/exportarr
     newTag: v2.0.1
 commonLabels:
