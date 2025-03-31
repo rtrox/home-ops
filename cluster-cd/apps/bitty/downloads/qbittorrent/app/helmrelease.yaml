@@ -30,7 +30,6 @@ spec:
             env:
               UMASK: "022"
               QBT_WEBUI_PORT: &port 80
-              QBT_TORRENTING_PORT: &BT-port 24983
             # probes:
             #   liveness: &probes
             #     enabled: true
@@ -75,10 +74,10 @@ spec:
               repository: ghcr.io/qdm12/gluetun
               tag: v3.40.0
             env:
-              FIREWALL_VPN_INPUT_PORTS: *BT-port
-            # env:
-            #   HEALTH_SERVER_ADDRESS: :9999
-            #   WIREGUARD_MTU: 1320
+              VPN_PORT_FORWARDING: "on"
+              VPN_PORT_FORWARDING_STATUS_FILE: /gluetun/forwarded_port
+              VPN_PORT_FORWARDING_UP_COMMAND: |
+                /bin/sh -c 'wget -O- --retry-connrefused --post-data "json={\"listen_port\":{{`{{PORTS}}`}}}" http://127.0.0.1:8080/api/v2/app/setPreferences 2>&1
             envFrom:
               - secretRef:
                   name: wireguard-secret
