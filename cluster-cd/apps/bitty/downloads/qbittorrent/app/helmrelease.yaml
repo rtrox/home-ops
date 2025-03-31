@@ -76,7 +76,7 @@ spec:
               tag: v3.40.0
             env:
               HEALTH_SERVER_ADDRESS: :9999
-              WIREGUARD_MTU: 3418
+              WIREGUARD_MTU: 1320
             envFrom:
               - secretRef:
                   name: wireguard-secret
