@@ -6,10 +6,11 @@ resources:
   - namespace.yaml
   # - networkpolicy.yaml
   - volsyncnetworkpolicy.yaml
-  - sabnzbd/ks.yaml
+  - autobrr/ks.yaml
   - prowlarr/ks.yaml
-  - readarr/ks.yaml
-  - sonarr/ks.yaml
-  - radarr/ks.yaml
-  - recyclarr/ks.yaml
   - qbittorrent/ks.yaml
+  - radarr/ks.yaml
+  - readarr/ks.yaml
+  - recyclarr/ks.yaml
+  - sabnzbd/ks.yaml
+  - sonarr/ks.yaml
