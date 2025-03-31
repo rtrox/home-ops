@@ -74,6 +74,8 @@ spec:
             image:
               repository: ghcr.io/qdm12/gluetun
               tag: v3.40.0
+            env:
+              FIREWALL_VPN_INPUT_PORTS: *BT-port
             # env:
             #   HEALTH_SERVER_ADDRESS: :9999
             #   WIREGUARD_MTU: 1320

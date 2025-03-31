@@ -32,7 +32,6 @@ spec:
         envFrom:
           - secretRef:
               name: pod-gateway-config
-
         securityContext:
           capabilities:
             add:
