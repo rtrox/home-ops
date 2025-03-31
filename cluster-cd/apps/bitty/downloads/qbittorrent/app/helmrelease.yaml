@@ -172,3 +172,9 @@ spec:
         accessMode: ReadWriteOnce
         storageClass: ceph-block
         size: 1Gi
+
+      openvpn:
+        type: secret
+        name: openvpn-secret
+        globalMounts:
+          - path: /gluetun-config/
