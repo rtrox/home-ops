@@ -114,9 +114,6 @@ spec:
                 add:
                   - NET_ADMIN
               allowPrivilegeEscalation: false
-            resources:
-              limits:
-                kernel.org/tun: 1
 
           # TODO: Replace once gluetun supports socks5, nothing supports shadowsocks
           socks5:
