@@ -29,7 +29,7 @@ spec:
               tag: 5.0.4@sha256:995c561247b069c10b1fa098186f35b3155c2df63912041f70637a9232755756
             env:
               UMASK: "022"
-              QBT_WEBUI_PORT: &port 80
+              QBT_WEBUI_PORT: &port 8080
             # probes:
             #   liveness: &probes
             #     enabled: true
