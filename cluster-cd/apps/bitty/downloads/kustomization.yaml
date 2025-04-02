@@ -15,3 +15,4 @@ resources:
   - sabnzbd/ks.yaml
   - sonarr/ks.yaml
   - unpackerr/ks.yaml
+  - cross-seed/ks.yaml
