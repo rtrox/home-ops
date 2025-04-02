@@ -13,7 +13,7 @@ spec:
   dependsOn:
     - name: rook-ceph-cluster
     - name: external-secrets-stores
-  path: ./cluster-cd/apps/${CLUSTER_NAME}/downloads/thelounge/app
+  path: ./cluster-cd/apps/${CLUSTER_NAME}/default/thelounge/app
   prune: true
   sourceRef:
     kind: GitRepository
