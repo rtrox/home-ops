@@ -13,4 +13,4 @@ configMapGenerator:
 
 images:
   - name: cloudflare/cloudflared
-    newTag: 2025.2.1
+    newTag: 2025.4.0
