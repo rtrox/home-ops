@@ -6,7 +6,7 @@ metadata:
   name: &app thelounge
   namespace: flux-system
 spec:
-  targetNamespace: downloads
+  targetNamespace: default
   commonMetadata:
     labels:
       app.kubernetes.io/name: *app
