@@ -72,7 +72,7 @@ spec:
             port: *port
     persistence:
       config:
-        existingClaim: cross-seed
+        existingClaim: ${APP}
       config-cross-seeds:
         type: emptyDir
         globalMounts:
