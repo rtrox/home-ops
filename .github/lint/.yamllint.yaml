@@ -9,6 +9,7 @@ ignore: |
   *.cho-raw.yaml
   *.sid.yaml
   *.sid-raw.yaml
+  cluster-cd/apps/bitty/downloads/qbittorrent/tools/resources/config.yaml
 extends: default
 rules:
   truthy:
