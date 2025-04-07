@@ -71,6 +71,7 @@ spec:
               - prune
               - --exclude-category=manual
               - --exclude-tag=activity:1d
+              - --exclude-tag=manual
               - --include-tag=expired
               - --with-data
         pod:
