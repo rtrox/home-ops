@@ -51,7 +51,7 @@ spec:
       app:
         className: nginx
         hosts:
-          - host: "kav.${SECRET_DOMAIN}"
+          - host: "comics.${SECRET_DOMAIN}"
             paths:
               - path: /
                 service:
