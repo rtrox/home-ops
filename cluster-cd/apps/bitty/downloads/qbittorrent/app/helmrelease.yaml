@@ -135,6 +135,7 @@ spec:
       gluetun:
         controller: *app
         nameOverride: gluetun
+        type: LoadBalancer
         ports:
           socks-proxy:
             enabled: true
