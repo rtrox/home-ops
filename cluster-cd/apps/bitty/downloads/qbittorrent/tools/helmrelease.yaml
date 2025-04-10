@@ -95,3 +95,9 @@ spec:
           - path: /config/config.yaml
             subPath: config.yaml
             readOnly: true
+      media:
+        type: nfs
+        server: ${NFS_SERVER}
+        path: /mnt/rusty/media
+        globalMounts:
+          - path: /media
