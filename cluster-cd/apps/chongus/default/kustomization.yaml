@@ -8,6 +8,7 @@ resources:
   - ./minecraft-sf5/ks.yaml
   - ./minecraft-vanilla/ks.yaml
   - ./paperless-ngx/ks.yaml
+  - ./kavita/ks.yaml
   # - ./thelounge/ks.yaml
   # - ./minecraft-cpw/ks.yaml
   # - ./shlink/ks.yaml
