@@ -78,8 +78,8 @@ spec:
             <<: *container
             args:
               - orphaned
-              - --exclude-pattern "*_unpackerred"
-              - --exclude-pattern "*/manual/*"
+              - --exclude-pattern="*_unpackerred"
+              - --exclude-pattern="*/manual/*"
         pod:
           restartPolicy: OnFailure
       reannounce:
