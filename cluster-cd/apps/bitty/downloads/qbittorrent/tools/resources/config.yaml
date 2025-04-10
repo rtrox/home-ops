@@ -21,6 +21,6 @@ trackers:
   - { name: rfx,  required_seed_ratio: 1.01, required_seed_days: 7.1,  urls: ["reelflix.xyz"] }
   - { name: st,   required_seed_ratio: 1.01, required_seed_days: 7.1,  urls: ["scenetime.com"] }
   - { name: td,   required_seed_ratio: 1.01, required_seed_days: 9.1,  urls: ["jumbohostpro.eu", "td-peers.com"] }
-  - { name: tl,   required_seed_ratio: 1.01, required_seed_days: 9.1,  urls: ["tleechreload.org", "torrentleech.org"] }
+  - { name: tl,   required_seed_ratio: 1.01, required_seed_days: 11.1,  urls: ["tleechreload.org", "torrentleech.org"] }
   - { name: ts,   required_seed_ratio: 1.01, required_seed_days: 7.1,  urls: ["torrentseeds.org"] }
   - { name: uhd,  required_seed_ratio: 1.01, required_seed_days: 7.1,  urls: ["uhdbits.org"] }
