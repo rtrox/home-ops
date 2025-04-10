@@ -4,3 +4,4 @@ kind: Kustomization
 resources:
   - ./echo/ks.yaml
   - ./thelounge/ks.yaml
+  - ./kavita/ks.yaml
