@@ -74,6 +74,12 @@ spec:
               - --exclude-tag=manual
               - --include-tag=expired
               - --with-data
+          delete-orphaned:
+            <<: *container
+            args:
+              - orphaned
+              - --exclude-pattern "*_unpackerred"
+              - --exclude-pattern "*/manual/*"
         pod:
           restartPolicy: OnFailure
       reannounce:
@@ -98,6 +104,8 @@ spec:
       media:
         type: nfs
         server: ${NFS_SERVER}
-        path: /mnt/rusty/media
-        globalMounts:
-          - path: /media
+        path: /mnt/rusty/media/.downloads/torrents
+        advancedMounts:
+          tagging:
+            delete-orphaned:
+              - path: /media/.downloads/torrents
