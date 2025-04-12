@@ -8,4 +8,10 @@ ingress:
   - hostname: '*.${SECRET_DOMAIN}'
     originRequest: *origin-request
     service: *ingress-svc
+  - hostname: "${BLUESKY_HOSTNAME}"
+    originRequest: *origin-request
+    service: *ingress-svc
+  - hostname: "*.${BLUESKY_HOSTNAME}"
+    originRequest: *origin-request
+    service: *ingress-svc
   - service: http_status:404
