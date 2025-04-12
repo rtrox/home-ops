@@ -14,6 +14,7 @@ spec:
     name: terraform-record
     namespace: flux-system
   cloud:
+    hostname: app.terraform.io
     organization: rtrox
     workspaces:
       name: arpa-home-keycloak
