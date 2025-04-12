@@ -5,3 +5,4 @@ resources:
   - ./echo/ks.yaml
   - ./thelounge/ks.yaml
   - ./kavita/ks.yaml
+  - ./bluesky/ks.yaml
