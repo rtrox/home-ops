@@ -18,7 +18,7 @@ spec:
     workspaces:
       name: arpa-home-cloudflare
   cliConfigSecretRef:
-    name: tf-controller-terraform-cloud
+    name: tofu-controller-terraform-cloud
   varsFrom:
     - kind: Secret
-      name: tf-controller-doppler
+      name: tofu-controller-doppler

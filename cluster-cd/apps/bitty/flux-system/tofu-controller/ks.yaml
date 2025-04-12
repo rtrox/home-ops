@@ -35,7 +35,7 @@ spec:
       app.kubernetes.io/name: *app
   dependsOn:
     - name: external-secrets-stores
-    - name: tf-controller
+    - name: tofu-controller
   path: ./cluster-cd/apps/${CLUSTER_NAME}/flux-system/tofu-controller/terraforms
   prune: true
   sourceRef:
