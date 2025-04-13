@@ -8,5 +8,5 @@ resources:
   # Flux-Kustomizations
   # - ./calibre/ks.yaml
   # - ./calibre-web/ks.yaml
-  - ./jellyfin/ks.yaml
+  # - ./jellyfin/ks.yaml
   # - ./stash/ks.yaml

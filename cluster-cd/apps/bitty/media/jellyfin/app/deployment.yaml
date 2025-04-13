@@ -28,7 +28,7 @@ spec:
         backup.velero.io/backup-volumes-excludes: media
     spec:
       replicas: 1
-      runtimeClassName: nvidia
+      # runtimeClassName: nvidia
       securityContext:
         runAsUser: 568
         runAsGroup: 568
@@ -43,10 +43,12 @@ spec:
           resources:
             limits:
               memory: 32Gi
-              nvidia.com/gpu: 1
+              # nvidia.com/gpu: 1
+              gpu.intel.com/i915: 1
             requests:
               memory: 4Gi
-              nvidia.com/gpu: 1
+              # nvidia.com/gpu: 1
+              gpu.intel.com/i915: 1
           securityContext:
             allowPrivilegeEscalation: false
             runAsUser: 568
