@@ -7,4 +7,3 @@ resources:
   - ./echo/ks.yaml
   - ./minecraft-sf5/ks.yaml
   - ./minecraft-vanilla/ks.yaml
-  - ./paperless-ngx/ks.yaml

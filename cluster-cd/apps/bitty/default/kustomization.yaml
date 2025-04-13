@@ -6,3 +6,4 @@ resources:
   - ./thelounge/ks.yaml
   - ./kavita/ks.yaml
   - ./bluesky/ks.yaml
+  - ./paperless-ngx/ks.yaml
