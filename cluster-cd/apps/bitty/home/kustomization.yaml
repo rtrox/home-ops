@@ -10,3 +10,4 @@ resources:
   - ./zwavejs/ks.yaml
   - ./mosquitto/ks.yaml
   - ./garbage-api/ks.yaml
+  - ./scrypted/ks.yaml
