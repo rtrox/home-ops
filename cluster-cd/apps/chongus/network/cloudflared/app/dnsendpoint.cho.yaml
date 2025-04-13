@@ -7,15 +7,11 @@ spec:
         - dnsName: ENC[AES256_GCM,data:C/iyelE+W5Ih/2+gkSvRaBZEpndWivkr,iv:z4mbp6au7kJ+O6SfHVZKU8Hcuji174JiS3TcU8ae1Z0=,tag:3GGv9hadXfg1P7T+zTecxQ==,type:str]
           recordType: CNAME
           targets:
-            - ENC[AES256_GCM,data:DZHmZjvNxQoHGqvSkdZ4FTZ/D9o7F8ClNOUjK9cvDQ+knJJUgY3SiI1atjsj+Gi4fl1xGQc=,iv:KgRaE4dWkLhhpxONz6k/68E1RhfYuK5IZk+sMSVvl/k=,tag:2WEDopi8UuJEpFUptLfYkQ==,type:str]
+            - ENC[AES256_GCM,data:58aNgfPemqgOogMn8sxFqzG01Hv1QK2uNrMVWgMRoFjVXZw0bF91cHVZ7cxG6Q6WskKnCZY=,iv:Dg3kvxl22r/ICN4+/7EHu/lttkk8cqSBeFLLrN8rAqY=,tag:KZQiVvC/0+VsRDgdtATDJw==,type:str]
           providerSpecific:
             - name: external-dns.alpha.kubernetes.io/cloudflare-proxied
               value: "true"
 sops:
-    kms: []
-    gcp_kms: []
-    azure_kv: []
-    hc_vault: []
     age:
         - recipient: age1ay8ky5ce59vkz740uzp2tr2r22sqwez9804wdv32rrd6q5tawc3q0ugvp3
           enc: |
@@ -53,8 +49,7 @@ sops:
             TGVBSkFJU0g5dU9VdTU5SEhaVGNFREkKp819giDgYHNXern97Obh1u9aTHVd2RZx
             AKmyXxyKx56N6EFUCSiu6qIj8ilWltA+V8mN7OmhZ7jlq8kYOrEn7A==
             -----END AGE ENCRYPTED FILE-----
-    lastmodified: "2025-04-01T19:33:05Z"
-    mac: ENC[AES256_GCM,data:pQBpj6nuZmDdFnYyNnob10GyBws55IiqM6cDConfg4gaWI+/hC+6wVFVB43+f5X3dRZU7/IEV+vj/lkkYrnze85OSJqudTE2FSioQdMmBQr67EngEE7gXTFo6tE9qQjZMTbBVHRkPO12WQTEbewzB+LB4TeMqdiehexWlMtOLww=,iv:yTfP3mKWECaWCAMiJskRYH6i+VHrTYwnnqpT9qAj/+Q=,tag:IfEwMyI38kkpcvzdgruOYA==,type:str]
-    pgp: []
+    lastmodified: "2025-04-13T02:28:32Z"
+    mac: ENC[AES256_GCM,data:pv2JFB2YYBnfFJnMgTQyYzMshDA+YMq5Ap0x+AHrg0no0kfYbADt8956IVuU0MOoihJ23/Cm9KT9cGMUbTMJx0Nyb1t9BvnoKrmyLMRvuN7KadtFhlRVq4nDRxPyKBz/RsXT3dbry7WtOiRcWHh4nT1NbNbYnJuPLqSQR5o+0lw=,iv:Iypw4EMOqeoOtU5g6ze6Ye6XyWbQj6GxEOW3/eVBVS8=,tag:RiG+HB/xvf/PjcOIM6w6ag==,type:str]
     encrypted_regex: ^(data|stringData|dnsName|targets)$
-    version: 3.7.3
+    version: 3.10.1
