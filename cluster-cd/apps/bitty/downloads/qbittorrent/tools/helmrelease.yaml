@@ -56,30 +56,30 @@ spec:
               allowPrivilegeEscalation: false
               readOnlyRootFilesystem: true
               capabilities: { drop: ["ALL"] }
-        # containers:
-        #   prune-unregistered:
-        #     <<: *container
-        #     args:
-        #       - prune
-        #       - --exclude-tag=expired
-        #       - --exclude-tag=added:1d
-        #       - --include-tag=unregistered
-        #       - --with-data
-        #   prune-expired:
-        #     <<: *container
-        #     args:
-        #       - prune
-        #       - --exclude-category=manual
-        #       - --exclude-tag=activity:1d
-        #       - --exclude-tag=manual
-        #       - --include-tag=expired
-        #       - --with-data
-        #   delete-orphaned:
-        #     <<: *container
-        #     args:
-        #       - orphaned
-        #       - --exclude-pattern="*_unpackerred"
-        #       - --exclude-pattern="*/manual/*"
+        containers:
+          # prune-unregistered:
+          #   <<: *container
+          #   args:
+          #     - prune
+          #     - --exclude-tag=expired
+          #     - --exclude-tag=added:1d
+          #     - --include-tag=unregistered
+          #     - --with-data
+          # prune-expired:
+          #   <<: *container
+          #   args:
+          #     - prune
+          #     - --exclude-category=manual
+          #     - --exclude-tag=activity:1d
+          #     - --exclude-tag=manual
+          #     - --include-tag=expired
+          #     - --with-data
+          delete-orphaned:
+            <<: *container
+            args:
+              - orphaned
+              - --exclude-pattern="*_unpackerred"
+              - --exclude-pattern="*/manual/*"
         pod:
           restartPolicy: OnFailure
       reannounce:
