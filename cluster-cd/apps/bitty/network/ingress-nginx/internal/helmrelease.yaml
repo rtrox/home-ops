@@ -30,7 +30,6 @@ spec:
         annotations:
           lbipam.cilium.io/ips: ${INGRESS_NGINX_IPV4} #,${INGRESS_NGINX_IPV6}
         ipFamilyPolicy: SingleStack # PreferDualStack
-        externalTrafficPolicy: Local
         # ipFamilies:
         #   - IPv4
         #   - IPv6
