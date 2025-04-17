@@ -19,6 +19,9 @@ sonarr:
       - template: sonarr-v4-custom-formats-anime
     quality_profiles:
       - name: WEB-1080p
+      - name: WEB-2160p
+      - name: Anime
+
     custom_formats:
       - trash_ids:
           - 32b367365729d530ca1c124a0b180c64 # Bad Dual Groups
@@ -44,11 +47,13 @@ sonarr:
           - 385e9e8581d33133c3961bdcdeffb7b4 # DV HDR10+ Boost
         assign_scores_to:
           - name: WEB-2160p
+
       - trash_ids:
           - 2016d1676f5ee13a5b7257ff86ac9a93 # SDR
           # - 83304f261cf516bb208c18c54c0adf97 # SDR (no WEBDL)
         assign_scores_to:
           - name: WEB-2160p
+
       - trash_ids:
           - 026d5aadd1a6b4e550b134cb6c72b3ca # Uncensored
         assign_scores_to:
