@@ -21,4 +21,4 @@ images:
   - name: ghcr.io/home-operations/postgres-init
     newTag: "17.4"
   - name: codercom/code-server
-    newTag: "4.99.2"
+    newTag: "4.99.3"
