@@ -24,7 +24,7 @@ spec:
       strategy: rollback
       retries: 3
   dependsOn:
-    - name: komga
+    - name: kavita
   values:
     controllers:
       komf:
