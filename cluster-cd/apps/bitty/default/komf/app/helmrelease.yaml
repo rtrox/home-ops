@@ -53,6 +53,19 @@ spec:
         ports:
           http:
             port: 8085
+    ingress:
+      app:
+        className: nginx
+        hosts:
+          - host: &host "komf.${SECRET_DOMAIN}"
+            paths:
+              - path: /
+                service:
+                  identifier: app
+                  port: http
+        tls:
+          - hosts:
+              - *host
     persistence:
       config:
         enabled: true
