@@ -84,7 +84,7 @@ spec:
       downloads:
         type: nfs
         server: ${NFS_SERVER}
-        path: /mnt/rusty/media/.downloads/suwayomi
+        path: /mnt/rusty/media
         globalMounts:
           - path: /home/suwayomi/.local/share/Tachidesk/downloads/mangas
-            subPath: manga/sources
+            subPath: /comics/Manga/Sources
