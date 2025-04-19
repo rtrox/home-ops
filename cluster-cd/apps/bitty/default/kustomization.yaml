@@ -8,4 +8,3 @@ resources:
   - ./komf/ks.yaml
   - ./bluesky/ks.yaml
   - ./paperless-ngx/ks.yaml
-  - ../../../../base/_templates/volsync-minio-default
