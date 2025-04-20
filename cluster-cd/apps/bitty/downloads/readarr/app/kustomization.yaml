@@ -18,7 +18,7 @@ images:
   - name: ghcr.io/home-operations/readarr
     newTag: "0.4.14.2782"
   - name: ghcr.io/onedr0p/exportarr
-    newTag: v2.1.0
+    newTag: v2.2.0
 commonLabels:
   app.kubernetes.io/part-of: readarr
   k8s-app: readarr

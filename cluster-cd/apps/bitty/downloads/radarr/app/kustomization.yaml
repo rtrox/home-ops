@@ -19,7 +19,7 @@ images:
   - name: ghcr.io/home-operations/radarr
     newTag: "5.22.2.9862"
   - name: ghcr.io/onedr0p/exportarr
-    newTag: v2.1.0
+    newTag: v2.2.0
 commonLabels:
   app.kubernetes.io/part-of: radarr
   k8s-app: radarr
