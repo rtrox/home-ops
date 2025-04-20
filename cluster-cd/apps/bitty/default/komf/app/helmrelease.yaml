@@ -37,6 +37,7 @@ spec:
               tag: 1.3.0@sha256:166e3dbf2a97c65916ad915abecf8d191515d6c7ffa6c7c0e1ab3f4419f9d559
             env:
               KOMF_KAVITA_BASE_URI: http://kavita.default:5000
+              KOMF_KOMGA_BASE_URI: http://komga.default:8080
               KOMF_LOG_LEVEL: INFO
             envFrom:
               - secretRef:
