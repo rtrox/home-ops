@@ -1,5 +1,6 @@
-# Ignore any talosconfigs
+# Ignore any Infra Configs
 **/*talosconfig*
+**/*kubeconfig*
 
 # .age-keys contains decrypted private keys for age
 **/.age-keys

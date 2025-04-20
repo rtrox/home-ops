@@ -1,0 +1,31 @@
+---
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+version: "3"
+
+set:
+  - pipefail
+shopt:
+  - globstar
+
+vars:
+  TALOS_DIR: "{{.ROOT_DIR}}/clusters/{{.CLUSTER_NAME}}/talos"
+  TALOSCONFIG: "{{.TALOS_DIR}}/clusterconfig/talosconfig"
+
+includes:
+  # flux: .taskfiles/flux/Taskfile.yaml
+  # k8s: .taskfiles/k8s/Taskfile.yaml
+  # k8s-bootstrap: .taskfiles/k8s-bootstrap/Taskfile.yaml
+  # postgres: .taskfiles/postgres/Taskfile.yaml
+  # sops: .taskfiles/sops/Taskfile.yaml
+  talos: .taskfiles/talos/Taskfile.yaml
+  # volsync: .taskfiles/volsync/Taskfile.yaml
+
+tasks:
+  default:
+    silent: true
+    cmd: task --list
+
+  noop:
+    internal: true
+    silent: true
+    cmd: noop() { :; }
