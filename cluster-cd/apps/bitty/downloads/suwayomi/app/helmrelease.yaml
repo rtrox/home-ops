@@ -87,4 +87,4 @@ spec:
         path: /mnt/rusty/media
         globalMounts:
           - path: /home/suwayomi/.local/share/Tachidesk/downloads/mangas
-            subPath: /comics/Manga/Sources
+            subPath: comics/Manga/Sources
