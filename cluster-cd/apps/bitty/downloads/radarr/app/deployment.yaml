@@ -39,7 +39,7 @@ spec:
           - 100
       containers:
         - name: radarr
-          image: ghcr.io/home-operations/radarr:5.22.2.9862
+          image: ghcr.io/home-operations/radarr:5.22.3.9889
           imagePullPolicy: IfNotPresent
           resources:
             limits:
