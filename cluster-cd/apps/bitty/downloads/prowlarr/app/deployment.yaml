@@ -100,7 +100,7 @@ spec:
               name: config
         - name: exportarr
           // TODO: pin once a new release is available.
-          image: ghcr.io/onedr0p/exportarr:v2.1.0
+          image: ghcr.io/onedr0p/exportarr:v2.2.0
           securityContext:
             allowPrivilegeEscalation: false
             runAsUser: 568
