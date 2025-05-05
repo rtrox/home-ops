@@ -6,5 +6,10 @@
       matchPackageNames: ["ghcr.io/linuxserver/calibre-web"],
       allowedVersions: "<1",
     },
+    {
+      matchDatasources: ["docker"],
+      matchPackageNames: ["ghcr.io/home-operations/qbittorrent"],
+      allowedVersions: "<5.0.4",
+    },
   ],
 }
