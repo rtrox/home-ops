@@ -69,7 +69,7 @@ spec:
           pdsadmin:
             image:
               repository: ghcr.io/rtrox/pdsadmin
-              tag: v0.4.107@sha256:2c127659d791edfb02dbef5b58e259a549eca76e5299c300f20b488038b55c4e
+              tag: v0.4.136@sha256:4f8488c585de34f1dde4360f953afd339b697eb3bb039e8b2afdeb2908ad357a
             env:
               PDS_HOSTNAME: *host
             envFrom:
