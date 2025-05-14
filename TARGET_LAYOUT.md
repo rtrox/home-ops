@@ -22,7 +22,11 @@ I'm currently in the process of migrating to a new repository structure. This Do
 │   │   ├── system
 │   │   ├── network
 │   │   ├── [...]
-│   │   ├── flux-system
+│   │   └── flux-system
+│   └── components
+│       ├── flux
+│       ├── namespace
+│       └── volsync
 └── clusters
     ├── base
     │   ├── bootstrap
