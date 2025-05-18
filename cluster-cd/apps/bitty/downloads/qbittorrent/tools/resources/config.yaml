@@ -24,4 +24,5 @@ trackers:
   - { name: ts,   required_seed_ratio: 1.01, required_seed_days: 7.1,  urls: ["torrentseeds.org"] }
   - { name: uhd,  required_seed_ratio: 1.01, required_seed_days: 7.1,  urls: ["uhdbits.org"] }
   - { name: dc, required_seed_ratio: 1.01, required_seed_days: 7.1, urls: ["digitalcore.club"] }
+  - { name: red, urls: ["flacsfor.me"]}
   - { name: mam,  urls: ["myanonamouse.net"] } # Forever
