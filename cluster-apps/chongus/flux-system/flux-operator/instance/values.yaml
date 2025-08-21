@@ -14,7 +14,7 @@ instance:
     kind: GitRepository
     url: https://github.com/rtrox/home-ops.git
     ref: refs/heads/main
-    path: clusters/chongus-new/flux
+    path: clusters/chongus/flux
     interval: 1h
   commonMetadata:
     labels:
