@@ -8,13 +8,14 @@ shopt:
   - globstar
 
 vars:
-  TALOS_DIR: "{{.ROOT_DIR}}/clusters/{{.CLUSTER_NAME}}/talos"
+  CLUSTER_DIR: "{{.ROOT_DIR}}/clusters/{{.CLUSTER_NAME}}"
+  TALOS_DIR: "{{.CLUSTER_DIR}}/talos"
   TALOSCONFIG: "{{.TALOS_DIR}}/clusterconfig/talosconfig"
 
 includes:
   # flux: .taskfiles/flux/Taskfile.yaml
   # k8s: .taskfiles/k8s/Taskfile.yaml
-  # k8s-bootstrap: .taskfiles/k8s-bootstrap/Taskfile.yaml
+  k8s-bootstrap: .taskfiles/k8s-bootstrap/Taskfile.yaml
   # postgres: .taskfiles/postgres/Taskfile.yaml
   # sops: .taskfiles/sops/Taskfile.yaml
   talos: .taskfiles/talos/Taskfile.yaml

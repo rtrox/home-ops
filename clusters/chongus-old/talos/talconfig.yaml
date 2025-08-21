@@ -8,20 +8,20 @@ talosVersion: v1.10.1
 # renovate: depName=kubernetes/kubernetes datasource=github-releases extractVersion=^v(?<version>.*)$
 kubernetesVersion: 1.33.0
 
-additionalApiServerCertSans: &sans
-  - ${clusterName}.${clusterDNSSuffix}
-  - 127.0.0.1 # KubePrism
-additionalMachineCertSans: *sans
-
 cniConfig:
   name: none
 
 clusterPodNets:
   - 10.244.0.0/16
-  # - ${ipv6PodNet}
+  - ${ipv6PodNet}
 clusterSvcNets:
   - 10.96.0.0/12
-  # - ${ipv6SvcNet}
+  - ${ipv6SvcNet}
+
+additionalApiServerCertSans: &san
+  - ${clusterName}.${clusterDNSSuffix}
+  - 127.0.0.1 # KubePrism
+additionalMachineCertSans: *san
 
 nodes:
   - hostname: node01.${clusterName}.${clusterDNSSuffix}
@@ -52,27 +52,41 @@ nodes:
       arch: amd64
 
 controlPlane:
-  nodeLabels:
-    topology.kubernetes.io/region: ${clusterName}
-    topology.kubernetes.io/zone: "1"
-
-  schematic:
-    customization:
-      extraKernelArgs:
-        - apparmor=0
-        - net.ifnames=0
-        - intel_iommu=on # PCI Passthrough
-      systemExtensions:
-        officialExtensions:
-          - siderolabs/intel-ucode
-          - siderolabs/i915-ucode
-          - siderolabs/iscsi-tools
-          - siderolabs/gasket-driver
-          - siderolabs/mei
-          - siderolabs/nonfree-kmod-nvidia-production
-          - siderolabs/nvidia-container-toolkit-production
-
   patches:
+    # Disable search domain everywhere
+    - |-
+      machine:
+        network:
+          disableSearchDomain: true
+    # Enable KubePrism
+    - |-
+      machine:
+        features:
+          kubePrism:
+            enabled: true
+            port: 7445
+
+    # Cluster configuration
+    - |-
+      cluster:
+        allowSchedulingOnMasters: true
+        proxy:
+          disabled: true
+        coreDNS:
+          disabled: true
+        controllerManager:
+          extraArgs:
+            node-cidr-mask-size-ipv6: "72"
+            feature-gates: MultiCIDRServiceAllocator=true
+
+    - |-
+      machine:
+        network:
+          interfaces:
+            - deviceSelector:
+                busPath: "0*"
+              dhcp: true
+
     # Configure containerd
     - |-
       machine:
@@ -84,84 +98,6 @@ controlPlane:
                 [plugins."io.containerd.grpc.v1.cri"]
                   enable_unprivileged_ports = true
                   enable_unprivileged_icmp = true
-              [plugins."io.containerd.grpc.v1.cri".containerd]
-                discard_unpacked_layers = false
-              [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
-                discard_unpacked_layers = false
-
-    # Disable search domain everywhere
-    - |-
-      machine:
-        network:
-          disableSearchDomain: true
-
-    # Enable HostDNS
-    - |-
-      machine:
-        features:
-          hostDNS:
-            enabled: true
-            resolveMemberNames: true
-            forwardKubeDNSToHost: false
-
-    # Enable KubePrism
-    - |-
-      machine:
-        features:
-          kubePrism:
-            enabled: true
-            port: 7445
-
-    # Kubelet configuration
-    - |-
-      machine:
-        kubelet:
-          extraArgs:
-            rotate-server-certificates: "true"
-          extraConfig:
-            maxPods: 150
-          nodeIP:
-            validSubnets:
-              - 172.16.0.0/12
-
-    # Enable MutatingAdmissionPolicy
-    - |-
-      cluster:
-        apiServer:
-          extraArgs:
-            runtime-config: admissionregistration.k8s.io/v1alpha1=true
-            feature-gates: MutatingAdmissionPolicy=true
-
-    # Cluster configuration
-    - |-
-      cluster:
-        allowSchedulingOnControlPlanes: true
-        proxy:
-          disabled: true
-        coreDNS:
-          disabled: true
-        scheduler:
-          config:
-            apiVersion: kubescheduler.config.k8s.io/v1
-            kind: KubeSchedulerConfiguration
-            profiles:
-              - schedulerName: default-scheduler
-                pluginConfig:
-                  - name: PodTopologySpread
-                    args:
-                      defaultingType: List
-                      defaultConstraints:
-                        - maxSkew: 1
-                          topologyKey: kubernetes.io/hostname
-                          whenUnsatisfiable: ScheduleAnyway
-
-    - |-
-      machine:
-        network:
-          interfaces:
-            - deviceSelector:
-                busPath: "0*"
-              dhcp: true
 
     # NFS Mount Configuration
     # Todo: return to 4.2 after migrating off synology
@@ -176,7 +112,23 @@ controlPlane:
               nfsvers=4.2
               hard=True
               noatime=True
-              nconnect=15
+              nodiratime=True
+              rsize=131072
+              wsize=131072
+              nconnect=8
+
+    # Kubelet configuration
+    - |-
+      machine:
+        kubelet:
+          extraArgs:
+            rotate-server-certificates: "true"
+          extraConfig:
+            maxPods: 150
+          nodeIP:
+            validSubnets:
+              - 172.16.0.0/12
+              - 2001:470:e899:100::/64
 
     # Custom sysctls
     - |-
@@ -185,8 +137,6 @@ controlPlane:
           fs.inotify.max_user_watches: "1048576"
           fs.inotify.max_user_instances: "8192"
           net.core.bpf_jit_harden: 1
-          net.core.rmem_max: 67108864            # Cloudflared / QUIC
-          net.core.wmem_max: 67108864            # Cloudflared / QUIC
 
     # Add Kernel Modules
     - |-
@@ -197,7 +147,6 @@ controlPlane:
             - name: "nvidia_uvm"
             - name: "nvidia_drm"
             - name: "nvidia_modeset"
-
     # Enable K8s Talos API Access
     - |-
       machine:
@@ -207,10 +156,27 @@ controlPlane:
             allowedRoles:
               - os:admin
             allowedKubernetesNamespaces:
-              - actions-runner-system
-              - system-upgrade
-
-
+              - system-controllers
+    # Enable HostDNS
+    - |-
+      machine:
+        features:
+          hostDNS:
+            enabled: true
+            resolveMemberNames: true
+            forwardKubeDNSToHost: false
+  schematic:
+    customization:
+      extraKernelArgs:
+        - net.ifnames=0
+      systemExtensions:
+        officialExtensions:
+          - siderolabs/intel-ucode
+          - siderolabs/i915-ucode
+          - siderolabs/iscsi-tools
+          - siderolabs/gasket-driver
+          - siderolabs/nonfree-kmod-nvidia-production
+          - siderolabs/nvidia-container-toolkit-production
 worker:
   schematic:
     customization:
@@ -222,6 +188,5 @@ worker:
           - siderolabs/i915-ucode
           - siderolabs/iscsi-tools
           - siderolabs/gasket-driver
-          - siderolabs/mei
           - siderolabs/nonfree-kmod-nvidia-production
           - siderolabs/nvidia-container-toolkit-production

@@ -23,7 +23,7 @@ metadata:
   namespace: flux-system
 spec:
   interval: 10m
-  path: ./kubernetes/apps
+  path: ./cluster-apps/chongus
   prune: true
   sourceRef:
     kind: GitRepository

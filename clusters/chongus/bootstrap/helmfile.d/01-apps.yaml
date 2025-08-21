@@ -1,0 +1,65 @@
+# yaml-language-server: $schema=https://json.schemastore.org/helmfile
+
+helmDefaults:
+  cleanupOnFail: true
+  wait: true
+  waitForJobs: true
+
+releases:
+  - name: cilium
+    namespace: kube-system
+    chart: oci://ghcr.io/home-operations/charts-mirror/cilium
+    version: 1.18.1
+    values:
+      - '../../../../cluster-apps/chongus/kube-system/cilium/app/values.yaml'
+    hooks:
+      # Apply cilium network configuration
+      - events:
+          - postsync
+        command: kubectl
+        args:
+          - apply
+          - --namespace=kube-system
+          - --server-side
+          - --field-manager=kustomize-controller
+          - --kustomize
+          - ../../../../cluster-apps/chongus/kube-system/cilium/config/
+        showlogs: true
+
+  - name: coredns
+    namespace: kube-system
+    chart: oci://ghcr.io/coredns/charts/coredns
+    version: 1.43.2
+    values:
+      - '../../../../cluster-apps/chongus/kube-system/coredns/app/values.yaml'
+    needs:
+      - kube-system/cilium
+
+
+  - name: cert-manager
+    namespace: cert-manager
+    chart: oci://quay.io/jetstack/charts/cert-manager
+    version: v1.18.2
+    values:
+      - '../../../../cluster-apps/base/cert-manager/app/values.yaml'
+    needs:
+      - kube-system/coredns
+
+  - name: flux-operator
+    namespace: flux-system
+    chart: oci://ghcr.io/controlplaneio-fluxcd/charts/flux-operator
+    version: 0.28.0
+    values:
+      - '../../../../cluster-apps/chongus/flux-system/flux-operator/app/values.yaml'
+    needs:
+      - cert-manager/cert-manager
+
+  - name: flux-instance
+    namespace: flux-system
+    chart: oci://ghcr.io/controlplaneio-fluxcd/charts/flux-instance
+    version: 0.28.0
+    wait: false
+    values:
+      - '../../../../cluster-apps/chongus/flux-system/flux-operator/instance/values.yaml'
+    needs:
+      - flux-system/flux-operator

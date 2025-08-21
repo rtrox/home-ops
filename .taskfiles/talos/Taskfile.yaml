@@ -18,7 +18,7 @@ tasks:
       - which talhelper
       - test -f {{.TALOS_DIR}}/talsecret.sops.yaml
       - test -f {{.TALOS_DIR}}/talconfig.yaml
-      - test -f {{.K8S_DIR}}/talenv.sops.yaml
+      - test -f {{.TALOS_DIR}}/talenv.sops.yaml
     cmds:
       - talhelper genconfig
         --env-file {{.TALOS_DIR}}/talenv.sops.yaml
@@ -33,7 +33,7 @@ tasks:
         sh: ls {{.TALOS_DIR}}/clusterconfig/*.yaml
     preconditions:
       - which ls
-      - test -f "${TALOSCONFIG}"
+      - test -f "{{.TALOSCONFIG}}"
     requires:
       vars:
         - *requires-cluster-name
@@ -52,7 +52,7 @@ tasks:
     desc: Apply Talos config to a node [NODE=required]
     preconditions:
       - which talosctl
-      - test -f "${TALOSCONFIG}"
+      - test -f "{{.TALOSCONFIG}}"
       - talosctl --nodes {{.NODE}} get machineconfig
     requires:
       vars:
