@@ -4,9 +4,8 @@ kind: Kustomization
 
 resources:
   - ./crds.yaml
-  - ./helmrepository.yaml
+  - ./ocirepository.yaml
   - ./helmrelease.yaml
-  - ./lbipam.yaml
 
 configMapGenerator:
   - name: cilium-values
