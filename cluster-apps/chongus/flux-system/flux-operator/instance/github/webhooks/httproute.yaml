@@ -6,7 +6,7 @@ metadata:
   name: github-webhook
 spec:
   hostnames:
-    - flux-${CLUSTER_NAME}.${SECRET_DOMAIN}
+    - flux-chongus.rtrox.io
   parentRefs:
     - name: external
       namespace: kube-system

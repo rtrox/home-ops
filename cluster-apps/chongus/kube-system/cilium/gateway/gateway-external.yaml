@@ -10,7 +10,7 @@ spec:
   gatewayClassName: cilium
   addresses:
     - type: IPAddress
-      value: ${GATEWAY_IP_EXTERNAL}
+      value: 172.22.12.2
   infrastructure:
     annotations:
       external-dns.alpha.kubernetes.io/hostname: *hostname
@@ -18,14 +18,14 @@ spec:
     - name: http
       protocol: HTTP
       port: 80
-      hostname: "*.${SECRET_DOMAIN}"
+      hostname: "*.rtrox.io"
       allowedRoutes:
         namespaces:
           from: All
     - name: https
       protocol: HTTPS
       port: 443
-      hostname: "*.${SECRET_DOMAIN}"
+      hostname: "*.rtrox.io"
       allowedRoutes:
         namespaces:
           from: All
