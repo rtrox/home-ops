@@ -43,3 +43,4 @@ spec:
   dependsOn:
     - name: cert-manager
     - name: external-secrets-store-doppler
+      namespace: external-secrets
