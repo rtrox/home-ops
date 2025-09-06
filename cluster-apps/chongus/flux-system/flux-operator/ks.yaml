@@ -12,7 +12,7 @@ spec:
       app.kubernetes.io/name: *appname
   interval: 30m
   timeout: 5m
-  path: ./cluster-apps/${CLUSTER_NAME}/flux-system/flux-operator/app
+  path: ./cluster-apps/chongus/flux-system/flux-operator/app
   prune: false # Never delete this
   sourceRef:
     kind: GitRepository
@@ -33,7 +33,7 @@ spec:
       app.kubernetes.io/name: *appname
   interval: 30m
   timeout: 5m
-  path: ./cluster-apps/${CLUSTER_NAME}/flux-system/flux-operator//instance
+  path: ./cluster-apps/chongus/flux-system/flux-operator//instance
   prune: false # Never delete this
   sourceRef:
     kind: GitRepository

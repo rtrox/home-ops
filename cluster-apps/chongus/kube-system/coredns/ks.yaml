@@ -6,16 +6,16 @@ apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
   name: &appname coredns
-  namespace: flux-system
+  namespace: &namespace kube-system
 spec:
-  targetNamespace: kube-system
+  targetNamespace: *namespace
   commonMetadata:
     labels:
       app.kubernetes.io/name: *appname
   interval: 10m
-  path: ./cluster-cd/apps/${CLUSTER_NAME}/kube-system/coredns/app
+  path: ./cluster-cd/apps/chongus/kube-system/coredns/app
   prune: true
   sourceRef:
     kind: GitRepository
-    name: home-ops-cd
+    name: flux-system
   wait: true
