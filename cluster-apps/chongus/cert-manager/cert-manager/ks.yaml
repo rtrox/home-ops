@@ -42,4 +42,4 @@ spec:
   wait: true
   dependsOn:
     - name: cert-manager
-    - name: external-secrets-stores
+    - name: external-secrets-store-doppler
