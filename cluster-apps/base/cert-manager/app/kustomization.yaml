@@ -4,6 +4,9 @@ kind: Kustomization
 
 namespace: cert-manager
 
+resources:
+  - ocirepository.yaml
+
 configMapGenerator:
   - name: cert-manager-values
     files:
