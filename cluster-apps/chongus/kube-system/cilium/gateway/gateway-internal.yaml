@@ -5,12 +5,12 @@ kind: Gateway
 metadata:
   name: internal
   annotations:
-    external-dns.alpha.kubernetes.io/target: &hostname cho-int.${SECRET_DOMAIN}
+    external-dns.alpha.kubernetes.io/target: &hostname cho-int.rtrox.io
 spec:
   gatewayClassName: cilium
   addresses:
     - type: IPAddress
-      value: ${GATEWAY_IP_INTERNAL}
+      value: 172.22.12.1
   infrastructure:
     annotations:
       external-dns.alpha.kubernetes.io/hostname: *hostname
@@ -18,14 +18,14 @@ spec:
     - name: http
       protocol: HTTP
       port: 80
-      hostname: "*.${SECRET_DOMAIN}"
+      hostname: "*.rtrox.io"
       allowedRoutes:
         namespaces:
           from: All
     - name: https
       protocol: HTTPS
       port: 443
-      hostname: "*.${SECRET_DOMAIN}"
+      hostname: "*.rtrox.io"
       allowedRoutes:
         namespaces:
           from: All
