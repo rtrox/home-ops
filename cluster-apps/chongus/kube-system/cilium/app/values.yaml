@@ -12,7 +12,7 @@ localRedirectPolicy: true
 kubeProxyReplacement: true
 kubeProxyReplacementHealthzBindAddr: 0.0.0.0:10256
 
-enableRuntimDeviceDetection: true
+enableRuntimeDeviceDetection: true
 devices: eth+
 
 loadBalancer:
@@ -43,16 +43,6 @@ hubble:
   enabled: true
   serviceMonitor:
     enabled: false
-
-  metrics:
-    enabled:
-      - dns:query;ignoreAAAA
-      - drop
-      - tcp
-      - flow
-      - port-distribution
-      - icmp
-      - http
 
   relay:
     enabled: true
