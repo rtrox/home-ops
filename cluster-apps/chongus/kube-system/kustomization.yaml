@@ -4,6 +4,3 @@ kind: Kustomization
 resources:
   - ./cilium/ks.yaml
   - ./coredns/ks.yaml
-components:
-  - ../../components/namespace
-  - ../../components/flux/alerts
