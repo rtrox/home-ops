@@ -4,5 +4,4 @@ kind: Kustomization
 
 resources:
   - ../../../../base/cert-manager/app
-  - ../../../../base/cert-manager/issuers
   - helmrelease.yaml
