@@ -16,24 +16,17 @@ spec:
 
   values:
     hubble:
-      serviceMonitor:
-        enabled: true
-      dashboards:
-        enabled: true
       relay:
         enabled: true
-        rolloutPods: true
+        rollOutPods: true
         prometheus:
           serviceMonitor:
             enabled: true
 
       ui:
         enabled: true
-        rolloutPods: true
+        rollOutPods: true
 
     prometheus:
       serviceMonitor:
         enabled: true
-
-    operator:
-      tolerations: []

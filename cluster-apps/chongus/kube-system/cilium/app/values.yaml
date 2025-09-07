@@ -30,10 +30,16 @@ ipam:
   mode: kubernetes
 
 operator:
+  dashboards:
+    enabled: true
+    annotations:
+      grafana_folder: Cilium
+  prometheus:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+  replicas: 2
   rollOutPods: true
-
-eni:
-  enabled: false
 
 enableIPv4BIGTCP: true
 autoDirectNodeRoutes: true
