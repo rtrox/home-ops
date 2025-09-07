@@ -28,25 +28,5 @@ spec:
   sourceRef:
     kind: GitRepository
     name: flux-system
-  decryption:
-    provider: sops
-    secretRef:
-      name: sops-age
   dependsOn:
     - name: flux-repositories
-  patches:
-    - patch: |-
-        apiVersion: kustomize.toolkit.fluxcd.io/v1
-        kind: Kustomization
-        metadata:
-          name: not-used
-          namespace: not-used
-        spec:
-          decryption:
-            provider: sops
-            secretRef:
-              name: sops-age
-              namespace: flux-system
-      target:
-        group: kustomize.toolkit.fluxcd.io
-        kind: Kustomization

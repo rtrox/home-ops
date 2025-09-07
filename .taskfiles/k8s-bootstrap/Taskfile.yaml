@@ -16,7 +16,7 @@ tasks:
     requires: *default-requires
     vars:
       TALOS_CONTROLLER:
-       sh: talosctl config use-context ${CLUSTER_NAME} && talosctl config info --output json | jq --raw-output '.endpoints[]' | shuf -n 1
+        sh: talosctl config use-context ${CLUSTER_NAME} && talosctl config info --output json | jq --raw-output '.endpoints[]' | shuf -n 1
     preconditions:
       - talosctl config use-context ${CLUSTER_NAME}
       - which jq minijinja-cli sops talosctl
@@ -33,11 +33,9 @@ tasks:
     prompt: Bootstrap apps into Talos cluster?
     requires: *default-requires
     preconditions:
-      - which yq sops helmfile kubectl
+      - which yq helmfile kubectl doppler
       - test -f "{{.TALOSCONFIG}}"
       - test -f {{.CLUSTER_DIR}}/bootstrap/resources/namespaces.yaml
-      - test -f {{.CLUSTER_DIR}}/bootstrap/resources/github-deploy-key.cho.yaml
-      - test -f {{.CLUSTER_DIR}}/bootstrap/resources/sops-age.cho.yaml
       - test -f {{.CLUSTER_DIR}}/bootstrap/helmfile.d/00-crds.yaml
       - test -f {{.CLUSTER_DIR}}/bootstrap/helmfile.d/01-apps.yaml
 
@@ -49,7 +47,6 @@ tasks:
     cmds:
       # - until kubectl wait nodes --for=condition=Ready=False --all --timeout=10m; do sleep 5; done
       - kubectl apply --server-side --filename {{.CLUSTER_DIR}}/bootstrap/resources/namespaces.yaml
-      - sops -d {{.CLUSTER_DIR}}/bootstrap/resources/github-deploy-key.cho.yaml | kubectl apply --server-side --filename -
-      - sops -d {{.CLUSTER_DIR}}/bootstrap/resources/sops-age.cho.yaml | kubectl apply --server-side --filename -
+      - doppler configs tokens create --project k8s-at-home --config ${CLUSTER_NAME:0:3} doppler-eso --plain | kubectl -n external-secrets create secret generic doppler-token --from-file=dopplerToken=/dev/stdin --dry-run=client -o yaml | kubectl apply -f -
       - helmfile --quiet --file {{.CLUSTER_DIR}}/bootstrap/helmfile.d/00-crds.yaml template | kubectl apply --server-side --filename -
       - helmfile --file {{.CLUSTER_DIR}}/bootstrap/helmfile.d/01-apps.yaml sync --hide-notes
