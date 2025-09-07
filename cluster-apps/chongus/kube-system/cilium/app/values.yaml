@@ -32,6 +32,9 @@ ipam:
 operator:
   rollOutPods: true
 
+eni:
+  enabled: false
+
 enableIPv4BIGTCP: true
 autoDirectNodeRoutes: true
 ipv4NativeRoutingCIDR: 10.244.0.0/16
