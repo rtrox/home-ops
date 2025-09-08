@@ -1,6 +1,6 @@
 ---
 originRequest:
-  originServerName: cho-cf.rtrox.io
+  originServerName: cho-ext.rtrox.io
 
 ingress:
   - hostname: rtrox.io
