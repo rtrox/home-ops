@@ -9,7 +9,7 @@ spec:
   issuerRef:
     name: letsencrypt-staging
     kind: ClusterIssuer
-  commonName: rtrox.io"
+  commonName: "rtrox.io"
   dnsNames:
     - "rtrox.io"
     - "*.rtrox.io"
