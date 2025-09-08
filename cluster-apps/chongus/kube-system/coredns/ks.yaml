@@ -13,7 +13,7 @@ spec:
     labels:
       app.kubernetes.io/name: *appname
   interval: 10m
-  path: ./cluster-cd/apps/chongus/kube-system/coredns/app
+  path: ./cluster-apps/chongus/kube-system/coredns/app
   prune: true
   sourceRef:
     kind: GitRepository
