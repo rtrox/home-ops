@@ -1,0 +1,14 @@
+---
+originRequest:
+  originServerName: cho-cf.rtrox.io
+
+ingress:
+  - hostname: rtrox.io
+    service: &svc https://cilium-gateway-external.network.svc.cluster.local
+  - hostname: "*.rtrox.io"
+    service: *svc
+  - hostname: ${BLUESKY_HOSTNAME}
+    service: *svc
+  - hostname: "*.${BLUESKY_HOSTNAME}"
+    service: *svc
+  - service: http_status:404

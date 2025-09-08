@@ -5,6 +5,7 @@ kind: Kustomization
 namespace: network
 resources:
   - ./external-dns/ks.yaml
+  - ./cloudflared/ks.yaml
 components:
   - ../../components/namespace
   - ../../components/flux/alerts
