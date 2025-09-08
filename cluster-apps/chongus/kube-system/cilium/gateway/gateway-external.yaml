@@ -9,6 +9,9 @@ spec:
   addresses:
     - type: IPAddress
       value: 172.22.12.2
+  infrastructure:
+    annotations:
+      external-dns.alpha.kubernetes.io/hostname: cho-ext.rtrox.io
   listeners:
     - name: http
       protocol: HTTP
