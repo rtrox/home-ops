@@ -12,7 +12,7 @@ spec:
       value: 172.22.12.2
   infrastructure:
     annotations:
-      external-dns.alpha.kubernetes.io/hostname: cho-ext.rtrox.io
+      external-dns.alpha.kubernetes.io/target: cho-ext.rtrox.io
       external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
   listeners:
     - name: http
