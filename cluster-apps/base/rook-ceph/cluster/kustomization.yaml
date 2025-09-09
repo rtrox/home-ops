@@ -4,11 +4,3 @@ kind: Kustomization
 
 resources:
   - ocirepository.yaml
-
-configMapGenerator:
-  - name: rook-ceph-cluster-values
-    files:
-      - values.yaml=./values.yaml
-
-configurations:
-  - kustomizeconfig.yaml
