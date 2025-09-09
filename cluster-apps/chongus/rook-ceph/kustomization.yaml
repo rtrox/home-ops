@@ -6,7 +6,5 @@ namespace: rook-ceph
 resources:
   - ./rook-ceph/ks.yaml
 components:
-  - ../../components/namespace
+  - namespace.yaml
   - ../../components/flux/alerts
-# patchesStrategicMerge:
-#   - namespace-patch.yaml
