@@ -50,8 +50,6 @@ spec:
             enabled: true
       network:
         provider: host
-        connections:
-          requireMsgr2: true
       storage:
         useAllNodes: false
         useAllDevices: false
