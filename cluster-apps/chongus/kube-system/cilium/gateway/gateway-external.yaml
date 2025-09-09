@@ -12,10 +12,6 @@ spec:
   addresses:
     - type: IPAddress
       value: 172.22.12.2
-  infrastructure:
-    annotations:
-      external-dns.alpha.kubernetes.io/hostname: *hostname
-      external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
   listeners:
     - name: http
       protocol: HTTP
