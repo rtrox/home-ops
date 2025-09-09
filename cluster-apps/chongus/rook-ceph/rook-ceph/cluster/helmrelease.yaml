@@ -23,7 +23,7 @@ spec:
       network:
         provider: host
         connections:
-          equireMsgr2: true
+          requireMsgr2: true
       crashCollector:
         disable: false
       dashboard:
