@@ -19,7 +19,17 @@ spec:
       enabled: true
       createPrometheusRules: true
     toolbox:
-      enabled: false
+      enabled: true
+    route:
+      dashboard:
+        host:
+          name: rook.chongus.rtrox.io
+          path: /
+          pathType: PathPrefix
+        parentRefs:
+          - name: internal
+            namespace: kube-system
+            sectionName: https
     cephClusterSpec:
       cephConfig:
         global:
@@ -31,51 +41,33 @@ spec:
         wipeDevicesFromOtherClusters: true
       crashCollector:
         disable: false
+      csi:
+        readAffinity:
+          enabled: true
       dashboard:
         enabled: true
         urlPrefix: /
         ssl: false
-        prometheusEndpoint: http://prometheus-operated.observability.svc.cluster.local:9090
       mgr:
         modules:
+          - name: diskprediction_local
+            enabled: true
           - name: insights
             enabled: true
           - name: pg_autoscaler
             enabled: true
           - name: rook
             enabled: true
-      mon:
-        count: 3
-        allowMultiplePerNode: false
-      placement:
-        all:
-          tolerations:
-            - key: "node-role.kubernetes.io/control-plane"
-              operator: "Exists"
-              effect: "NoSchedule"
-            - key: "node-role.kubernetes.io/master"
-              operator: "Exists"
-              effect: "NoSchedule"
       network:
         provider: host
+        connections:
+          requireMsgr2: true
       storage:
-        useAllNodes: false
+        useAllNodes: true
         useAllDevices: false
+        devicePathFilter: /dev/disk/by-id/ata-Samsung_SSD_870_EVO_2TB_*
         config:
           osdsPerDevice: "1"
-        nodes:
-          - name: node01
-            devices:
-              - name: "/dev/disk/by-id/ata-Samsung_SSD_870_EVO_2TB_S6PNNM0TA24923Y"
-              - name: "/dev/disk/by-id/ata-Samsung_SSD_870_EVO_2TB_S6PNNM0TA24951W"
-          - name: node02
-            devices:
-              - name: "/dev/disk/by-id/ata-Samsung_SSD_870_EVO_2TB_S6PNNL0T903885F"
-              - name: "/dev/disk/by-id/ata-Samsung_SSD_870_EVO_2TB_S6PNNS0T802153Z"
-          - name: node03
-            devices:
-              - name: "/dev/disk/by-id/ata-Samsung_SSD_870_EVO_2TB_S6PNNM0TA21948W"
-              - name: "/dev/disk/by-id/ata-Samsung_SSD_870_EVO_2TB_S6PNNS0T802154X"
     cephBlockPools:
       - name: ceph-blockpool
         spec:
@@ -92,6 +84,8 @@ spec:
           mountOptions:
             - discard
           parameters:
+            compression_mode: aggressive
+            compression_algorithm: zstd
             imageFormat: "2"
             imageFeatures: layering,fast-diff,object-map,deep-flatten,exclusive-lock
             csi.storage.k8s.io/provisioner-secret-name: rook-csi-rbd-provisioner
