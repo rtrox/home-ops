@@ -52,7 +52,7 @@ spec:
     route:
       app:
         hostnames:
-          - echo-server.rtrox.io
+          - echo.rtrox.io
         parentRefs:
           - name: internal
             namespace: kube-system
