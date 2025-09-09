@@ -36,7 +36,6 @@ spec:
           bdev_enable_discard: "true" # quote
           bdev_async_discard_threads: "1" # quote
           osd_class_update_on_start: "false" # quote
-          device_failure_prediction_mode: local # requires mgr module
       cleanupPolicy:
         wipeDevicesFromOtherClusters: true
       crashCollector:
@@ -50,8 +49,6 @@ spec:
         ssl: false
       mgr:
         modules:
-          - name: diskprediction_local
-            enabled: true
           - name: insights
             enabled: true
           - name: pg_autoscaler
@@ -62,6 +59,18 @@ spec:
         provider: host
         connections:
           requireMsgr2: true
+      mon:
+        count: 1
+        allowMultiplePerNode: false
+      placement:
+        all:
+          tolerations:
+            - key: "node-role.kubernetes.io/control-plane"
+              operator: "Exists"
+              effect: "NoSchedule"
+            - key: "node-role.kubernetes.io/master"
+              operator: "Exists"
+              effect: "NoSchedule"
       storage:
         useAllNodes: true
         useAllDevices: false
