@@ -1,13 +1,10 @@
 apiVersion: externaldns.k8s.io/v1alpha1
 kind: DNSEndpoint
 metadata:
-    name: cloudflared-tunnel
+  name: cloudflared-tunnel
 spec:
-    endpoints:
-        - dnsName: cho-ext.rtrox.io
-          recordType: CNAME
-          targets:
-            - ${TUNNEL_ENDPOINT}
-          providerSpecific:
-            - name: external-dns.alpha.kubernetes.io/cloudflare-proxied
-              value: "true"
+  endpoints:
+    - dnsName: cho-ext.rtrox.io
+      recordType: CNAME
+      targets:
+        - ${TUNNEL_ENDPOINT}
