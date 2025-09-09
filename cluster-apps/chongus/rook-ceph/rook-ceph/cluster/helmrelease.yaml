@@ -1,0 +1,50 @@
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2beta2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: rook-ceph-cluster
+spec:
+  interval: 30m
+  chartRef:
+    kind: OCIRepository
+    name: rook-ceph-cluster
+  dependsOn:
+    - name: rook-ceph
+      namespace: rook-ceph
+    - name: snapshot-controller
+      namespace: system-controllers
+  valuesFrom:
+    - kind: ConfigMap
+      name: rook-ceph-cluster-values
+      valuesKey: values.yaml
+  values:
+    cephClusterSpec:
+      network:
+        provider: host
+        connections:
+          equireMsgr2: true
+      crashCollector:
+        disable: false
+      dashboard:
+        enabled: true
+        urlPrefix: /
+        ssl: false
+      storage:
+        useAllNodes: false
+        useAllDevices: false
+        config:
+          osdsPerDevice: "1"
+        nodes:
+          - name: node01
+            devices:
+              - name: "/dev/disk/by-id/ata-Samsung_SSD_870_EVO_2TB_S6PNNM0TA24923Y"
+              - name: "/dev/disk/by-id/ata-Samsung_SSD_870_EVO_2TB_S6PNNM0TA24951W"
+          - name: node02
+            devices:
+              - name: "/dev/disk/by-id/ata-Samsung_SSD_870_EVO_2TB_S6PNNL0T903885F"
+              - name: "/dev/disk/by-id/ata-Samsung_SSD_870_EVO_2TB_S6PNNS0T802153Z"
+          - name: node03
+            devices:
+              - name: "/dev/disk/by-id/ata-Samsung_SSD_870_EVO_2TB_S6PNNM0TA21948W"
+              - name: "/dev/disk/by-id/ata-Samsung_SSD_870_EVO_2TB_S6PNNS0T802154X"
