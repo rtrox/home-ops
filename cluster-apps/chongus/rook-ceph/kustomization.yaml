@@ -8,3 +8,5 @@ resources:
 components:
   - ../../components/namespace
   - ../../components/flux/alerts
+patchesStrategicMerge:
+  - namespace-patch.yaml
