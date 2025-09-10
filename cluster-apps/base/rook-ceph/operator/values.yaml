@@ -12,6 +12,16 @@ image:
   repository: ghcr.io/rook/ceph
 monitoring:
   enabled: true
+enableDiscoveryDaemon: true
+discover:
+  tolerations:
+    - key: node-role.kubernetes.io/control-plane
+      operator: Exists
+      effect: NoSchedule
+    - key: node-role.kubernetes.io/master
+      operator: Exists
+      effect: NoSchedule
+logLevel: DEBUG
 resources:
   requests:
     memory: 128Mi # unchangable
