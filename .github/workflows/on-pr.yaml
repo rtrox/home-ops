@@ -18,9 +18,15 @@ jobs:
 
   simple-checks:
     uses: rtrox/home-ops/.github/workflows/simple-checks.yaml@main
+    permissions:
+      contents: read
+      pull-requests: write
 
   flux-local-chongus:
     uses: rtrox/home-ops/.github/workflows/flux-local-chongus.yaml@main
+    permissions:
+      contents: read
+      pull-requests: write
     needs:
       - simple-checks
 
