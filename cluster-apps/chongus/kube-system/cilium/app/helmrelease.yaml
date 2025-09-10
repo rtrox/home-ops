@@ -26,7 +26,3 @@ spec:
       ui:
         enabled: true
         rollOutPods: true
-
-    prometheus:
-      serviceMonitor:
-        enabled: true
