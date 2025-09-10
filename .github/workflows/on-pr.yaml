@@ -1,16 +1,16 @@
 name: On PR
 
 on:
-  - pull_request_target
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+    branches:
+      - main
 
 jobs:
-  labeler:
-    uses: rtrox/home-ops/.github/workflows/labeler.yaml@main
-    permissions:
-      contents: read
-      pull-requests: write
-    secrets: inherit
-
   simple-checks:
     uses: rtrox/home-ops/.github/workflows/simple-checks.yaml@main
     permissions:
