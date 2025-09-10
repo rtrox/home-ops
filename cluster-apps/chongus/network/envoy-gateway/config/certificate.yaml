@@ -6,7 +6,7 @@ metadata:
 spec:
   secretName: "rtrox-io-tls"
   issuerRef:
-    name: letsencrypt-produ
+    name: letsencrypt-prod
     kind: ClusterIssuer
   commonName: "rtrox.io"
   dnsNames:
