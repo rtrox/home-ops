@@ -7,5 +7,5 @@ resources:
   - ./reloader/ks.yaml
   - ./spegel/ks.yaml
 components:
-  - ../../components/namespace
+  - ../../components/privileged-namespace
   - ../../components/flux/alerts
