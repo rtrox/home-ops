@@ -5,6 +5,7 @@ kind: Kustomization
 namespace: observability
 resources:
   - ./kube-prometheus-stack/ks.yaml
+  - ./kube-state-metrics/ks.yaml
   - ./grafana/ks.yaml
 components:
   - ../../components/namespace
