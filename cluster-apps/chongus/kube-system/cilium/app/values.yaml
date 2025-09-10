@@ -65,10 +65,6 @@ envoy:
   enabled: false
 endpointRoutes:
   enabled: true
-gatewayAPI:
-  enabled: true
-  enableAlpn: true
-  xffNumTrustedHops: 1
 
 securityContext:
   capabilities:

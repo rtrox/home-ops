@@ -3,15 +3,17 @@
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
-  name: external
+  name: internal
   annotations:
-    external-dns.alpha.kubernetes.io/target: &hostname cho-ext.rtrox.io
-    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+    external-dns.alpha.kubernetes.io/target: &hostname cho-int.rtrox.io
 spec:
   gatewayClassName: cilium
   addresses:
     - type: IPAddress
-      value: 172.22.12.2
+      value: 172.22.12.1
+  infrastructure:
+    annotations:
+      external-dns.alpha.kubernetes.io/hostname: *hostname
   listeners:
     - name: http
       protocol: HTTP
@@ -19,7 +21,7 @@ spec:
       hostname: "*.rtrox.io"
       allowedRoutes:
         namespaces:
-          from: All
+          from: Same
     - name: https
       protocol: HTTPS
       port: 443
@@ -35,12 +37,12 @@ spec:
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: external
+  name: internal
   annotations:
     external-dns.alpha.kubernetes.io/controller: none
 spec:
   parentRefs:
-    - name: external
+    - name: internal
       namespace: network
       sectionName: http
   rules:

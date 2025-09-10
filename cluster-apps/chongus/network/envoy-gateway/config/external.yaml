@@ -1,48 +1,43 @@
 ---
-# yaml-language-server: $schema=https://github.com/datreeio/CRDs-catalog/raw/refs/heads/main/gateway.networking.k8s.io/gateway_v1.json
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
-  name: internal
+  name: envoy-external
   annotations:
-    external-dns.alpha.kubernetes.io/target: &hostname cho-int.rtrox.io
+    external-dns.alpha.kubernetes.io/target: &hostname cho-ext.rtrox.io
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
 spec:
-  gatewayClassName: cilium
+  gatewayClassName: envoy
   addresses:
     - type: IPAddress
-      value: 172.22.12.1
-  infrastructure:
-    annotations:
-      external-dns.alpha.kubernetes.io/hostname: *hostname
+      value: 172.22.12.2
   listeners:
     - name: http
       protocol: HTTP
       port: 80
-      hostname: "*.rtrox.io"
       allowedRoutes:
         namespaces:
-          from: All
+          from: Same
     - name: https
       protocol: HTTPS
       port: 443
-      hostname: "*.rtrox.io"
       allowedRoutes:
         namespaces:
           from: All
       tls:
         certificateRefs:
           - kind: Secret
-            name: wildcard-tls
+            name: rtrox-io-tls
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: internal
+  name: envoy-external
   annotations:
     external-dns.alpha.kubernetes.io/controller: none
 spec:
   parentRefs:
-    - name: internal
+    - name: envoy-external
       namespace: network
       sectionName: http
   rules:

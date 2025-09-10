@@ -1,13 +1,12 @@
----
 # yaml-language-server: $schema=https://raw.githubusercontent.com/datreeio/CRDs-catalog/refs/heads/main/cert-manager.io/certificate_v1.json
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: "wildcard"
+  name: "rtrox-io"
 spec:
-  secretName: "wildcard-tls"
+  secretName: "rtrox-io-tls"
   issuerRef:
-    name: letsencrypt-prod
+    name: letsencrypt-produ
     kind: ClusterIssuer
   commonName: "rtrox.io"
   dnsNames:
