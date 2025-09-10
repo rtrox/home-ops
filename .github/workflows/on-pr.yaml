@@ -1,13 +1,7 @@
 name: On PR
 
 on:
-  pull_request:
-    branches:
-      - main
-    types:
-      - opened
-      - synchronize
-      - reopened
+  - pull_request_target
 
 jobs:
   labeler:
@@ -31,6 +25,3 @@ jobs:
     secrets: inherit
     needs:
       - simple-checks
-
-
-

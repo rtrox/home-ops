@@ -3,7 +3,7 @@
 name: Labeler
 
 on:
-  - pull_request_target
+  workflow_call:
 
 permissions:
   contents: read
