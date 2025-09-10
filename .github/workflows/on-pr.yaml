@@ -10,6 +10,18 @@ on:
       - reopened
 
 jobs:
-  # Pin to main to prevent accidental injection of malicious code
+  labeler:
+    uses: rtrox/home-ops/.github/workflows/labeler.yaml@main
+    permissions:
+      contents: read
+      pull-requests: write
+
   simple-checks:
     uses: rtrox/home-ops/.github/workflows/simple-checks.yaml@main
+
+  flux-local-chongus:
+    uses: rtrox/home-ops/.github/workflows/flux-local-chongus.yaml@main
+    needs:
+      - simple-checks
+
+
