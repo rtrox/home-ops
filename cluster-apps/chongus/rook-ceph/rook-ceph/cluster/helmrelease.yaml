@@ -72,11 +72,23 @@ spec:
               operator: "Exists"
               effect: "NoSchedule"
       storage:
-        useAllNodes: true
+        useAllNodes: false
         useAllDevices: false
-        devicePathFilter: /dev/disk/by-id/ata-Samsung_SSD_870_EVO_2TB_*
         config:
           osdsPerDevice: "1"
+        nodes:
+          - name: node01
+            devices:
+              - name: "/dev/disk/by-id/ata-Samsung_SSD_870_EVO_2TB_S6PNNM0TA24923Y"
+              - name: "/dev/disk/by-id/ata-Samsung_SSD_870_EVO_2TB_S6PNNM0TA24951W"
+          - name: node02
+            devices:
+              - name: "/dev/disk/by-id/ata-Samsung_SSD_870_EVO_2TB_S6PNNL0T903885F"
+              - name: "/dev/disk/by-id/ata-Samsung_SSD_870_EVO_2TB_S6PNNS0T802153Z"
+          - name: node03
+            devices:
+              - name: "/dev/disk/by-id/ata-Samsung_SSD_870_EVO_2TB_S6PNNM0TA21948W"
+              - name: "/dev/disk/by-id/ata-Samsung_SSD_870_EVO_2TB_S6PNNS0T802154X"
     cephBlockPools:
       - name: ceph-blockpool
         spec:
