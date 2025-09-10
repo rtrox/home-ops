@@ -299,7 +299,7 @@ spec:
       main:
         enabled: true
         hostnames:
-          - *hostname
+          - grafana.chongus.rtrox.io
         parentRefs:
           - name: envoy-internal
             namespace: network
