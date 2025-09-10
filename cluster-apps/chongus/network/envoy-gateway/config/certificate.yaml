@@ -12,3 +12,4 @@ spec:
   dnsNames:
     - "rtrox.io"
     - "*.rtrox.io"
+    - "*.chongus.rtrox.io"
