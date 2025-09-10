@@ -6,6 +6,7 @@ namespace: system
 resources:
   - ./reloader/ks.yaml
   - ./spegel/ks.yaml
+  - ./descheduler/ks.yaml
 components:
   - ../../components/privileged-namespace
   - ../../components/flux/alerts
