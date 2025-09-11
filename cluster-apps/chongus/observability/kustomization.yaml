@@ -9,5 +9,5 @@ resources:
   - ./node-exporter/ks.yaml
   - ./grafana/ks.yaml
 components:
-  - ../../components/namespace
+  - ../../components/privileged-namespace
   - ../../components/flux/alerts
