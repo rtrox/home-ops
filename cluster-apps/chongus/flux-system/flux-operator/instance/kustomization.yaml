@@ -9,6 +9,7 @@ resources:
   - ./ocirepository.yaml
   - ./helmrelease.yaml
   - ./prometheusrule.yaml
+  - ./podmonitor.yaml
   - ./github/
 configMapGenerator:
   - name: flux-instance-helm-values
