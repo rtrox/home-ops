@@ -14,7 +14,7 @@ spec:
   dependsOn:
     - name: rook-ceph-cluster
       namespace: rook-ceph
-    - name: external-secrets-stores
+    - name: external-secrets-store-doppler
       namespace: external-secrets
     - name: volsync
       namespace: system
