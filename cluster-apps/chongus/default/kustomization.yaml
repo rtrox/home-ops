@@ -5,5 +5,4 @@ kind: Kustomization
 
 resources:
   - ./echo-server/ks.yaml
-
-
+  - ./minecraft-vanilla/ks.yaml
