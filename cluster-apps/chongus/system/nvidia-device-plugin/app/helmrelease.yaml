@@ -31,7 +31,15 @@ spec:
   values:
     nodeSelector:
       feature.node.kubernetes.io/pci-0300_10de.present: "true"
-    affinity: []
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: feature.node.kubernetes.io/pci-0300_10de.present
+                  operator: In
+                  values:
+                    - "true"
     # Shared gpu access https://github.com/NVIDIA/k8s-device-plugin#shared-access-to-gpus
     config:
       name: time-slicing-config
