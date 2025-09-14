@@ -34,15 +34,5 @@ spec:
     affinity: []
     # Shared gpu access https://github.com/NVIDIA/k8s-device-plugin#shared-access-to-gpus
     config:
-      map:
-        default: |-
-          version: v1
-          flags:
-            migStrategy: none
-          sharing:
-            timeSlicing:
-              renameByDefault: false
-              failRequestsGreaterThanOne: false
-              resources:
-                - name: nvidia.com/gpu
-                  replicas: 4
+      name: time-slicing-config
+      default: any
