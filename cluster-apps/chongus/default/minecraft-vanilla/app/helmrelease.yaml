@@ -1,0 +1,116 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &app minecraft-vanilla
+spec:
+  interval: 30m
+  chartRef:
+    kind: OCIRepository
+    name: itzg-minecraft
+  maxHistory: 2
+  timeout: 15m
+  install:
+    timeout: 15m
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    timeout: 15m
+    remediation:
+      retries: 3
+  uninstall:
+    keepHistory: false
+  values:
+    deploymentAnnotations:
+      secret.reloader.stakater.com/reload: &secret minecraft
+    image:
+      repository: ghcr.io/itzg/minecraft-server
+      tag: java21
+    resources:
+      requests:
+        cpu: 1000m
+        memory: 12Gi
+      limits:
+        memory: 16Gi
+    securityContext:
+      runAsUser: &uid 568
+      fsGroup: *uid
+    livenessProbe:
+      initialDelaySeconds: 600
+      periodSeconds: 30
+    readinessProbe:
+      initialDelaySeconds: 300
+      periodSeconds: 30
+    extraEnv:
+      TZ: "America/Los_Angeles"
+      SYNC_CHUNK_WRITES: "false"
+    persistence:
+      dataDir:
+        enabled: true
+        existingClaim: *app
+    serviceAnnotations:
+      external-dns.alpha.kubernetes.io/hostname: "mc.${SECRET_DOMAIN}"
+    minecraftServer:
+      eula: true
+      version: "1.21"
+      type: FABRIC
+      forceReDownload: true
+      jvmOpts: "-Djava.net.preferIPv4Stack=true"
+      jvmXXOpts: "--add-modules=jdk.incubator.vector -XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=200 -XX:+UnlockExperimentalVMOptions -XX:+DisableExplicitGC -XX:+AlwaysPreTouch -XX:G1HeapWastePercent=5 -XX:G1MixedGCCountTarget=4 -XX:InitiatingHeapOccupancyPercent=15 -XX:G1MixedGCLiveThresholdPercent=90 -XX:G1RSetUpdatingPauseTimePercent=5 -XX:SurvivorRatio=32 -XX:+PerfDisableSharedMem -XX:MaxTenuringThreshold=1 -Dusing.aikars.flags=https://mcflags.emc.gs -Daikars.new.flags=true -XX:G1NewSizePercent=40 -XX:G1MaxNewSizePercent=50 -XX:G1HeapRegionSize=16M -XX:G1ReservePercent=15"
+      memory: 12288M # 75% memory usage limit to allow container & JVM overhead
+      difficulty: hard
+      spawnProtection: 0
+      viewDistance: 32
+      gameMode: survival
+      levelSeed: "1890611819"
+      pvp: default
+      onlineMode: true
+      ops: "swyyytch"
+      motd: "\u00A79[Vanilla] \u00A7f Minecraft 1.21 Server \u00A7o\u00A79Powered by K8s"
+      maxWorldSize: 229999984 # Reset to minecraft default
+      worldSaveName: Vanilla
+      modUrls:
+        - https://cdn.modrinth.com/data/wwcspvkr/versions/C73KkDD6/textile_backup-3.1.3-1.21.jar
+        - https://cdn.modrinth.com/data/yn9u3ypm/versions/qtHZSwwl/graves-3.4.1%2B1.21.jar
+        - https://cdn.modrinth.com/data/abooMhox/versions/astoQXO2/treeharvester-1.21.0-8.9.jar
+        - https://cdn.modrinth.com/data/qpPoAL6m/versions/AQi6tDVy/trade-cycling-fabric-1.21-1.0.12.jar
+        - https://cdn.modrinth.com/data/P7dR8mSH/versions/Y0cpssyN/fabric-api-0.100.6%2B1.21.jar ## Fabric API
+        - https://cdn.modrinth.com/data/xGdtZczs/versions/Bbj5Ts5L/polymer-bundled-0.9.4%2B1.21.jar ## Dependency for Graves
+        - https://mediafilez.forgecdn.net/files/5424/575/cloth-config-15.0.127-fabric.jar ## Dependency for Textile Backup
+        - https://cdn.modrinth.com/data/e0M1UDsY/versions/ZaTRzQs8/collective-1.21.0-7.70.jar ## Dependency for Tree Harvester
+        - https://cdn.modrinth.com/data/gvQqBUqZ/versions/my7uONjU/lithium-fabric-mc1.21-0.12.7.jar ## General Optimization of Game Logic
+        - https://cdn.modrinth.com/data/nxrXbh5K/versions/jSJ8G6z8/viewdistancefix-fabric-1.21-1.0.2.jar ## Tricks Server into matching client's view distance
+        - https://cdn.modrinth.com/data/KuNKN7d2/versions/W8V2bkLB/noisium-fabric-2.2.1%2Bmc1.21.jar ## Speeds up world generation
+        - https://cdn.modrinth.com/data/VSNURh3q/versions/oIlNIzsC/c2me-fabric-mc1.21-0.2.0%2Balpha.11.107.jar ## Speeds up worldgen, io, etc by allowing multiple cpu threads
+        - https://cdn.modrinth.com/data/dbVXHSlv/versions/YcE9H1C5/fabricexporter-1.0.11.jar ## Exports metrics to Prometheus
+        - https://cdn.modrinth.com/data/l6YH9Als/versions/KYGTUMOq/spark-1.10.73-fabric.jar ## Dependency for Fabric Exporter, Profiler
+      rcon:
+        enabled: true
+        serviceType: ClusterIP
+      extraPorts:
+        - name: metrics
+          containerPort: 25585
+          protocol: TCP
+          service:
+            enabled: true
+            embedded: true
+            port: 25585
+          ingress:
+            enabled: false
+      serviceType: LoadBalancer
+      extraServiceSpec:
+        publishNotReadyAddresses: true
+    dnsPolicy: None
+    dnsConfig:
+      options:
+        - name: ndots
+          value: "1"
+      nameservers:
+        - 1.1.1.1
+        - 1.0.0.1
+  valuesFrom:
+    - kind: Secret
+      name: *secret
+      valuesKey: RCON_PASSWORD
+      targetPath: minecraftServer.rcon.password
