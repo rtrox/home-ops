@@ -8,11 +8,9 @@ spec:
   chartRef:
     kind: OCIRepository
     name: itzg-minecraft
-    namespace: flux-system
   maxHistory: 2
   timeout: 15m
   install:
-    createNamespace: true
     timeout: 15m
     remediation:
       retries: 3
