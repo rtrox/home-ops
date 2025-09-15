@@ -1,0 +1,72 @@
+---
+# yaml-language-server: $schema=https://crd.movishell.pl/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: thanos
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: thanos
+  dependsOn:
+    - name: kube-prometheus-stack
+  interval: 30m
+  maxHistory: 3
+  uninstall:
+    keepHistory: false
+  values:
+    objstoreConfig:
+      # Creates by kps
+      create: false
+      name: thanos-objectstore-secret
+      key: objstore.yml
+    additionalEndpoints:
+      - dnssrv+_grpc._tcp.kube-prometheus-stack-thanos-discovery.monitor.svc.cluster.local
+    additionalReplicaLabels: ["__replica__"]
+    serviceMonitor:
+      enabled: true
+    compact:
+      enabled: true
+      extraArgs:
+        - --compact.concurrency=4
+        - --delete-delay=30m
+        - --retention.resolution-raw=30d
+        - --downsampling.disable
+      persistence:
+        enabled: true
+        storageClass: "truenas-ssd-iscsi"
+        size: 30Gi
+    query:
+      extraArgs: --alert.query-url=http://thanos.${PUBLIC_DOMAIN}
+    queryFrontend:
+      enabled: true
+      ingress:
+        enabled: true
+        ingressClassName: private
+        hosts:
+          - &queryFrontendhost thanos.${PUBLIC_DOMAIN}
+    rule:
+      enabled: true
+      extraArgs: ["--web.prefix-header=X-Forwarded-Prefix"]
+      alertmanagersConfig:
+        value: |-
+          alertmanagers:
+            - api_version: v2
+              static_configs:
+                - dnssrv+_http-web._tcp.kube-prometheus-stack-alertmanager.monitor.svc.cluster.local
+      rules:
+        value: |-
+          groups:
+            - name: PrometheusWatcher
+              rules:
+                - alert: PrometheusDown
+                  annotations:
+                    summary: A Prometheus has disappeared from Prometheus target discovery
+                  expr: absent(up{job="prometheus-prometheus"})
+                  for: 5m
+                  labels:
+                    severity: critical
+      persistence:
+        enabled: true
+        storageClass: openebs-hostpath
+        size: 15Gi
