@@ -229,17 +229,18 @@ spec:
       datasources.yaml:
         apiVersion: 1
         datasources:
+          # - access: proxy
+          #   name: Prometheus
+          #   type: prometheus
+          #   url: http://thanos-query.observability.svc.cluster.local:10902
+          #   isDefault: true
+          #   jsonData:
+          #     prometheusType: Thanos
           - access: proxy
             name: Prometheus
             type: prometheus
-            url: http://thanos-query.observability.svc.cluster.local:10902
-            isDefault: true
-            jsonData:
-              prometheusType: Thanos
-          - access: proxy
-            name: Prometheus (Direct)
-            type: prometheus
             url: http://prometheus-operated.observability.svc.cluster.local:9090
+            isDefault: true
             jsonData:
               prometheusType: Prometheus
           - access: proxy
