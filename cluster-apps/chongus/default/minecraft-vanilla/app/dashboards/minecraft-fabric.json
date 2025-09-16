@@ -17,14 +17,14 @@
   },
   "editable": true,
   "fiscalYearStartMonth": 0,
-  "gnetId": 14492,
   "graphTooltip": 1,
+  "id": 49,
   "links": [],
   "panels": [
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "P2AF30C786CBB33F1"
+        "uid": "${DS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -38,7 +38,7 @@
             "steps": [
               {
                 "color": "green",
-                "value": null
+                "value": 0
               },
               {
                 "color": "red",
@@ -61,8 +61,11 @@
         "graphMode": "area",
         "justifyMode": "auto",
         "orientation": "auto",
+        "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -70,12 +73,12 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "10.4.1",
+      "pluginVersion": "12.1.1",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P2AF30C786CBB33F1"
+            "uid": "${DS}"
           },
           "editorMode": "code",
           "exemplar": false,
@@ -93,7 +96,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "P2AF30C786CBB33F1"
+        "uid": "${DS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -107,7 +110,7 @@
             "steps": [
               {
                 "color": "green",
-                "value": null
+                "value": 0
               },
               {
                 "color": "red",
@@ -131,8 +134,11 @@
         "graphMode": "area",
         "justifyMode": "auto",
         "orientation": "auto",
+        "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -140,12 +146,12 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "10.4.1",
+      "pluginVersion": "12.1.1",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P2AF30C786CBB33F1"
+            "uid": "${DS}"
           },
           "editorMode": "code",
           "exemplar": false,
@@ -163,7 +169,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "P2AF30C786CBB33F1"
+        "uid": "${DS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -176,7 +182,7 @@
             "steps": [
               {
                 "color": "green",
-                "value": null
+                "value": 0
               },
               {
                 "color": "red",
@@ -200,8 +206,11 @@
         "graphMode": "area",
         "justifyMode": "auto",
         "orientation": "auto",
+        "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "/^vendor$/",
           "values": false
         },
@@ -209,12 +218,12 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "10.4.1",
+      "pluginVersion": "12.1.1",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P2AF30C786CBB33F1"
+            "uid": "${DS}"
           },
           "editorMode": "code",
           "exemplar": false,
@@ -233,7 +242,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "P2AF30C786CBB33F1"
+        "uid": "${DS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -246,7 +255,7 @@
             "steps": [
               {
                 "color": "green",
-                "value": null
+                "value": 0
               },
               {
                 "color": "red",
@@ -270,8 +279,11 @@
         "graphMode": "area",
         "justifyMode": "auto",
         "orientation": "auto",
+        "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "/^runtime$/",
           "values": false
         },
@@ -279,12 +291,12 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "10.4.1",
+      "pluginVersion": "12.1.1",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P2AF30C786CBB33F1"
+            "uid": "${DS}"
           },
           "editorMode": "code",
           "exemplar": false,
@@ -303,7 +315,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "P2AF30C786CBB33F1"
+        "uid": "${DS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -316,7 +328,7 @@
             "steps": [
               {
                 "color": "green",
-                "value": null
+                "value": 0
               },
               {
                 "color": "red",
@@ -340,8 +352,11 @@
         "graphMode": "area",
         "justifyMode": "auto",
         "orientation": "auto",
+        "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "/^version$/",
           "values": false
         },
@@ -349,12 +364,12 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "10.4.1",
+      "pluginVersion": "12.1.1",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P2AF30C786CBB33F1"
+            "uid": "${DS}"
           },
           "editorMode": "code",
           "exemplar": false,
@@ -373,7 +388,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "P2AF30C786CBB33F1"
+        "uid": "${DS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -386,7 +401,7 @@
             "steps": [
               {
                 "color": "green",
-                "value": null
+                "value": 0
               },
               {
                 "color": "red",
@@ -410,8 +425,11 @@
         "graphMode": "area",
         "justifyMode": "auto",
         "orientation": "auto",
+        "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -419,12 +437,12 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "10.4.1",
+      "pluginVersion": "12.1.1",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P2AF30C786CBB33F1"
+            "uid": "${DS}"
           },
           "editorMode": "code",
           "exemplar": false,
@@ -455,7 +473,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "P2AF30C786CBB33F1"
+        "uid": "${DS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -469,7 +487,7 @@
             "steps": [
               {
                 "color": "green",
-                "value": null
+                "value": 0
               }
             ]
           }
@@ -488,8 +506,11 @@
         "graphMode": "area",
         "justifyMode": "auto",
         "orientation": "auto",
+        "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -498,12 +519,12 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "10.4.1",
+      "pluginVersion": "12.1.1",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P2AF30C786CBB33F1"
+            "uid": "${DS}"
           },
           "exemplar": true,
           "expr": "sum(minecraft_players_online{instance=~\"$instance\",job=~\"$job\"})",
@@ -519,7 +540,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "P2AF30C786CBB33F1"
+        "uid": "${DS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -532,7 +553,7 @@
             "steps": [
               {
                 "color": "green",
-                "value": null
+                "value": 0
               },
               {
                 "color": "yellow",
@@ -560,8 +581,11 @@
         "graphMode": "area",
         "justifyMode": "auto",
         "orientation": "auto",
+        "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -569,12 +593,12 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "10.4.1",
+      "pluginVersion": "12.1.1",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P2AF30C786CBB33F1"
+            "uid": "${DS}"
           },
           "editorMode": "code",
           "exemplar": true,
@@ -588,7 +612,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P2AF30C786CBB33F1"
+            "uid": "${DS}"
           },
           "editorMode": "code",
           "exemplar": false,
@@ -618,7 +642,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "P2AF30C786CBB33F1"
+        "uid": "${DS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -632,7 +656,7 @@
             "steps": [
               {
                 "color": "green",
-                "value": null
+                "value": 0
               },
               {
                 "color": "yellow",
@@ -660,8 +684,11 @@
         "graphMode": "area",
         "justifyMode": "auto",
         "orientation": "auto",
+        "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -669,12 +696,12 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "10.4.1",
+      "pluginVersion": "12.1.1",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P2AF30C786CBB33F1"
+            "uid": "${DS}"
           },
           "editorMode": "code",
           "exemplar": true,
@@ -693,7 +720,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "P2AF30C786CBB33F1"
+        "uid": "${DS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -707,7 +734,7 @@
             "steps": [
               {
                 "color": "green",
-                "value": null
+                "value": 0
               }
             ]
           }
@@ -726,8 +753,11 @@
         "graphMode": "area",
         "justifyMode": "auto",
         "orientation": "auto",
+        "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -736,12 +766,12 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "10.4.1",
+      "pluginVersion": "12.1.1",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P2AF30C786CBB33F1"
+            "uid": "${DS}"
           },
           "exemplar": true,
           "expr": "sum(minecraft_entities{instance=~\"$instance\",job=~\"$job\"})",
@@ -757,7 +787,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "P2AF30C786CBB33F1"
+        "uid": "${DS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -771,7 +801,7 @@
             "steps": [
               {
                 "color": "green",
-                "value": null
+                "value": 0
               }
             ]
           }
@@ -790,8 +820,11 @@
         "graphMode": "area",
         "justifyMode": "auto",
         "orientation": "auto",
+        "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -800,12 +833,12 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "10.4.1",
+      "pluginVersion": "12.1.1",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P2AF30C786CBB33F1"
+            "uid": "${DS}"
           },
           "editorMode": "code",
           "exemplar": true,
@@ -823,7 +856,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "P2AF30C786CBB33F1"
+        "uid": "${DS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -837,7 +870,7 @@
             "steps": [
               {
                 "color": "green",
-                "value": null
+                "value": 0
               }
             ]
           }
@@ -856,8 +889,11 @@
         "graphMode": "area",
         "justifyMode": "auto",
         "orientation": "auto",
+        "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -866,12 +902,12 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "10.4.1",
+      "pluginVersion": "12.1.1",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P2AF30C786CBB33F1"
+            "uid": "${DS}"
           },
           "editorMode": "code",
           "exemplar": true,
@@ -889,7 +925,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "P2AF30C786CBB33F1"
+        "uid": "${DS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -903,7 +939,7 @@
             "steps": [
               {
                 "color": "green",
-                "value": null
+                "value": 0
               },
               {
                 "color": "yellow",
@@ -931,8 +967,11 @@
         "graphMode": "area",
         "justifyMode": "auto",
         "orientation": "auto",
+        "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -940,12 +979,12 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "10.4.1",
+      "pluginVersion": "12.1.1",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P2AF30C786CBB33F1"
+            "uid": "${DS}"
           },
           "editorMode": "code",
           "exemplar": false,
@@ -964,7 +1003,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "P2AF30C786CBB33F1"
+        "uid": "${DS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -977,7 +1016,7 @@
             "steps": [
               {
                 "color": "red",
-                "value": null
+                "value": 0
               },
               {
                 "color": "yellow",
@@ -1004,8 +1043,11 @@
         "graphMode": "area",
         "justifyMode": "auto",
         "orientation": "auto",
+        "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -1014,12 +1056,12 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "10.4.1",
+      "pluginVersion": "12.1.1",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P2AF30C786CBB33F1"
+            "uid": "${DS}"
           },
           "editorMode": "code",
           "exemplar": true,
@@ -1037,7 +1079,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "P2AF30C786CBB33F1"
+        "uid": "${DS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1050,7 +1092,7 @@
             "steps": [
               {
                 "color": "green",
-                "value": null
+                "value": 0
               },
               {
                 "color": "yellow",
@@ -1078,8 +1120,11 @@
         "graphMode": "area",
         "justifyMode": "auto",
         "orientation": "auto",
+        "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -1088,12 +1133,12 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "10.4.1",
+      "pluginVersion": "12.1.1",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P2AF30C786CBB33F1"
+            "uid": "${DS}"
           },
           "editorMode": "code",
           "exemplar": true,
@@ -1121,7 +1166,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P2AF30C786CBB33F1"
+            "uid": "${DS}"
           },
           "fieldConfig": {
             "defaults": {
@@ -1201,7 +1246,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P2AF30C786CBB33F1"
+                "uid": "${DS}"
               },
               "exemplar": true,
               "expr": "sum(minecraft_players_online{instance=~\"$instance\",job=~\"$job\"}) by (world)",
@@ -1216,7 +1261,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P2AF30C786CBB33F1"
+            "uid": "${DS}"
           },
           "fieldConfig": {
             "defaults": {
@@ -1296,7 +1341,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P2AF30C786CBB33F1"
+                "uid": "${DS}"
               },
               "exemplar": true,
               "expr": "sum(minecraft_loaded_chunks{instance=~\"$instance\",job=~\"$job\"}) by (world)",
@@ -1311,7 +1356,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P2AF30C786CBB33F1"
+            "uid": "${DS}"
           },
           "fieldConfig": {
             "defaults": {
@@ -1391,7 +1436,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P2AF30C786CBB33F1"
+                "uid": "${DS}"
               },
               "editorMode": "code",
               "exemplar": true,
@@ -1408,7 +1453,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P2AF30C786CBB33F1"
+            "uid": "${DS}"
           },
           "fieldConfig": {
             "defaults": {
@@ -1488,7 +1533,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P2AF30C786CBB33F1"
+                "uid": "${DS}"
               },
               "editorMode": "code",
               "exemplar": true,
@@ -1505,7 +1550,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P2AF30C786CBB33F1"
+            "uid": "${DS}"
           },
           "fieldConfig": {
             "defaults": {
@@ -1585,7 +1630,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P2AF30C786CBB33F1"
+                "uid": "${DS}"
               },
               "exemplar": true,
               "expr": "minecraft_mspt{type=\"mean\",instance=~\"$instance\",job=~\"$job\"}",
@@ -1614,7 +1659,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P2AF30C786CBB33F1"
+            "uid": "${DS}"
           },
           "fieldConfig": {
             "defaults": {
@@ -1648,7 +1693,9 @@
             "namePlacement": "auto",
             "orientation": "horizontal",
             "reduceOptions": {
-              "calcs": ["lastNotNull"],
+              "calcs": [
+                "lastNotNull"
+              ],
               "fields": "",
               "values": false
             },
@@ -1662,7 +1709,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P2AF30C786CBB33F1"
+                "uid": "${DS}"
               },
               "exemplar": true,
               "expr": "sum(minecraft_entities{instance=~\"$instance\",job=~\"$job\"}) by (type)",
@@ -1677,7 +1724,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P2AF30C786CBB33F1"
+            "uid": "${DS}"
           },
           "fieldConfig": {
             "defaults": {
@@ -1757,7 +1804,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P2AF30C786CBB33F1"
+                "uid": "${DS}"
               },
               "exemplar": true,
               "expr": "sum(minecraft_entities{instance=~\"$instance\",job=~\"$job\"}) by (group)",
@@ -1772,7 +1819,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P2AF30C786CBB33F1"
+            "uid": "${DS}"
           },
           "fieldConfig": {
             "defaults": {
@@ -1852,7 +1899,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P2AF30C786CBB33F1"
+                "uid": "${DS}"
               },
               "exemplar": true,
               "expr": "sum(minecraft_entities{instance=~\"$instance\",job=~\"$job\"}) by (world)",
@@ -1881,7 +1928,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P2AF30C786CBB33F1"
+            "uid": "${DS}"
           },
           "fieldConfig": {
             "defaults": {
@@ -1926,8 +1973,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   }
                 ]
               },
@@ -1944,7 +1990,12 @@
           "id": 30,
           "options": {
             "legend": {
-              "calcs": ["mean", "lastNotNull", "max", "min"],
+              "calcs": [
+                "mean",
+                "lastNotNull",
+                "max",
+                "min"
+              ],
               "displayMode": "table",
               "placement": "bottom",
               "showLegend": true
@@ -1958,7 +2009,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P2AF30C786CBB33F1"
+                "uid": "${DS}"
               },
               "editorMode": "code",
               "expr": "jvm_memory_bytes_used{job=~\"$job\", instance=~\"$instance\", area=\"heap\"}",
@@ -1971,7 +2022,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P2AF30C786CBB33F1"
+                "uid": "${DS}"
               },
               "editorMode": "code",
               "expr": "jvm_memory_bytes_max{job=~\"$job\", instance=~\"$instance\", area=\"heap\"}",
@@ -1984,7 +2035,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P2AF30C786CBB33F1"
+                "uid": "${DS}"
               },
               "editorMode": "code",
               "expr": "jvm_memory_bytes_committed{job=~\"$job\", instance=~\"$instance\", area=\"heap\"}",
@@ -2000,7 +2051,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P2AF30C786CBB33F1"
+            "uid": "${DS}"
           },
           "fieldConfig": {
             "defaults": {
@@ -2045,8 +2096,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   }
                 ]
               },
@@ -2063,7 +2113,12 @@
           "id": 31,
           "options": {
             "legend": {
-              "calcs": ["mean", "lastNotNull", "max", "min"],
+              "calcs": [
+                "mean",
+                "lastNotNull",
+                "max",
+                "min"
+              ],
               "displayMode": "table",
               "placement": "bottom",
               "showLegend": true
@@ -2077,7 +2132,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P2AF30C786CBB33F1"
+                "uid": "${DS}"
               },
               "editorMode": "code",
               "expr": "jvm_memory_bytes_used{job=~\"$job\", instance=~\"$instance\", area=\"nonheap\"}",
@@ -2090,7 +2145,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P2AF30C786CBB33F1"
+                "uid": "${DS}"
               },
               "editorMode": "code",
               "expr": "jvm_memory_bytes_max{job=~\"$job\", instance=~\"$instance\", area=\"nonheap\"}",
@@ -2103,7 +2158,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P2AF30C786CBB33F1"
+                "uid": "${DS}"
               },
               "editorMode": "code",
               "expr": "jvm_memory_bytes_committed{job=~\"$job\", instance=~\"$instance\", area=\"nonheap\"}",
@@ -2119,7 +2174,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P2AF30C786CBB33F1"
+            "uid": "${DS}"
           },
           "fieldConfig": {
             "defaults": {
@@ -2163,8 +2218,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   },
                   {
                     "color": "red",
@@ -2199,7 +2253,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P2AF30C786CBB33F1"
+                "uid": "${DS}"
               },
               "editorMode": "code",
               "expr": "jvm_memory_pool_bytes_committed{pool=\"G1 Eden Space\", job=~\"$job\"}",
@@ -2211,7 +2265,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P2AF30C786CBB33F1"
+                "uid": "${DS}"
               },
               "editorMode": "code",
               "expr": "jvm_memory_pool_bytes_used{pool=\"G1 Eden Space\", job=~\"$job\"}",
@@ -2224,7 +2278,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P2AF30C786CBB33F1"
+                "uid": "${DS}"
               },
               "editorMode": "code",
               "expr": "jvm_memory_pool_bytes_max{pool=\"G1 Eden Space\", job=~\"$job\"}",
@@ -2241,7 +2295,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P2AF30C786CBB33F1"
+            "uid": "${DS}"
           },
           "fieldConfig": {
             "defaults": {
@@ -2285,8 +2339,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   },
                   {
                     "color": "red",
@@ -2321,7 +2374,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P2AF30C786CBB33F1"
+                "uid": "${DS}"
               },
               "editorMode": "code",
               "expr": "jvm_memory_pool_bytes_committed{pool=\"Metaspace\", job=~\"$job\"}",
@@ -2333,7 +2386,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P2AF30C786CBB33F1"
+                "uid": "${DS}"
               },
               "editorMode": "code",
               "expr": "jvm_memory_pool_bytes_used{pool=\"Metaspace\", job=~\"$job\"}",
@@ -2346,7 +2399,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P2AF30C786CBB33F1"
+                "uid": "${DS}"
               },
               "editorMode": "code",
               "expr": "jvm_memory_pool_bytes_max{pool=\"Metaspace\", job=~\"$job\"}",
@@ -2363,7 +2416,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P2AF30C786CBB33F1"
+            "uid": "${DS}"
           },
           "fieldConfig": {
             "defaults": {
@@ -2407,8 +2460,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   },
                   {
                     "color": "red",
@@ -2443,7 +2495,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P2AF30C786CBB33F1"
+                "uid": "${DS}"
               },
               "editorMode": "code",
               "expr": "sum(jvm_memory_pool_bytes_committed{pool=~\"CodeHeap.*\", job=~\"$job\"})",
@@ -2455,7 +2507,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P2AF30C786CBB33F1"
+                "uid": "${DS}"
               },
               "editorMode": "code",
               "expr": "sum(jvm_memory_pool_bytes_used{pool=~\"CodeHeap.*\", job=~\"$job\"})",
@@ -2468,7 +2520,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P2AF30C786CBB33F1"
+                "uid": "${DS}"
               },
               "editorMode": "code",
               "expr": "sum(jvm_memory_pool_bytes_committed{pool=~\"CodeHeap.*\", job=~\"$job\"})",
@@ -2485,7 +2537,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P2AF30C786CBB33F1"
+            "uid": "${DS}"
           },
           "fieldConfig": {
             "defaults": {
@@ -2529,8 +2581,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   },
                   {
                     "color": "red",
@@ -2565,7 +2616,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P2AF30C786CBB33F1"
+                "uid": "${DS}"
               },
               "editorMode": "code",
               "expr": "jvm_memory_pool_bytes_committed{pool=\"Compressed Class Space\", job=~\"$job\"}",
@@ -2577,7 +2628,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P2AF30C786CBB33F1"
+                "uid": "${DS}"
               },
               "editorMode": "code",
               "expr": "jvm_memory_pool_bytes_used{pool=\"Compressed Class Space\", job=~\"$job\"}",
@@ -2590,7 +2641,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P2AF30C786CBB33F1"
+                "uid": "${DS}"
               },
               "editorMode": "code",
               "expr": "jvm_memory_pool_bytes_max{pool=\"Compressed Class Space\", job=~\"$job\"}",
@@ -2607,7 +2658,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P2AF30C786CBB33F1"
+            "uid": "${DS}"
           },
           "fieldConfig": {
             "defaults": {
@@ -2651,8 +2702,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   },
                   {
                     "color": "red",
@@ -2687,7 +2737,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P2AF30C786CBB33F1"
+                "uid": "${DS}"
               },
               "editorMode": "code",
               "expr": "jvm_memory_pool_bytes_committed{pool=\"G1 Survivor Space\"}",
@@ -2699,7 +2749,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P2AF30C786CBB33F1"
+                "uid": "${DS}"
               },
               "editorMode": "code",
               "expr": "jvm_memory_pool_bytes_used{pool=\"G1 Survivor Space\", job=~\"$job\"}",
@@ -2712,7 +2762,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P2AF30C786CBB33F1"
+                "uid": "${DS}"
               },
               "editorMode": "code",
               "expr": "jvm_memory_pool_bytes_max{pool=\"G1 Survivor Space\", job=~\"$job\"}",
@@ -2729,7 +2779,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P2AF30C786CBB33F1"
+            "uid": "${DS}"
           },
           "fieldConfig": {
             "defaults": {
@@ -2773,8 +2823,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   },
                   {
                     "color": "red",
@@ -2809,7 +2858,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P2AF30C786CBB33F1"
+                "uid": "${DS}"
               },
               "editorMode": "code",
               "expr": "jvm_memory_pool_bytes_committed{pool=\"G1 Old Gen\", job=~\"$job\"}",
@@ -2821,7 +2870,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P2AF30C786CBB33F1"
+                "uid": "${DS}"
               },
               "editorMode": "code",
               "expr": "jvm_memory_pool_bytes_used{pool=\"G1 Old Gen\", job=~\"$job\"}",
@@ -2834,7 +2883,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P2AF30C786CBB33F1"
+                "uid": "${DS}"
               },
               "editorMode": "code",
               "expr": "jvm_memory_pool_bytes_max{pool=\"G1 Old Gen\", job=~\"$job\"}",
@@ -2851,7 +2900,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P2AF30C786CBB33F1"
+            "uid": "${DS}"
           },
           "fieldConfig": {
             "defaults": {
@@ -2896,8 +2945,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   }
                 ]
               },
@@ -2914,7 +2962,10 @@
           "id": 41,
           "options": {
             "legend": {
-              "calcs": ["max", "lastNotNull"],
+              "calcs": [
+                "max",
+                "lastNotNull"
+              ],
               "displayMode": "table",
               "placement": "bottom",
               "showLegend": true
@@ -2928,7 +2979,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P2AF30C786CBB33F1"
+                "uid": "${DS}"
               },
               "editorMode": "code",
               "expr": "jvm_threads_current{job=~\"$job\"}",
@@ -2941,7 +2992,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P2AF30C786CBB33F1"
+                "uid": "${DS}"
               },
               "editorMode": "code",
               "expr": "jvm_threads_daemon{job=~\"$job\"}",
@@ -2958,7 +3009,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P2AF30C786CBB33F1"
+            "uid": "${DS}"
           },
           "fieldConfig": {
             "defaults": {
@@ -3003,8 +3054,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   }
                 ]
               },
@@ -3021,7 +3071,10 @@
           "id": 42,
           "options": {
             "legend": {
-              "calcs": ["max", "lastNotNull"],
+              "calcs": [
+                "max",
+                "lastNotNull"
+              ],
               "displayMode": "table",
               "placement": "bottom",
               "showLegend": true
@@ -3036,7 +3089,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P2AF30C786CBB33F1"
+                "uid": "${DS}"
               },
               "editorMode": "code",
               "expr": "jvm_gc_collection_seconds_sum{job=~\"$job\"}",
@@ -3053,7 +3106,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P2AF30C786CBB33F1"
+            "uid": "${DS}"
           },
           "fieldConfig": {
             "defaults": {
@@ -3097,8 +3150,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   },
                   {
                     "color": "red",
@@ -3132,7 +3184,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P2AF30C786CBB33F1"
+                "uid": "${DS}"
               },
               "editorMode": "code",
               "expr": "jvm_classes_currently_loaded{job=~\"$job\"}",
@@ -3148,7 +3200,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P2AF30C786CBB33F1"
+            "uid": "${DS}"
           },
           "fieldConfig": {
             "defaults": {
@@ -3192,8 +3244,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   }
                 ]
               },
@@ -3210,7 +3261,10 @@
           "id": 43,
           "options": {
             "legend": {
-              "calcs": ["max", "lastNotNull"],
+              "calcs": [
+                "max",
+                "lastNotNull"
+              ],
               "displayMode": "table",
               "placement": "bottom",
               "showLegend": true
@@ -3225,7 +3279,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P2AF30C786CBB33F1"
+                "uid": "${DS}"
               },
               "editorMode": "code",
               "expr": "jvm_gc_collection_seconds_count{job=~\"$job\"}",
@@ -3244,26 +3298,28 @@
       "type": "row"
     }
   ],
+  "preload": false,
   "refresh": "10s",
-  "schemaVersion": 39,
+  "schemaVersion": 41,
   "tags": [],
   "templating": {
     "list": [
       {
         "current": {
-          "selected": true,
-          "text": ["10.244.2.92:25585"],
-          "value": ["10.244.2.92:25585"]
+          "text": [
+            "10.244.2.92:25585"
+          ],
+          "value": [
+            "10.244.2.92:25585"
+          ]
         },
         "datasource": {
           "type": "prometheus",
-          "uid": "P2AF30C786CBB33F1"
+          "uid": "${DS}"
         },
         "definition": "query_result(minecraft_entities{job=~\"$job\"})",
         "description": "",
-        "hide": 0,
         "includeAll": true,
-        "label": "",
         "multi": true,
         "name": "instance",
         "options": [],
@@ -3274,24 +3330,19 @@
         },
         "refresh": 1,
         "regex": "/.*instance=\"([^\"]+).*/",
-        "skipUrlSync": false,
-        "sort": 0,
         "type": "query"
       },
       {
         "current": {
-          "selected": false,
           "text": "minecraft-vanilla-minecraft",
           "value": "minecraft-vanilla-minecraft"
         },
         "datasource": {
           "type": "prometheus",
-          "uid": "P2AF30C786CBB33F1"
+          "uid": "${DS}"
         },
         "definition": "query_result(minecraft_entities)",
-        "hide": 0,
         "includeAll": false,
-        "multi": false,
         "name": "job",
         "options": [],
         "query": {
@@ -3300,9 +3351,20 @@
         },
         "refresh": 1,
         "regex": "/.*job=\"([^\"]+)/",
-        "skipUrlSync": false,
-        "sort": 0,
         "type": "query"
+      },
+      {
+        "current": {
+          "text": "Prometheus",
+          "value": "PBFA97CFB590B2093"
+        },
+        "label": "Datasource",
+        "name": "DS",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "type": "datasource"
       }
     ]
   },
@@ -3314,6 +3376,5 @@
   "timezone": "",
   "title": "Minecraft (Fabric)",
   "uid": "6UU5TBqGzasdf2",
-  "version": 2,
-  "weekStart": ""
+  "version": 1
 }
