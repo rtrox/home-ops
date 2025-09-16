@@ -230,7 +230,7 @@ spec:
         apiVersion: 1
         datasources:
           - access: proxy
-            name: Prometheus (Thanos)
+            name: Prometheus
             type: prometheus
             url: http://thanos-query.observability.svc.cluster.local:10902
             isDefault: true
