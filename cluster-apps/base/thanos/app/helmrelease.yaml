@@ -18,10 +18,10 @@ spec:
     objstoreConfig:
       # Creates by kps
       create: false
-      name: thanos-objectstore-secret
-      key: objstore.yml
+      name: kube-prometheus-stack-prometheus
+      key: object-storage-configs.yaml
     additionalEndpoints:
-      - dnssrv+_grpc._tcp.kube-prometheus-stack-thanos-discovery.monitor.svc.cluster.local
+      - dnssrv+_grpc._tcp.kube-prometheus-stack-thanos-discovery.observability.svc.cluster.local
     additionalReplicaLabels: ["__replica__"]
     serviceMonitor:
       enabled: true
@@ -31,20 +31,13 @@ spec:
         - --compact.concurrency=4
         - --delete-delay=30m
         - --retention.resolution-raw=30d
+        - --retention.resolution-5m=60d
+        - --retention.resolution-1h=3650d
         - --downsampling.disable
       persistence:
         enabled: true
-        storageClass: "truenas-ssd-iscsi"
+        storageClass: "ceph-block"
         size: 30Gi
-    query:
-      extraArgs: --alert.query-url=http://thanos.${PUBLIC_DOMAIN}
-    queryFrontend:
-      enabled: true
-      ingress:
-        enabled: true
-        ingressClassName: private
-        hosts:
-          - &queryFrontendhost thanos.${PUBLIC_DOMAIN}
     rule:
       enabled: true
       extraArgs: ["--web.prefix-header=X-Forwarded-Prefix"]
@@ -53,7 +46,7 @@ spec:
           alertmanagers:
             - api_version: v2
               static_configs:
-                - dnssrv+_http-web._tcp.kube-prometheus-stack-alertmanager.monitor.svc.cluster.local
+                - dnssrv+_http-web._tcp.kube-prometheus-stack-alertmanager.observability.svc.cluster.local
       rules:
         value: |-
           groups:
