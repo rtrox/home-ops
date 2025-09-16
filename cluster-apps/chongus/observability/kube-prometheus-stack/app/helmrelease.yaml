@@ -173,13 +173,19 @@ spec:
               resources:
                 requests:
                   storage: 55Gi
+        walCompression: true
         thanos:
           objectStorageConfig:
             secret:
               type: s3
               config:
                 insecure: true
-        walCompression: true
+
+      thanosService:
+        enabled: true
+      thanosServiceMonitor:
+        enabled: true
+
       route:
         main:
           enabled: true
