@@ -1,5 +1,0 @@
----
-providerRegex: |
-  ^(node[0-9]+)$
-
-bypassDnsResolution: true
