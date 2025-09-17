@@ -4,10 +4,6 @@ logging {
     write_to = [loki.write.default.receiver]
 }
 
-server.http "debug" {
-    listen_address = "0.0.0.0:12345"
-}
-
 // discovery.kubernetes allows you to find scrape targets from Kubernetes resources.
 // It watches cluster state and ensures targets are continually synced with what is currently running in your cluster
 discovery.kubernetes "pod" {
