@@ -11,5 +11,6 @@ configMapGenerator:
     files:
       - server.toml=./config/server.toml
 generatorOptions:
+  disableNameSuffixHash: true
   annotations:
     kustomize.toolkit.fluxcd.io/substitute: disabled
