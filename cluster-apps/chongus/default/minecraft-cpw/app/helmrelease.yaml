@@ -1,12 +1,12 @@
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: &app minecraft-sf5
+  name: &app minecraft-cpw
 spec:
   interval: 30m
   chartRef:
     kind: OCIRepository
-    name: itzg-minecraft-sf5
+    name: itzg-minecraft-cpw
   maxHistory: 2
   timeout: 15m
   install:
@@ -23,7 +23,7 @@ spec:
     keepHistory: false
   values:
     deploymentAnnotations:
-      secret.reloader.stakater.com/reload: &secret minecraft-sf5
+      secret.reloader.stakater.com/reload: &secret minecraft-cpw
     image:
       repository: ghcr.io/itzg/minecraft-server
       tag: java17
@@ -44,13 +44,17 @@ spec:
       periodSeconds: 30
     extraEnv:
       TZ: "America/Los_Angeles"
-      DEBUG: "true"
     persistence:
       dataDir:
         enabled: true
         existingClaim: *app
     serviceAnnotations:
-      external-dns.alpha.kubernetes.io/hostname: "sf5.rtrox.io"
+      mc-router.itzg.me/externalServerName: "cpw.rtrox.io"
+      # mcbackup:
+      #   enabled: true
+      #   backupInterval: 24hr
+      #   pauseIfNoPlayers: "true"
+      #   pruneBackupDays: 3
     minecraftServer:
       eula: true
       version: "1.20.1"
@@ -58,17 +62,19 @@ spec:
       forceReDownload: true
       jvmOpts: "-Djava.net.preferIPv4Stack=true"
       jvmXXOpts: "-XX:MaxRAMPercentage=75"
-      memory: 12880M
+      memory: 4096M
       difficulty: hard
       spawnProtection: 0
       gameMode: survival
+      levelSeed: "787419271612053211"
       pvp: default
       onlineMode: true
       ops: "swyyytch"
-      motd: "\u00A79 [Modded] \u00A7f SkyFactory 5 \u00A7o\u00A79Powered by K8s"
+      icon: "https://media.forgecdn.net/avatars/thumbnails/885/73/256/256/638320128884278582.png"
+      motd: "\u00A79[Create] \u00A7f Perfect World \u00A7o\u00A79Powered by K8s"
       worldSaveName: CreatePerfectWorld
       modUrls:
-        - https://mediafilez.forgecdn.net/files/5695/9/SimpleBackups-1.20.1-3.1.8.jar
+        - https://mediafilez.forgecdn.net/files/5369/377/SimpleBackups-1.20.1-3.1.6.jar
         - https://mediafilez.forgecdn.net/files/5869/930/Prometheus-Exporter-1.20.1-forge-1.2.1.jar
       rcon:
         enabled: true
@@ -78,7 +84,7 @@ spec:
           existingSecret: *secret
           secretKey: cf-api-key
         # Unique id of modpack, can be used instead of url
-        slug: skyfactory-5
+        slug: create-perfect-world
       serviceType: LoadBalancer
       extraServiceSpec:
         publishNotReadyAddresses: true
@@ -93,14 +99,6 @@ spec:
             port: 19565
           ingress:
             enabled: false
-    dnsPolicy: None
-    dnsConfig:
-      options:
-        - name: ndots
-          value: "1"
-      nameservers:
-        - 1.1.1.1
-        - 1.0.0.1
   valuesFrom:
     - kind: Secret
       name: *secret
