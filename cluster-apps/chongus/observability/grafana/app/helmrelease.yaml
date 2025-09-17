@@ -225,6 +225,14 @@ spec:
             - name: "DS_PROMETHEUS"
               value: Prometheus
 
+      minecraft:
+        fabric-exporter:
+          # renovate: dashboardName="Fabric Exporter"
+          gnetId: 14492
+          revision: 4
+          datasource: Prometheus
+
+
     datasources:
       datasources.yaml:
         apiVersion: 1
