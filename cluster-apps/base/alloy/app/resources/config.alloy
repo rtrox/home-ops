@@ -1,7 +1,11 @@
 logging {
-    level    = "warn"
+    level    = "info"
     format   = "json"
     write_to = [loki.write.default.receiver]
+}
+
+server.http "debug" {
+    listen_address = "0.0.0.0:12345"
 }
 
 // discovery.kubernetes allows you to find scrape targets from Kubernetes resources.
