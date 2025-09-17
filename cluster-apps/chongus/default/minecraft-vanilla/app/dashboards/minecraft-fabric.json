@@ -1180,6 +1180,7 @@
                 "axisLabel": "",
                 "axisPlacement": "auto",
                 "barAlignment": 0,
+                "barWidthFactor": 0.6,
                 "drawStyle": "line",
                 "fillOpacity": 10,
                 "gradientMode": "none",
@@ -1210,7 +1211,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": 0
                   },
                   {
                     "color": "red",
@@ -1226,7 +1228,7 @@
             "h": 14,
             "w": 6,
             "x": 0,
-            "y": 41
+            "y": 17
           },
           "id": 8,
           "options": {
@@ -1237,11 +1239,12 @@
               "showLegend": true
             },
             "tooltip": {
+              "hideZeros": false,
               "mode": "multi",
               "sort": "none"
             }
           },
-          "pluginVersion": "10.4.1",
+          "pluginVersion": "12.1.1",
           "targets": [
             {
               "datasource": {
@@ -1275,6 +1278,7 @@
                 "axisLabel": "",
                 "axisPlacement": "auto",
                 "barAlignment": 0,
+                "barWidthFactor": 0.6,
                 "drawStyle": "line",
                 "fillOpacity": 10,
                 "gradientMode": "none",
@@ -1305,7 +1309,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": 0
                   },
                   {
                     "color": "red",
@@ -1321,7 +1326,7 @@
             "h": 14,
             "w": 6,
             "x": 6,
-            "y": 41
+            "y": 17
           },
           "id": 9,
           "options": {
@@ -1332,11 +1337,12 @@
               "showLegend": true
             },
             "tooltip": {
+              "hideZeros": false,
               "mode": "multi",
               "sort": "none"
             }
           },
-          "pluginVersion": "10.4.1",
+          "pluginVersion": "12.1.1",
           "targets": [
             {
               "datasource": {
@@ -1370,6 +1376,7 @@
                 "axisLabel": "",
                 "axisPlacement": "auto",
                 "barAlignment": 0,
+                "barWidthFactor": 0.6,
                 "drawStyle": "line",
                 "fillOpacity": 10,
                 "gradientMode": "none",
@@ -1400,7 +1407,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": 0
                   },
                   {
                     "color": "red",
@@ -1416,7 +1424,7 @@
             "h": 14,
             "w": 6,
             "x": 12,
-            "y": 41
+            "y": 17
           },
           "id": 10,
           "options": {
@@ -1427,11 +1435,12 @@
               "showLegend": true
             },
             "tooltip": {
+              "hideZeros": false,
               "mode": "multi",
               "sort": "none"
             }
           },
-          "pluginVersion": "10.4.1",
+          "pluginVersion": "12.1.1",
           "targets": [
             {
               "datasource": {
@@ -1467,6 +1476,7 @@
                 "axisLabel": "",
                 "axisPlacement": "auto",
                 "barAlignment": 0,
+                "barWidthFactor": 0.6,
                 "drawStyle": "line",
                 "fillOpacity": 10,
                 "gradientMode": "none",
@@ -1497,7 +1507,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": 0
                   },
                   {
                     "color": "red",
@@ -1513,7 +1524,7 @@
             "h": 7,
             "w": 6,
             "x": 18,
-            "y": 41
+            "y": 17
           },
           "id": 29,
           "options": {
@@ -1524,11 +1535,12 @@
               "showLegend": true
             },
             "tooltip": {
+              "hideZeros": false,
               "mode": "multi",
               "sort": "none"
             }
           },
-          "pluginVersion": "10.4.1",
+          "pluginVersion": "12.1.1",
           "targets": [
             {
               "datasource": {
@@ -1564,6 +1576,7 @@
                 "axisLabel": "",
                 "axisPlacement": "auto",
                 "barAlignment": 0,
+                "barWidthFactor": 0.6,
                 "drawStyle": "line",
                 "fillOpacity": 10,
                 "gradientMode": "none",
@@ -1594,7 +1607,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": 0
                   },
                   {
                     "color": "red",
@@ -1610,7 +1624,7 @@
             "h": 7,
             "w": 6,
             "x": 18,
-            "y": 48
+            "y": 42
           },
           "id": 4,
           "options": {
@@ -1621,11 +1635,12 @@
               "showLegend": true
             },
             "tooltip": {
+              "hideZeros": false,
               "mode": "multi",
               "sort": "none"
             }
           },
-          "pluginVersion": "10.4.1",
+          "pluginVersion": "12.1.1",
           "targets": [
             {
               "datasource": {
@@ -1647,7 +1662,7 @@
       "type": "row"
     },
     {
-      "collapsed": true,
+      "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -1655,265 +1670,280 @@
         "y": 17
       },
       "id": 33,
-      "panels": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS}"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "thresholds"
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 18,
-            "w": 12,
-            "x": 0,
-            "y": 42
-          },
-          "id": 17,
-          "options": {
-            "displayMode": "basic",
-            "maxVizHeight": 300,
-            "minVizHeight": 16,
-            "minVizWidth": 8,
-            "namePlacement": "auto",
-            "orientation": "horizontal",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "showUnfilled": true,
-            "sizing": "auto",
-            "text": {},
-            "valueMode": "color"
-          },
-          "pluginVersion": "10.4.1",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS}"
-              },
-              "exemplar": true,
-              "expr": "sum(minecraft_entities{instance=~\"$instance\",job=~\"$job\"}) by (type)",
-              "interval": "",
-              "legendFormat": "{{type}}",
-              "refId": "A"
-            }
-          ],
-          "title": "Top entities by type",
-          "type": "bargauge"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS}"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisBorderShow": false,
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 10,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "insertNulls": false,
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "normal"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
-                  }
-                ]
-              },
-              "unit": "short"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 9,
-            "w": 12,
-            "x": 12,
-            "y": 42
-          },
-          "id": 7,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "none"
-            }
-          },
-          "pluginVersion": "10.4.1",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS}"
-              },
-              "exemplar": true,
-              "expr": "sum(minecraft_entities{instance=~\"$instance\",job=~\"$job\"}) by (group)",
-              "interval": "",
-              "legendFormat": "{{group}}",
-              "refId": "A"
-            }
-          ],
-          "title": "Entities by spawn group",
-          "type": "timeseries"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS}"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisBorderShow": false,
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 10,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "insertNulls": false,
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "normal"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
-                  }
-                ]
-              },
-              "unit": "short"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 9,
-            "w": 12,
-            "x": 12,
-            "y": 51
-          },
-          "id": 6,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "none"
-            }
-          },
-          "pluginVersion": "10.4.1",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS}"
-              },
-              "exemplar": true,
-              "expr": "sum(minecraft_entities{instance=~\"$instance\",job=~\"$job\"}) by (world)",
-              "interval": "",
-              "legendFormat": "Entities in {{world}}",
-              "refId": "A"
-            }
-          ],
-          "title": "Entities by world",
-          "type": "timeseries"
-        }
-      ],
+      "panels": [],
       "title": "Minecraft Entity Stats",
       "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 18,
+        "w": 12,
+        "x": 0,
+        "y": 18
+      },
+      "id": 17,
+      "options": {
+        "displayMode": "basic",
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "maxVizHeight": 300,
+        "minVizHeight": 16,
+        "minVizWidth": 8,
+        "namePlacement": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true,
+        "sizing": "auto",
+        "text": {},
+        "valueMode": "color"
+      },
+      "pluginVersion": "12.1.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS}"
+          },
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "sort_desc(sum(minecraft_entities{instance=~\"$instance\",job=~\"$job\"}) by (type))",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "{{type}}",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Top entities by type",
+      "type": "bargauge"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 18
+      },
+      "id": 7,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.1.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS}"
+          },
+          "exemplar": true,
+          "expr": "sum(minecraft_entities{instance=~\"$instance\",job=~\"$job\"}) by (group)",
+          "interval": "",
+          "legendFormat": "{{group}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Entities by spawn group",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 27
+      },
+      "id": 6,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.1.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS}"
+          },
+          "exemplar": true,
+          "expr": "sum(minecraft_entities{instance=~\"$instance\",job=~\"$job\"}) by (world)",
+          "interval": "",
+          "legendFormat": "Entities in {{world}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Entities by world",
+      "type": "timeseries"
     },
     {
       "collapsed": true,
@@ -1921,7 +1951,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 18
+        "y": 36
       },
       "id": 34,
       "panels": [
@@ -1985,7 +2015,7 @@
             "h": 10,
             "w": 6,
             "x": 0,
-            "y": 19
+            "y": 51
           },
           "id": 30,
           "options": {
@@ -2108,7 +2138,7 @@
             "h": 10,
             "w": 6,
             "x": 6,
-            "y": 19
+            "y": 51
           },
           "id": 31,
           "options": {
@@ -2234,7 +2264,7 @@
             "h": 5,
             "w": 4,
             "x": 12,
-            "y": 19
+            "y": 51
           },
           "id": 35,
           "options": {
@@ -2355,7 +2385,7 @@
             "h": 5,
             "w": 4,
             "x": 16,
-            "y": 19
+            "y": 51
           },
           "id": 36,
           "options": {
@@ -2476,7 +2506,7 @@
             "h": 5,
             "w": 4,
             "x": 20,
-            "y": 19
+            "y": 51
           },
           "id": 38,
           "options": {
@@ -2597,7 +2627,7 @@
             "h": 5,
             "w": 4,
             "x": 12,
-            "y": 24
+            "y": 56
           },
           "id": 40,
           "options": {
@@ -2718,7 +2748,7 @@
             "h": 5,
             "w": 4,
             "x": 16,
-            "y": 24
+            "y": 56
           },
           "id": 37,
           "options": {
@@ -2839,7 +2869,7 @@
             "h": 5,
             "w": 4,
             "x": 20,
-            "y": 24
+            "y": 56
           },
           "id": 39,
           "options": {
@@ -2957,7 +2987,7 @@
             "h": 14,
             "w": 4,
             "x": 0,
-            "y": 29
+            "y": 61
           },
           "id": 41,
           "options": {
@@ -3066,7 +3096,7 @@
             "h": 7,
             "w": 10,
             "x": 4,
-            "y": 29
+            "y": 61
           },
           "id": 42,
           "options": {
@@ -3165,7 +3195,7 @@
             "h": 7,
             "w": 10,
             "x": 14,
-            "y": 29
+            "y": 61
           },
           "id": 44,
           "options": {
@@ -3256,7 +3286,7 @@
             "h": 7,
             "w": 10,
             "x": 4,
-            "y": 36
+            "y": 68
           },
           "id": 43,
           "options": {
@@ -3376,5 +3406,5 @@
   "timezone": "",
   "title": "Minecraft (Fabric)",
   "uid": "6UU5TBqGzasdf2",
-  "version": 1
+  "version": 2
 }
