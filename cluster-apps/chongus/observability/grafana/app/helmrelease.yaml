@@ -238,7 +238,9 @@ spec:
           # renovate: dashboardName="Fabric Exporter"
           gnetId: 14492
           revision: 4
-          datasource: Prometheus
+          datasource:
+            - name: "DS_PROMETHEUS"
+              value: Prometheus
 
 
     datasources:
