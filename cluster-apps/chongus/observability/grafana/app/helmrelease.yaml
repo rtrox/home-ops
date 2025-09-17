@@ -71,6 +71,14 @@ spec:
               path: /var/lib/grafana/dashboards/unpoller
             orgId: 1
             type: file
+          - name: minecraft
+            disableDeletion: false
+            editable: true
+            folder: "Minecraft"
+            options:
+              path: /var/lib/grafana/dashboards/minecraft
+            orgId: 1
+            type: file
 
     dashboards:
       default:
