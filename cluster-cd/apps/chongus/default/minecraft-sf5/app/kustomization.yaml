@@ -6,4 +6,5 @@ resources:
   - ./helmrelease.yaml
   - ./externalsecret.yaml
   - ./cronjob.yaml
+  - ./servicemonitor.yaml
   - ../../../../base/_templates/volsync-minio-default
