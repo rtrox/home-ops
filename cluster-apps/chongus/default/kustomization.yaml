@@ -6,5 +6,6 @@ kind: Kustomization
 resources:
   - ./atuin/ks.yaml
   - ./echo-server/ks.yaml
-  - ./minecraft-vanilla/ks.yaml
+  - ./minecraft-cpw/ks.yaml
   - ./minecraft-sf5/ks.yaml
+  - ./minecraft-vanilla/ks.yaml
