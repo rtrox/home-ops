@@ -68,6 +68,17 @@ spec:
         ports:
           http:
             port: *port
+          metrics:
+            port: 9001
+    serviceMonitor:
+      app:
+        enabled: true
+        endpoints:
+          - port: metrics
+            scheme: http
+            path: /metrics
+            interval: 1m
+            scrapeTimeout: 10s
     route:
       app:
         hostnames:
@@ -79,3 +90,10 @@ spec:
     persistence:
       config:
         existingClaim: "{{ .Release.Name }}"
+      config-file:
+        type: configMap
+        name: atuin-config
+        globalMounts:
+          - path: /config/server.toml
+            subPath: server.toml
+            readOnly: true
