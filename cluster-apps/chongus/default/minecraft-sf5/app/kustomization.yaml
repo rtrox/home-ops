@@ -8,3 +8,14 @@ resources:
   - ./cronjob.yaml
   - ./servicemonitor.yaml
   - ./ocirepository.yaml
+
+configMapGenerator:
+  - name: minecraft-forge-dashboards
+    files:
+      - minecraft-forge.json=./dashboards/minecraft-forge.json
+generatorOptions:
+  disableNameSuffixHash: true
+  labels:
+    grafana_dashboard: "1"
+  annotations:
+    kustomize.toolkit.fluxcd.io/substitute: disabled
