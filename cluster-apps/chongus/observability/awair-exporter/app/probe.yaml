@@ -6,7 +6,7 @@ metadata:
   name: awair-sensors
 spec:
   prober:
-    url: prometheus-awair-exporter.observability.svc.cluster.local:8080
+    url: awair-exporter.observability.svc.cluster.local:8080
     path: /probe
   targets:
     staticConfig:
@@ -22,4 +22,4 @@ spec:
         - sourceLabels: [__param_target]
           targetLabel: target
         - targetLabel: __address__
-          replacement: prometheus-awair-exporter.observability.svc:8080
+          replacement: awair-exporter.observability.svc:8080
