@@ -37,7 +37,7 @@ spec:
         controller: graphite-exporter
         type: LoadBalancer
         annotations:
-          external-dns.alpha.kubernetes.io/hostname: graphite-exporter.${CLUSTER_DOMAIN}
+          external-dns.alpha.kubernetes.io/hostname: graphite-exporter.rtrox.io
         ports:
           graphite-tcp:
             protocol: TCP
