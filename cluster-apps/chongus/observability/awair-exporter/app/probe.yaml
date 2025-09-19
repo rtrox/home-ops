@@ -20,6 +20,6 @@ spec:
         - sourceLabels: [__address__]
           targetLabel: __param_target
         - sourceLabels: [__param_target]
-          targetLabel: target
+          targetLabel: instance
         - targetLabel: __address__
-          replacement: awair-exporter.observability.svc:8080
+          replacement: awair-exporter.observability.svc.cluster.local:8080
