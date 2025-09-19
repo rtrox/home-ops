@@ -8,6 +8,6 @@ resources:
 configMapGenerator:
   - name: graphite-mapping-config
     files:
-      - graphite-mapping.yaml=./config/graphite-mapping.conf
+      - graphite-mapping.conf=./config/graphite-mapping.conf
 generatorOptions:
   disableNameSuffixHash: true
