@@ -6,6 +6,7 @@ namespace: observability
 resources:
   - ./awair-exporter/ks.yaml
   - ./alloy/ks.yaml
+  - ./blackbox-exporter/ks.yaml
   - ./grafana/ks.yaml
   - ./kube-prometheus-stack/ks.yaml
   - ./kube-state-metrics/ks.yaml
