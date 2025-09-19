@@ -7,8 +7,8 @@ resources:
   - ./namespace.yaml
   # Flux-Kustomizations
   # - ./monitoring-shared/ks.yaml
-  - ./kube-prometheus-stack/ks.yaml
-  - ./thanos/ks.yaml
-  - ./grafana/ks.yaml
+  # - ./kube-prometheus-stack/ks.yaml
+  # - ./thanos/ks.yaml
+  # - ./grafana/ks.yaml
   - ./ping-exporter/ks.yaml
-  - ./awair-exporter/ks.yaml
+  # - ./awair-exporter/ks.yaml

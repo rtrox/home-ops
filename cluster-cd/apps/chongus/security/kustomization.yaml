@@ -6,6 +6,6 @@ resources:
   # Pre Flux-Kustomizations
   - ./namespace.yaml
   # Flux-Kustomizations
-  - ./external-secrets/ks.yaml
+  # - ./external-secrets/ks.yaml
   - ./keycloak/ks.yaml
   - ./kyverno/ks.yaml
