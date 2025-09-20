@@ -31,7 +31,7 @@ spec:
       }
   backendConfigsFrom:
     - kind: Secret
-      name: tofu-controller-s3-backend
+      name: terraform-controller-s3-backend
   varsFrom:
     - kind: Secret
       name: tofu-controller-doppler
