@@ -10,3 +10,4 @@ resources:
   - ./externalsecret.yaml
   - ./gitrepository.yaml
   - ./receiver.yaml
+  - ./s3stateexternalsecret.yaml
