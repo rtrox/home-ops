@@ -76,6 +76,7 @@ spec:
         - https://cdn.modrinth.com/data/wwcspvkr/versions/C73KkDD6/textile_backup-3.1.3-1.21.jar  ## Server Backup Utility
         - https://cdn.modrinth.com/data/yn9u3ypm/versions/gdZmLCZD/graves-3.8.1%2B1.21.6.jar ## Gravestone Mod
         - https://cdn.modrinth.com/data/P7dR8mSH/versions/CF23l2iP/fabric-api-0.133.4%2B1.21.8.jar ## Fabric API
+        - https://cdn.modrinth.com/data/qpPoAL6m/versions/xpf5V7wi/trade-cycling-fabric-1.21.8-1.0.19.jar ## Allows cycling villager trades
         - https://cdn.modrinth.com/data/xGdtZczs/versions/Low85MxT/polymer-bundled-0.13.13%2B1.21.8.jar ## Dependency for Graves
         - https://cdn.modrinth.com/data/9s6osm5g/versions/cz0b1j8R/cloth-config-19.0.147-fabric.jar ## Dependency for Textile Backup
         - https://cdn.modrinth.com/data/gvQqBUqZ/versions/pDfTqezk/lithium-fabric-0.18.0%2Bmc1.21.8.jar ## General Optimization of Game Logic
