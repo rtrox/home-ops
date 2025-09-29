@@ -109,7 +109,7 @@ spec:
 
     persistence:
       pds:
-        existingClaim: bluesky
+        existingClaim: bluesky-pds
         globalMounts:
           - path: /pds
       temp:
