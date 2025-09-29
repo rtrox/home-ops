@@ -3,12 +3,12 @@
   packageRules: [
     {
       description: "Separate PRs for main cluster",
-      matchFileNames: ["**/cluster-cd/aps/bitty/**"],
+      matchFileNames: ["**/cluster-cd/aps/bitty/**", "**/cluster-apps/bitty/**", "**/clusters/bitty/**"],
       additionalBranchPrefix: "bitty-",
     },
     {
       description: "Separate PRs for main cluster",
-      matchFileNames: ["**/cluster-cd/aps/chongus/**"],
+      matchFileNames: ["**/cluster-cd/aps/chongus/**", "**/cluster-apps/chongus/**", "**/clusters/chongus/**"],
       additionalBranchPrefix: "chongus-",
     },
   ],
