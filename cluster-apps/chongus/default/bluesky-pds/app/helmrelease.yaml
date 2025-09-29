@@ -32,7 +32,7 @@ spec:
           main:
             image:
               repository: ghcr.io/bluesky-social/pds
-              tag: 0.4.136@sha256:77f9a78d9c070b597fa0c815087314c722ec79e541f5e235b975bc050a3937fd
+              tag: 0.4.182@sha256:e0255ded350126b3c0e7e91577129fa41aba70cc7e22d1adb615974c21d9ec4e
             envFrom:
               - configMapRef:
                   name: bluesky-config
@@ -65,7 +65,7 @@ spec:
           pdsadmin:
             image:
               repository: ghcr.io/rtrox/pdsadmin
-              tag: v0.4.136@sha256:4f8488c585de34f1dde4360f953afd339b697eb3bb039e8b2afdeb2908ad357a
+              tag: v0.4.182@sha256:6bbbf1d6514465f265af6ce48d7d2b1b0f5c27c5591a2ec0c9f68cdbabe48762
             envFrom:
               - configMapRef:
                   name: bluesky-config
