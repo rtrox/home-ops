@@ -7,9 +7,18 @@ area/kubernetes:
   - changed-files:
       - any-glob-to-any-file: "cluster-apps/**/*"
 # Cluster
+cluster/base:
+  - changed-files:
+      - any-glob-to-any-file: "cluster-apps/base/**/*"
+      - any-glob-to-any-file: "cluster-cd/base/*"
+      - any-glob-to-any-file: "clusters/base/*"
 cluster/bitty:
   - changed-files:
-      - any-glob-to-any-file: cluster-apps/bitty/**/*
+      - any-glob-to-any-file: "cluster-apps/bitty/**/*"
+      - any-glob-to-any-file: "cluster-cd/bitty/*"
+      - any-glob-to-any-file: "clusters/bitty/*"
 cluster/chongus:
   - changed-files:
-      - any-glob-to-any-file: cluster-apps/chongus/**/*
+      - any-glob-to-any-file: "cluster-apps/chongus/**/*"
+      - any-glob-to-any-file: "cluster-cd/chongus/*"
+      - any-glob-to-any-file: "clusters/chongus/*"

@@ -12,12 +12,12 @@
 
   ignorePaths: [".archive/**"],
   flux: {
-    fileMatch: ["^cluster-cd/.+\\.ya?ml$"],
+    fileMatch: ["^cluster-cd/.+\\.ya?ml$", "^cluster-apps/.+\\.ya?ml$"],
   },
   "helm-values": {
-    fileMatch: ["^cluster-cd/.+\\.ya?ml$"],
+    fileMatch: ["^cluster-cd/.+\\.ya?ml$", "^cluster-apps/.+\\.ya?ml$"],
   },
   kubernetes: {
-    fileMatch: ["^cluster-cd/.+\\.ya?ml$"],
+    fileMatch: ["^cluster-cd/.+\\.ya?ml$", "^cluster-apps/.+\\.ya?ml$"],
   },
 }
