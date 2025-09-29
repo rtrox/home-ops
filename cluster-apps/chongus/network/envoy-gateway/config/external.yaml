@@ -11,6 +11,7 @@ spec:
   infrastructure:
     annotations:
       lbipam.cilium.io/ips: 172.22.12.2
+
   listeners:
     - name: http
       protocol: HTTP
@@ -35,6 +36,7 @@ metadata:
   name: envoy-external
   annotations:
     external-dns.alpha.kubernetes.io/controller: none
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
 spec:
   parentRefs:
     - name: envoy-external
