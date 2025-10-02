@@ -85,6 +85,7 @@ spec:
         - https://cdn.modrinth.com/data/VSNURh3q/versions/tlZRTK1v/c2me-fabric-mc1.21.8-0.3.4.0.0.jar ## Speeds up worldgen, io, etc by allowing multiple cpu threads
         - https://cdn.modrinth.com/data/dbVXHSlv/versions/VaRUspV6/fabricexporter-1.0.17.jar ## Exports metrics to Prometheus
         - https://cdn.modrinth.com/data/l6YH9Als/versions/3KCl7Vx0/spark-1.10.142-fabric.jar ## Dependency for Fabric Exporter, Profiler
+        - https://cdn.modrinth.com/data/zQhsx8KF/versions/zvqUUU4K/servux-fabric-1.21.8-0.7.3.jar # Server-Side support for MiniHUD
       rcon:
         enabled: true
         serviceType: ClusterIP
