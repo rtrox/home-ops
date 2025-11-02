@@ -65,7 +65,7 @@ spec:
       gameMode: survival
       levelSeed: "1890611819"
       pvp: default
-      onlineMode: false
+      onlineMode: true
       ops: "swyyytch"
       icon: https://f004.backblazeb2.com/file/public-test-rtrox/icon.png
       motd: "\u00A79[Vanilla] \u00A7f Swyytchverse 1.21.8 \u00A7o\u00A79Powered by K8s"
