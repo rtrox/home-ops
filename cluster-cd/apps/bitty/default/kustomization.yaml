@@ -8,4 +8,4 @@ resources:
   # - ./komga/ks.yaml
   # - ./komf/ks.yaml
   # - ./bluesky/ks.yaml
-  - ./paperless-ngx/ks.yaml
+  # - ./paperless-ngx/ks.yaml
