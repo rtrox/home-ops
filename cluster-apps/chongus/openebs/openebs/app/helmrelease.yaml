@@ -51,3 +51,5 @@ spec:
       enabled: false
     minio:
       enabled: false
+    preUpgradeHook:
+      enabled: false
