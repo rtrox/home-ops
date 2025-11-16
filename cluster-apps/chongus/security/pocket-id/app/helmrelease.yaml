@@ -34,6 +34,11 @@ spec:
               TRUST_PROXY: true
               TZ: "America/Los_Angeles"
               UPLOAD_PATH: /app/data/uploads
+              ENCRYPTION_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: pocket-id-secret
+                    key: ENCRYPTION_KEY
 
             probes:
               liveness:
