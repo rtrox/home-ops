@@ -65,6 +65,8 @@ spec:
   commonMetadata:
     labels:
       app.kubernetes.io/name: *app
+  components:
+    - ../../../../components/volsync
   interval: 30m
   timeout: 5m
   path: "./cluster-apps/chongus/default/paperless/ai"
