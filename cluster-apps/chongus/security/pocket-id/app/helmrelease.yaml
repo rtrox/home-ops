@@ -64,7 +64,7 @@ spec:
         hostnames: ["auth.rtrox.io"]
         parentRefs:
           - name: envoy-internal
-            namespace: networking
+            namespace: network
 
     persistence:
       config:
