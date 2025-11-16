@@ -151,7 +151,7 @@ spec:
                   value: /
             backendRefs:
               - name: main
-                port: http
+                port: 8000
                 kind: Service
 
 
