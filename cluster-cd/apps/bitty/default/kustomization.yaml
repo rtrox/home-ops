@@ -4,8 +4,8 @@ kind: Kustomization
 resources:
   - ./echo/ks.yaml
   - ./thelounge/ks.yaml
-  - ./kavita/ks.yaml
-  - ./komga/ks.yaml
-  - ./komf/ks.yaml
-  - ./bluesky/ks.yaml
+  # - ./kavita/ks.yaml
+  # - ./komga/ks.yaml
+  # - ./komf/ks.yaml
+  # - ./bluesky/ks.yaml
   - ./paperless-ngx/ks.yaml
