@@ -10,6 +10,8 @@ spec:
     kind: OCIRepository
     name: openebs
   values:
+    preUpgradeHook:
+      enabled: false
     localpv-provisioner:
       rbac:
         create: true
@@ -50,6 +52,4 @@ spec:
     alloy:
       enabled: false
     minio:
-      enabled: false
-    preUpgradeHook:
       enabled: false
