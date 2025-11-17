@@ -11,3 +11,4 @@ resources:
   - ./minecraft-sf5/ks.yaml
   - ./minecraft-vanilla/ks.yaml
   - ./paperless/ks.yaml
+  - ./thelounge/ks.yaml
