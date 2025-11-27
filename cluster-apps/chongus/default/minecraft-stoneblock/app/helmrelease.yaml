@@ -79,7 +79,7 @@ spec:
         # Unique id of modpack, can be used instead of url
         slug: ftb-stoneblock-4
         excludeMods:
-          - status-effect-bars # client-side only
+          - status-effect-bars-reforged # client-side only
         includeModes:
           - particular-reforged # required for Healing Spring - https://github.com/FTBTeam/FTB-Modpack-Issues/issues/9270
         forceSynchronize: true
