@@ -78,6 +78,8 @@ spec:
           secretKey: cf-api-key
         # Unique id of modpack, can be used instead of url
         slug: ftb-stoneblock-4
+        excludeMods:
+          - statuseffectbars # client-side only
       serviceType: LoadBalancer
       extraServiceSpec:
         publishNotReadyAddresses: true
