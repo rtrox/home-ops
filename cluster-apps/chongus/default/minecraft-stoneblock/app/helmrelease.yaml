@@ -79,7 +79,9 @@ spec:
         # Unique id of modpack, can be used instead of url
         slug: ftb-stoneblock-4
         excludeMods:
-          - statuseffectbars # client-side only
+          - status-effect-bars # client-side only
+        includeModes:
+          - particular-reforged # required for Healing Spring - https://github.com/FTBTeam/FTB-Modpack-Issues/issues/9270
         forceSynchronize: true
       serviceType: LoadBalancer
       extraServiceSpec:
