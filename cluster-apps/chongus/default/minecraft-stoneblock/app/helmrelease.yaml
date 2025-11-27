@@ -26,7 +26,7 @@ spec:
       secret.reloader.stakater.com/reload: &secret minecraft-stoneblock
     image:
       repository: ghcr.io/itzg/minecraft-server
-      tag: java17
+      tag: java21
     resources:
       requests:
         cpu: 1000m
