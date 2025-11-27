@@ -80,6 +80,7 @@ spec:
         slug: ftb-stoneblock-4
         excludeMods:
           - statuseffectbars # client-side only
+        forceSynchronize: true
       serviceType: LoadBalancer
       extraServiceSpec:
         publishNotReadyAddresses: true
