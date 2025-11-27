@@ -88,11 +88,11 @@ spec:
           - packmenu
           - reeses-sodium-options
           - sodium-extra
-          - sopium-options-api
+          - sodium-options-api
           - toast-control
         includeMods:
           - particular-reforged # required for Healing Spring - https://github.com/FTBTeam/FTB-Modpack-Issues/issues/9270
-          - https://www.curseforge.com/minecraft/mc-mods/oritech-things/files/7155260
+          - oritech-things
         forceSynchronize: true
       serviceType: LoadBalancer
       extraServiceSpec:
