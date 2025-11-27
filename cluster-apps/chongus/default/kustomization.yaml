@@ -9,6 +9,7 @@ resources:
   - ./echo-server/ks.yaml
   - ./minecraft-cpw/ks.yaml
   - ./minecraft-sf5/ks.yaml
+  - ./minecraft-stoneblock/ks.yaml
   - ./minecraft-vanilla/ks.yaml
   - ./paperless/ks.yaml
   - ./thelounge/ks.yaml

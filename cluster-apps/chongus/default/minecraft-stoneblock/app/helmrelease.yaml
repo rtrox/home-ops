@@ -1,0 +1,107 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &app minecraft-stoneblock
+spec:
+  interval: 30m
+  chartRef:
+    kind: OCIRepository
+    name: itzg-minecraft-stoneblock
+  maxHistory: 2
+  timeout: 15m
+  install:
+    createNamespace: true
+    timeout: 15m
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    timeout: 15m
+    remediation:
+      retries: 3
+  uninstall:
+    keepHistory: false
+  values:
+    deploymentAnnotations:
+      secret.reloader.stakater.com/reload: &secret minecraft-stoneblock
+    image:
+      repository: ghcr.io/itzg/minecraft-server
+      tag: java17
+    resources:
+      requests:
+        cpu: 1000m
+        memory: 16Gi
+      limits:
+        memory: 16Gi
+    securityContext:
+      runAsUser: &uid 568
+      fsGroup: *uid
+    livenessProbe:
+      initialDelaySeconds: 600
+      periodSeconds: 30
+    readinessProbe:
+      initialDelaySeconds: 300
+      periodSeconds: 30
+    extraEnv:
+      TZ: "America/Los_Angeles"
+      DEBUG: "true"
+    persistence:
+      dataDir:
+        enabled: true
+        existingClaim: *app
+    serviceAnnotations:
+      external-dns.alpha.kubernetes.io/hostname: "sb4.rtrox.io"
+    minecraftServer:
+      eula: true
+      version: "1.21.1"
+      type: AUTO_CURSEFORGE
+      forceReDownload: true
+      jvmOpts: "-Djava.net.preferIPv4Stack=true"
+      jvmXXOpts: "-XX:MaxRAMPercentage=75"
+      memory: 12880M
+      difficulty: hard
+      spawnProtection: 0
+      gameMode: survival
+      pvp: default
+      onlineMode: true
+      ops: "swyyytch"
+      motd: "\u00A79 [FTB] \u00A7f Stoneblock 4 \u00A7o\u00A79Powered by K8s"
+      worldSaveName: Stoneblock4
+      modUrls:
+        - https://mediafilez.forgecdn.net/files/5657/655/Prometheus-Exporter-1.21.1-neoforge-1.2.1.jar
+      rcon:
+        enabled: true
+        serviceType: ClusterIP
+      autoCurseForge:
+        apiKey:
+          existingSecret: *secret
+          secretKey: cf-api-key
+        # Unique id of modpack, can be used instead of url
+        slug: ftb-stoneblock-4
+      serviceType: LoadBalancer
+      extraServiceSpec:
+        publishNotReadyAddresses: true
+      extraPorts:
+        - name: metrics
+          containerPort: 19565
+          protocol: TCP
+          service:
+            enabled: true
+            embedded: false
+            type: ClusterIP
+            port: 19565
+          ingress:
+            enabled: false
+    dnsPolicy: None
+    dnsConfig:
+      options:
+        - name: ndots
+          value: "1"
+      nameservers:
+        - 1.1.1.1
+        - 1.0.0.1
+  valuesFrom:
+    - kind: Secret
+      name: *secret
+      valuesKey: RCON_PASSWORD
+      targetPath: minecraftServer.rcon.password
