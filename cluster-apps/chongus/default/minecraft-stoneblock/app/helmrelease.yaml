@@ -80,6 +80,8 @@ spec:
         slug: ftb-stoneblock-4
         excludeMods:
           - status-effect-bars # client-side only
+        includeModes:
+          - particular-reforged # required for Healing Spring - https://github.com/FTBTeam/FTB-Modpack-Issues/issues/9270
         forceSynchronize: true
       serviceType: LoadBalancer
       extraServiceSpec:
