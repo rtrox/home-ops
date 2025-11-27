@@ -1,0 +1,115 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: minecraft-stoneblock-rcon-30m-warning
+spec:
+  schedule: "30 9 * * 1"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: rcon
+              image: itzg/minecraft-server
+              imagePullPolicy: IfNotPresent
+              command:
+                - bash
+                - -c
+                - 'rcon-cli --host minecraft-stoneblock-minecraft-rcon --port "25575" --password $$RCON_PASSWORD say "The server will restart in 30 minutes"'
+              envFrom:
+                - secretRef:
+                    name: minecraft
+          restartPolicy: OnFailure
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: minecraft-stoneblock-rcon-15m-warning
+spec:
+  schedule: "45 9 * * 1"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: rcon
+              image: itzg/minecraft-server
+              imagePullPolicy: IfNotPresent
+              command:
+                - bash
+                - -c
+                - 'rcon-cli --host minecraft-stoneblock-minecraft-rcon --port "25575" --password $$RCON_PASSWORD say "The server will restart in 15 minutes"'
+              envFrom:
+                - secretRef:
+                    name: minecraft
+          restartPolicy: OnFailure
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: minecraft-stoneblock-rcon-5m-warning
+spec:
+  schedule: "55 9 * * 1"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: rcon
+              image: itzg/minecraft-server
+              imagePullPolicy: IfNotPresent
+              command:
+                - bash
+                - -c
+                - 'rcon-cli --host minecraft-stoneblock-minecraft-rcon --port "25575" --password $$RCON_PASSWORD say "The server will restart in 5 minutes"'
+              envFrom:
+                - secretRef:
+                    name: minecraft
+          restartPolicy: OnFailure
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: minecraft-stoneblock-rcon-1m-warning
+spec:
+  schedule: "59 9 * * 1"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: rcon
+              image: itzg/minecraft-server
+              imagePullPolicy: IfNotPresent
+              command:
+                - bash
+                - -c
+                - 'rcon-cli --host minecraft-stoneblock-minecraft-rcon --port "25575" --password $$RCON_PASSWORD say "The server will restart in 1 minutes"'
+              envFrom:
+                - secretRef:
+                    name: minecraft
+          restartPolicy: OnFailure
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: minecraft-stoneblock-rcon-server-restart
+spec:
+  schedule: "0 10 * * 1"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: rcon
+              image: itzg/minecraft-server
+              imagePullPolicy: IfNotPresent
+              command:
+                - bash
+                - -c
+                - 'rcon-cli --host minecraft-stoneblock-minecraft-rcon --port "25575" --password $$RCON_PASSWORD stop'
+              envFrom:
+                - secretRef:
+                    name: minecraft
+          restartPolicy: OnFailure
