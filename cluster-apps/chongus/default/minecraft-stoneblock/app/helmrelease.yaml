@@ -79,7 +79,7 @@ spec:
         # Unique id of modpack, can be used instead of url
         slug: ftb-stoneblock-4
         excludeMods:
-          - statuseffectbars # client-side only
+          - status-effect-bars # client-side only
         forceSynchronize: true
       serviceType: LoadBalancer
       extraServiceSpec:
