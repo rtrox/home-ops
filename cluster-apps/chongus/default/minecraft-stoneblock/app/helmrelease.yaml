@@ -80,8 +80,19 @@ spec:
         slug: ftb-stoneblock-4
         excludeMods:
           - status-effect-bars-reforged # client-side only
-        includeModes:
+          - lighty
+          - dark-mode-everywhere
+          - iceberg
+          - just-enough-mekanism-multiblocks
+          - model-gap-fix
+          - packmenu
+          - reeses-sodium-options
+          - sodium-extra
+          - sopium-options-api
+          - toast-control
+        includeMods:
           - particular-reforged # required for Healing Spring - https://github.com/FTBTeam/FTB-Modpack-Issues/issues/9270
+          - https://www.curseforge.com/minecraft/mc-mods/oritech-things/files/7155260
         forceSynchronize: true
       serviceType: LoadBalancer
       extraServiceSpec:
