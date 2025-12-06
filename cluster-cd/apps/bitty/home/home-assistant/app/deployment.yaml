@@ -63,51 +63,51 @@ spec:
             - name: api
               containerPort: 8123
               protocol: TCP
-          livenessProbe:
-            httpGet:
-              path: /
-              port: api
-              scheme: HTTP
-            initialDelaySeconds: 10
-            failureThreshold: 5
-            timeoutSeconds: 2
-          readinessProbe:
-            httpGet:
-              path: /
-              port: api
-              scheme: HTTP
-            initialDelaySeconds: 10
-            failureThreshold: 5
-            timeoutSeconds: 2
-          startupProbe:
-            httpGet:
-              path: /
-              port: api
-              scheme: HTTP
-            initialDelaySeconds: 10
-            failureThreshold: 5
-            timeoutSeconds: 2
+          # livenessProbe:
+          #   httpGet:
+          #     path: /
+          #     port: api
+          #     scheme: HTTP
+          #   initialDelaySeconds: 10
+          #   failureThreshold: 5
+          #   timeoutSeconds: 2
+          # readinessProbe:
+          #   httpGet:
+          #     path: /
+          #     port: api
+          #     scheme: HTTP
+          #   initialDelaySeconds: 10
+          #   failureThreshold: 5
+          #   timeoutSeconds: 2
+          # startupProbe:
+          #   httpGet:
+          #     path: /
+          #     port: api
+          #     scheme: HTTP
+          #   initialDelaySeconds: 10
+          #   failureThreshold: 5
+          #   timeoutSeconds: 2
           volumeMounts:
             - mountPath: /config
               name: config
-        - name: vscode
-          image: codercom/code-server:4.99.4
-          imagePullPolicy: IfNotPresent
-          resources:
-            limits:
-              cpu: 10m
-              memory: 512Mi
-          workingDir: /config
-          args:
-            - --port=8080
-            - --auth=none
-          ports:
-            - name: vscode
-              containerPort: 8080
-              protocol: TCP
-          volumeMounts:
-            - mountPath: /config
-              name: config
+        # - name: vscode
+        #   image: codercom/code-server:4.99.4
+        #   imagePullPolicy: IfNotPresent
+        #   resources:
+        #     limits:
+        #       cpu: 10m
+        #       memory: 512Mi
+        #   workingDir: /config
+        #   args:
+        #     - --port=8080
+        #     - --auth=none
+        #   ports:
+        #     - name: vscode
+        #       containerPort: 8080
+        #       protocol: TCP
+        #   volumeMounts:
+        #     - mountPath: /config
+        #       name: config
       volumes:
         - name: config
           persistentVolumeClaim:
