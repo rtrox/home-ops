@@ -4,6 +4,7 @@ trackers:
   - { name: ar,   required_seed_ratio: 1.01, required_seed_days: 14.1, urls: ["alpharatio.cc"] }
   - { name: ath,  urls: ["aither.cc"] } # Forever
   - { name: bhd,  required_seed_ratio: 0,    required_seed_days: 0,    urls: ["beyond-hd.me"] }
+  - { name: bbt, required_seed_ratio: 1.01, urls: ["bakabt.me"]}
   - { name: blu,  required_seed_ratio: 0,    required_seed_days: 14.1, urls: ["blutopia.cc", "blutopia.xyz"] }
   - { name: dc, required_seed_ratio: 1.01, required_seed_days: 7.1, urls: ["digitalcore.club"] }
   - { name: fl,   required_seed_ratio: 1.01, required_seed_days: 7.1,  urls: ["filelist.io", "thefl.org"] } # min: 48 hours
