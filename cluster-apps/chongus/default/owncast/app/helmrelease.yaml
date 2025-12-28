@@ -62,6 +62,12 @@ spec:
         ports:
           http:
             port: 8080
+      rtmp:
+        annotations:
+          external-dns.alpha.kubernetes.io/hostname: owncast-stream.rtrox.io
+        type: LoadBalancer
+        controller: owncast
+        ports:
           rtmp:
             port: 1935
     route:
@@ -72,6 +78,15 @@ spec:
           - name: envoy-internal
             namespace: network
             sectionName: https
+        rules:
+          - matches:
+              - path:
+                  type: PathPrefix
+                  value: /
+            backendRefs:
+              - name: owncast-app
+                port: 8080
+                kind: Service
     persistence:
       data:
         existingClaim: "{{ .Release.Name }}"
