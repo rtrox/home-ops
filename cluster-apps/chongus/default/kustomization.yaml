@@ -11,5 +11,6 @@ resources:
   - ./minecraft-sf5/ks.yaml
   - ./minecraft-stoneblock/ks.yaml
   - ./minecraft-vanilla/ks.yaml
+  - ./owncast/ks.yaml
   - ./paperless/ks.yaml
   - ./thelounge/ks.yaml
