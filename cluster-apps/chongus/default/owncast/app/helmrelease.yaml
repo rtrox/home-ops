@@ -47,12 +47,9 @@ spec:
               requests:
                 cpu: 100m
                 memory: 256Mi
-                nvidia.com/gpu: 1
               limits:
                 memory: 2Gi
-                nvidia.com/gpu: 1
     defaultPodOptions:
-      runtimeClassName: nvidia
       securityContext:
         runAsNonRoot: true
         runAsUser: 1000
