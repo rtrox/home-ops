@@ -23,7 +23,7 @@ spec:
           app:
             image:
               repository: ghcr.io/rtrox/bambustatus-streamer
-              tag: sha-f5fa7c9
+              tag: sha-6354deb@sha256:33bb47e98e5241616577dee788081917bb21ee14cc7a3bbbcf74e9df39a8a1fa
             env:
               # Printer configuration
               PRINTER_HOST: "172.29.14.2"
