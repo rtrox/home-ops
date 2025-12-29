@@ -1,0 +1,102 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: bambustatus-streamer
+spec:
+  interval: 1h
+  chartRef:
+    kind: OCIRepository
+    name: bambustatus-streamer
+  install:
+    remediation:
+      retries: -1
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  values:
+    controllers:
+      bambustatus-streamer:
+        containers:
+          app:
+            image:
+              repository: ghcr.io/rtrox/bambustatus-streamer
+              tag: sha-f5fa7c9
+            env:
+              # Printer configuration
+              PRINTER_HOST: "172.29.14.2"
+              PRINTER_PORT: "8883"
+              PRINTER_USERNAME: "bblp"
+              PRINTER_SERIAL: ""
+              # Overlay settings
+              OVERLAY_URL: "http://localhost:8080"
+              OVERLAY_FILE: "/tmp/overlay/current.png"
+              OVERLAY_X: "10"
+              OVERLAY_Y: "780"
+              CAPTURE_INTERVAL: "1"
+              TZ: America/Los_Angeles
+            envFrom:
+              - secretRef:
+                  name: bambustatus-streamer-secret
+            probes:
+              liveness: &probes
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /
+                    port: 8080
+                  initialDelaySeconds: 0
+                  periodSeconds: 10
+                  timeoutSeconds: 1
+                  failureThreshold: 3
+              readiness: *probes
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: false
+              capabilities: {drop: ["ALL"]}
+            resources:
+              requests:
+                cpu: 100m
+                memory: 256Mi
+              limits:
+                memory: 1Gi
+    defaultPodOptions:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+    service:
+      app:
+        controller: bambustatus-streamer
+        ports:
+          http:
+            port: 8080
+          rtsp:
+            port: 8554
+    route:
+      app:
+        hostnames:
+          - "{{ .Release.Name }}.rtrox.io"
+        parentRefs:
+          - name: envoy-internal
+            namespace: network
+            sectionName: https
+        rules:
+          - matches:
+              - path:
+                  type: PathPrefix
+                  value: /
+            backendRefs:
+              - name: bambustatus-streamer-app
+                port: 8080
+                kind: Service
+    persistence:
+      overlay:
+        type: emptyDir
+        globalMounts:
+          - path: /tmp/overlay
