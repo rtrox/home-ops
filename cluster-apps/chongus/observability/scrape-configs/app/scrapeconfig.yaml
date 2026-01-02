@@ -1,0 +1,11 @@
+---
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ScrapeConfig
+metadata:
+  name: node-exporter
+  namespace: monitoring
+spec:
+  scheme: HTTP
+  staticConfigs:
+    - targets:
+        - avahi.rtrox.io:9100

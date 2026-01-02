@@ -13,6 +13,7 @@ resources:
   - ./kube-state-metrics/ks.yaml
   - ./loki/ks.yaml
   - ./node-exporter/ks.yaml
+  - ./scrape-configs/ks.yaml
   - ./thanos/ks.yaml
 
 components:

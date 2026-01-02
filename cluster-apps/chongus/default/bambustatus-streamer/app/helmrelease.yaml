@@ -61,9 +61,12 @@ spec:
               requests:
                 cpu: 100m
                 memory: 256Mi
+                nvidia.com/gpu: 1
               limits:
                 memory: 1Gi
+                nvidia.com/gpu: 1
     defaultPodOptions:
+      runtimeClassName: nvidia
       securityContext:
         runAsNonRoot: true
         runAsUser: 1000
@@ -100,3 +103,7 @@ spec:
         type: emptyDir
         globalMounts:
           - path: /tmp/overlay
+      cache:
+        type: emptyDir
+        globalMounts:
+          - path: /var/cache

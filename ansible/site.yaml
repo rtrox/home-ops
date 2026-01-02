@@ -18,6 +18,7 @@
       vars:
         docker_users: "{{ docker_users }}"
     - role: raspi-monitor
+    - role: node-exporter
 
   tasks:
     - name: Ensure /etc/hosts has an entry for the hostname
@@ -40,9 +41,9 @@
         - name: Ensure timezone is set to UTC
           timezone:
             name: UTC
-        - name: Ensure locale is set to US English
-          command: localectl set-locale LANG=en_US.UTF-8
-          changed_when: false
+        # - name: Ensure locale is set to US English
+        #   command: localectl set-locale LANG=en_US.UTF-8
+        #   changed_when: false
 
     - name: Install common packages
       apt:
