@@ -9,3 +9,5 @@ spec:
   staticConfigs:
     - targets:
         - avahi.rtrox.io:9100
+        - ns1.rtrox.io:9100
+        - ns2.rtrox.io:9100
