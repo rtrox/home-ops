@@ -5,7 +5,7 @@ kind: Kustomization
 
 resources:
   - ./atuin/ks.yaml
-  - ./bambustatus-streamer/ks.yaml
+  # - ./bambustatus-streamer/ks.yaml
   - ./bluesky-pds/ks.yaml
   - ./echo-server/ks.yaml
   - ./minecraft-cpw/ks.yaml

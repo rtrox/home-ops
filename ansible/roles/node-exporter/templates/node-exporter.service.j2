@@ -1,0 +1,22 @@
+[Unit]
+Description=Prometheus Node Exporter
+After=docker.service
+Requires=docker.service
+
+[Service]
+TimeoutStartSec=0
+ExecStartPre=-/usr/bin/docker rm --force node-exporter
+ExecStart=/usr/bin/docker run --name node-exporter \
+    --pull always \
+    --restart unless-stopped \
+    --net="host" \
+    --pid="host" \
+    -v "/:/host:ro,rslave" \
+    prom/node-exporter:latest \
+    --path.rootfs=/host
+ExecStop=/usr/bin/docker stop node-exporter
+Restart=always
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
