@@ -11,7 +11,7 @@ spec:
     labels:
       app.kubernetes.io/name: *app
   dependsOn:
-    - name: external-secrets-stores
+    - name: external-secrets-store-doppler
       namespace: external-secrets
   interval: 1h
   path: ./cluster-apps/chongus/database/cloudnative-pg/app
