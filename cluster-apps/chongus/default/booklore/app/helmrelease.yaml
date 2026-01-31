@@ -159,9 +159,6 @@ spec:
               capabilities:
                 drop:
                   - ALL
-              # Required for io_uring support in containerd v2
-              seccompProfile:
-                type: Unconfined
 
           nginx:
             image:
