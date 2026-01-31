@@ -48,7 +48,7 @@ spec:
               - /bin/sh
               - -c
               - |
-                envsubst '${BOOKLORE_PORT}' \
+                envsubst '$${BOOKLORE_PORT}' \
                 < /etc/nginx/nginx.conf \
                 > /config/nginx.conf
             env:
