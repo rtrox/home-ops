@@ -1,0 +1,355 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/fluxcd-community/flux2-schemas/main/helmrelease-helm-v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: booklore
+spec:
+  interval: 30m
+  chartRef:
+    kind: OCIRepository
+    name: booklore
+
+  values:
+    # Reusable probe definitions
+    bookloreProbes: &bookloreProbes
+      liveness:
+        enabled: true
+        custom: true
+        spec:
+          httpGet:
+            path: /api/v1/healthcheck
+            port: 8080
+      readiness:
+        enabled: true
+        custom: true
+        spec:
+          httpGet:
+            path: /api/v1/healthcheck
+            port: 8080
+
+    mariadbProbeCommand: &mariadbProbeCommand
+      - /bin/bash
+      - -c
+      - |
+        mariadb --user=root --password="$MARIADB_ROOT_PASSWORD" --socket=/run/mysqld/mysqld.sock --execute="SELECT 1;"
+
+    controllers:
+      booklore:
+        annotations:
+          reloader.stakater.com/auto: "true"
+
+        initContainers:
+          nginx-config:
+            image:
+              repository: ghcr.io/bjw-s-labs/booklore
+              tag: v1.18.5@sha256:92c24b1e2aa3c0ea7accc0d62be91e5d3bbdde25fd7d71f8afc13802aa240afd
+            command:
+              - /bin/bash
+              - -c
+              - |
+                envsubst '${BOOKLORE_PORT}' \
+                < /tmp/nginx-config/nginx.conf.template \
+                > /tmp/nginx/nginx.conf
+            env:
+              - name: BOOKLORE_PORT
+                value: "8080"
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities:
+                drop:
+                  - ALL
+
+        containers:
+          booklore:
+            image:
+              repository: ghcr.io/bjw-s-labs/booklore
+              tag: v1.18.5@sha256:92c24b1e2aa3c0ea7accc0d62be91e5d3bbdde25fd7d71f8afc13802aa240afd
+            command:
+              - java
+              - -jar
+              - /app/app.jar
+            env:
+              - name: DATABASE_DRIVER
+                value: org.mariadb.jdbc.Driver
+              - name: DATABASE_URL
+                value: jdbc:mariadb://localhost:3306/booklore
+              - name: DATABASE_USERNAME
+                value: booklore
+              - name: DATABASE_PASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    name: booklore-secret
+                    key: MARIADB_PASSWORD
+            probes:
+              <<: *bookloreProbes
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /api/v1/healthcheck
+                    port: 8080
+                  failureThreshold: 10
+                  periodSeconds: 10
+            resources:
+              requests:
+                cpu: 100m
+                memory: 512Mi
+              limits:
+                memory: 1Gi
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities:
+                drop:
+                  - ALL
+
+          mariadb:
+            image:
+              repository: mariadb
+              tag: 12.1.2-noble@sha256:f54db0cb3ccfe9431aba6d08c65a1763c499789b116b4cb651dd7fcf325965b3
+            env:
+              - name: MARIADB_ROOT_PASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    name: booklore-secret
+                    key: MARIADB_ROOT_PASSWORD
+              - name: MARIADB_DATABASE
+                value: booklore
+              - name: MARIADB_USER
+                value: booklore
+              - name: MARIADB_PASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    name: booklore-secret
+                    key: MARIADB_PASSWORD
+            probes:
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command: *mariadbProbeCommand
+                  failureThreshold: 30
+                  periodSeconds: 10
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command: *mariadbProbeCommand
+                  periodSeconds: 10
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command: *mariadbProbeCommand
+                  periodSeconds: 10
+            resources:
+              requests:
+                cpu: 50m
+                memory: 256Mi
+              limits:
+                memory: 512Mi
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                  - ALL
+              # Required for io_uring support in containerd v2
+              seccompProfile:
+                type: Unconfined
+
+          nginx:
+            image:
+              repository: ghcr.io/bjw-s-labs/booklore
+              tag: v1.18.5@sha256:92c24b1e2aa3c0ea7accc0d62be91e5d3bbdde25fd7d71f8afc13802aa240afd
+            command:
+              - nginx
+              - -c
+              - /tmp/nginx/nginx.conf
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /
+                    port: 6060
+                  periodSeconds: 10
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /
+                    port: 6060
+                  periodSeconds: 10
+            resources:
+              requests:
+                cpu: 10m
+                memory: 64Mi
+              limits:
+                memory: 128Mi
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities:
+                drop:
+                  - ALL
+              runAsUser: 100
+              runAsGroup: 101
+
+        pod:
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            runAsNonRoot: true
+            fsGroup: 1000
+            fsGroupChangePolicy: OnRootMismatch
+
+    service:
+      booklore:
+        controller: booklore
+        ports:
+          http:
+            port: 6060
+
+    route:
+      booklore:
+        hostnames:
+          - booklore.rtrox.io
+        parentRefs:
+          - name: envoy-internal
+            namespace: network
+            sectionName: https
+        rules:
+          - matches:
+              - path:
+                  type: PathPrefix
+                  value: /
+            backendRefs:
+              - name: booklore
+                port: 6060
+
+    persistence:
+      data:
+        existingClaim: booklore
+        advancedMounts:
+          booklore:
+            booklore:
+              - path: /app/data
+                subPath: app
+            mariadb:
+              - path: /var/lib/mysql
+                subPath: mysql
+
+      books:
+        type: nfs
+        server: nas.rtrox.io
+        path: /mnt/rusty/media/books
+        advancedMounts:
+          booklore:
+            booklore:
+              - path: /books
+
+      bookdrop:
+        type: nfs
+        server: nas.rtrox.io
+        path: /mnt/rusty/media/.bookdrop
+        advancedMounts:
+          booklore:
+            booklore:
+              - path: /bookdrop
+
+      mysqld:
+        type: emptyDir
+        medium: Memory
+        sizeLimit: 1Mi
+        advancedMounts:
+          booklore:
+            mariadb:
+              - path: /run/mysqld
+
+      nginx:
+        type: emptyDir
+        sizeLimit: 200Mi
+        advancedMounts:
+          booklore:
+            nginx:
+              - path: /tmp/nginx
+
+      nginx-config:
+        type: configMap
+        name: booklore-nginx-config
+        advancedMounts:
+          booklore:
+            nginx-config:
+              - path: /tmp/nginx-config
+
+      nginx-run:
+        type: emptyDir
+        medium: Memory
+        sizeLimit: 100Mi
+        advancedMounts:
+          booklore:
+            nginx:
+              - path: /run
+
+      tmpfs-booklore:
+        type: emptyDir
+        medium: Memory
+        sizeLimit: 100Mi
+        advancedMounts:
+          booklore:
+            booklore:
+              - path: /tmp
+
+      tmpfs-mariadb:
+        type: emptyDir
+        medium: Memory
+        sizeLimit: 100Mi
+        advancedMounts:
+          booklore:
+            mariadb:
+              - path: /tmp
+
+    configMaps:
+      nginx-config:
+        data:
+          nginx.conf.template: |
+            worker_processes  1;
+            error_log /tmp/nginx/error.log;
+            pid /tmp/nginx/nginx.pid;
+            events {
+              worker_connections  1024;
+            }
+            http {
+              client_body_temp_path /tmp/nginx/client_temp;
+              proxy_temp_path       /tmp/nginx/proxy_temp;
+              fastcgi_temp_path     /tmp/nginx/fastcgi_temp;
+              uwsgi_temp_path       /tmp/nginx/uwsgi_temp;
+              scgi_temp_path        /tmp/nginx/scgi_temp;
+              include       /etc/nginx/mime.types;
+              default_type  application/octet-stream;
+              log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                                '$status $body_bytes_sent "$http_referer" '
+                                '"$http_user_agent" "$http_x_forwarded_for"';
+              access_log  /tmp/nginx/access.log  main;
+              sendfile        on;
+              keepalive_timeout  65;
+              server {
+                listen       6060;
+                server_name  localhost;
+                location / {
+                  proxy_pass http://localhost:${BOOKLORE_PORT};
+                  proxy_set_header Host $host;
+                  proxy_set_header X-Real-IP $remote_addr;
+                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                  proxy_set_header X-Forwarded-Proto $scheme;
+                }
+              }
+            }

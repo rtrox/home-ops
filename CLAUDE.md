@@ -169,6 +169,10 @@ Every application in the Chongus cluster follows this standard structure:
 
 - Doppler as primary secret store
 - ExternalSecrets operator with ClusterSecretStore
+- **Preferred Pattern**: Single Doppler secret key per app with JSON structure
+  - Extract entire JSON object using `dataFrom.extract`
+  - Use `target.template` to expand individual values
+  - Example: `BOOKLORE` key in Doppler contains `{"mariadb_password": "...", "mariadb_root_password": "..."}`
 - SOPS only for bootstrap secrets (considered tech debt)
 - NO postBuild substitution from SOPS secrets
 
@@ -264,6 +268,10 @@ spec:
     tag: 1.2.3  # Chart version
   url: oci://registry.example.com/charts/chart-name
 ```
+
+**Common Charts:**
+
+- **bjw-s app-template**: `oci://ghcr.io/bjw-s-labs/helm/app-template` - Modern, flexible chart for common app patterns (supports init containers, sidecars, persistence, etc.)
 
 ### ExternalSecret Pattern
 
