@@ -1,0 +1,138 @@
+---
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+version: "3"
+
+vars:
+  FLUX_PATH: "{{.CLUSTER_DIR}}/flux/cluster"
+  FLUX_DIFF_OUTPUT: "{{.ROOT_DIR}}/flux-diff.patch"
+  WORKTREE_DIR: "{{.ROOT_DIR}}/.flux-worktree"
+
+tasks:
+  default-requires:
+    internal: true
+    requires: &default-requires
+      vars:
+        - &requires-cluster-name
+          name: CLUSTER_NAME
+          enum: [chongus, bitty]
+
+  test:
+    desc: Validate all Flux resources with flux-local
+    requires: *default-requires
+    preconditions:
+      - which flux-local
+      - test -d "{{.FLUX_PATH}}"
+    cmds:
+      - flux-local test
+        --enable-helm
+        --all-namespaces
+        --path "{{.FLUX_PATH}}"
+        -v
+
+  build:
+    desc: Build Flux resources (Kustomizations or HelmReleases)
+    requires: *default-requires
+    vars:
+      RESOURCE_TYPE: '{{.RESOURCE_TYPE | default "ks"}}'
+      RESOURCE_NAME: '{{.RESOURCE_NAME | default ""}}'
+    preconditions:
+      - which flux-local
+      - test -d "{{.FLUX_PATH}}"
+      - sh: test "{{.RESOURCE_TYPE}}" = "ks" -o "{{.RESOURCE_TYPE}}" = "hr"
+        msg: "RESOURCE_TYPE must be 'ks' or 'hr'"
+    cmds:
+      - flux-local build {{.RESOURCE_TYPE}}
+        {{if .RESOURCE_NAME}}{{.RESOURCE_NAME}}{{end}}
+        --path "{{.FLUX_PATH}}"
+        --all-namespaces
+
+  list:
+    desc: List Flux resources (Kustomizations or HelmReleases)
+    requires: *default-requires
+    vars:
+      RESOURCE_TYPE: '{{.RESOURCE_TYPE | default "ks"}}'
+    preconditions:
+      - which flux-local
+      - test -d "{{.FLUX_PATH}}"
+      - sh: test "{{.RESOURCE_TYPE}}" = "ks" -o "{{.RESOURCE_TYPE}}" = "hr"
+        msg: "RESOURCE_TYPE must be 'ks' or 'hr'"
+    cmds:
+      - flux-local get {{.RESOURCE_TYPE}}
+        --path "{{.FLUX_PATH}}"
+        --all-namespaces
+        -o wide
+
+  diff:
+    desc: Compare Flux resources against main branch
+    requires: *default-requires
+    vars:
+      RESOURCE_TYPE: '{{.RESOURCE_TYPE | default "hr"}}'
+      BASE_BRANCH: '{{.BASE_BRANCH | default "main"}}'
+    preconditions:
+      - which flux-local
+      - which git
+      - test -d "{{.FLUX_PATH}}"
+      - sh: test "{{.RESOURCE_TYPE}}" = "ks" -o "{{.RESOURCE_TYPE}}" = "hr"
+        msg: "RESOURCE_TYPE must be 'ks' or 'hr'"
+      - sh: git rev-parse --verify "{{.BASE_BRANCH}}" >/dev/null 2>&1
+        msg: "Base branch '{{.BASE_BRANCH}}' does not exist"
+    cmds:
+      - task: _setup-worktree
+        vars:
+          BASE_BRANCH: "{{.BASE_BRANCH}}"
+      - defer:
+          task: _cleanup-worktree
+      - flux-local diff {{.RESOURCE_TYPE}}
+        --unified 6
+        --path "{{.FLUX_PATH}}"
+        --path-orig "{{.WORKTREE_DIR}}/{{.FLUX_PATH}}"
+        --strip-attrs "helm.sh/chart,checksum/config,app.kubernetes.io/version,chart"
+        --limit-bytes 10000
+        --all-namespaces
+        --output-file "{{.FLUX_DIFF_OUTPUT}}"
+      - cmd: |
+          if [ -s "{{.FLUX_DIFF_OUTPUT}}" ]; then
+            echo "=== Flux {{.RESOURCE_TYPE}} Diff ==="
+            cat "{{.FLUX_DIFF_OUTPUT}}"
+          else
+            echo "No differences found"
+          fi
+
+  diff-all:
+    desc: Compare both Kustomizations and HelmReleases against main branch
+    requires: *default-requires
+    vars:
+      BASE_BRANCH: '{{.BASE_BRANCH | default "main"}}'
+    cmds:
+      - task: diff
+        vars:
+          RESOURCE_TYPE: "ks"
+          BASE_BRANCH: "{{.BASE_BRANCH}}"
+      - task: diff
+        vars:
+          RESOURCE_TYPE: "hr"
+          BASE_BRANCH: "{{.BASE_BRANCH}}"
+
+  _setup-worktree:
+    internal: true
+    requires:
+      vars:
+        - BASE_BRANCH
+    preconditions:
+      - which git
+      - sh: git rev-parse --verify "{{.BASE_BRANCH}}" >/dev/null 2>&1
+        msg: "Base branch '{{.BASE_BRANCH}}' does not exist"
+    cmds:
+      - task: _cleanup-worktree
+      - mkdir -p "{{.WORKTREE_DIR}}"
+      - git worktree add "{{.WORKTREE_DIR}}" "{{.BASE_BRANCH}}"
+
+  _cleanup-worktree:
+    internal: true
+    silent: true
+    cmds:
+      - cmd: |
+          if [ -d "{{.WORKTREE_DIR}}" ]; then
+            git worktree remove "{{.WORKTREE_DIR}}" --force 2>/dev/null || true
+            rm -rf "{{.WORKTREE_DIR}}"
+          fi
