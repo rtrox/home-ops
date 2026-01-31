@@ -162,8 +162,8 @@ spec:
 
           nginx:
             image:
-              repository: ghcr.io/bjw-s-labs/booklore
-              tag: v1.18.5@sha256:92c24b1e2aa3c0ea7accc0d62be91e5d3bbdde25fd7d71f8afc13802aa240afd
+              repository: ghcr.io/booklore-app/booklore
+              tag: v1.18.5@sha256:44a39097fcf69e7373b51df0459da052640d07459fb02b429f2c47cceaa32485
             command:
               - nginx
               - -c
