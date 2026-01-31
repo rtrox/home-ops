@@ -300,23 +300,61 @@ spec:
         key: DOPPLER_KEY  # Extract specific key from Doppler
 ```
 
-### Volsync Backup Pattern
+### Flux Kustomization Pattern (ks.yaml)
 
 ```yaml
-# In ks.yaml
+# In ks.yaml - Flux Kustomization (NOT Kustomize kustomization.yaml)
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: app-name
+  name: &app app-name
+  namespace: &namespace default
 spec:
-  path: ./cluster-apps/chongus/namespace/app-name/app
+  commonMetadata:
+    labels:
+      app.kubernetes.io/name: *app
   components:
-    - ../../../components/volsync  # Include Volsync backup
+    - ../../../../components/volsync  # Relative to path field, not ks.yaml location
+  dependsOn:
+    - name: rook-ceph-cluster
+      namespace: rook-ceph
+    - name: external-secrets-store-doppler
+      namespace: external-secrets
+  interval: 1h
+  retryInterval: 2m
+  timeout: 5m
+  path: ./cluster-apps/chongus/namespace/app-name/app
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system        # ALWAYS use flux-system
+    namespace: flux-system   # ALWAYS include namespace
+  targetNamespace: *namespace
+  wait: false
   postBuild:
     substitute:
-      APP: app-name
+      APP: *app
       VOLSYNC_CAPACITY: 10Gi
-      VOLSYNC_CLAIM: app-name
+      VOLSYNC_CLAIM: *app
+```
+
+**Critical Details:**
+
+- **sourceRef.name**: ALWAYS `flux-system` (not `home-ops` or other names)
+- **sourceRef.namespace**: ALWAYS `flux-system`
+- **Component paths**: Relative to `spec.path` field (e.g., `../../../../components/volsync`)
+- **namespace anchor**: Use `&namespace` and reference with `*namespace`
+- **app anchor**: Use `&app` for reuse in metadata, labels, and substitutions
+
+### Volsync Backup Pattern
+
+```yaml
+# In ks.yaml - postBuild section only
+postBuild:
+  substitute:
+    APP: app-name
+    VOLSYNC_CAPACITY: 10Gi
+    VOLSYNC_CLAIM: app-name
 ```
 
 **Backup Backends:**
@@ -373,6 +411,7 @@ components:
 11. **Raw manifests over Helm charts** - Prefer Helm charts for easier Flux management (not a hard rule, but best practice)
 12. **Velero for backups** - Use Volsync instead (Velero is legacy/deprecated)
 13. **envoy-external for internal apps** - Prefer envoy-internal unless internet access is explicitly needed
+14. **Wrong GitRepository name** - ALWAYS use `flux-system` in sourceRef, never `home-ops` or other names
 
 ## Backup and Disaster Recovery
 
