@@ -93,12 +93,6 @@ spec:
                     port: 8080
                   failureThreshold: 10
                   periodSeconds: 10
-            resources:
-              requests:
-                cpu: 100m
-                memory: 512Mi
-              limits:
-                memory: 8Gi
             securityContext:
               allowPrivilegeEscalation: false
               readOnlyRootFilesystem: true
@@ -148,12 +142,6 @@ spec:
                   exec:
                     command: *mariadbProbeCommand
                   periodSeconds: 10
-            resources:
-              requests:
-                cpu: 50m
-                memory: 1Gi
-              limits:
-                memory: 4Gi
             securityContext:
               allowPrivilegeEscalation: false
               capabilities:
@@ -187,12 +175,6 @@ spec:
                     path: /
                     port: 6060
                   periodSeconds: 10
-            resources:
-              requests:
-                cpu: 10m
-                memory: 64Mi
-              limits:
-                memory: 128Mi
             securityContext:
               allowPrivilegeEscalation: false
               readOnlyRootFilesystem: true
