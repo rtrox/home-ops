@@ -49,8 +49,8 @@ spec:
               - -c
               - |
                 envsubst '${BOOKLORE_PORT}' \
-                < /tmp/nginx-config/nginx.conf.template \
-                > /tmp/nginx/nginx.conf
+                < /etc/nginx/nginx.conf \
+                > /config/nginx.conf
             env:
               - name: BOOKLORE_PORT
                 value: "8080"
@@ -167,7 +167,9 @@ spec:
             command:
               - nginx
               - -c
-              - /tmp/nginx/nginx.conf
+              - /config/nginx.conf
+              - -g
+              - daemon off;
             probes:
               liveness:
                 enabled: true
@@ -199,14 +201,6 @@ spec:
                   - ALL
               runAsUser: 100
               runAsGroup: 101
-
-        pod:
-          securityContext:
-            runAsUser: 1000
-            runAsGroup: 1000
-            runAsNonRoot: true
-            fsGroup: 1000
-            fsGroupChangePolicy: OnRootMismatch
 
     service:
       booklore:
@@ -277,15 +271,15 @@ spec:
         advancedMounts:
           booklore:
             nginx:
-              - path: /tmp/nginx
-
-      nginx-config:
-        type: configMap
-        name: booklore-nginx-config
-        advancedMounts:
-          booklore:
+              - path: /config
+                subPath: config
+              - path: /var/lib/nginx/logs
+                subPath: log
+              - path: /var/lib/nginx/tmp
+                subPath: tmp
             nginx-config:
-              - path: /tmp/nginx-config
+              - path: /config
+                subPath: config
 
       nginx-run:
         type: emptyDir
@@ -294,9 +288,9 @@ spec:
         advancedMounts:
           booklore:
             nginx:
-              - path: /run
+              - path: /run/nginx
 
-      tmpfs-booklore:
+      tmpfs:
         type: emptyDir
         medium: Memory
         sizeLimit: 100Mi
@@ -304,49 +298,15 @@ spec:
           booklore:
             booklore:
               - path: /tmp
-
-      tmpfs-mariadb:
-        type: emptyDir
-        medium: Memory
-        sizeLimit: 100Mi
-        advancedMounts:
-          booklore:
+                subPath: app
             mariadb:
               - path: /tmp
+                subPath: mysql
 
-    configMaps:
-      nginx-config:
-        data:
-          nginx.conf.template: |
-            worker_processes  1;
-            error_log /tmp/nginx/error.log;
-            pid /tmp/nginx/nginx.pid;
-            events {
-              worker_connections  1024;
-            }
-            http {
-              client_body_temp_path /tmp/nginx/client_temp;
-              proxy_temp_path       /tmp/nginx/proxy_temp;
-              fastcgi_temp_path     /tmp/nginx/fastcgi_temp;
-              uwsgi_temp_path       /tmp/nginx/uwsgi_temp;
-              scgi_temp_path        /tmp/nginx/scgi_temp;
-              include       /etc/nginx/mime.types;
-              default_type  application/octet-stream;
-              log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
-                                '$status $body_bytes_sent "$http_referer" '
-                                '"$http_user_agent" "$http_x_forwarded_for"';
-              access_log  /tmp/nginx/access.log  main;
-              sendfile        on;
-              keepalive_timeout  65;
-              server {
-                listen       6060;
-                server_name  localhost;
-                location / {
-                  proxy_pass http://localhost:${BOOKLORE_PORT};
-                  proxy_set_header Host $host;
-                  proxy_set_header X-Real-IP $remote_addr;
-                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                  proxy_set_header X-Forwarded-Proto $scheme;
-                }
-              }
-            }
+    defaultPodOptions:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
