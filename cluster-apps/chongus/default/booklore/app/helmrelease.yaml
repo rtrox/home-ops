@@ -1,45 +1,64 @@
 ---
-# yaml-language-server: $schema=https://raw.githubusercontent.com/fluxcd-community/flux2-schemas/main/helmrelease-helm-v2.json
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: booklore
 spec:
-  interval: 30m
   chartRef:
     kind: OCIRepository
     name: booklore
-
+  interval: 30m
   values:
-    # Reusable probe definitions
-    bookloreProbes: &bookloreProbes
-      liveness:
-        enabled: true
-        custom: true
-        spec:
-          httpGet:
-            path: /api/v1/healthcheck
-            port: 8080
-      readiness:
-        enabled: true
-        custom: true
-        spec:
-          httpGet:
-            path: /api/v1/healthcheck
-            port: 8080
-
-    mariadbProbeCommand: &mariadbProbeCommand
-      - /bin/bash
-      - -c
-      - |
-        mariadb --user=root --password="$MARIADB_ROOT_PASSWORD" --socket=/run/mysqld/mysqld.sock --execute="SELECT 1;"
-
     controllers:
       booklore:
         annotations:
           reloader.stakater.com/auto: "true"
-
+        pod:
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            fsGroup: 1000
+            fsGroupChangePolicy: OnRootMismatch
         initContainers:
+          mariadb:
+            image:
+              repository: docker.io/library/mariadb
+              tag: 12.1.2-noble
+            env:
+              MARIADB_DATABASE: booklore
+              MARIADB_PASSWORD:
+                valueFrom:
+                  secretKeyRef:
+                    name: booklore-secret
+                    key: mariadb_password
+              MARIADB_ROOT_PASSWORD:
+                valueFrom:
+                  secretKeyRef:
+                    name: booklore-secret
+                    key: mariadb_root_password
+              MARIADB_USER: booklore
+              PGID: 1000
+              PUID: 1000
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                      - bash
+                      - -c
+                      - |-
+                        mariadb-admin ping --socket=/run/mysqld/mysqld.sock --user=root --password=$${MARIADB_ROOT_PASSWORD}
+            restartPolicy: Always
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                  - ALL
+              readOnlyRootFilesystem: true
           nginx-config:
             image:
               repository: ghcr.io/booklore-app/booklore
@@ -47,20 +66,19 @@ spec:
             command:
               - /bin/sh
               - -c
-              - |
-                envsubst '$${BOOKLORE_PORT}' \
-                < /etc/nginx/nginx.conf \
-                > /config/nginx.conf
+            args:
+              - "envsubst '$${BOOKLORE_PORT}' < /etc/nginx/nginx.conf > /config/nginx.conf"
             env:
-              - name: BOOKLORE_PORT
-                value: &httpPort "6060"
+              BOOKLORE_PORT: &httpPort 6060
             securityContext:
               allowPrivilegeEscalation: false
-              readOnlyRootFilesystem: true
               capabilities:
                 drop:
                   - ALL
-
+              readOnlyRootFilesystem: true
+              runAsUser: 100
+              runAsGroup: 101
+              fsGroup: 101
         containers:
           booklore:
             image:
@@ -68,22 +86,26 @@ spec:
               tag: v1.18.5@sha256:44a39097fcf69e7373b51df0459da052640d07459fb02b429f2c47cceaa32485
             command:
               - java
+            args:
               - -jar
               - /app/app.jar
             env:
-              - name: DATABASE_DRIVER
-                value: org.mariadb.jdbc.Driver
-              - name: DATABASE_URL
-                value: jdbc:mariadb://localhost:3306/booklore
-              - name: DATABASE_USERNAME
-                value: booklore
-              - name: DATABASE_PASSWORD
+              DATABASE_PASSWORD:
                 valueFrom:
                   secretKeyRef:
                     name: booklore-secret
-                    key: MARIADB_PASSWORD
+                    key: mariadb_password
+              DATABASE_URL: jdbc:mariadb://localhost:3306/booklore
+              DATABASE_USERNAME: booklore
             probes:
-              <<: *bookloreProbes
+              liveness: &probe
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /api/v1/healthcheck
+                    port: 8080
+              readiness: *probe
               startup:
                 enabled: true
                 custom: true
@@ -92,114 +114,41 @@ spec:
                     path: /api/v1/healthcheck
                     port: 8080
                   failureThreshold: 10
-                  periodSeconds: 10
             securityContext:
               allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                  - ALL
               readOnlyRootFilesystem: true
-              capabilities:
-                drop:
-                  - ALL
-
-          mariadb:
-            image:
-              repository: mariadb
-              tag: 12.1.2-noble@sha256:f54db0cb3ccfe9431aba6d08c65a1763c499789b116b4cb651dd7fcf325965b3
-            env:
-              - name: MARIADB_ROOT_PASSWORD
-                valueFrom:
-                  secretKeyRef:
-                    name: booklore-secret
-                    key: MARIADB_ROOT_PASSWORD
-              - name: MARIADB_DATABASE
-                value: booklore
-              - name: MARIADB_USER
-                value: booklore
-              - name: MARIADB_PASSWORD
-                valueFrom:
-                  secretKeyRef:
-                    name: booklore-secret
-                    key: MARIADB_PASSWORD
-            probes:
-              startup:
-                enabled: true
-                custom: true
-                spec:
-                  exec:
-                    command: *mariadbProbeCommand
-                  failureThreshold: 30
-                  periodSeconds: 10
-              liveness:
-                enabled: true
-                custom: true
-                spec:
-                  exec:
-                    command: *mariadbProbeCommand
-                  periodSeconds: 10
-              readiness:
-                enabled: true
-                custom: true
-                spec:
-                  exec:
-                    command: *mariadbProbeCommand
-                  periodSeconds: 10
-            securityContext:
-              allowPrivilegeEscalation: false
-              capabilities:
-                drop:
-                  - ALL
-
           nginx:
             image:
               repository: ghcr.io/booklore-app/booklore
               tag: v1.18.5@sha256:44a39097fcf69e7373b51df0459da052640d07459fb02b429f2c47cceaa32485
             command:
               - nginx
+            args:
               - -c
               - /config/nginx.conf
               - -g
-              - daemon off;
+              - "daemon off;"
             probes:
-              liveness:
+              liveness: &probe
                 enabled: true
                 custom: true
                 spec:
                   httpGet:
                     path: /
                     port: *httpPort
-                  periodSeconds: 10
-              readiness:
-                enabled: true
-                custom: true
-                spec:
-                  httpGet:
-                    path: /
-                    port: *httpPort
-                  periodSeconds: 10
+              readiness: *probe
             securityContext:
               allowPrivilegeEscalation: false
-              readOnlyRootFilesystem: true
               capabilities:
                 drop:
                   - ALL
+              readOnlyRootFilesystem: true
               runAsUser: 100
               runAsGroup: 101
-
-    service:
-      booklore:
-        controller: booklore
-        ports:
-          http:
-            port: *httpPort
-
-    route:
-      booklore:
-        hostnames:
-          - booklore.rtrox.io
-        parentRefs:
-          - name: envoy-internal
-            namespace: network
-            sectionName: https
-
+              fsGroup: 101
     persistence:
       data:
         existingClaim: booklore
@@ -211,25 +160,17 @@ spec:
             mariadb:
               - path: /var/lib/mysql
                 subPath: mysql
-
-      books:
+      nfs-nas-media:
         type: nfs
         server: nas.rtrox.io
-        path: /mnt/rusty/media/books
+        path: /mnt/rusty/media
         advancedMounts:
           booklore:
             booklore:
               - path: /books
-
-      bookdrop:
-        type: nfs
-        server: nas.rtrox.io
-        path: /mnt/rusty/media/.bookdrop
-        advancedMounts:
-          booklore:
-            booklore:
+                subPath: books
               - path: /bookdrop
-
+                subPath: .bookdrop
       mysqld:
         type: emptyDir
         medium: Memory
@@ -238,7 +179,6 @@ spec:
           booklore:
             mariadb:
               - path: /run/mysqld
-
       nginx:
         type: emptyDir
         sizeLimit: 200Mi
@@ -254,7 +194,6 @@ spec:
             nginx-config:
               - path: /config
                 subPath: config
-
       nginx-run:
         type: emptyDir
         medium: Memory
@@ -263,7 +202,6 @@ spec:
           booklore:
             nginx:
               - path: /run/nginx
-
       tmpfs:
         type: emptyDir
         medium: Memory
@@ -276,11 +214,16 @@ spec:
             mariadb:
               - path: /tmp
                 subPath: mysql
-
-    defaultPodOptions:
-      securityContext:
-        runAsNonRoot: true
-        runAsUser: 1000
-        runAsGroup: 1000
-        fsGroup: 1000
-        fsGroupChangePolicy: OnRootMismatch
+    route:
+      booklore:
+        hostnames:
+          - booklore.rtrox.io
+        parentRefs:
+          - name: envoy-internal
+            namespace: network
+            sectionName: https
+    service:
+      booklore:
+        ports:
+          http:
+            port: *httpPort
