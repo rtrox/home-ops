@@ -59,26 +59,6 @@ spec:
                 drop:
                   - ALL
               readOnlyRootFilesystem: true
-          nginx-config:
-            image:
-              repository: ghcr.io/booklore-app/booklore
-              tag: v1.18.5@sha256:44a39097fcf69e7373b51df0459da052640d07459fb02b429f2c47cceaa32485
-            command:
-              - /bin/sh
-              - -c
-            args:
-              - "envsubst '$${BOOKLORE_PORT}' < /etc/nginx/nginx.conf > /config/nginx.conf"
-            env:
-              BOOKLORE_PORT: &httpPort 6060
-            securityContext:
-              allowPrivilegeEscalation: false
-              capabilities:
-                drop:
-                  - ALL
-              readOnlyRootFilesystem: true
-              runAsUser: 100
-              runAsGroup: 101
-              fsGroup: 101
         containers:
           booklore:
             image:
@@ -120,35 +100,6 @@ spec:
                 drop:
                   - ALL
               readOnlyRootFilesystem: true
-          nginx:
-            image:
-              repository: ghcr.io/booklore-app/booklore
-              tag: v1.18.5@sha256:44a39097fcf69e7373b51df0459da052640d07459fb02b429f2c47cceaa32485
-            command:
-              - nginx
-            args:
-              - -c
-              - /config/nginx.conf
-              - -g
-              - "daemon off;"
-            probes:
-              liveness: &probe
-                enabled: true
-                custom: true
-                spec:
-                  httpGet:
-                    path: /
-                    port: *httpPort
-              readiness: *probe
-            securityContext:
-              allowPrivilegeEscalation: false
-              capabilities:
-                drop:
-                  - ALL
-              readOnlyRootFilesystem: true
-              runAsUser: 100
-              runAsGroup: 101
-              fsGroup: 101
     persistence:
       data:
         existingClaim: booklore
@@ -179,29 +130,6 @@ spec:
           booklore:
             mariadb:
               - path: /run/mysqld
-      nginx:
-        type: emptyDir
-        sizeLimit: 200Mi
-        advancedMounts:
-          booklore:
-            nginx:
-              - path: /config
-                subPath: config
-              - path: /var/lib/nginx/logs
-                subPath: log
-              - path: /var/lib/nginx/tmp
-                subPath: tmp
-            nginx-config:
-              - path: /config
-                subPath: config
-      nginx-run:
-        type: emptyDir
-        medium: Memory
-        sizeLimit: 100Mi
-        advancedMounts:
-          booklore:
-            nginx:
-              - path: /run/nginx
       tmpfs:
         type: emptyDir
         medium: Memory
@@ -224,6 +152,7 @@ spec:
             sectionName: https
     service:
       booklore:
+        controller: booklore
         ports:
           http:
-            port: *httpPort
+            port: 8080
