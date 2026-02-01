@@ -1,0 +1,176 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: qbittorrent
+spec:
+  interval: 1h
+  chartRef:
+    kind: OCIRepository
+    name: qbittorrent
+  install:
+    remediation:
+      retries: -1
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  values:
+    controllers:
+      qbittorrent:
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          app:
+            image:
+              repository: ghcr.io/home-operations/qbittorrent
+              tag: 5.1.4@sha256:56ecd30a7f5e1357daf5eea2a6935134d329b7b268a3a9b9c67041b65fb87fc6
+            env:
+              UMASK: "022"
+              QBT_WEBUI_PORT: &port 8080
+            probes:
+              liveness: &probes
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /api/v2/app/version
+                    port: *port
+                  initialDelaySeconds: 30
+                  timeoutSeconds: 10
+                  periodSeconds: 30
+                  failureThreshold: 5
+              readiness: *probes
+            securityContext:
+              runAsUser: 568
+              runAsGroup: 568
+              runAsNonRoot: true
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities:
+                drop:
+                  - ALL
+            resources:
+              requests:
+                cpu: 100m
+                memory: 256Mi
+              limits:
+                memory: 8Gi
+          mousehole:
+            dependsOn: app
+            image:
+              repository: docker.io/tmmrtn/mousehole
+              tag: 0.2.0@sha256:9adfcfddb3395d33f0fbef50a6dc52a930769c57f2c0af2b3b9d6f7bfda6195c
+            env:
+              TZ: America/Los_Angeles
+              MOUSEHOLE_PORT: &mousehole-port 5010
+              MOUSEHOLE_STATE_DIR_PATH: /srv/mousehole
+              MOUSEHOLE_CHECK_INTERVAL_SECONDS: "1800"
+            securityContext:
+              runAsUser: 568
+              runAsGroup: 568
+              runAsNonRoot: true
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities:
+                drop:
+                  - ALL
+            resources:
+              requests:
+                cpu: 10m
+                memory: 32Mi
+              limits:
+                memory: 512Mi
+        initContainers:
+          gluetun:
+            image:
+              repository: ghcr.io/qdm12/gluetun
+              tag: v3.40.0
+            env:
+              VPN_PORT_FORWARDING: "on"
+              VPN_PORT_FORWARDING_STATUS_FILE: /gluetun/forwarded_port
+              VPN_PORT_FORWARDING_UP_COMMAND: |
+                /bin/sh -c 'wget -O- --retry-connrefused --post-data "json={\"listen_port\":{{`{{PORTS}}`}}}" http://127.0.0.1:8080/api/v2/app/setPreferences 2>&1'
+            envFrom:
+              - secretRef:
+                  name: qbittorrent-gluetun-env-secret
+            restartPolicy: Always
+            securityContext:
+              capabilities:
+                add:
+                  - NET_ADMIN
+              allowPrivilegeEscalation: false
+          socks5:
+            restartPolicy: Always
+            image:
+              repository: serjs/go-socks5-proxy
+              tag: latest@sha256:aad36c623f16850d7cea0171d1aa79d706129191db9e270b6dfd7db6b552c734
+            env:
+              PROXY_PORT: &proxy-port 8388
+    defaultPodOptions:
+      terminationGracePeriodSeconds: 300
+      securityContext:
+        fsGroup: 568
+        fsGroupChangePolicy: OnRootMismatch
+    service:
+      app:
+        controller: qbittorrent
+        ports:
+          http:
+            port: *port
+          mousehole:
+            port: *mousehole-port
+      gluetun:
+        controller: qbittorrent
+        type: LoadBalancer
+        ports:
+          socks-proxy:
+            enabled: true
+            port: *proxy-port
+    route:
+      app:
+        hostnames:
+          - qbittorrent.rtrox.io
+        parentRefs:
+          - name: envoy-internal
+            namespace: network
+            sectionName: https
+        rules:
+          - matches:
+              - path:
+                  type: PathPrefix
+                  value: /
+            backendRefs:
+              - name: qbittorrent-app
+                port: *port
+    persistence:
+      config:
+        existingClaim: qbittorrent
+        advancedMounts:
+          qbittorrent:
+            app:
+              - path: /config
+      media:
+        type: nfs
+        server: nas.rtrox.io
+        path: /mnt/rusty/media
+        globalMounts:
+          - path: /media
+      openvpn:
+        type: secret
+        name: qbittorrent-openvpn-secret
+        globalMounts:
+          - path: /gluetun-config/
+      gluetun-data:
+        type: emptyDir
+        advancedMounts:
+          qbittorrent:
+            gluetun:
+              - path: /gluetun
+      mousehole-data:
+        type: emptyDir
+        advancedMounts:
+          qbittorrent:
+            mousehole:
+              - path: /srv/mousehole
