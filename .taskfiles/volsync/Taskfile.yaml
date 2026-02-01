@@ -1,0 +1,115 @@
+---
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+version: "3"
+
+tasks:
+  default-requires:
+    internal: true
+    requires: &default-requires
+      vars:
+        - APP
+        - NAMESPACE
+
+  restic-env:
+    desc: Print restic environment variables for a Volsync backup (use with eval)
+    requires: *default-requires
+    vars:
+      BACKEND: '{{.BACKEND | default "minio"}}'
+    preconditions:
+      - which kubectl
+      - sh: test "{{.BACKEND}}" = "minio" -o "{{.BACKEND}}" = "b2"
+        msg: "BACKEND must be 'minio' or 'b2'"
+      - sh: kubectl get secret "{{.APP}}-volsync-{{.BACKEND}}-secret" -n "{{.NAMESPACE}}" >/dev/null 2>&1
+        msg: "Secret '{{.APP}}-volsync-{{.BACKEND}}-secret' not found in namespace '{{.NAMESPACE}}'"
+    silent: true
+    cmds:
+      - |
+        SECRET_NAME="{{.APP}}-volsync-{{.BACKEND}}-secret"
+        echo "export RESTIC_REPOSITORY='$(kubectl get secret ${SECRET_NAME} -n {{.NAMESPACE}} -o jsonpath='{.data.RESTIC_REPOSITORY}' | base64 -d)'"
+        echo "export RESTIC_PASSWORD='$(kubectl get secret ${SECRET_NAME} -n {{.NAMESPACE}} -o jsonpath='{.data.RESTIC_PASSWORD}' | base64 -d)'"
+        echo "export AWS_ACCESS_KEY_ID='$(kubectl get secret ${SECRET_NAME} -n {{.NAMESPACE}} -o jsonpath='{.data.AWS_ACCESS_KEY_ID}' | base64 -d)'"
+        echo "export AWS_SECRET_ACCESS_KEY='$(kubectl get secret ${SECRET_NAME} -n {{.NAMESPACE}} -o jsonpath='{.data.AWS_SECRET_ACCESS_KEY}' | base64 -d)'"
+
+  snapshots:
+    desc: List restic snapshots for a Volsync backup
+    requires: *default-requires
+    vars:
+      BACKEND: '{{.BACKEND | default "minio"}}'
+    preconditions:
+      - which kubectl
+      - which restic
+      - sh: test "{{.BACKEND}}" = "minio" -o "{{.BACKEND}}" = "b2"
+        msg: "BACKEND must be 'minio' or 'b2'"
+    cmds:
+      - task: _with-restic-env
+        vars:
+          APP: "{{.APP}}"
+          NAMESPACE: "{{.NAMESPACE}}"
+          BACKEND: "{{.BACKEND}}"
+          RESTIC_CMD: "restic snapshots"
+
+  ls:
+    desc: List files in the latest snapshot
+    requires: *default-requires
+    vars:
+      BACKEND: '{{.BACKEND | default "minio"}}'
+      SNAPSHOT: '{{.SNAPSHOT | default "latest"}}'
+    preconditions:
+      - which kubectl
+      - which restic
+    cmds:
+      - task: _with-restic-env
+        vars:
+          APP: "{{.APP}}"
+          NAMESPACE: "{{.NAMESPACE}}"
+          BACKEND: "{{.BACKEND}}"
+          RESTIC_CMD: "restic ls {{.SNAPSHOT}}"
+
+  stats:
+    desc: Show repository statistics
+    requires: *default-requires
+    vars:
+      BACKEND: '{{.BACKEND | default "minio"}}'
+    preconditions:
+      - which kubectl
+      - which restic
+    cmds:
+      - task: _with-restic-env
+        vars:
+          APP: "{{.APP}}"
+          NAMESPACE: "{{.NAMESPACE}}"
+          BACKEND: "{{.BACKEND}}"
+          RESTIC_CMD: "restic stats"
+
+  unlock:
+    desc: Remove stale locks from the repository
+    requires: *default-requires
+    vars:
+      BACKEND: '{{.BACKEND | default "minio"}}'
+    preconditions:
+      - which kubectl
+      - which restic
+    cmds:
+      - task: _with-restic-env
+        vars:
+          APP: "{{.APP}}"
+          NAMESPACE: "{{.NAMESPACE}}"
+          BACKEND: "{{.BACKEND}}"
+          RESTIC_CMD: "restic unlock"
+
+  _with-restic-env:
+    internal: true
+    requires:
+      vars:
+        - APP
+        - NAMESPACE
+        - BACKEND
+        - RESTIC_CMD
+    cmds:
+      - |
+        SECRET_NAME="{{.APP}}-volsync-{{.BACKEND}}-secret"
+        export RESTIC_REPOSITORY="$(kubectl get secret ${SECRET_NAME} -n {{.NAMESPACE}} -o jsonpath='{.data.RESTIC_REPOSITORY}' | base64 -d)"
+        export RESTIC_PASSWORD="$(kubectl get secret ${SECRET_NAME} -n {{.NAMESPACE}} -o jsonpath='{.data.RESTIC_PASSWORD}' | base64 -d)"
+        export AWS_ACCESS_KEY_ID="$(kubectl get secret ${SECRET_NAME} -n {{.NAMESPACE}} -o jsonpath='{.data.AWS_ACCESS_KEY_ID}' | base64 -d)"
+        export AWS_SECRET_ACCESS_KEY="$(kubectl get secret ${SECRET_NAME} -n {{.NAMESPACE}} -o jsonpath='{.data.AWS_SECRET_ACCESS_KEY}' | base64 -d)"
+        {{.RESTIC_CMD}}

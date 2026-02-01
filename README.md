@@ -215,7 +215,8 @@ kubectl -n rook-ceph exec -it deploy/rook-ceph-tools -- ceph status
 
 For detailed information about the repository structure, patterns, and best practices, see:
 
-**[CLAUDE.md](CLAUDE.md)** - Comprehensive architectural context and patterns
+- **[CLAUDE.md](CLAUDE.md)** - Comprehensive architectural context and patterns
+- **[Taskfile Reference](.taskfiles/README.md)** - Task automation commands
 
 ---
 
