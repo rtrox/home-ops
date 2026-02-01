@@ -65,6 +65,8 @@ spec:
   clientIPDetection:
     xForwardedFor:
       numTrustedHops: 1
+  headers:
+    enableEnvoyHeaders: true
   http3: {}
   targetSelectors:
     - group: gateway.networking.k8s.io
