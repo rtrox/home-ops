@@ -24,8 +24,8 @@ spec:
         containers:
           app:
             image:
-              repository: jellyfin/jellyfin
-              tag: 10.11.5@sha256:6d819e9ab067efcf712993b23455cc100ee5585919bb297ea5a109ac00cb626e
+              repository: ghcr.io/jellyfin/jellyfin
+              tag: 10.11.6@sha256:25db4eb10143c1c12adb79ed978e31d94fc98dc499fbae2d38b2c935089ced3e
             env:
               TZ: America/Los_Angeles
             probes:
@@ -90,15 +90,6 @@ spec:
           - name: envoy-internal
             namespace: network
             sectionName: https
-        rules:
-          - matches:
-              - path:
-                  type: PathPrefix
-                  value: /
-            backendRefs:
-              - name: jellyfin-app
-                port: 8096
-                kind: Service
     persistence:
       config:
         existingClaim: jellyfin
@@ -110,7 +101,6 @@ spec:
         path: /mnt/rusty/media
         globalMounts:
           - path: /media
-            readOnly: true
       transcodes:
         type: emptyDir
         globalMounts:
