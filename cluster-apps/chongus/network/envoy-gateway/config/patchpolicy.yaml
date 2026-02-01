@@ -39,7 +39,7 @@ spec:
         value:
           header:
             key: "X-Forwarded-Port"
-            value: "%DOWNSTREAM_LOCAL_PORT%"
+            value: "443"
           append_action: OVERWRITE_IF_EXISTS_OR_ADD
 ---
 apiVersion: gateway.envoyproxy.io/v1alpha1
@@ -81,5 +81,5 @@ spec:
         value:
           header:
             key: "X-Forwarded-Port"
-            value: "%DOWNSTREAM_LOCAL_PORT%"
+            value: "443"
           append_action: OVERWRITE_IF_EXISTS_OR_ADD
