@@ -105,3 +105,9 @@ spec:
         existingClaim: qui
         globalMounts:
           - path: /config
+      media:
+        type: nfs
+        server: nas.rtrox.io
+        path: /mnt/rusty/media
+        globalMounts:
+          - path: /media
