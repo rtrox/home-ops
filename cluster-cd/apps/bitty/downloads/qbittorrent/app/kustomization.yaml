@@ -5,6 +5,7 @@ kind: Kustomization
 resources:
   - ./helmrelease.yaml
   - ./externalsecret.yaml
+  - ./cronjob-secret.yaml
   - ./openvpn-config.yaml
   - ../../../../base/_templates/volsync-minio-default
   - ../../../../base/_templates/gatus
