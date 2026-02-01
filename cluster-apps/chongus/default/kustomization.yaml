@@ -9,6 +9,7 @@ resources:
   - ./bluesky-pds/ks.yaml
   - ./booklore/ks.yaml
   - ./echo-server/ks.yaml
+  - ./jellyfin/ks.yaml
   - ./minecraft-cpw/ks.yaml
   - ./minecraft-sf5/ks.yaml
   - ./minecraft-stoneblock/ks.yaml
