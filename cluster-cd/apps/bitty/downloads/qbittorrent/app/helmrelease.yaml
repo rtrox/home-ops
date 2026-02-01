@@ -118,6 +118,30 @@ spec:
             env:
               PROXY_PORT: &proxy-port 8388
 
+      script-runner:
+        type: cronjob
+        cronjob:
+          schedule: "*/30 * * * *"
+          successfulJobsHistory: 1
+          failedJobsHistory: 1
+        containers:
+          main:
+            image:
+              repository: curlimages/curl
+              tag: latest
+            command:
+              - /bin/sh
+              - /scripts/script.sh
+            securityContext:
+              runAsUser: 568
+              runAsGroup: 568
+              runAsNonRoot: true
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities:
+                drop:
+                  - ALL
+
     defaultPodOptions:
       terminationGracePeriodSeconds: 300
       securityContext:
@@ -178,3 +202,19 @@ spec:
         name: openvpn-secret
         globalMounts:
           - path: /gluetun-config/
+
+      cronjob-script:
+        type: secret
+        name: qbittorrent-cronjob-script
+        defaultMode: 0755
+        advancedMounts:
+          script-runner:
+            main:
+              - path: /scripts
+
+      cronjob-cookies:
+        type: emptyDir
+        advancedMounts:
+          script-runner:
+            main:
+              - path: /tmp/cookies
