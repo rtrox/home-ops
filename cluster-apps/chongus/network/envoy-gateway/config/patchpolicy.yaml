@@ -11,31 +11,31 @@ spec:
     name: envoy-internal
   type: JSONPatch
   jsonPatches:
-    - type: "type.googleapis.com/envoy.config.listener.v3.Listener"
+    - type: "type.googleapis.com/envoy.config.route.v3.RouteConfiguration"
       name: "network/envoy-internal/https"
       operation:
         op: add
-        path: "/default_filter_chain/filters/0/typed_config/route_config/request_headers_to_add/-"
+        path: "/request_headers_to_add/-"
         value:
           header:
             key: "X-Real-IP"
             value: "%DOWNSTREAM_REMOTE_ADDRESS_WITHOUT_PORT%"
           append_action: OVERWRITE_IF_EXISTS_OR_ADD
-    - type: "type.googleapis.com/envoy.config.listener.v3.Listener"
+    - type: "type.googleapis.com/envoy.config.route.v3.RouteConfiguration"
       name: "network/envoy-internal/https"
       operation:
         op: add
-        path: "/default_filter_chain/filters/0/typed_config/route_config/request_headers_to_add/-"
+        path: "/request_headers_to_add/-"
         value:
           header:
             key: "X-Forwarded-Host"
             value: "%REQ(:authority)%"
           append_action: OVERWRITE_IF_EXISTS_OR_ADD
-    - type: "type.googleapis.com/envoy.config.listener.v3.Listener"
+    - type: "type.googleapis.com/envoy.config.route.v3.RouteConfiguration"
       name: "network/envoy-internal/https"
       operation:
         op: add
-        path: "/default_filter_chain/filters/0/typed_config/route_config/request_headers_to_add/-"
+        path: "/request_headers_to_add/-"
         value:
           header:
             key: "X-Forwarded-Port"
@@ -53,31 +53,31 @@ spec:
     name: envoy-external
   type: JSONPatch
   jsonPatches:
-    - type: "type.googleapis.com/envoy.config.listener.v3.Listener"
+    - type: "type.googleapis.com/envoy.config.route.v3.RouteConfiguration"
       name: "network/envoy-external/https"
       operation:
         op: add
-        path: "/default_filter_chain/filters/0/typed_config/route_config/request_headers_to_add/-"
+        path: "/request_headers_to_add/-"
         value:
           header:
             key: "X-Real-IP"
             value: "%DOWNSTREAM_REMOTE_ADDRESS_WITHOUT_PORT%"
           append_action: OVERWRITE_IF_EXISTS_OR_ADD
-    - type: "type.googleapis.com/envoy.config.listener.v3.Listener"
+    - type: "type.googleapis.com/envoy.config.route.v3.RouteConfiguration"
       name: "network/envoy-external/https"
       operation:
         op: add
-        path: "/default_filter_chain/filters/0/typed_config/route_config/request_headers_to_add/-"
+        path: "/request_headers_to_add/-"
         value:
           header:
             key: "X-Forwarded-Host"
             value: "%REQ(:authority)%"
           append_action: OVERWRITE_IF_EXISTS_OR_ADD
-    - type: "type.googleapis.com/envoy.config.listener.v3.Listener"
+    - type: "type.googleapis.com/envoy.config.route.v3.RouteConfiguration"
       name: "network/envoy-external/https"
       operation:
         op: add
-        path: "/default_filter_chain/filters/0/typed_config/route_config/request_headers_to_add/-"
+        path: "/request_headers_to_add/-"
         value:
           header:
             key: "X-Forwarded-Port"
