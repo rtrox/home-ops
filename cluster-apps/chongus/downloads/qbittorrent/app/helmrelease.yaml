@@ -144,6 +144,21 @@ spec:
             backendRefs:
               - name: qbittorrent-app
                 port: *port
+      mousehole:
+        hostnames:
+          - mousehole.rtrox.io
+        parentRefs:
+          - name: envoy-internal
+            namespace: network
+            sectionName: https
+        rules:
+          - matches:
+              - path:
+                  type: PathPrefix
+                  value: /
+            backendRefs:
+              - name: qbittorrent-app
+                port: *mousehole-port
     persistence:
       config:
         existingClaim: qbittorrent
