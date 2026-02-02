@@ -35,3 +35,11 @@ flux-diff.patch
 
 # Claude Code local files
 .claude/
+
+# Node modules (prettier)
+node_modules/
+
+# Python
+.venv/
+.pytest_cache/
+__pycache__/

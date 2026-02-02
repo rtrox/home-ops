@@ -154,7 +154,6 @@ spec:
                 port: 8000
                 kind: Service
 
-
     persistence:
       data:
         enabled: true

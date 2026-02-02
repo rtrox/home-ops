@@ -1,0 +1,83 @@
+{
+  "YAML Document Start": {
+    "prefix": ["---", "yaml", "doc"],
+    "scope": "yaml",
+    "body": ["---", "$0"],
+    "description": "Start a new YAML document with document start marker"
+  },
+  "Kubernetes Resource": {
+    "prefix": ["k8s", "resource"],
+    "scope": "yaml",
+    "body": [
+      "---",
+      "apiVersion: ${1:v1}",
+      "kind: ${2:ConfigMap}",
+      "metadata:",
+      "  name: ${3:name}",
+      "$0"
+    ],
+    "description": "Kubernetes resource template"
+  },
+  "Flux Kustomization": {
+    "prefix": ["ks", "fluxks"],
+    "scope": "yaml",
+    "body": [
+      "---",
+      "# yaml-language-server: \\$schema=https://kubernetes-schemas.pages.dev/kustomize.toolkit.fluxcd.io/kustomization_v1.json",
+      "apiVersion: kustomize.toolkit.fluxcd.io/v1",
+      "kind: Kustomization",
+      "metadata:",
+      "  name: &app ${1:app-name}",
+      "  namespace: &namespace ${2:default}",
+      "spec:",
+      "  targetNamespace: *namespace",
+      "  commonMetadata:",
+      "    labels:",
+      "      app.kubernetes.io/name: *app",
+      "  dependsOn:",
+      "    - name: rook-ceph-cluster",
+      "      namespace: rook-ceph",
+      "    - name: external-secrets-store-doppler",
+      "      namespace: external-secrets",
+      "  path: ./cluster-apps/chongus/${2:namespace}/${1:app-name}/app",
+      "  prune: true",
+      "  sourceRef:",
+      "    kind: GitRepository",
+      "    name: flux-system",
+      "    namespace: flux-system",
+      "  wait: false",
+      "  interval: 1h",
+      "  retryInterval: 2m",
+      "  timeout: 5m",
+      "$0"
+    ],
+    "description": "Flux Kustomization template for Chongus"
+  },
+  "HelmRelease": {
+    "prefix": ["hr", "helmrelease"],
+    "scope": "yaml",
+    "body": [
+      "---",
+      "# yaml-language-server: \\$schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json",
+      "apiVersion: helm.toolkit.fluxcd.io/v2",
+      "kind: HelmRelease",
+      "metadata:",
+      "  name: ${1:app-name}",
+      "spec:",
+      "  interval: 1h",
+      "  chartRef:",
+      "    kind: OCIRepository",
+      "    name: ${1:app-name}",
+      "  install:",
+      "    remediation:",
+      "      retries: -1",
+      "  upgrade:",
+      "    cleanupOnFail: true",
+      "    remediation:",
+      "      retries: 3",
+      "  values:",
+      "    $0"
+    ],
+    "description": "HelmRelease template with app-template"
+  }
+}

@@ -114,14 +114,14 @@ spec:
           gnetId: 1860
           revision: 41
           datasource:
-            - {name: DS_PROMETHEUS, value: Prometheus, }
+            - { name: DS_PROMETHEUS, value: Prometheus }
 
         smartctl-exporter:
           # renovate: dashboardName="SMARTctl Exporter Dashboard"
           gnetId: 22604
           revision: 2
           datasource:
-            - {name: DS_PROMETHEUS, value: Prometheus, }
+            - { name: DS_PROMETHEUS, value: Prometheus }
 
         spegel:
           # renovate: dashboardName="Spegel"
@@ -241,7 +241,6 @@ spec:
           datasource:
             - name: "DS_PROMETHEUS"
               value: Prometheus
-
 
     datasources:
       datasources.yaml:

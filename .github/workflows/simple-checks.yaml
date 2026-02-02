@@ -65,13 +65,13 @@ jobs:
 
   lint_success:
     needs:
-    - pre-commit-check
-    - lint-yaml
-    - renovate-config-validator
+      - pre-commit-check
+      - lint-yaml
+      - renovate-config-validator
     if: ${{ !cancelled() }}
     name: Lint successful
     runs-on: ubuntu-latest
     steps:
-    - name: Check job status
-      if: ${{ contains(needs.*.result, 'failure') }}
-      run: exit 1
+      - name: Check job status
+        if: ${{ contains(needs.*.result, 'failure') }}
+        run: exit 1

@@ -1,0 +1,11 @@
+---
+# Only format YAML files
+overrides:
+  - files:
+      - "*.yaml"
+      - "*.yml"
+    options:
+      parser: yaml
+      proseWrap: preserve
+      singleQuote: false
+      bracketSpacing: true

@@ -10,7 +10,6 @@ spec:
     kind: OCIRepository
     name: paperless-redis
 
-
   values:
     defaultPodOptions:
       enableServiceLinks: true

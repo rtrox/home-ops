@@ -30,7 +30,6 @@ jobs:
             clusters/base/**/*
             clusters/chongus/**/*
 
-
   test:
     if: ${{ needs.filter-changes.outputs.changed-files != '[]' }}
     name: Flux Local Test
