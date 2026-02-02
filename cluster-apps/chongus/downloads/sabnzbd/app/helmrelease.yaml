@@ -114,7 +114,7 @@ spec:
             port: *metrics-port
     serviceMonitor:
       app:
-        serviceName: sabnzbd-app
+        serviceName: sabnzbd
         endpoints:
           - port: metrics
             scheme: http
@@ -128,14 +128,7 @@ spec:
           - name: envoy-internal
             namespace: network
             sectionName: https
-        rules:
-          - matches:
-              - path:
-                  type: PathPrefix
-                  value: /
-            backendRefs:
-              - name: sabnzbd-app
-                port: *port
+
     persistence:
       config:
         existingClaim: sabnzbd
