@@ -71,7 +71,7 @@ spec:
             dependsOn: app
             image:
               repository: ghcr.io/onedr0p/exportarr
-              tag: v2.3.0@sha256:9ad6555d59cd7be6efedbd9f557c3afc71f9686d5278b35cff770f6bb5830a6b
+              tag: v2.3.0@sha256:af535d94061cf97a52e1661945ffba78c03f9443eae7c0da1a80a5a4be56b520
             args:
               - sabnzbd
             env:
