@@ -86,7 +86,7 @@ spec:
           gluetun:
             image:
               repository: ghcr.io/qdm12/gluetun
-              tag: v3.40.0
+              tag: v3.41.0
             env:
               VPN_PORT_FORWARDING: "on"
               VPN_PORT_FORWARDING_STATUS_FILE: /gluetun/forwarded_port
