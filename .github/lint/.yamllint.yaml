@@ -9,7 +9,10 @@ ignore: |
   *.cho-raw.yaml
   *.sid.yaml
   *.sid-raw.yaml
-  cluster-cd/apps/bitty/downloads/qbittorrent/tools/resources/config.yaml
+  *.bty.yaml
+  cluster-cd/
+  ansible/
+  clusters/bitty/
 extends: default
 rules:
   truthy:
