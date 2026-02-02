@@ -9,15 +9,14 @@
     "github>rtrox/home-ops//.github/renovate/clusters.json5",
     "github>rtrox/home-ops//.github/renovate/grafanaDashboards.json5",
   ],
-
   ignorePaths: [".archive/**", "cluster-cd/**"],
   flux: {
-    fileMatch: ["^cluster-apps/.+\\.ya?ml$"],
+    managerFilePatterns: ["/^cluster-apps/.+\\.ya?ml$/"],
   },
   "helm-values": {
-    fileMatch: ["^cluster-apps/.+\\.ya?ml$"],
+    managerFilePatterns: ["/^cluster-apps/.+\\.ya?ml$/"],
   },
   kubernetes: {
-    fileMatch: ["^cluster-apps/.+\\.ya?ml$"],
+    managerFilePatterns: ["/^cluster-apps/.+\\.ya?ml$/"],
   },
 }
