@@ -7,6 +7,9 @@
     "yaml.schemas": {
       "kubernetes": ["kubernetes/*.yml", "kubernetes/*.yaml"]
     },
+    "yaml.customTags": [
+      "!env_var scalar"
+    ],
     "markdownlint.config": {
       "extends": ".markdownlint.yaml"
     }
