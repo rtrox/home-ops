@@ -9,7 +9,6 @@ resources:
   - ./ocirepository.yaml
   - ./externalsecret.yaml
 
-
 configMapGenerator:
   - name: minecraft-dashboards
     files:

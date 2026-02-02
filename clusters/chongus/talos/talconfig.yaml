@@ -210,7 +210,6 @@ controlPlane:
               - actions-runner-system
               - system-upgrade
 
-
 worker:
   schematic:
     customization:
