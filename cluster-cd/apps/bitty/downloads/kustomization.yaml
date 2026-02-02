@@ -7,8 +7,8 @@ resources:
   # - networkpolicy.yaml
   - volsyncnetworkpolicy.yaml
   - autobrr/ks.yaml
-  - prowlarr/ks.yaml
-  - qbittorrent/ks.yaml
+  # - prowlarr/ks.yaml
+  # - qbittorrent/ks.yaml
   - radarr/ks.yaml
   - readarr/ks.yaml
   - recyclarr/ks.yaml
