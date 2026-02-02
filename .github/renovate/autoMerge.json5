@@ -32,5 +32,14 @@
       matchPackageNames: ["cilium"],
       ignoreTests: false,
     },
+    {
+      description: "Never Automerge qbittorrent",
+      matchDatasources: ["docker"],
+      automerge: false,
+      matchPackageNames: ["ghcr.io/home-operations/qbittorrent"],
+      prBodyNotes: [
+        ":warning: **Manual Review Required**: Check [qbittorrent changelog](https://github.com/qbittorrent/qBittorrent/blob/master/Changelog) and [libtorrent releases](https://github.com/arvidn/libtorrent/releases) for breaking changes before merging.",
+      ],
+    },
   ],
 }
