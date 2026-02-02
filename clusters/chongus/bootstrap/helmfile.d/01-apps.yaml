@@ -38,7 +38,7 @@ releases:
   - name: cert-manager
     namespace: cert-manager
     chart: oci://quay.io/jetstack/charts/cert-manager
-    version: v1.18.2
+    version: v1.19.3
     values:
       - "../../../../cluster-apps/base/cert-manager/app/values.yaml"
     needs:
