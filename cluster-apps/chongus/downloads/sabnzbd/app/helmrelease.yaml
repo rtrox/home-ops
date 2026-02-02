@@ -97,20 +97,6 @@ spec:
                 memory: 64Mi
               limits:
                 memory: 256Mi
-        initContainers:
-          gluetun:
-            image:
-              repository: ghcr.io/qdm12/gluetun
-              tag: v3.40.0
-            envFrom:
-              - secretRef:
-                  name: sabnzbd-gluetun-env-secret
-            restartPolicy: Always
-            securityContext:
-              capabilities:
-                add:
-                  - NET_ADMIN
-              allowPrivilegeEscalation: false
     defaultPodOptions:
       terminationGracePeriodSeconds: 120
       securityContext:
@@ -163,12 +149,6 @@ spec:
         path: /mnt/rusty/media
         globalMounts:
           - path: /media
-      gluetun-data:
-        type: emptyDir
-        advancedMounts:
-          sabnzbd:
-            gluetun:
-              - path: /gluetun
       tmp:
         type: emptyDir
         globalMounts:
