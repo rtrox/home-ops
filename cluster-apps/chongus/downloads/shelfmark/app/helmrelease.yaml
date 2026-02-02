@@ -90,6 +90,7 @@ spec:
         advancedMounts:
           shelfmark:
             shelfmark:
+              - path: /media
               - path: /bookdrop
                 subPath: .bookdrop
       tmpfs:
