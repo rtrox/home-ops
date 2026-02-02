@@ -25,7 +25,7 @@ spec:
           app:
             image:
               repository: ghcr.io/home-operations/sabnzbd
-              tag: 4.5.1@sha256:2e4eef4d3671e5c06c3b14e0e5f04943b51d99fdb7c30bf7df5e8bc4f7d50e7a
+              tag: 4.5.5@sha256:485440a3e9209a3515c01e1c73d6088726491a292302a721d4cb9e7c6375c768
             env:
               TZ: America/Los_Angeles
               SABNZBD__PORT: &port 8080
