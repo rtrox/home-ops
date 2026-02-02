@@ -88,9 +88,11 @@ spec:
               PORT: &metrics-port 8081
               URL: http://localhost:8080
               ENABLE_ADDITIONAL_METRICS: "true"
-            envFrom:
-              - secretRef:
-                  name: prowlarr-secret
+              APIKEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: prowlarr-secret
+                    key: PROWLARR__AUTH__APIKEY
             securityContext:
               runAsUser: 568
               runAsGroup: 568
