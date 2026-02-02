@@ -15,6 +15,6 @@ resources:
   - sabnzbd/ks.yaml
   - sonarr/ks.yaml
   - unpackerr/ks.yaml
-  - cross-seed/ks.yaml
+  # - cross-seed/ks.yaml
   - suwayomi/ks.yaml
   - flaresolverr/ks.yaml

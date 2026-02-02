@@ -8,6 +8,8 @@ resources:
   - ./prowlarr/ks.yaml
   - ./qbittorrent/ks.yaml
   - ./qui/ks.yaml
+  - ./radarr/ks.yaml
+  - ./sonarr/ks.yaml
 components:
   - ../../components/privileged-namespace
   - ../../components/flux/alerts
