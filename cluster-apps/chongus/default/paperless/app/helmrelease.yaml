@@ -102,7 +102,7 @@ spec:
           main:
             image:
               repository: "docker.io/gotenberg/gotenberg"
-              tag: "8.25.0@sha256:80e15ffce58d2c40ad5d1b88fb8fe00b10287c8e9311dbaa705004f856ec7abd"
+              tag: "8.25.0@sha256:e304e45acee3c400f8ef76afa195c76b1d0eaf0ab6fe9651e305067ab6a1560c"
             command:
               [
                 "gotenberg",
