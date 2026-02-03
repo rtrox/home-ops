@@ -1,0 +1,52 @@
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: &app actions-runner-controller
+  namespace: flux-system
+spec:
+  commonMetadata:
+    labels:
+      app.kubernetes.io/name: *app
+  dependsOn:
+    - name: external-secrets-store-doppler
+      namespace: external-secrets
+  interval: 1h
+  retryInterval: 2m
+  timeout: 5m
+  path: ./cluster-apps/chongus/actions-runner-system/actions-runner-system/operator
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  targetNamespace: actions-runner-system
+  wait: false
+  postBuild:
+    substitute:
+      APP: *app
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: actions-runner-controller-runners
+  namespace: flux-system
+spec:
+  commonMetadata:
+    labels:
+      app.kubernetes.io/name: actions-runner-controller
+  dependsOn:
+    - name: actions-runner-controller
+    - name: openebs
+      namespace: openebs
+  interval: 1h
+  retryInterval: 2m
+  timeout: 5m
+  path: ./cluster-apps/chongus/actions-runner-system/actions-runner-system/runners
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  targetNamespace: actions-runner-system
+  wait: false
