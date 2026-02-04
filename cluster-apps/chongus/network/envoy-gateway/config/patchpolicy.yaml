@@ -20,7 +20,7 @@ spec:
           header:
             key: "X-Real-IP"
             value: "%DOWNSTREAM_REMOTE_ADDRESS_WITHOUT_PORT%"
-          append_action: OVERWRITE_IF_EXISTS_OR_ADD
+          append_action: ADD_IF_ABSENT
     - type: "type.googleapis.com/envoy.config.route.v3.RouteConfiguration"
       name: "network/envoy-internal/https"
       operation:
@@ -62,7 +62,7 @@ spec:
           header:
             key: "X-Real-IP"
             value: "%DOWNSTREAM_REMOTE_ADDRESS_WITHOUT_PORT%"
-          append_action: OVERWRITE_IF_EXISTS_OR_ADD
+          append_action: ADD_IF_ABSENT
     - type: "type.googleapis.com/envoy.config.route.v3.RouteConfiguration"
       name: "network/envoy-external/https"
       operation:
