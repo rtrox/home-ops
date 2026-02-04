@@ -9,7 +9,7 @@ _.python.venv = { path = "{{config_root}}/.venv", create = true }
 "uv" = "latest"
 "pipx:makejinja" = "2.8.2"
 "pipx:flux-local" = "8.1.0"
-"aqua:budimanjojo/talhelper" = "3.0.21"
+"aqua:budimanjojo/talhelper" = "3.1.3"
 "aqua:cilium/cilium-cli" = "0.18.3"
 "aqua:cli/cli" = "2.86.0"
 "aqua:cue-lang/cue" = "0.12.1"
