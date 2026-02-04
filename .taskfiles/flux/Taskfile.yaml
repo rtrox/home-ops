@@ -20,11 +20,23 @@ tasks:
     desc: Validate all Flux resources with flux-local
     requires: *default-requires
     preconditions:
-      - which flux-local
+      - mise exec -- which flux-local
       - test -d "{{.FLUX_PATH}}"
     cmds:
-      - flux-local test
+      - mise exec -- flux-local test
         --enable-helm
+        --all-namespaces
+        --path "{{.FLUX_PATH}}"
+        -v
+
+  test-quick:
+    desc: Validate Flux structure without fetching Helm charts (avoids GHCR rate limits)
+    requires: *default-requires
+    preconditions:
+      - mise exec -- which flux-local
+      - test -d "{{.FLUX_PATH}}"
+    cmds:
+      - mise exec -- flux-local test
         --all-namespaces
         --path "{{.FLUX_PATH}}"
         -v
@@ -36,12 +48,12 @@ tasks:
       RESOURCE_TYPE: '{{.RESOURCE_TYPE | default "ks"}}'
       RESOURCE_NAME: '{{.RESOURCE_NAME | default ""}}'
     preconditions:
-      - which flux-local
+      - mise exec -- which flux-local
       - test -d "{{.FLUX_PATH}}"
       - sh: test "{{.RESOURCE_TYPE}}" = "ks" -o "{{.RESOURCE_TYPE}}" = "hr"
         msg: "RESOURCE_TYPE must be 'ks' or 'hr'"
     cmds:
-      - flux-local build {{.RESOURCE_TYPE}}
+      - mise exec -- flux-local build {{.RESOURCE_TYPE}}
         {{if .RESOURCE_NAME}}{{.RESOURCE_NAME}}{{end}}
         --path "{{.FLUX_PATH}}"
         --all-namespaces
@@ -52,12 +64,12 @@ tasks:
     vars:
       RESOURCE_TYPE: '{{.RESOURCE_TYPE | default "ks"}}'
     preconditions:
-      - which flux-local
+      - mise exec -- which flux-local
       - test -d "{{.FLUX_PATH}}"
       - sh: test "{{.RESOURCE_TYPE}}" = "ks" -o "{{.RESOURCE_TYPE}}" = "hr"
         msg: "RESOURCE_TYPE must be 'ks' or 'hr'"
     cmds:
-      - flux-local get {{.RESOURCE_TYPE}}
+      - mise exec -- flux-local get {{.RESOURCE_TYPE}}
         --path "{{.FLUX_PATH}}"
         --all-namespaces
         -o wide
@@ -69,7 +81,7 @@ tasks:
       RESOURCE_TYPE: '{{.RESOURCE_TYPE | default "hr"}}'
       BASE_BRANCH: '{{.BASE_BRANCH | default "main"}}'
     preconditions:
-      - which flux-local
+      - mise exec -- which flux-local
       - which git
       - test -d "{{.FLUX_PATH}}"
       - sh: test "{{.RESOURCE_TYPE}}" = "ks" -o "{{.RESOURCE_TYPE}}" = "hr"
@@ -82,7 +94,7 @@ tasks:
           BASE_BRANCH: "{{.BASE_BRANCH}}"
       - defer:
           task: _cleanup-worktree
-      - flux-local diff {{.RESOURCE_TYPE}}
+      - mise exec -- flux-local diff {{.RESOURCE_TYPE}}
         --unified 6
         --path "{{.FLUX_PATH}}"
         --path-orig "{{.WORKTREE_DIR}}/{{.FLUX_PATH}}"

@@ -1,0 +1,21 @@
+---
+apiVersion: tuppr.home-operations.com/v1alpha1
+kind: TalosUpgrade
+metadata:
+  name: talos
+spec:
+  # Current version deployed in Chongus cluster
+  version: v1.10.3
+  installerImage: ghcr.io/siderolabs/installer
+  rebootPolicy: powercycle
+  waitConditions:
+    - kind: ReplicationSource
+      apiVersion: volsync.backube/v1alpha1
+      conditions:
+        - type: Synchronizing
+          status: "False"
+    - kind: CephCluster
+      apiVersion: ceph.rook.io/v1
+      conditions:
+        - type: Health
+          status: HEALTH_OK
