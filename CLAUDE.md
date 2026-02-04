@@ -494,6 +494,16 @@ See [full guide](docs/REFERENCE_IMPLEMENTATIONS.md) for detailed workflow and co
 
 ## Testing and Validation
 
+### Tool Requirements
+
+All validation tasks require tools managed via [mise](https://mise.jdx.dev/). Ensure tools are installed:
+
+```bash
+mise install
+```
+
+**Note**: Tasks use `mise exec` to run tools, so mise doesn't need to be activated in your shell.
+
 ### Pre-commit Hooks
 
 - Trailing whitespace removal
@@ -511,16 +521,58 @@ See [full guide](docs/REFERENCE_IMPLEMENTATIONS.md) for detailed workflow and co
 
 ### Local Validation
 
+**Quick validation** (recommended for iterative development):
+
 ```bash
-# Validate Flux resources
-task flux:validate
+export CLUSTER_NAME=chongus
+task flux:test-quick
+```
+
+- Validates all Flux resource structure and syntax
+- Does NOT fetch Helm charts (avoids GHCR rate limits)
+- Fast: ~4 seconds
+- Use this after making changes to verify correctness
+
+**Full validation** (comprehensive, may hit rate limits):
+
+```bash
+export CLUSTER_NAME=chongus
+task flux:test
+```
+
+- Validates structure AND templates all Helm charts
+- May fail with `403: denied` if GHCR rate limits are hit
+- Slower: ~40+ seconds
+- To avoid rate limits, authenticate with GHCR:
+
+  ```bash
+  # Create GitHub PAT with read:packages scope
+  echo "YOUR_TOKEN" | docker login ghcr.io -u YOUR_GITHUB_USERNAME --password-stdin
+  ```
+
+**Other validation tasks**:
+
+```bash
+# List all Flux resources
+task flux:list CLUSTER_NAME=chongus
+
+# Build specific resources
+task flux:build CLUSTER_NAME=chongus RESOURCE_TYPE=hr RESOURCE_NAME=tuppr
+
+# Compare against main branch
+task flux:diff CLUSTER_NAME=chongus
 
 # Test Talos configuration
-task talos:generate-clusterconfig
-
-# Bootstrap dry-run
-helmfile --file clusters/chongus/bootstrap/helmfile.d/00-crds.yaml diff
+task talos:generate-clusterconfig CLUSTER_NAME=chongus
 ```
+
+### Recommended Workflow After Making Changes
+
+1. **Make changes** to Flux resources
+2. **Quick validate**: `task flux:test-quick CLUSTER_NAME=chongus`
+3. **Review diff**: `task flux:diff CLUSTER_NAME=chongus` (if comparing to main)
+4. **Commit** if validation passes
+5. **CI will run** full validation with authenticated GHCR access
 
 
 ## Troubleshooting
