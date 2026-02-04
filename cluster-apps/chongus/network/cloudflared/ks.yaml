@@ -52,4 +52,3 @@ spec:
     - name: external-secrets-store-doppler
       namespace: external-secrets
     - name: cloudflared-config
-

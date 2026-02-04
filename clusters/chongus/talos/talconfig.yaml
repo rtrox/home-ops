@@ -4,7 +4,7 @@ clusterName: ${clusterName}
 endpoint: https://${clusterName}.${clusterDNSSuffix}:6443
 allowSchedulingOnMasters: true
 # renovate: depName=ghcr.io/siderolabs/installer datasource=docker extractVersion=^(?<version>.*)$
-talosVersion: v1.10.6
+talosVersion: v1.10.9
 # renovate: depName=kubernetes/kubernetes datasource=github-releases extractVersion=^v(?<version>.*)$
 kubernetesVersion: 1.33.0
 
@@ -209,7 +209,6 @@ controlPlane:
             allowedKubernetesNamespaces:
               - actions-runner-system
               - system-upgrade
-
 
 worker:
   schematic:

@@ -1,0 +1,39 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: recyclarr
+spec:
+  schedule: "@daily"
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 86400
+      template:
+        spec:
+          automountServiceAccountToken: false
+          restartPolicy: OnFailure
+          containers:
+            - name: recyclarr
+              image: ghcr.io/recyclarr/recyclarr:7.4.1
+              args:
+                - sync
+              envFrom:
+                - secretRef:
+                    name: sonarr-secret
+                - secretRef:
+                    name: radarr-secret
+              volumeMounts:
+                - name: config
+                  mountPath: /config/recyclarr.yml
+                  subPath: recyclarr.yml
+                  readOnly: true
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 64Mi
+                limits:
+                  memory: 256Mi
+          volumes:
+            - name: config
+              configMap:
+                name: recyclarr-configmap

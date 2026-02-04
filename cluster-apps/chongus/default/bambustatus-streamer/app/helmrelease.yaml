@@ -23,7 +23,7 @@ spec:
           app:
             image:
               repository: ghcr.io/rtrox/bambustatus-streamer
-              tag: 0.0.6@sha256:d41ebf093829955572ee0cfbb0e3754f080827ceaa49fdd35fe37bec3d93ccf9
+              tag: 0.0.7@sha256:a7c727f2639b142ae74fe7eb186412bcfc0b11180a4d3fb3d46c80d4d4f35b3f
             env:
               # Printer configuration
               PRINTER_HOST: "172.29.14.2"
@@ -56,7 +56,7 @@ spec:
             securityContext:
               allowPrivilegeEscalation: false
               readOnlyRootFilesystem: false
-              capabilities: {drop: ["ALL"]}
+              capabilities: { drop: ["ALL"] }
             resources:
               requests:
                 cpu: 100m

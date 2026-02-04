@@ -114,14 +114,14 @@ spec:
           gnetId: 1860
           revision: 41
           datasource:
-            - {name: DS_PROMETHEUS, value: Prometheus, }
+            - { name: DS_PROMETHEUS, value: Prometheus }
 
         smartctl-exporter:
           # renovate: dashboardName="SMARTctl Exporter Dashboard"
           gnetId: 22604
           revision: 2
           datasource:
-            - {name: DS_PROMETHEUS, value: Prometheus, }
+            - { name: DS_PROMETHEUS, value: Prometheus }
 
         spegel:
           # renovate: dashboardName="Spegel"
@@ -242,7 +242,6 @@ spec:
             - name: "DS_PROMETHEUS"
               value: Prometheus
 
-
     datasources:
       datasources.yaml:
         apiVersion: 1
@@ -340,7 +339,7 @@ spec:
       image:
         registry: ghcr.io
         repository: home-operations/k8s-sidecar
-        tag: 1.30.10@sha256:dd3b1f0c4e6b4512b2deb50c58acf65fd0f0927120a59a95eec854d32a6c9ce3
+        tag: 2.5.0@sha256:ae958215a6124c6d09dbf6cf568dc72176791bfba8630f4300d4eaaf1caa5b10
       dashboards:
         enabled: true
         searchNamespace: ALL

@@ -1,0 +1,18 @@
+# Ignore directories
+.archive/
+cluster-cd/
+node_modules/
+.git/
+
+# Ignore non-YAML files
+*.json
+*.json5
+*.md
+*.txt
+*.sh
+*.py
+*.go
+*.toml
+Makefile
+Taskfile*
+LICENSE

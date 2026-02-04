@@ -73,7 +73,7 @@ spec:
       worldSaveName: Vanilla-1.21.8-reset
       downloadWorldUrl: "http://172.30.1.12:9000/public/Vanilla.zip"
       modUrls:
-        - https://cdn.modrinth.com/data/wwcspvkr/versions/C73KkDD6/textile_backup-3.1.3-1.21.jar  ## Server Backup Utility
+        - https://cdn.modrinth.com/data/wwcspvkr/versions/C73KkDD6/textile_backup-3.1.3-1.21.jar ## Server Backup Utility
         - https://cdn.modrinth.com/data/yn9u3ypm/versions/gdZmLCZD/graves-3.8.1%2B1.21.6.jar ## Gravestone Mod
         - https://cdn.modrinth.com/data/P7dR8mSH/versions/CF23l2iP/fabric-api-0.133.4%2B1.21.8.jar ## Fabric API
         - https://cdn.modrinth.com/data/qpPoAL6m/versions/xpf5V7wi/trade-cycling-fabric-1.21.8-1.0.19.jar ## Allows cycling villager trades

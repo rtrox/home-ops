@@ -29,7 +29,7 @@ spec:
           labelSources: ["pci", "system", "usb"]
         sources:
           usb:
-            deviceClassWhitelist: ['02', '03', 0e, ef, fe, ff]
+            deviceClassWhitelist: ["02", "03", 0e, ef, fe, ff]
             deviceLabelFields: [class, vendor, device]
       tolerations:
         - key: node-role.kubernetes.io/control-plane

@@ -8,8 +8,8 @@ jobs:
   pre-commit-check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
       - uses: pre-commit/action@v3.0.1
         with:
           extra_args: --config .pre-commit-config.yaml
@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 1
 
@@ -46,7 +46,7 @@ jobs:
     name: Validate Renovate Config
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: dorny/paths-filter@v3
         id: filter
@@ -65,13 +65,13 @@ jobs:
 
   lint_success:
     needs:
-    - pre-commit-check
-    - lint-yaml
-    - renovate-config-validator
+      - pre-commit-check
+      - lint-yaml
+      - renovate-config-validator
     if: ${{ !cancelled() }}
     name: Lint successful
     runs-on: ubuntu-latest
     steps:
-    - name: Check job status
-      if: ${{ contains(needs.*.result, 'failure') }}
-      run: exit 1
+      - name: Check job status
+        if: ${{ contains(needs.*.result, 'failure') }}
+        run: exit 1

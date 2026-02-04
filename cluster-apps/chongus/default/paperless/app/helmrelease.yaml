@@ -87,7 +87,7 @@ spec:
           main:
             image:
               repository: "docker.io/apache/tika"
-              tag: "3.2.3.0-full@sha256:3fafa194474c5f3a8cff25a0eefd07e7c0513b7f552074ad455e1af58a06bbea"
+              tag: "3.2.3.0-full@sha256:21d8052de04e491ccf66e8680ade4da6f3d453a56d59f740b4167e54167219b7"
             resources:
               requests:
                 cpu: "10m"
@@ -102,7 +102,7 @@ spec:
           main:
             image:
               repository: "docker.io/gotenberg/gotenberg"
-              tag: "8.25.0@sha256:80e15ffce58d2c40ad5d1b88fb8fe00b10287c8e9311dbaa705004f856ec7abd"
+              tag: "8.26.0@sha256:328551506b3dec3ff6381dd47e5cd72a44def97506908269e201a8fbfa1c12c0"
             command:
               [
                 "gotenberg",
@@ -153,7 +153,6 @@ spec:
               - name: paperless-ngx-main
                 port: 8000
                 kind: Service
-
 
     persistence:
       data:

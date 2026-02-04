@@ -10,14 +10,14 @@
     "github>rtrox/home-ops//.github/renovate/grafanaDashboards.json5",
   ],
 
-  ignorePaths: [".archive/**"],
+  ignorePaths: [".archive/**", "cluster-cd/**"],
   flux: {
-    fileMatch: ["^cluster-cd/.+\\.ya?ml$", "^cluster-apps/.+\\.ya?ml$"],
+    fileMatch: ["^cluster-apps/.+\\.ya?ml$"],
   },
   "helm-values": {
-    fileMatch: ["^cluster-cd/.+\\.ya?ml$", "^cluster-apps/.+\\.ya?ml$"],
+    fileMatch: ["^cluster-apps/.+\\.ya?ml$"],
   },
   kubernetes: {
-    fileMatch: ["^cluster-cd/.+\\.ya?ml$", "^cluster-apps/.+\\.ya?ml$"],
+    fileMatch: ["^cluster-apps/.+\\.ya?ml$"],
   },
 }
