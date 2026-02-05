@@ -4,18 +4,16 @@ kind: TalosUpgrade
 metadata:
   name: talos
 spec:
-  # Current version deployed in Chongus cluster
-  version: v1.10.3
-  installerImage: ghcr.io/siderolabs/installer
-  rebootPolicy: powercycle
-  waitConditions:
-    - kind: ReplicationSource
-      apiVersion: volsync.backube/v1alpha1
-      conditions:
-        - type: Synchronizing
-          status: "False"
-    - kind: CephCluster
-      apiVersion: ceph.rook.io/v1
-      conditions:
-        - type: Health
-          status: HEALTH_OK
+  talos:
+    version: v1.12.2
+  policy:
+    rebootMode: default
+  healthChecks:
+    - apiVersion: volsync.backube/v1alpha1
+      kind: ReplicationSource
+      expr: |-
+        status.conditions.filter(c, c.type == "Synchronizing").all(c, c.status == "False")
+    - apiVersion: ceph.rook.io/v1
+      kind: CephCluster
+      expr: |-
+        status.ceph.health in ['HEALTH_OK']
