@@ -5,7 +5,7 @@ metadata:
   name: kubernetes
 spec:
   kubernetes:
-    version: v1.35.0
+    version: v1.34.0
   healthChecks:
     - apiVersion: volsync.backube/v1alpha1
       kind: ReplicationSource
