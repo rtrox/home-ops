@@ -61,8 +61,8 @@ spec:
               readOnlyRootFilesystem: true
           nginx-config:
             image:
-              repository: ghcr.io/booklore-app/booklore
-              tag: v1.18.5@sha256:44a39097fcf69e7373b51df0459da052640d07459fb02b429f2c47cceaa32485
+              repository: ghcr.io/rtrox/booklore
+              tag: 9ace45a8
             command:
               - /bin/sh
               - -c
@@ -82,8 +82,8 @@ spec:
         containers:
           booklore:
             image:
-              repository: ghcr.io/booklore-app/booklore
-              tag: v1.18.5@sha256:44a39097fcf69e7373b51df0459da052640d07459fb02b429f2c47cceaa32485
+              repository: ghcr.io/rtrox/booklore
+              tag: 9ace45a8
             command:
               - java
             args:
@@ -122,8 +122,8 @@ spec:
               readOnlyRootFilesystem: true
           nginx:
             image:
-              repository: ghcr.io/booklore-app/booklore
-              tag: v1.18.5@sha256:44a39097fcf69e7373b51df0459da052640d07459fb02b429f2c47cceaa32485
+              repository: ghcr.io/rtrox/booklore
+              tag: 9ace45a8
             command:
               - nginx
             args:
