@@ -1,0 +1,188 @@
+# imap-classifier configuration
+#
+# Secrets are injected via environment variables — never stored here.
+#   IMAP_CLASSIFIER_IMAP__PASSWORD      → imap.password
+#   IMAP_CLASSIFIER_API__API_KEY        → api.api_key
+#   ANTHROPIC_API_KEY                   → read directly by Anthropic SDK
+#   IMAP_CLASSIFIER_IMAP__HOST          → overrides imap.host at runtime
+#   IMAP_CLASSIFIER_IMAP__PORT          → overrides imap.port at runtime
+
+# ── IMAP ────────────────────────────────────────────────────────────────────
+
+[imap]
+host = "127.0.0.1"         # Overridden at runtime via IMAP_CLASSIFIER_IMAP__HOST
+port = 1143
+# username → env var IMAP_CLASSIFIER_IMAP__USERNAME
+# password → env var IMAP_CLASSIFIER_IMAP__PASSWORD
+ssl = false
+starttls = false
+idle_folder = "INBOX"
+sync_folders = ["INBOX"]
+reconnect_max_backoff_seconds = 60
+labels_prefix = "Labels"
+folders_prefix = "Folders"
+
+# ── Classifier ──────────────────────────────────────────────────────────────
+
+[classifier]
+backend = "anthropic"
+body_snippet_chars = 500
+sync_concurrency = 3
+
+[[classifier.prompt_examples]]
+label = "LinkedIn"
+logic = "Job posting, recruiter outreach, or promotional upgrade email → Marketing. Weekly digest of network activity → Newsletters. Profile view notification or generic platform alert → Other."
+
+[[classifier.prompt_examples]]
+label = "Payment and purchase emails"
+logic = "One-time purchase confirmation or order receipt (Steam, App Store, e-commerce store) → Shopping. Package tracking update or delivery notification → Shopping. Recurring subscription charge, renewal notice, bank statement, or invoice → Finance. Promises unrealistic prizes or requests credentials → Spam."
+
+[[classifier.prompt_examples]]
+label = "Notifications"
+logic = "Security alert, login warning, or two-factor code → Security. Payment confirmation, renewal, or financial transaction → Finance. Delivery update or order tracking → Shopping. Direct message or forwarded email from a real person you know → Important. Generic platform alert or automated system message → Other."
+
+[[classifier.prompt_examples]]
+label = "Community platform digests"
+logic = "Nextdoor 'Top story', 'Top post', 'New from neighbors', or any neighborhood digest → Newsletters regardless of the post content. Reddit digest → Newsletters. Individual reply notification → Other."
+
+[[classifier.prompt_examples]]
+label = "E-commerce and gaming purchases"
+logic = "Steam, GOG, Epic Games, App Store, or any 'Thank you for your purchase' / order confirmation for a one-time item → Shopping. Package tracking update from the same order → Shopping. Monthly or annual subscription to a gaming service → Finance."
+
+[[classifier.prompt_examples]]
+label = "Tax and financial services"
+logic = "TurboTax, H&R Block, tax filing reminders, IRS notices, payroll summaries → Finance. Bank statements → Finance. Employer-side tax documents sent to an employee → Finance."
+
+[[classifier.prompt_examples]]
+label = "Subscription renewals and service access"
+logic = "GitHub Copilot, Netflix, domain registrations, software subscriptions renewed or expiring → Finance. A 'your access has been renewed' notice is Finance, not Security."
+
+[[classifier.prompt_examples]]
+label = "Personal and forwarded emails"
+logic = "Email from a family member, friend, or personal contact (personal email domain, no unsubscribe link, conversational tone) → Important. Email forwarded by someone you know, such as a medical document request or appointment notification → Important. Cold outreach from an unknown person or company → Other or Marketing."
+
+[classifier.anthropic]
+# api_key → env var ANTHROPIC_API_KEY (read directly by Anthropic SDK)
+model = "claude-haiku-4-5-20251001"
+# WARNING: email subject+body will be sent to Anthropic's API when this backend is active.
+
+# ── Categories ──────────────────────────────────────────────────────────────
+
+[[categories]]
+name = "Security"
+priority = 1
+description = """Authentication events from platforms you use: login alerts, two-factor
+authentication codes, password reset emails, and suspicious sign-in warnings. Must be FROM
+a recognized platform (Google, Apple, Microsoft, GitHub, a bank, etc.) about YOUR account.
+Document requests, subscription renewals, forwarded emails, and medical notifications are
+NOT Security even if they mention account or access."""
+
+[[categories]]
+name = "Spam"
+priority = 2
+description = """Phishing attempts, scams, and unsolicited bulk email from unknown senders.
+Indicators: unrealistic promises ('You won!'), urgent requests for personal information,
+mismatched sender domains, or no unsubscribe option."""
+
+[[categories]]
+name = "Finance"
+priority = 3
+description = """Recurring financial email: subscription charges, renewal notices (GitHub,
+Netflix, domain registrations), invoices, bank statements, payroll summaries, tax documents,
+and financial transaction confirmations. Key signals: a recurring charge, invoice number,
+renewal notice, or account balance. A payment-themed phishing email is Spam, not Finance."""
+
+[[categories]]
+name = "Shopping"
+priority = 4
+description = """One-time purchase confirmations, order receipts, shipping notifications with
+tracking numbers, delivery status updates, and pickup notifications. Covers both digital
+purchases (games, apps) and physical goods. Key signals: an order number, tracking number,
+or delivery status for a specific purchase."""
+
+[[categories]]
+name = "Marketing"
+priority = 5
+description = """Marketing emails with discount codes, limited-time offers, sales
+announcements, product launches, and upgrade calls-to-action. Sent by companies to
+promote their products or services."""
+
+[[categories]]
+name = "Newsletters"
+priority = 6
+description = """Subscription-based content digests delivered on a regular cadence: blog
+roundups, curated article collections, industry news, and mailing list updates. Also
+includes community platform digests such as Nextdoor neighborhood summaries, Reddit
+digests, and Facebook Group highlights. Key signal: aggregated content from multiple
+people or topics in one email. A single platform notification is Other, not Newsletters."""
+
+[[categories]]
+name = "Important"
+priority = 7
+description = """Personal emails from real people you know: messages from family, friends,
+colleagues, or your doctor. Key signals: conversational writing style, personal email
+domain (gmail, icloud, etc.), no unsubscribe link, sent directly to you rather than a
+mailing list. Also includes emails forwarded by someone you know personally."""
+
+[[categories]]
+name = "Other"
+priority = 8
+description = """Platform notifications, system messages, account registrations, automated
+alerts, and anything that does not clearly fit the above categories. Use this as a last
+resort."""
+
+# ── Rules ───────────────────────────────────────────────────────────────────
+
+[[rules]]
+category = "Security"
+action = "copy"
+destination = "Labels/AI|Security"
+
+[[rules]]
+category = "Spam"
+action = "copy"
+destination = "Labels/AI|Spam"
+
+[[rules]]
+category = "Finance"
+action = "copy"
+destination = "Labels/AI|Finance"
+
+[[rules]]
+category = "Shopping"
+action = "copy"
+destination = "Labels/AI|Shopping"
+
+[[rules]]
+category = "Marketing"
+action = "copy"
+destination = "Labels/AI|Marketing"
+
+[[rules]]
+category = "Newsletters"
+action = "copy"
+destination = "Labels/AI|Newsletters"
+
+[[rules]]
+category = "Important"
+action = "copy"
+destination = "Labels/AI|Important"
+
+[[rules]]
+category = "Other"
+action = "copy"
+destination = "Labels/AI|Other"
+
+# ── Storage ─────────────────────────────────────────────────────────────────
+
+[storage]
+database_url = "sqlite+aiosqlite:///./data/classifier.db"
+retention_days = 90
+store_email_metadata = true
+
+# ── API ─────────────────────────────────────────────────────────────────────
+
+[api]
+host = "0.0.0.0"
+port = 8080
+# api_key → env var IMAP_CLASSIFIER_API__API_KEY
