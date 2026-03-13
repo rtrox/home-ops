@@ -1,0 +1,127 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: imap-classifier
+spec:
+  interval: 1h
+  chartRef:
+    kind: OCIRepository
+    name: imap-classifier
+  install:
+    remediation:
+      retries: -1
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  values:
+    controllers:
+      imap-classifier:
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          app:
+            image:
+              repository: ghcr.io/rtrox/imap-classifier
+              tag: main@sha256:24f94cf387a9e130847af8fb6d2bebcd28855dcd650d28f7dbf4fd1a35039451
+            env:
+              IMAP_CLASSIFIER_CONFIG_PATH: /app/config.toml
+              IMAP_CLASSIFIER_IMAP__HOST: "127.0.0.1"
+              IMAP_CLASSIFIER_IMAP__PORT: "1143"
+            envFrom:
+              - secretRef:
+                  name: imap-classifier-secret
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  tcpSocket:
+                    port: 8080
+                  initialDelaySeconds: 10
+                  periodSeconds: 30
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              readiness:
+                enabled: false
+            securityContext:
+              runAsNonRoot: true
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: false
+              capabilities: { drop: ["ALL"] }
+            resources:
+              requests:
+                cpu: 100m
+                memory: 128Mi
+              limits:
+                memory: 256Mi
+          bridge:
+            image:
+              repository: ghcr.io/dancwilliams/protonmail-bridge-docker
+              tag: v3.22.0@sha256:25cc7a9007516f817d4d220d359e36558961de693935092361c8066184fd5d52
+            command: ["/bin/bash", "-c"]
+            args:
+              - "apt-get update && apt-get install -y libfido2-dev libcbor-dev libfido2-1 && bash /protonmail/entrypoint.sh"
+            securityContext:
+              runAsNonRoot: false
+              runAsUser: 0
+              runAsGroup: 0
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: false
+              capabilities: { drop: ["ALL"] }
+            resources:
+              requests:
+                cpu: 100m
+                memory: 256Mi
+              limits:
+                memory: 512Mi
+    defaultPodOptions:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+    service:
+      app:
+        controller: imap-classifier
+        ports:
+          http:
+            port: 8080
+    route:
+      app:
+        hostnames:
+          - "{{ .Release.Name }}.rtrox.io"
+        parentRefs:
+          - name: envoy-internal
+            namespace: network
+            sectionName: https
+        rules:
+          - matches:
+              - path:
+                  type: PathPrefix
+                  value: /
+            backendRefs:
+              - name: imap-classifier-app
+                port: 8080
+                kind: Service
+    persistence:
+      data:
+        existingClaim: imap-classifier
+        advancedMounts:
+          imap-classifier:
+            app:
+              - path: /app/data
+            bridge:
+              - path: /root
+                subPath: bridge-data
+      config:
+        type: configMap
+        name: imap-classifier-config
+        advancedMounts:
+          imap-classifier:
+            app:
+              - path: /app/config.toml
+                subPath: config.toml
+                readOnly: true
