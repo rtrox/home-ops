@@ -1,0 +1,96 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: scrypted
+spec:
+  interval: 1h
+  chartRef:
+    kind: OCIRepository
+    name: scrypted
+  install:
+    remediation:
+      retries: -1
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  values:
+    defaultPodOptions:
+      runtimeClassName: nvidia
+      enableServiceLinks: true
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      securityContext:
+        supplementalGroups:
+          - 65542 # gladius:external-services
+    controllers:
+      scrypted:
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          app:
+            image:
+              repository: ghcr.io/koush/scrypted
+              tag: v0.123.58-jammy-full
+            resources:
+              requests:
+                cpu: 136m
+                memory: 512Mi
+              limits:
+                memory: 8192Mi
+            securityContext:
+              privileged: true
+
+    service:
+      app:
+        controller: scrypted
+        ports:
+          http:
+            port: 11080
+      nvr:
+        controller: scrypted
+        type: LoadBalancer
+        annotations:
+          external-dns.alpha.kubernetes.io/hostname: nvr-svc.rtrox.io
+        ports:
+          https:
+            port: 10443
+          rebroadcast:
+            port: 34135
+
+    route:
+      app:
+        hostnames:
+          - nvr.rtrox.io
+        parentRefs:
+          - name: envoy-internal
+            namespace: network
+            sectionName: https
+
+    persistence:
+      config:
+        existingClaim: scrypted
+        advancedMounts:
+          scrypted:
+            app:
+              - path: /server/volume
+      cache:
+        type: emptyDir
+        globalMounts:
+          - path: /.cache
+      cache-npm:
+        type: emptyDir
+        globalMounts:
+          - path: /.npm
+      sys-bus-usb:
+        type: hostPath
+        hostPath: /sys/bus/usb
+        hostPathType: Directory
+      recs:
+        type: nfs
+        server: nas.rtrox.io
+        path: /mnt/rusty/nvr
+        globalMounts:
+          - path: /recs
