@@ -47,7 +47,7 @@ releases:
   - name: flux-operator
     namespace: flux-system
     chart: oci://ghcr.io/controlplaneio-fluxcd/charts/flux-operator
-    version: 0.44.0
+    version: 0.45.0
     values:
       - "../../../../cluster-apps/chongus/flux-system/flux-operator/app/values.yaml"
     needs:
