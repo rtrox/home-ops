@@ -78,6 +78,8 @@ spec:
               limits:
                 memory: 512Mi
     defaultPodOptions:
+      imagePullSecrets:
+        - name: imap-classifier-pull-secret
       securityContext:
         runAsUser: 1000
         runAsGroup: 1000
