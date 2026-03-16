@@ -68,6 +68,14 @@ spec:
           - name: envoy-internal
             namespace: network
             sectionName: https
+        rules:
+          - matches:
+              - path:
+                  type: PathPrefix
+                  value: /
+            backendRefs:
+              - name: scrypted-app
+                port: 11080
 
     persistence:
       config:
