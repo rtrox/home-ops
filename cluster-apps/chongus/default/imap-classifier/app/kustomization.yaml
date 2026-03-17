@@ -6,6 +6,7 @@ resources:
   - ./helmrelease.yaml
   - ./ocirepository.yaml
   - ./externalsecret.yaml
+  - ./externalsecret-pull-secret.yaml
 configMapGenerator:
   - name: imap-classifier-config
     files:
