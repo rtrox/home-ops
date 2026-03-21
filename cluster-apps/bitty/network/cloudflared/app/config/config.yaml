@@ -1,0 +1,10 @@
+---
+originRequest:
+  originServerName: bty-ext.rtrox.io
+
+ingress:
+  - hostname: rtrox.io
+    service: &svc https://envoy-external.network.svc.cluster.local
+  - hostname: "*.rtrox.io"
+    service: *svc
+  - service: http_status:404

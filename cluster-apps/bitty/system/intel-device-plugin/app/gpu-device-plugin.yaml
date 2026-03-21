@@ -1,0 +1,10 @@
+---
+apiVersion: deviceplugin.intel.com/v1
+kind: GpuDevicePlugin
+metadata:
+  name: gpudeviceplugin
+spec:
+  image: intel/intel-gpu-plugin:0.32.0
+  sharedDevNum: 1
+  resourceManager: false
+  preferredAllocationPolicy: none
