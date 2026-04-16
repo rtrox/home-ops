@@ -60,7 +60,7 @@ spec:
           bridge:
             image:
               repository: ghcr.io/dancwilliams/protonmail-bridge-docker
-              tag: v3.23.1@sha256:84b7b7b5d9a0221c3d31fb9ecc96d36743729940eba3dd02567498e7693351a3
+              tag: v3.23.1@sha256:5036974da9ce162c304f2864d7ffc9802be1f8eb167e96138727bb99d11cefef
             command: ["/bin/bash", "-c"]
             args:
               - "apt-get -o APT::Sandbox::User=root update && apt-get -o APT::Sandbox::User=root install -y libfido2-dev libcbor-dev libfido2-1 && bash /protonmail/entrypoint.sh"
