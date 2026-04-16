@@ -32,7 +32,7 @@ spec:
           main:
             image:
               repository: ghcr.io/bluesky-social/pds
-              tag: 0.4.208@sha256:637083d9369dff85946fbcc12ae5fcce482322ff315d70c4b6004a0be9654bc8
+              tag: 0.4.219@sha256:e0b756701c924410532c61b546a61810b6a0059bcebb0c21718d161f5b7880db
             envFrom:
               - configMapRef:
                   name: bluesky-config
