@@ -9,10 +9,13 @@ spec:
   chartRef:
     kind: OCIRepository
     name: envoy-gateway
+  # Gateway API CRDs are managed by the bootstrap helmfile (gateway-api-crds v1.5.1).
+  # That chart installs safe-upgrades ValidatingAdmissionPolicy which blocks downgrading
+  # CRDs below v1.5.0, so we must not let this chart manage them.
   install:
-    crds: CreateReplace
+    crds: Skip
   upgrade:
-    crds: CreateReplace
+    crds: Skip
   values:
     config:
       envoyGateway:
