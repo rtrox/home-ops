@@ -10,9 +10,9 @@ spec:
     kind: OCIRepository
     name: envoy-gateway
   install:
-    crds: CreateReplace
+    crds: Skip
   upgrade:
-    crds: CreateReplace
+    crds: Skip
   values:
     config:
       envoyGateway:
