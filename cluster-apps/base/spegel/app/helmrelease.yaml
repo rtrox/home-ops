@@ -8,6 +8,9 @@ spec:
   chartRef:
     kind: OCIRepository
     name: spegel
+  upgrade:
+    # DaemonSet selector changed in 0.7.0; force allows delete+recreate of immutable fields.
+    force: true
   values:
     service:
       registry:
