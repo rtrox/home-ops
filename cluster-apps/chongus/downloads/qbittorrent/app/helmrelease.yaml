@@ -167,6 +167,9 @@ spec:
           qbittorrent:
             app:
               - path: /config
+            mousehole:
+              - path: /srv/mousehole
+                subPath: mousehole
       media:
         type: nfs
         server: nas.rtrox.io
@@ -184,9 +187,3 @@ spec:
           qbittorrent:
             gluetun:
               - path: /gluetun
-      mousehole-data:
-        type: emptyDir
-        advancedMounts:
-          qbittorrent:
-            mousehole:
-              - path: /srv/mousehole
