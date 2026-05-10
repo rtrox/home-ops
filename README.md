@@ -28,10 +28,11 @@ This repository contains the Infrastructure as Code (IaC) for my home Kubernetes
 
 ### Clusters
 
-I run two Kubernetes clusters:
+I run three Kubernetes clusters:
 
 - **Chongus** (Primary) - Dell R730 servers with NVIDIA GPUs
-- **Bitty** (Secondary) - Intel NUC cluster
+- **Mini** (Secondary) - Minisforum MS-A2 nodes (AMD Ryzen AI 9) with NVIDIA GPUs
+- **Bitty** (Tertiary, being phased out) - Intel NUC cluster
 
 ### Core Components
 
@@ -63,16 +64,21 @@ This repository follows a structured GitOps layout:
 ```text
 📁 cluster-apps/           # Application definitions (Flux source)
 ├── 📁 base/              # Shared applications across clusters
-├── 📁 chongus/           # Chongus cluster applications (NEW PATTERN)
+├── 📁 chongus/           # Chongus cluster applications (primary)
 │   └── 📁 [namespace]/
 │       └── 📁 [app]/
 │           ├── 📁 app/   # HelmRelease + configs
 │           └── ks.yaml   # Flux Kustomization
+├── 📁 mini/              # Mini cluster applications (secondary)
 ├── 📁 bitty/             # Bitty cluster (deprecated pattern)
 └── 📁 components/        # Reusable Kustomize components
 
 📁 clusters/              # Cluster bootstrap configurations
 ├── 📁 chongus/
+│   ├── 📁 bootstrap/     # Helmfile-based bootstrap
+│   ├── 📁 flux/          # Flux Kustomizations
+│   └── 📁 talos/         # Talos configuration
+├── 📁 mini/
 │   ├── 📁 bootstrap/     # Helmfile-based bootstrap
 │   ├── 📁 flux/          # Flux Kustomizations
 │   └── 📁 talos/         # Talos configuration
@@ -135,21 +141,26 @@ While most infrastructure runs on-premises, some cloud services are used:
 | ------------ | ---------- | ------ | ---------------------- | --------------------------------- |
 | Dell R730 x3 | Intel Xeon | 256GB+ | 2x Samsung 870 EVO 2TB | Kubernetes nodes with NVIDIA GPUs |
 
-**Storage:**
+- Rook-Ceph: 6x 2TB SSDs (2 per node), `ceph-block` storage class, 3x replication
+- LB pool: 172.22.12.0/24
 
-- Rook-Ceph: 6x 2TB SSDs (2 per node)
-- Storage Class: `ceph-block` (default)
-- Replication: 3 replicas
+### Mini Cluster (Secondary)
 
-### Bitty Cluster (Secondary)
+| Device              | CPU               | RAM   | Storage | Purpose                           |
+| ------------------- | ----------------- | ----- | ------- | --------------------------------- |
+| Minisforum MS-A2 x3 | AMD Ryzen AI 9 HX | 96GB+ | 2x NVMe | Kubernetes nodes with NVIDIA GPUs |
 
-| Device       | CPU         | RAM   | Storage | Purpose                        |
-| ------------ | ----------- | ----- | ------- | ------------------------------ |
+- Rook-Ceph: 3x NVMe (1 per node), `ceph-block` storage class, 3x replication
+- LB pool: 172.22.32.0/24
+
+### Bitty Cluster (Tertiary - Being Phased Out)
+
+| Device       | CPU         | RAM   | Storage | Purpose                         |
+| ------------ | ----------- | ----- | ------- | ------------------------------- |
 | Intel NUC x3 | Intel i5/i7 | 32GB+ | NVMe    | Kubernetes nodes with QuickSync |
 
-- Rook-Ceph: 3x 512GB SSDs (1 per node)
-- Storage Class: `ceph-block` (default)
-- Replication: 3 replicas
+- Rook-Ceph: 3x 512GB SSDs (1 per node), `ceph-block` storage class, 3x replication
+- LB pool: 172.22.22.0/24
 
 ### Supporting Infrastructure
 
