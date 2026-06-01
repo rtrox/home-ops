@@ -65,7 +65,7 @@ spec:
           pdsadmin:
             image:
               repository: ghcr.io/rtrox/pdsadmin
-              tag: v0.4.219@sha256:22735d7ac304ee7eb3b1cd4cad482baa4ebadb4b3d7639e4050344738c83f191
+              tag: v0.4.5001@sha256:f79fd794a83105808209456f8a6173d294630999d15af5fc2170fc61e9289da4
             envFrom:
               - configMapRef:
                   name: bluesky-config
