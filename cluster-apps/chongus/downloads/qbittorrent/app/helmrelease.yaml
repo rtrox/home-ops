@@ -61,7 +61,7 @@ spec:
             dependsOn: app
             image:
               repository: docker.io/tmmrtn/mousehole
-              tag: 0.3.1@sha256:903eaac224b02327b6d4ef6238c0b78950ae62037f6863a3cc01118cb305f747
+              tag: 0.4.0@sha256:ac06e30556e9543b045a17ff087c32e2dc018ba1a6c088ec7c3c91e4233d157d
             env:
               TZ: America/Los_Angeles
               MOUSEHOLE_PORT: &mousehole-port 5010
