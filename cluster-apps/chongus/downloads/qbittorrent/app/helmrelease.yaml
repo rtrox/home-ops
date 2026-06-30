@@ -67,6 +67,8 @@ spec:
               MOUSEHOLE_PORT: &mousehole-port 5010
               MOUSEHOLE_STATE_DIR_PATH: /srv/mousehole
               MOUSEHOLE_CHECK_INTERVAL_SECONDS: "1800"
+              MOUSEHOLE_INSECURE_ALLOW_NO_AUTH: "true"
+              MOUSEHOLE_ALLOWED_HOSTS: mousehole.rtrox.io
             securityContext:
               runAsUser: 568
               runAsGroup: 568
