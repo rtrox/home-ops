@@ -73,7 +73,7 @@ tasks:
     preconditions:
       - which talosctl
       - which yq
-      - test -f "${TALOSCONFIG}"
+      - test -f "{{.TALOSCONFIG}}"
       - talosctl --nodes {{.NODE}} get machineconfig
     requires:
       vars:
@@ -83,9 +83,9 @@ tasks:
       FILE:
         sh: ls {{.TALOS_DIR}}/clusterconfig/{{.CLUSTER_NAME}}-{{.NODE}}*.yaml
       TALOS_IMAGE:
-        sh: yq '.machine.install.image' < "{{.FILE}}"
+        sh: yq 'select(.machine.install.image != null) | .machine.install.image' < "{{.FILE}}" | head -1
     cmds:
-      - talosctl --nodes {{.NODE}} upgrade --image="{{.TALOS_IMAGE}}" --timeout=10m
+      - talosctl --nodes {{.NODE}} upgrade --image="{{.TALOS_IMAGE}}" --timeout=10m {{ if eq "true" .FORCE }}--force{{ end }}
       - talosctl --nodes {{.NODE}} health
 
   _apply-machineconfig:

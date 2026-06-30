@@ -22,6 +22,7 @@ spec:
     substitute:
       APP: *app
       VOLSYNC_CAPACITY: 50Gi
+      VOLSYNC_CACHE_SNAPSHOTCLASS: ceph-block
   prune: true
   retryInterval: 2m
   sourceRef:
