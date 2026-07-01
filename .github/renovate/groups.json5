@@ -15,7 +15,7 @@
     {
       description: "Rook-Ceph image and chart",
       groupName: "Rook Ceph",
-      matchPackagePatterns: ["rook.ceph"],
+      matchPackagePatterns: ["rook.ceph", "rook.ceph-csi-drivers"],
       matchDatasources: ["docker", "helm"],
       group: {
         commitMessageTopic: "{{{groupName}}} group",
