@@ -25,6 +25,31 @@ spec:
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
+  name: &appname ceph-csi-drivers
+  namespace: &namespace rook-ceph
+spec:
+  targetNamespace: *namespace
+  commonMetadata:
+    labels:
+      app.kubernetes.io/name: *appname
+  dependsOn:
+    - name: rook-ceph-operator
+      namespace: rook-ceph
+  interval: 30m
+  timeout: 5m
+  path: ./cluster-apps/chongus/rook-ceph/rook-ceph/ceph-csi-drivers
+  prune: false
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  wait: true
+
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/fluxcd-community/flux2-schemas/main/kustomization-kustomize-v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
   name: &appname rook-ceph-cluster
   namespace: &namespace rook-ceph
 spec:
@@ -45,6 +70,11 @@ spec:
       kind: CephCluster
       name: rook-ceph
       namespace: *namespace
+  dependsOn:
+    - name: rook-ceph-operator
+      namespace: rook-ceph
+    - name: ceph-csi-drivers
+      namespace: rook-ceph
   interval: 30m
   path: ./cluster-apps/chongus/rook-ceph/rook-ceph/cluster
   prune: false # Never delete this
