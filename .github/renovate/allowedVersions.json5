@@ -6,13 +6,5 @@
       matchPackageNames: ["ghcr.io/linuxserver/calibre-web"],
       allowedVersions: "<1",
     },
-    {
-      description: "Hold Rook-Ceph at v1.19.x — v1.20 (Tentacle) is flaky; revisit after the bare-metal rebuild",
-      matchPackageNames: [
-        "ghcr.io/rook/rook-ceph",
-        "ghcr.io/rook/rook-ceph-cluster",
-      ],
-      allowedVersions: "<=1.19.6",
-    },
   ],
 }
