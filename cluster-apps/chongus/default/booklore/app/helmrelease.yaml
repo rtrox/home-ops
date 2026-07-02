@@ -62,7 +62,7 @@ spec:
           nginx-config:
             image:
               repository: ghcr.io/grimmory-tools/grimmory
-              tag: v2.2.1
+              tag: v3.2.4
             command:
               - /bin/sh
               - -c
