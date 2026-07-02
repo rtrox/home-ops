@@ -61,8 +61,8 @@ spec:
               readOnlyRootFilesystem: true
           nginx-config:
             image:
-              repository: ghcr.io/rtrox/booklore
-              tag: 9ace45a8
+              repository: ghcr.io/grimmory-tools/grimmory
+              tag: v2.2.1
             command:
               - /bin/sh
               - -c
