@@ -59,31 +59,11 @@ spec:
                 drop:
                   - ALL
               readOnlyRootFilesystem: true
-          nginx-config:
-            image:
-              repository: ghcr.io/grimmory-tools/grimmory
-              tag: v3.2.4@sha256:dfa7afdfcf25d649fd664497a62385dd00cd9678c37546e182c172e41c8e80cb
-            command:
-              - /bin/sh
-              - -c
-            args:
-              - "envsubst '$${BOOKLORE_PORT}' < /etc/nginx/nginx.conf > /config/nginx.conf"
-            env:
-              BOOKLORE_PORT: &httpPort 6060
-            securityContext:
-              allowPrivilegeEscalation: false
-              capabilities:
-                drop:
-                  - ALL
-              readOnlyRootFilesystem: true
-              runAsUser: 100
-              runAsGroup: 101
-              fsGroup: 101
         containers:
           booklore:
             image:
-              repository: ghcr.io/rtrox/booklore
-              tag: 9ace45a8
+              repository: ghcr.io/grimmory-tools/grimmory
+              tag: v3.2.4@sha256:dfa7afdfcf25d649fd664497a62385dd00cd9678c37546e182c172e41c8e80cb
             command:
               - java
             args:
@@ -120,35 +100,6 @@ spec:
                 drop:
                   - ALL
               readOnlyRootFilesystem: true
-          nginx:
-            image:
-              repository: ghcr.io/rtrox/booklore
-              tag: 9ace45a8
-            command:
-              - nginx
-            args:
-              - -c
-              - /config/nginx.conf
-              - -g
-              - "daemon off;"
-            probes:
-              liveness: &nginxProbe
-                enabled: true
-                custom: true
-                spec:
-                  httpGet:
-                    path: /
-                    port: *httpPort
-              readiness: *nginxProbe
-            securityContext:
-              allowPrivilegeEscalation: false
-              capabilities:
-                drop:
-                  - ALL
-              readOnlyRootFilesystem: true
-              runAsUser: 100
-              runAsGroup: 101
-              fsGroup: 101
     persistence:
       data:
         existingClaim: booklore
@@ -179,29 +130,6 @@ spec:
           booklore:
             mariadb:
               - path: /run/mysqld
-      nginx:
-        type: emptyDir
-        sizeLimit: 200Mi
-        advancedMounts:
-          booklore:
-            nginx:
-              - path: /config
-                subPath: config
-              - path: /var/lib/nginx/logs
-                subPath: log
-              - path: /var/lib/nginx/tmp
-                subPath: tmp
-            nginx-config:
-              - path: /config
-                subPath: config
-      nginx-run:
-        type: emptyDir
-        medium: Memory
-        sizeLimit: 500Mi
-        advancedMounts:
-          booklore:
-            nginx:
-              - path: /run/nginx
       tmpfs:
         type: emptyDir
         medium: Memory
@@ -227,4 +155,4 @@ spec:
         controller: booklore
         ports:
           http:
-            port: *httpPort
+            port: 8080
