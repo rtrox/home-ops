@@ -4,7 +4,7 @@
 
 ## Overview
 
-This repository implements a GitOps-managed Kubernetes infrastructure using FluxCD, running two clusters: Chongus (primary, modern pattern) and Bitty (secondary, being phased out). The infrastructure is built on Talos Linux with a focus on automation, high availability, and disaster recovery.
+This repository implements a GitOps-managed Kubernetes infrastructure using FluxCD, running three clusters: Chongus (primary, modern pattern), Mini (secondary, AMD/NVIDIA), and Bitty (tertiary, being phased out). The infrastructure is built on Talos Linux with a focus on automation, high availability, and disaster recovery.
 
 ## Key Principles
 
@@ -68,20 +68,33 @@ This repository implements a GitOps-managed Kubernetes infrastructure using Flux
 - Cilium CNI with Gateway API
 - External-DNS (Cloudflare)
 
-### Bitty Cluster (Secondary - Being Phased Out)
+### Mini Cluster (Secondary - Follow Chongus Pattern)
+
+**Summary:** 3x Minisforum MS-A2 nodes (AMD Ryzen AI 9), all with NVIDIA GPUs.
+
+- Kubernetes v1.36.0 on Talos v1.13.0
+- Node IPs: 172.30.31.1-3
+- Load Balancer Pool: 172.22.32.0/24
+  - 172.22.32.1: envoy-internal (default, local network)
+  - 172.22.32.2: envoy-external (internet via Cloudflare)
+- Talos extensions: `amd-ucode`, `iscsi-tools`, `nonfree-kmod-nvidia-production`, `nvidia-container-toolkit-production`
+- Storage: Rook-Ceph (3x replication), OpenEBS for volsync cache
+- Cilium cluster ID: 3
+
+### Bitty Cluster (Tertiary - Being Phased Out)
 
 **Summary:** 3x Intel NUC nodes with QuickSync iGPU, secondary cluster for smaller workloads.
 
 - Kubernetes v1.33.0 on Talos v1.10.1
 - IP Range: 172.30.21.1-3
 - Use for: QuickSync video transcoding only
-- **Do not deploy new applications to Bitty** - migrate to Chongus
+- **Do not deploy new applications to Bitty** - migrate to Chongus or Mini
 
 ## Repository Structure
 
 ### Understanding Namespace Directories
 
-Directories immediately under `cluster-apps/chongus/` or `cluster-apps/bitty/` are **Kubernetes namespace directories**, NOT application directories. Each namespace directory:
+Directories immediately under `cluster-apps/chongus/`, `cluster-apps/mini/`, or `cluster-apps/bitty/` are **Kubernetes namespace directories**, NOT application directories. Each namespace directory:
 
 - Represents a single Kubernetes namespace
 - Contains a `kustomization.yaml` that includes namespace components and lists all apps

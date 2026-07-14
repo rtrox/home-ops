@@ -11,5 +11,10 @@
       matchFileNames: ["**/cluster-cd/aps/chongus/**", "**/cluster-apps/chongus/**", "**/clusters/chongus/**"],
       additionalBranchPrefix: "chongus-",
     },
+    {
+      description: "Separate PRs for mini cluster",
+      matchFileNames: ["**/cluster-apps/mini/**", "**/clusters/mini/**"],
+      additionalBranchPrefix: "mini-",
+    },
   ],
 }
