@@ -32,7 +32,7 @@ spec:
             sectionName: https
     cephImage:
       repository: quay.io/ceph/ceph
-      tag: v20.2.2
+      tag: v21.1.0
     cephClusterSpec:
       cephConfig:
         global:
