@@ -25,6 +25,7 @@ spec:
       namespace: rook-ceph
   components:
     - ../../../../components/volsync
+    - ../../../../components/volsync-b2
   postBuild:
     substitute:
       APP: *app
