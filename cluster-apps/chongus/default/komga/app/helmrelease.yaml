@@ -18,7 +18,7 @@ spec:
           app:
             image:
               repository: ghcr.io/gotson/komga
-              tag: 1.25.0@sha256:c4f9885fc077e2e9cd684dc95e8f6cfa5e33b100b46712b2de7f5cc2ff59e6fb
+              tag: 1.26.2@sha256:8bc00f642c82a7b5148c2c49289cd5f2289402072f2c9d83ccfecde5d5e55e5f
             env:
               SERVER_PORT: &port 8080
             probes:
