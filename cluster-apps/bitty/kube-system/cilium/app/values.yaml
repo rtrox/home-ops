@@ -1,0 +1,100 @@
+---
+cluster:
+  name: bitty
+  id: 1
+
+k8sServiceHost: localhost
+k8sServicePort: 7445
+
+rollOutCiliumPods: true
+localRedirectPolicy: true
+
+kubeProxyReplacement: true
+kubeProxyReplacementHealthzBindAddr: 0.0.0.0:10256
+
+enableRuntimeDeviceDetection: true
+devices: eth+
+
+loadBalancer:
+  algorithm: maglev
+  mode: dsr
+
+bandwidthManager:
+  enabled: true
+  bbr: true
+bpf:
+  masquerade: true
+  tproxy: true
+
+ipam:
+  mode: kubernetes
+
+operator:
+  dashboards:
+    enabled: true
+    annotations:
+      grafana_folder: Cilium
+  prometheus:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+  replicas: 2
+  rollOutPods: true
+
+enableIPv4BIGTCP: true
+autoDirectNodeRoutes: true
+ipv4NativeRoutingCIDR: 10.244.0.0/16
+routingMode: native
+
+hubble:
+  enabled: true
+  serviceMonitor:
+    enabled: false
+
+  relay:
+    enabled: true
+    rollOutPods: true
+
+  ui:
+    enabled: true
+    ingress:
+      enabled: false
+    rollOutPods: true
+
+envoy:
+  enabled: false
+endpointRoutes:
+  enabled: true
+gatewayAPI:
+  enabled: true
+  enableAlpn: true
+  xffNumTrustedHops: 1
+
+securityContext:
+  capabilities:
+    ciliumAgent:
+      - CHOWN
+      - KILL
+      - NET_ADMIN
+      - NET_RAW
+      - IPC_LOCK
+      - SYS_ADMIN
+      - SYS_RESOURCE
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
+    cleanCiliumState:
+      - NET_ADMIN
+      - SYS_ADMIN
+      - SYS_RESOURCE
+
+cgroup:
+  autoMount:
+    enabled: false
+  hostRoot: /sys/fs/cgroup
+
+prometheus:
+  serviceMonitor:
+    trustCRDsExist: true
+    enabled: true
