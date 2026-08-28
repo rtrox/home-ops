@@ -62,7 +62,7 @@ controlPlane:
       systemExtensions:
         officialExtensions:
           - siderolabs/intel-ucode
-          - siderolabs/i915-ucode
+          - siderolabs/i915
           - siderolabs/iscsi-tools
           - siderolabs/gasket-driver
 
@@ -202,6 +202,6 @@ worker:
       systemExtensions:
         officialExtensions:
           - siderolabs/intel-ucode
-          - siderolabs/i915-ucode
+          - siderolabs/i915
           - siderolabs/iscsi-tools
           - siderolabs/gasket-driver
