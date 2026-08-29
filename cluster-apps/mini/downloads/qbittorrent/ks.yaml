@@ -17,7 +17,7 @@ spec:
     - name: external-secrets-store-doppler
       namespace: external-secrets
   interval: 1h
-  path: ./cluster-apps/chongus/downloads/qbittorrent/app
+  path: ./cluster-apps/mini/downloads/qbittorrent/app
   postBuild:
     substitute:
       APP: *app
