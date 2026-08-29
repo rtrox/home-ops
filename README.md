@@ -6,8 +6,8 @@
 
 *Infrastructure as Code for my home Kubernetes clusters*
 
-[![Talos](https://img.shields.io/badge/Talos-v1.10.6-blue?style=for-the-badge&logo=linux&logoColor=white)](https://www.talos.dev/)
-[![Kubernetes](https://img.shields.io/badge/Kubernetes-v1.33.0-blue?style=for-the-badge&logo=kubernetes&logoColor=white)](https://kubernetes.io/)
+[![Talos](https://img.shields.io/badge/Talos-v1.13.9-blue?style=for-the-badge&logo=linux&logoColor=white)](https://www.talos.dev/)
+[![Kubernetes](https://img.shields.io/badge/Kubernetes-v1.36.4-blue?style=for-the-badge&logo=kubernetes&logoColor=white)](https://kubernetes.io/)
 [![Flux](https://img.shields.io/badge/Flux-v2.5.1-blue?style=for-the-badge&logo=flux&logoColor=white)](https://fluxcd.io/)
 [![Renovate](https://img.shields.io/badge/Renovate-enabled-blue?style=for-the-badge&logo=renovatebot&logoColor=white)](https://github.com/renovatebot/renovate)
 

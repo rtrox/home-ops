@@ -49,7 +49,7 @@ This repository implements a GitOps-managed Kubernetes infrastructure using Flux
 
 **Critical Configuration:**
 
-- **Kubernetes**: v1.33.0 on Talos v1.10.6
+- **Kubernetes**: v1.36.4 on Talos v1.13.9
 - **Pod CIDR**: 10.244.0.0/16
 - **Service CIDR**: 10.96.0.0/12
 - **Load Balancer Pool**: 172.22.12.0/24
@@ -72,10 +72,11 @@ This repository implements a GitOps-managed Kubernetes infrastructure using Flux
 
 **Summary:** 3x Intel NUC nodes with QuickSync iGPU, secondary cluster for smaller workloads.
 
-- Kubernetes v1.33.0 on Talos v1.10.1
+- Kubernetes v1.36.4 on Talos v1.13.9
 - IP Range: 172.30.21.1-3
 - Use for: QuickSync video transcoding only
 - **Do not deploy new applications to Bitty** - migrate to Chongus
+- `clusters/bitty/` now bootstraps with the same helmfile/Talos pattern as Chongus (see below); `cluster-apps/bitty/` is still on the old pattern pending migration
 
 ## Repository Structure
 
@@ -119,7 +120,7 @@ cluster-apps/chongus/
 │   │   ├── system/            # "system" namespace (privileged)
 │   │   ├── observability/     # "observability" namespace
 │   │   └── actions-runner-system/  # "actions-runner-system" namespace
-│   ├── bitty/                 # Bitty-specific (deprecated pattern)
+│   ├── bitty/                 # Bitty-specific apps (deprecated pattern, pending migration)
 │   └── components/            # Reusable Kustomize components
 │       ├── flux/alerts/       # Flux error notifications
 │       ├── namespace/         # Basic namespace template
@@ -136,7 +137,7 @@ cluster-apps/chongus/
 │   │   │   └── cluster/
 │   │   └── talos/             # Talos configuration
 │   │       └── clusterconfig/
-│   └── bitty/                 # Old bootstrap pattern (deprecated)
+│   └── bitty/                 # Same helmfile/Talos bootstrap pattern as Chongus
 └── .taskfiles/                # Operational automation
     ├── k8s-bootstrap/
     ├── sops/

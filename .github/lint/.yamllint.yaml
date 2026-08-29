@@ -12,7 +12,6 @@ ignore: |
   *.bty.yaml
   cluster-cd/
   ansible/
-  clusters/bitty/
 extends: default
 rules:
   truthy:
