@@ -30,6 +30,8 @@ nodes:
     machineSpec:
       mode: metal
       arch: amd64
+      secureboot: true
+      useUKI: true
 
   - hostname: node02.${clusterName}.${clusterDNSSuffix}
     ipAddress: 172.21.31.2
@@ -39,6 +41,8 @@ nodes:
     machineSpec:
       mode: metal
       arch: amd64
+      secureboot: true
+      useUKI: true
 
   - hostname: node03.${clusterName}.${clusterDNSSuffix}
     ipAddress: 172.21.31.3
@@ -48,6 +52,8 @@ nodes:
     machineSpec:
       mode: metal
       arch: amd64
+      secureboot: true
+      useUKI: true
 
 controlPlane:
   nodeLabels:
@@ -192,6 +198,21 @@ controlPlane:
             allowedKubernetesNamespaces:
               - actions-runner-system
               - system-upgrade
+
+    # Enable TPM-backed disk encryption (requires SecureBoot/UKI)
+    - |-
+      machine:
+        systemDiskEncryption:
+          state:
+            provider: luks2
+            keys:
+              - slot: 0
+                tpm: {}
+          ephemeral:
+            provider: luks2
+            keys:
+              - slot: 0
+                tpm: {}
 
 worker:
   schematic:
