@@ -10,10 +10,8 @@ spec:
     mediaType: application/vnd.cncf.helm.chart.content.v1.tar+gzip
     operation: copy
   ref:
-    # Held at v1.19.x -- v1.20 (Tentacle) is flagged flaky in
-    # .github/renovate/allowedVersions.json5. Chongus currently runs
-    # v1.20.1 anyway (predates the hold, or the hold went stale); mini is
-    # a fresh deployment so there's no reason to knowingly start on the
-    # version the repo's own config says to avoid.
-    tag: v1.19.6
+    # The repo-wide v1.19.x hold (.github/renovate/allowedVersions.json5) exists
+    # to protect chongus/bitty, which have live data on Ceph v20 already. Mini
+    # has no data at risk, so it tracks true latest instead of the hold.
+    tag: v1.20.6
   url: oci://ghcr.io/rook/rook-ceph
