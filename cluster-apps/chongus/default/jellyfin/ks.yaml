@@ -23,9 +23,6 @@ spec:
       APP: *app
       VOLSYNC_CAPACITY: 50Gi
       VOLSYNC_CACHE_SNAPSHOTCLASS: ceph-block
-    substituteFrom:
-      - kind: Secret
-        name: cluster-settings
   prune: true
   retryInterval: 2m
   sourceRef:

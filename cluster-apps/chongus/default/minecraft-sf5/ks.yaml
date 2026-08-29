@@ -33,6 +33,3 @@ spec:
       APP: *app
       VOLSYNC_CLAIM: minecraft-sf5
       VOLSYNC_CAPACITY: 20Gi
-    substituteFrom:
-      - kind: Secret
-        name: cluster-settings

@@ -30,6 +30,3 @@ spec:
       APP: *app
       VOLSYNC_CAPACITY: 1Gi
       VOLSYNC_CLAIM: *app
-    substituteFrom:
-      - kind: Secret
-        name: cluster-settings
