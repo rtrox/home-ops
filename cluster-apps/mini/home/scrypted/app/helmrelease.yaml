@@ -40,6 +40,12 @@ spec:
                 memory: 512Mi
               limits:
                 memory: 8192Mi
+                # node03 is the only mini node with an NVIDIA GPU (unlike
+                # chongus, where every node has one) -- request it
+                # explicitly so the scheduler pins this pod there instead
+                # of landing on a node where the nvidia RuntimeClass has
+                # no actual container runtime backing it.
+                nvidia.com/gpu: "1"
             securityContext:
               privileged: true
 

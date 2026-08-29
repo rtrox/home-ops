@@ -17,7 +17,7 @@ spec:
     - name: nvidia-device-plugin
       namespace: system
   interval: 1h
-  path: ./cluster-apps/chongus/home/scrypted/app
+  path: ./cluster-apps/mini/home/scrypted/app
   postBuild:
     substitute:
       APP: *app
