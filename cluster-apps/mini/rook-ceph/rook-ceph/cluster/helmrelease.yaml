@@ -63,6 +63,26 @@ spec:
         provider: host
         connections:
           requireMsgr2: true
+      # aes256k (rook-ceph's default cephx key type as of v1.20) requires
+      # kernel 7.0+; Talos v1.13.9 ships 6.18, so pin to the older aes
+      # cipher instead. See onedr0p/home-ops for the reference pattern.
+      security:
+        cephx:
+          daemon:
+            keyRotationPolicy: KeyGeneration
+            keyGeneration: 2
+          csi:
+            keyType: aes
+      healthCheck:
+        muteHealthWarning:
+          AUTH_INSECURE_ROTATING_SERVICE_KEY_TYPE:
+            policy: mute
+          AUTH_INSECURE_CLIENT_KEY_TYPE:
+            policy: mute
+          AUTH_INSECURE_KEYS_ALLOWED:
+            policy: mute
+          AUTH_INSECURE_KEYS_CREATABLE:
+            policy: mute
       mon:
         count: 3
         allowMultiplePerNode: false
