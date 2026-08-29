@@ -87,6 +87,11 @@ spec:
               # probes/service/route below (pre-existing config, unchanged
               # from the chongus deployment)
               SERVER_PORT: "8080"
+              # app.oidc.allow-unsafe-hosts: v3.3.3 added an SSRF guard that
+              # blocks OIDC discovery/token calls to private-network hosts
+              # by default. pocket-id (auth.rtrox.io) resolves to an
+              # internal LB IP, so this must be allowed explicitly.
+              APP_OIDC_ALLOW_UNSAFE_HOSTS: "true"
             probes:
               liveness: &probe
                 enabled: true
