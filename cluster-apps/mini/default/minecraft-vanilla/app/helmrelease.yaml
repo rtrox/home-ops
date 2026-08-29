@@ -33,7 +33,7 @@ spec:
         memory: 12Gi
       limits:
         memory: 16Gi
-    securityContext:
+    podSecurityContext:
       runAsUser: &uid 568
       fsGroup: *uid
     livenessProbe:
