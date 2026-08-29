@@ -9,7 +9,7 @@ tasks:
       vars:
         - &requires-cluster-name
           name: CLUSTER_NAME
-          enum: [chongus, bitty]
+          enum: [chongus, bitty, mini]
 
   talos-cluster:
     desc: Bootstrap Talos
@@ -43,7 +43,6 @@ tasks:
     env:
       NODE_COUNT:
         sh: talosctl config info --output json | jq --raw-output '.nodes | length'
-      ROOK_DISK: nvme-Samsung_SSD_990_PRO_1TB
     cmds:
       # - until kubectl wait nodes --for=condition=Ready=False --all --timeout=10m; do sleep 5; done
       - kubectl apply --server-side --filename {{.CLUSTER_DIR}}/bootstrap/resources/namespaces.yaml

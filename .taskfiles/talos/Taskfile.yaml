@@ -9,7 +9,7 @@ tasks:
       vars:
         - &requires-cluster-name
           name: CLUSTER_NAME
-          enum: [chongus, bitty]
+          enum: [chongus, bitty, mini]
 
   generate-clusterconfig:
     desc: Generate clusterconfig for Talos

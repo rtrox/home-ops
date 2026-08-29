@@ -52,14 +52,29 @@
 - Node 2: 172.30.21.2
 - Node 3: 172.30.21.3
 
+## Mini Cluster
+
+### Minisforum MS-A2 Nodes (3x)
+
+**Node Configuration:**
+- **CPU**: AMD Ryzen
+- **GPU**: AMD iGPU (amdgpu extension enabled)
+- **Storage**: Dual NVMe per node - 2TB boot disk, 4TB storage disk (reserved for future Rook-Ceph use)
+- **Network**: Gigabit Ethernet
+
+**IP Assignments:**
+- Node 1: 172.21.31.1
+- Node 2: 172.21.31.2
+- Node 3: 172.21.31.3
+
 ## Network Infrastructure
 
-**Load Balancer IP Pool:**
-- Range: 172.22.12.0/24
-- Managed by: Cilium LBIPAM
-- Reserved IPs:
+**Load Balancer IP Pools (Cilium LBIPAM, one distinct pool per cluster since these networks are routable to each other):**
+- Chongus: 172.22.12.0/24
   - 172.22.12.1: envoy-internal gateway
   - 172.22.12.2: envoy-external gateway
+- Bitty: 172.19.12.0/24
+- Mini: 172.19.32.0/24
 
 **Pod Network:**
 - CIDR: 10.244.0.0/16
