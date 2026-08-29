@@ -8,7 +8,6 @@ resources:
   - ./bluesky-pds/ks.yaml
   - ./imap-classifier/ks.yaml
   - ./jellyfin/ks.yaml
-  - ./komga/ks.yaml
   - ./minecraft-cpw/ks.yaml
   - ./minecraft-sf5/ks.yaml
   - ./minecraft-vanilla/ks.yaml
