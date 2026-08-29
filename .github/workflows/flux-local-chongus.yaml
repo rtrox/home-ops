@@ -6,7 +6,12 @@ on:
   workflow_call:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.number || github.ref }}
+  # NOTE: github.workflow resolves to the CALLING workflow's name inside a
+  # workflow_call, not this file's own `name:` -- all three flux-local-*
+  # workflows share the same caller (on-pr.yaml), so using github.workflow
+  # here collides them into one concurrency group and they cancel each
+  # other out. Hardcode a unique key per cluster instead.
+  group: flux-local-chongus-${{ github.event.number || github.ref }}
   cancel-in-progress: true
 
 permissions:
