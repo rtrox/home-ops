@@ -83,6 +83,10 @@ spec:
                     key: mariadb_password
               DATABASE_URL: jdbc:mariadb://localhost:3306/booklore
               DATABASE_USERNAME: booklore
+              # v3.3.3 listens on 6060 by default; force 8080 to match
+              # probes/service/route below (pre-existing config, unchanged
+              # from the chongus deployment)
+              SERVER_PORT: "8080"
             probes:
               liveness: &probe
                 enabled: true
