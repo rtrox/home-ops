@@ -33,6 +33,3 @@ spec:
       APP: *app
       VOLSYNC_CLAIM: minecraft-vanilla
       VOLSYNC_CAPACITY: 80Gi
-    substituteFrom:
-      - kind: Secret
-        name: cluster-settings
