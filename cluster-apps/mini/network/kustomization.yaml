@@ -2,10 +2,10 @@
 # yaml-language-server: $schema=https://json.schemastore.org/kustomization
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-namespace: system-controllers
+namespace: network
 resources:
-  - ./kubelet-csr-approver/ks.yaml
-  - ./snapshot-controller/ks.yaml
+  - ./external-dns/ks.yaml
+  - ./envoy-gateway/ks.yaml
 components:
   - ../../components/namespace
   - ../../components/flux/alerts
