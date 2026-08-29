@@ -41,5 +41,15 @@
         ":warning: **Manual Review Required**: Check [qbittorrent changelog](https://github.com/qbittorrent/qBittorrent/blob/master/Changelog) and [libtorrent releases](https://github.com/arvidn/libtorrent/releases) for breaking changes before merging.",
       ],
     },
+    {
+      description: "Never Automerge Kubernetes",
+      matchDatasources: ["github-releases"],
+      matchPackageNames: ["kubernetes/kubernetes"],
+      automerge: false,
+      ignoreTests: false,
+      prBodyNotes: [
+        ":warning: **Manual Review Required**: Confirm the new Kubernetes version is supported by the pinned Talos version in the same talconfig.yaml before merging -- check the [Talos support matrix](https://www.talos.dev/latest/introduction/support-matrix/). A mismatched pin will fail `talhelper genconfig`.",
+      ],
+    },
   ],
 }
