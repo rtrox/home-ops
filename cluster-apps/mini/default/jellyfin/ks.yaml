@@ -17,7 +17,7 @@ spec:
     - name: nvidia-device-plugin
       namespace: system
   interval: 1h
-  path: ./cluster-apps/chongus/default/jellyfin/app
+  path: ./cluster-apps/mini/default/jellyfin/app
   postBuild:
     substitute:
       APP: *app
