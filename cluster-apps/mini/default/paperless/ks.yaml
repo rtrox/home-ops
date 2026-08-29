@@ -20,7 +20,7 @@ spec:
       namespace: system
   interval: 30m
   timeout: 5m
-  path: "./cluster-apps/chongus/default/paperless/app"
+  path: "./cluster-apps/mini/default/paperless/app"
   prune: true
   sourceRef:
     kind: GitRepository
@@ -49,7 +49,7 @@ spec:
       app.kubernetes.io/name: *app
   interval: 30m
   timeout: 5m
-  path: "./cluster-apps/chongus/default/paperless/redis"
+  path: "./cluster-apps/mini/default/paperless/redis"
   prune: true
   sourceRef:
     kind: GitRepository
@@ -72,7 +72,7 @@ spec:
     - ../../../../components/volsync
   interval: 30m
   timeout: 5m
-  path: "./cluster-apps/chongus/default/paperless/ai"
+  path: "./cluster-apps/mini/default/paperless/ai"
   prune: true
   sourceRef:
     kind: GitRepository
