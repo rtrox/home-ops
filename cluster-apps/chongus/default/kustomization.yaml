@@ -14,4 +14,3 @@ resources:
   - ./minecraft-vanilla/ks.yaml
   - ./owncast/ks.yaml
   - ./paperless/ks.yaml
-  - ./thelounge/ks.yaml

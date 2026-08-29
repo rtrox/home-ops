@@ -15,10 +15,12 @@ spec:
     - name: rook-ceph-cluster
       namespace: rook-ceph
   interval: 1h
-  path: ./cluster-apps/chongus/default/thelounge/app
+  path: ./cluster-apps/mini/default/thelounge/app
   postBuild:
     substitute:
       APP: *app
+      APP_UID: "1000"
+      APP_GID: "1000"
       VOLSYNC_CAPACITY: 5Gi
   prune: true
   retryInterval: 2m
