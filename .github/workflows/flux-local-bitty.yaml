@@ -6,7 +6,9 @@ on:
   workflow_call:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.number || github.ref }}
+  # See flux-local-chongus.yaml for why this is hardcoded rather than
+  # github.workflow.
+  group: flux-local-bitty-${{ github.event.number || github.ref }}
   cancel-in-progress: true
 
 permissions:
