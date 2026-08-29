@@ -32,8 +32,9 @@ tasks:
       CLUSTERCONFIG_FILES:
         sh: ls {{.TALOS_DIR}}/clusterconfig/*.yaml
     preconditions:
-      - which ls
+      - which ls yq
       - test -f "{{.TALOSCONFIG}}"
+      - test -f "{{.TALOS_DIR}}/talconfig.yaml"
     requires:
       vars:
         - *requires-cluster-name
@@ -43,8 +44,10 @@ tasks:
         task: _apply-machineconfig
         vars:
           FILENAME: "{{.ITEM}}"
-          HOSTNAME: |-
-            {{ trimPrefix (printf "%s-" .CLUSTER_NAME) (base .ITEM) | trimSuffix ".yaml" }}
+          NODE_NUM: '{{ regexFind "node[0-9]+" (base .ITEM) }}'
+          TARGET:
+            sh: |-
+              yq -r '.nodes[] | select(.hostname | test("^{{ regexFind "node[0-9]+" (base .ITEM) }}")) | .ipAddress' {{.TALOS_DIR}}/talconfig.yaml
           DRY_RUN: "{{ .DRY_RUN }}"
           INSECURE: "{{ .INSECURE }}"
 
@@ -65,7 +68,7 @@ tasks:
       - task: _apply-machineconfig
         vars:
           FILENAME: "{{.FILE}}"
-          HOSTNAME: "{{.NODE}}"
+          TARGET: "{{.NODE}}"
       - talosctl --nodes {{.NODE}} health
 
   upgrade-node:
@@ -96,13 +99,13 @@ tasks:
       - test -f "{{.FILENAME}}"
     requires:
       vars:
-        - HOSTNAME
+        - TARGET
         - FILENAME
     vars:
       MODE: '{{.MODE | default "auto"}}'
     cmds:
       - talosctl apply-config
-        --nodes "{{.HOSTNAME}}"
+        --nodes "{{.TARGET}}"
         --file "{{.FILENAME}}"
         --mode="{{.MODE}}"
         {{ if eq "true" .INSECURE }}--insecure{{ end }}

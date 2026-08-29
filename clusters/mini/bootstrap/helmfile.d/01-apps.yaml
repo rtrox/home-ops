@@ -10,6 +10,12 @@ releases:
     namespace: kube-system
     chart: oci://ghcr.io/home-operations/charts-mirror/cilium
     version: 1.18.6
+    # Cilium's own hubble-relay needs CoreDNS to become healthy, but CoreDNS
+    # is the next release in this same helmfile and can't come up until
+    # cilium's CNI is in place -- don't block bootstrap progression on
+    # cilium's full readiness (hubble-relay self-heals once CoreDNS exists).
+    wait: false
+    waitForJobs: false
     values:
       - "../../../../cluster-apps/mini/kube-system/cilium/app/values.yaml"
     hooks:
