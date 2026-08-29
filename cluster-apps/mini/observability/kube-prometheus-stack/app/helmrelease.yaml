@@ -46,7 +46,7 @@ spec:
         main:
           enabled: true
           hostnames:
-            - alertmanager.chongus.rtrox.io
+            - alertmanager.mini.rtrox.io
           parentRefs:
             - name: envoy-internal
               namespace: network
@@ -56,7 +56,7 @@ spec:
           name: alertmanager
           global:
             resolveTimeout: 5m
-        externalUrl: https://alertmanager.chongus.rtrox.io
+        externalUrl: https://alertmanager.mini.rtrox.io
         storage:
           volumeClaimTemplate:
             spec:
@@ -190,7 +190,7 @@ spec:
         main:
           enabled: true
           hostnames:
-            - prometheus.chongus.rtrox.io
+            - prometheus.mini.rtrox.io
           parentRefs:
             - name: envoy-internal
               namespace: network

@@ -10,7 +10,7 @@ spec:
     labels:
       app.kubernetes.io/name: *app
   interval: 1h
-  path: ./cluster-apps/chongus/observability/blackbox-exporter/app
+  path: ./cluster-apps/mini/observability/blackbox-exporter/app
   prune: true
   retryInterval: 2m
   sourceRef:
