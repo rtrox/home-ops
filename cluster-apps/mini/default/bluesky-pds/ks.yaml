@@ -19,7 +19,7 @@ spec:
       namespace: external-secrets
     - name: volsync
       namespace: system
-  path: ./cluster-apps/chongus/default/bluesky-pds/app
+  path: ./cluster-apps/mini/default/bluesky-pds/app
   prune: true
   sourceRef:
     kind: GitRepository
@@ -32,4 +32,6 @@ spec:
   postBuild:
     substitute:
       APP: *app
+      APP_UID: "1001"
+      APP_GID: "1001"
       VOLSYNC_CAPACITY: 20Gi

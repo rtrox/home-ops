@@ -5,7 +5,6 @@ kind: Kustomization
 
 resources:
   # - ./bambustatus-streamer/ks.yaml
-  - ./bluesky-pds/ks.yaml
   - ./imap-classifier/ks.yaml
   - ./minecraft-cpw/ks.yaml
   - ./minecraft-sf5/ks.yaml
