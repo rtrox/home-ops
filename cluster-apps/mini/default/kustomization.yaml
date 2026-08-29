@@ -5,6 +5,7 @@ kind: Kustomization
 
 resources:
   - ./atuin/ks.yaml
+  - ./bluesky-pds/ks.yaml
   - ./echo-server/ks.yaml
   - ./grimmory/ks.yaml
   - ./jellyfin/ks.yaml
