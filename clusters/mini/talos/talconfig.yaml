@@ -54,6 +54,31 @@ nodes:
       arch: amd64
       secureboot: true
       useUKI: true
+    # node03 has an NVIDIA RTX 3050 in addition to the AMD iGPU shared by
+    # every node. Node-level `schematic` overwrites (not merges with) the
+    # controlPlane group schematic, so the full extension list has to be
+    # repeated here alongside the NVIDIA additions.
+    schematic:
+      customization:
+        extraKernelArgs:
+          - apparmor=0
+          - net.ifnames=0
+        systemExtensions:
+          officialExtensions:
+            - siderolabs/amd-ucode
+            - siderolabs/amdgpu
+            - siderolabs/iscsi-tools
+            - siderolabs/nonfree-kmod-nvidia-production
+            - siderolabs/nvidia-container-toolkit-production
+    patches:
+      - |-
+        machine:
+          kernel:
+            modules:
+              - name: "nvidia"
+              - name: "nvidia_uvm"
+              - name: "nvidia_drm"
+              - name: "nvidia_modeset"
 
 controlPlane:
   nodeLabels:
