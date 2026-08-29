@@ -7,5 +7,6 @@ resources:
   - ./atuin/ks.yaml
   - ./echo-server/ks.yaml
   - ./grimmory/ks.yaml
+  - ./owncast/ks.yaml
   - ./paperless/ks.yaml
   - ./thelounge/ks.yaml
