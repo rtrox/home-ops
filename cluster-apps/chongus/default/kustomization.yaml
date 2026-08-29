@@ -6,7 +6,6 @@ kind: Kustomization
 resources:
   # - ./bambustatus-streamer/ks.yaml
   - ./bluesky-pds/ks.yaml
-  - ./echo-server/ks.yaml
   - ./imap-classifier/ks.yaml
   - ./jellyfin/ks.yaml
   - ./komga/ks.yaml

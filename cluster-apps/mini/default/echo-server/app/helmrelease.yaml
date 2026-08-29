@@ -8,8 +8,7 @@ spec:
   interval: 30m
   chartRef:
     kind: OCIRepository
-    name: app-template
-    namespace: flux-system
+    name: echo-server
 
   values:
     controllers:
@@ -52,7 +51,7 @@ spec:
     route:
       app:
         hostnames:
-          - echo.chongus.rtrox.io
+          - echo.rtrox.io
         parentRefs:
           - name: envoy-internal
             namespace: network
