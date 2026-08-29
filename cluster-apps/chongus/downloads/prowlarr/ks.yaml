@@ -22,6 +22,9 @@ spec:
     substitute:
       APP: *app
       VOLSYNC_CAPACITY: 1Gi
+    substituteFrom:
+      - kind: Secret
+        name: cluster-settings
   prune: true
   retryInterval: 2m
   sourceRef:
