@@ -3,15 +3,15 @@
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: booklore
+  name: grimmory
 spec:
   chartRef:
     kind: OCIRepository
-    name: booklore
+    name: grimmory
   interval: 30m
   values:
     controllers:
-      booklore:
+      grimmory:
         annotations:
           reloader.stakater.com/auto: "true"
         pod:
@@ -27,16 +27,22 @@ spec:
               repository: docker.io/library/mariadb
               tag: 12.3.3-noble
             env:
+              # NOTE: the underlying MariaDB database/user are still named
+              # "booklore" -- that's baked into the restored data files
+              # from the pre-rename (Booklore -> Grimmory) deployment.
+              # Renaming these would require a live SQL rename against the
+              # restored database; not done here, this is purely an
+              # internal implementation detail nothing else references.
               MARIADB_DATABASE: booklore
               MARIADB_PASSWORD:
                 valueFrom:
                   secretKeyRef:
-                    name: booklore-secret
+                    name: grimmory-secret
                     key: mariadb_password
               MARIADB_ROOT_PASSWORD:
                 valueFrom:
                   secretKeyRef:
-                    name: booklore-secret
+                    name: grimmory-secret
                     key: mariadb_root_password
               MARIADB_USER: booklore
               PGID: 1000
@@ -60,7 +66,7 @@ spec:
                   - ALL
               readOnlyRootFilesystem: true
         containers:
-          booklore:
+          grimmory:
             image:
               repository: ghcr.io/grimmory-tools/grimmory
               tag: v3.3.3@sha256:fffd0ae0bfccd64ca00441e8fa58a14e286b9115e5df1cb47eecf294ad09e6ff
@@ -73,7 +79,7 @@ spec:
               DATABASE_PASSWORD:
                 valueFrom:
                   secretKeyRef:
-                    name: booklore-secret
+                    name: grimmory-secret
                     key: mariadb_password
               DATABASE_URL: jdbc:mariadb://localhost:3306/booklore
               DATABASE_USERNAME: booklore
@@ -102,10 +108,10 @@ spec:
               readOnlyRootFilesystem: true
     persistence:
       data:
-        existingClaim: booklore
+        existingClaim: grimmory
         advancedMounts:
-          booklore:
-            booklore:
+          grimmory:
+            grimmory:
               - path: /app/data
                 subPath: app
             mariadb:
@@ -116,8 +122,8 @@ spec:
         server: nas.rtrox.io
         path: /mnt/rusty/media
         advancedMounts:
-          booklore:
-            booklore:
+          grimmory:
+            grimmory:
               - path: /books
                 subPath: books
               - path: /bookdrop
@@ -127,7 +133,7 @@ spec:
         medium: Memory
         sizeLimit: 1Mi
         advancedMounts:
-          booklore:
+          grimmory:
             mariadb:
               - path: /run/mysqld
       tmpfs:
@@ -135,24 +141,25 @@ spec:
         medium: Memory
         sizeLimit: 500Mi
         advancedMounts:
-          booklore:
-            booklore:
+          grimmory:
+            grimmory:
               - path: /tmp
                 subPath: app
             mariadb:
               - path: /tmp
                 subPath: mysql
     route:
-      booklore:
+      grimmory:
         hostnames:
+          - books.rtrox.io
           - booklore.rtrox.io
         parentRefs:
           - name: envoy-internal
             namespace: network
             sectionName: https
     service:
-      booklore:
-        controller: booklore
+      grimmory:
+        controller: grimmory
         ports:
           http:
             port: 8080

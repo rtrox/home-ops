@@ -7,7 +7,6 @@ resources:
   - ./atuin/ks.yaml
   # - ./bambustatus-streamer/ks.yaml
   - ./bluesky-pds/ks.yaml
-  - ./booklore/ks.yaml
   - ./echo-server/ks.yaml
   - ./imap-classifier/ks.yaml
   - ./jellyfin/ks.yaml
