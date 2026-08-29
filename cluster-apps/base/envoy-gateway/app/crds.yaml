@@ -1,0 +1,38 @@
+---
+# Envoy Gateway's own CRDs (BackendTrafficPolicy, ClientTrafficPolicy,
+# EnvoyProxy, EnvoyPatchPolicy, etc.) ship bundled in the chart's "crds"
+# subchart alongside a second copy of the *standard* Gateway API CRDs plus
+# a safe-upgrade ValidatingAdmissionPolicy -- which is exactly what the
+# HelmRelease's install.crds/upgrade.crds: Skip is guarding against (it
+# would conflict with the separately-managed gateway-api-crds bootstrap
+# chart). Skip is all-or-nothing per chart though, so it silently drops
+# Envoy's own CRDs too. Source just those directly instead.
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: envoy-gateway-crd
+spec:
+  interval: 30m
+  url: https://github.com/envoyproxy/gateway
+  ref:
+    # renovate: depName=envoyproxy/gateway datasource=github-releases
+    tag: v1.9.0
+  ignore: |
+    # exclude
+    /*
+    # include
+    !charts/gateway-helm/charts/crds/crds/generated
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: envoy-gateway-crds
+spec:
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: envoy-gateway-crd
+  wait: true
+  interval: 15m
+  retryInterval: 1m
+  timeout: 5m
