@@ -78,6 +78,17 @@ This repository implements a GitOps-managed Kubernetes infrastructure using Flux
 - **Do not deploy new applications to Bitty** - migrate to Chongus
 - `clusters/bitty/` now bootstraps with the same helmfile/Talos pattern as Chongus (see below); `cluster-apps/bitty/` is still on the old pattern pending migration
 
+### Mini Cluster (New)
+
+**Summary:** 3x Minisforum MS-A2 nodes (AMD Ryzen, dual NVMe: 2TB boot + 4TB storage), bootstrapped directly on the Chongus helmfile/Talos pattern from day one.
+
+- Kubernetes v1.36.4 on Talos v1.13.9
+- IP Range: 172.21.31.1-3
+- Load Balancer Pool: 172.19.32.0/24 (Cilium LBIPAM, distinct from Chongus and Bitty since these networks are routable to each other)
+- GPU: AMD `amdgpu` iGPU support enabled (`siderolabs/amdgpu` + `siderolabs/amd-ucode`), no Intel/NVIDIA extensions
+- Install disk: boot disk selected via `size: < 3TB` (picks the 2TB NVMe over the 4TB storage NVMe, which is reserved for future Rook-Ceph use)
+- `clusters/mini/` and the `cluster-apps/mini/` baseline (cilium, coredns, flux-operator/instance) follow the Chongus pattern exactly; the rest of `cluster-apps/mini` (rook-ceph, cert-manager issuers, envoy-gateway, etc.) is pending, same as Bitty
+
 ## Repository Structure
 
 ### Understanding Namespace Directories
@@ -121,6 +132,7 @@ cluster-apps/chongus/
 │   │   ├── observability/     # "observability" namespace
 │   │   └── actions-runner-system/  # "actions-runner-system" namespace
 │   ├── bitty/                 # Bitty-specific apps (deprecated pattern, pending migration)
+│   ├── mini/                  # Mini-specific apps (baseline only: cilium, coredns, flux-operator)
 │   └── components/            # Reusable Kustomize components
 │       ├── flux/alerts/       # Flux error notifications
 │       ├── namespace/         # Basic namespace template
@@ -137,7 +149,8 @@ cluster-apps/chongus/
 │   │   │   └── cluster/
 │   │   └── talos/             # Talos configuration
 │   │       └── clusterconfig/
-│   └── bitty/                 # Same helmfile/Talos bootstrap pattern as Chongus
+│   ├── bitty/                 # Same helmfile/Talos bootstrap pattern as Chongus
+│   └── mini/                  # Same helmfile/Talos bootstrap pattern as Chongus
 └── .taskfiles/                # Operational automation
     ├── k8s-bootstrap/
     ├── sops/

@@ -28,10 +28,11 @@ This repository contains the Infrastructure as Code (IaC) for my home Kubernetes
 
 ### Clusters
 
-I run two Kubernetes clusters:
+I run three Kubernetes clusters:
 
 - **Chongus** (Primary) - Dell R730 servers with NVIDIA GPUs
 - **Bitty** (Secondary) - Intel NUC cluster
+- **Mini** (New) - Minisforum MS-A2 servers with AMD iGPUs
 
 ### Core Components
 
@@ -150,6 +151,15 @@ While most infrastructure runs on-premises, some cloud services are used:
 - Rook-Ceph: 3x 512GB SSDs (1 per node)
 - Storage Class: `ceph-block` (default)
 - Replication: 3 replicas
+
+### Mini Cluster (New)
+
+| Device            | CPU        | RAM   | Storage                     | Purpose                      |
+| ----------------- | ---------- | ----- | ---------------------------- | ----------------------------- |
+| Minisforum MS-A2 x3 | AMD Ryzen | TBD  | 2TB NVMe (boot) + 4TB NVMe (storage) | Kubernetes nodes with AMD iGPU |
+
+- Rook-Ceph: planned on the 4TB storage NVMe (1 per node) - not yet deployed
+- Storage Class: `ceph-block` (planned)
 
 ### Supporting Infrastructure
 
