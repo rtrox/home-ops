@@ -33,3 +33,6 @@ spec:
     substitute:
       APP: *app
       VOLSYNC_CAPACITY: 2Gi
+    substituteFrom:
+      - kind: Secret
+        name: cluster-settings

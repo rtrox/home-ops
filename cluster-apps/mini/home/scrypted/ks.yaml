@@ -21,8 +21,10 @@ spec:
   postBuild:
     substitute:
       APP: *app
-      CLUSTER_NAME: mini
       VOLSYNC_CAPACITY: 15Gi
+    substituteFrom:
+      - kind: Secret
+        name: cluster-settings
   prune: true
   retryInterval: 2m
   sourceRef:
