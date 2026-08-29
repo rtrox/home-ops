@@ -99,16 +99,24 @@ jobs:
         id: diff
         run: |
           {
-              echo 'diff<<EOF'
-              cat diff.patch
-              echo EOF
-          } >> "${GITHUB_OUTPUT}";
-          {
               echo "## Flux ${{ matrix.resources }} diff"
               echo '```diff'
               cat diff.patch
               echo '```'
           } >> "${GITHUB_STEP_SUMMARY}"
+          # A large diff.patch blows the OS argument/environment size limit
+          # when the PR-comment action spawns its node process, so skip
+          # posting a comment entirely above a conservative size and rely
+          # on the (untruncated) job summary above instead.
+          if [ "$(wc -c < diff.patch)" -gt 20000 ]; then
+              echo "diff too large for a PR comment ($(wc -c < diff.patch) bytes) -- see the job summary for the full output" >> "${GITHUB_STEP_SUMMARY}"
+          else
+              {
+                  echo 'diff<<EOF'
+                  cat diff.patch
+                  echo EOF
+              } >> "${GITHUB_OUTPUT}"
+          fi
 
       - name: Generate Token
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
