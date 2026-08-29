@@ -20,7 +20,7 @@ spec:
       namespace: system
   interval: 30m
   timeout: 5m
-  path: "./cluster-apps/chongus/default/minecraft-vanilla/app"
+  path: "./cluster-apps/mini/default/minecraft-vanilla/app"
   prune: true
   sourceRef:
     kind: GitRepository
