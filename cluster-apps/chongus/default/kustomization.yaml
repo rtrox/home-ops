@@ -12,6 +12,5 @@ resources:
   - ./minecraft-cpw/ks.yaml
   - ./minecraft-sf5/ks.yaml
   - ./minecraft-vanilla/ks.yaml
-  - ./owncast/ks.yaml
   - ./paperless/ks.yaml
   - ./thelounge/ks.yaml
