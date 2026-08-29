@@ -15,7 +15,7 @@ spec:
     - name: rook-ceph-cluster
       namespace: rook-ceph
   interval: 1h
-  path: ./cluster-apps/chongus/security/pocket-id/app
+  path: ./cluster-apps/mini/security/pocket-id/app
   postBuild:
     substitute:
       APP: *app
