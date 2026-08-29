@@ -69,6 +69,7 @@ spec:
               MOUSEHOLE_CHECK_INTERVAL_SECONDS: "1800"
               MOUSEHOLE_INSECURE_ALLOW_NO_AUTH: "true"
               MOUSEHOLE_ALLOWED_HOSTS: mousehole.rtrox.io
+              MOUSEHOLE_ALLOWED_ORIGINS: https://mousehole.rtrox.io
             securityContext:
               runAsUser: 568
               runAsGroup: 568
