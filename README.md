@@ -28,11 +28,10 @@ This repository contains the Infrastructure as Code (IaC) for my home Kubernetes
 
 ### Clusters
 
-I run three Kubernetes clusters:
+I run two Kubernetes clusters:
 
-- **Chongus** (Primary) - Dell R730 servers with NVIDIA GPUs
+- **Mini** (Primary) - Minisforum MS-A2 servers with AMD iGPUs (one with an NVIDIA GPU)
 - **Bitty** (Secondary) - Intel NUC cluster
-- **Mini** (New) - Minisforum MS-A2 servers with AMD iGPUs
 
 ### Core Components
 
@@ -64,16 +63,16 @@ This repository follows a structured GitOps layout:
 ```text
 📁 cluster-apps/           # Application definitions (Flux source)
 ├── 📁 base/              # Shared applications across clusters
-├── 📁 chongus/           # Chongus cluster applications (NEW PATTERN)
+├── 📁 mini/              # Mini cluster applications (reference pattern)
 │   └── 📁 [namespace]/
 │       └── 📁 [app]/
 │           ├── 📁 app/   # HelmRelease + configs
 │           └── ks.yaml   # Flux Kustomization
-├── 📁 bitty/             # Bitty cluster (deprecated pattern)
+├── 📁 bitty/             # Bitty cluster (partially migrated)
 └── 📁 components/        # Reusable Kustomize components
 
 📁 clusters/              # Cluster bootstrap configurations
-├── 📁 chongus/
+├── 📁 mini/
 │   ├── 📁 bootstrap/     # Helmfile-based bootstrap
 │   ├── 📁 flux/          # Flux Kustomizations
 │   └── 📁 talos/         # Talos configuration
@@ -130,15 +129,15 @@ While most infrastructure runs on-premises, some cloud services are used:
 
 ## 🔧 Hardware
 
-### Chongus Cluster (Primary)
+### Mini Cluster (Primary)
 
-| Device       | CPU        | RAM    | Storage                | Purpose                           |
-| ------------ | ---------- | ------ | ---------------------- | --------------------------------- |
-| Dell R730 x3 | Intel Xeon | 256GB+ | 2x Samsung 870 EVO 2TB | Kubernetes nodes with NVIDIA GPUs |
+| Device            | CPU        | RAM   | Storage                     | Purpose                      |
+| ----------------- | ---------- | ----- | ---------------------------- | ----------------------------- |
+| Minisforum MS-A2 x3 | AMD Ryzen | TBD  | 2TB NVMe (boot) + 4TB NVMe (storage) | Kubernetes nodes, AMD iGPU on every node, NVIDIA GPU on one |
 
 **Storage:**
 
-- Rook-Ceph: 6x 2TB SSDs (2 per node)
+- Rook-Ceph: 3x 4TB NVMe (1 per node)
 - Storage Class: `ceph-block` (default)
 - Replication: 3 replicas
 
@@ -151,12 +150,6 @@ While most infrastructure runs on-premises, some cloud services are used:
 - Rook-Ceph: 3x 512GB SSDs (1 per node)
 - Storage Class: `ceph-block` (default)
 - Replication: 3 replicas
-
-### Mini Cluster (New)
-
-| Device            | CPU        | RAM   | Storage                     | Purpose                      |
-| ----------------- | ---------- | ----- | ---------------------------- | ----------------------------- |
-| Minisforum MS-A2 x3 | AMD Ryzen | TBD  | 2TB NVMe (boot) + 4TB NVMe (storage) | Kubernetes nodes with AMD iGPU |
 
 - Rook-Ceph: planned on the 4TB storage NVMe (1 per node) - not yet deployed
 - Storage Class: `ceph-block` (planned)

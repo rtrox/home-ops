@@ -17,11 +17,6 @@ cluster/bitty:
       - any-glob-to-any-file: "cluster-apps/bitty/**/*"
       - any-glob-to-any-file: "cluster-cd/bitty/*"
       - any-glob-to-any-file: "clusters/bitty/*"
-cluster/chongus:
-  - changed-files:
-      - any-glob-to-any-file: "cluster-apps/chongus/**/*"
-      - any-glob-to-any-file: "cluster-cd/chongus/*"
-      - any-glob-to-any-file: "clusters/chongus/*"
 cluster/mini:
   - changed-files:
       - any-glob-to-any-file: "cluster-apps/mini/**/*"
