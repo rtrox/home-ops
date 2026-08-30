@@ -7,7 +7,8 @@
       allowedVersions: "<1",
     },
     {
-      description: "Hold Rook-Ceph at v1.19.x — v1.20 (Tentacle) is flaky; revisit after the bare-metal rebuild",
+      description: "Hold Rook-Ceph at v1.19.x on chongus/bitty — v1.20 (Tentacle) is flaky; revisit after the bare-metal rebuild. Mini tracks true latest instead (see cluster-apps/mini/rook-ceph/rook-ceph/{operator,cluster}/ocirepository.yaml), so it's excluded here.",
+      matchFileNames: ["**/cluster-apps/chongus/**", "**/cluster-apps/bitty/**"],
       matchPackageNames: [
         "ghcr.io/rook/rook-ceph",
         "ghcr.io/rook/rook-ceph-cluster",

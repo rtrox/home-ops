@@ -51,5 +51,37 @@
         ":warning: **Manual Review Required**: Confirm the new Kubernetes version is supported by the pinned Talos version in the same talconfig.yaml before merging -- check the [Talos support matrix](https://www.talos.dev/latest/introduction/support-matrix/). A mismatched pin will fail `talhelper genconfig`.",
       ],
     },
+    {
+      // talosVersion in talconfig.yaml is tracked via an inline `# renovate:`
+      // comment against this same package (see the depName= annotation above
+      // talosVersion), so this rule also gates the actual Talos version bump,
+      // not just the installer image.
+      description: "Never Automerge Talos",
+      matchDatasources: ["docker"],
+      matchPackageNames: ["ghcr.io/siderolabs/installer"],
+      automerge: false,
+      ignoreTests: false,
+      prBodyNotes: [
+        ":warning: **Manual Review Required**: Confirm the new Talos version still supports the pinned Kubernetes version in the same talconfig.yaml before merging -- check the [Talos support matrix](https://www.talos.dev/latest/introduction/support-matrix/). After merging, also update `talos.version` in the matching tuppr `TalosUpgrade` (system-upgrade/tuppr/upgrades/talos.yaml) -- it's kept in sync by hand, not auto-updated by this PR.",
+      ],
+    },
+    {
+      // Rook's chart version keeps major=1 forever (v1.19 -> v1.20 -> v1.21
+      // are semver *minor* bumps), so matchUpdateTypes: ["major"] would never
+      // fire here -- same trap as Kubernetes above. Block unconditionally
+      // instead of trying to classify by update type.
+      description: "Never Automerge Rook-Ceph",
+      matchDatasources: ["docker", "helm"],
+      matchPackageNames: [
+        "ghcr.io/rook/rook-ceph",
+        "ghcr.io/rook/rook-ceph-cluster",
+        "quay.io/ceph/ceph",
+      ],
+      automerge: false,
+      ignoreTests: false,
+      prBodyNotes: [
+        ":warning: **Manual Review Required**: Confirm the new Rook/Ceph version is a supported pairing before merging -- check [Rook's maintenance and support matrix](https://rook.io/docs/rook/latest-release/Getting-Started/maintenance-and-support/) and the [Ceph upgrade guide](https://rook.io/docs/rook/latest-release/Upgrade/ceph-upgrade/) for known-bad patch versions (e.g. avoid Ceph v20.2.0 -- data-corruption bug with read affinity enabled, use v20.2.1+).",
+      ],
+    },
   ],
 }
