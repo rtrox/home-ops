@@ -11,6 +11,9 @@ spec:
   timeout: 20m
   values:
     admin:
+      # Doppler's GRAFANA_ADMIN.grafana_username must not collide with any
+      # OIDC user's login -- Grafana surfaces that as a misleading
+      # "user.sync: Failed to create user: user not found" error.
       existingSecret: grafana-admin-secret
 
     annotations:
@@ -304,9 +307,23 @@ spec:
       GF_AUTH_GENERIC_OAUTH_ALLOW_SIGN_UP: true
       GF_AUTH_GENERIC_OAUTH_LOGIN_ATTRIBUTE_PATH: preferred_username
       GF_AUTH_GENERIC_OAUTH_NAME_ATTRIBUTE_PATH: name
+      # Global allow_sign_up governs Grafana's native self-serve signup page
+      # specifically -- not needed for OAuth auto-provisioning (that's the
+      # provider-level ALLOW_SIGN_UP above), so left off. No persistent
+      # storage here (persistence.enabled: false), so keep this off rather
+      # than risk exposing native self-registration.
+      GF_USERS_ALLOW_SIGN_UP: false
+      # Removes the native username/password login form entirely, so the
+      # only way in is through pocket-id.
+      GF_AUTH_DISABLE_LOGIN_FORM: true
       # Login is already gated to the pocket-id "admins" group via the
       # client's allowed_user_groups, so anyone who can sign in gets Admin.
       GF_USERS_AUTO_ASSIGN_ORG_ROLE: Admin
+      # role_attribute_path returning the literal 'GrafanaAdmin' grants both
+      # org Admin and the server-level GrafanaAdmin (superadmin) flag to
+      # every OAuth login -- safe here since login is admin-gated already.
+      GF_AUTH_GENERIC_OAUTH_ALLOW_ASSIGN_GRAFANA_ADMIN: true
+      GF_AUTH_GENERIC_OAUTH_ROLE_ATTRIBUTE_PATH: "'GrafanaAdmin'"
 
     envValueFrom:
       GF_AUTH_GENERIC_OAUTH_CLIENT_ID:
