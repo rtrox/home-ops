@@ -15,11 +15,3 @@ creation_rules:
       age1ptsqml5nfm2rq004uprw4wf4ghc965cygut4n7ejkt0esfxr7a7sxpmz5m,
       age1ns2r38fd24cpfmhmn3qeu8x28nrq6ehjdc72yz4q44sxk8aej9vqtr5jue,
       age1lsf3sk6jdjgm49tna2g2s7hxdj5tvsqrvm0a9gwsuugdtwacfaeqsrwae3
-  - path_regex: .*\.cho\.ya?ml
-    encrypted_regex: ^(data|stringData|dnsName|targets)$
-    # chongus flux, Ubuntu WSL (desk), work macbook, Endeavour Laptop
-    age: >-
-      age1ay8ky5ce59vkz740uzp2tr2r22sqwez9804wdv32rrd6q5tawc3q0ugvp3,
-      age1ptsqml5nfm2rq004uprw4wf4ghc965cygut4n7ejkt0esfxr7a7sxpmz5m,
-      age1ns2r38fd24cpfmhmn3qeu8x28nrq6ehjdc72yz4q44sxk8aej9vqtr5jue,
-      age1lsf3sk6jdjgm49tna2g2s7hxdj5tvsqrvm0a9gwsuugdtwacfaeqsrwae3

@@ -10,8 +10,8 @@ spec:
     mediaType: application/vnd.cncf.helm.chart.content.v1.tar+gzip
     operation: copy
   ref:
-    # The repo-wide v1.19.x hold (.github/renovate/allowedVersions.json5) exists
-    # to protect chongus/bitty, which have live data on Ceph v20 already. Mini
-    # has no data at risk, so it tracks true latest instead of the hold.
+    # Tracks latest. Rook chart bumps never auto-merge (see
+    # .github/renovate/autoMerge.json5) -- check the Rook/Ceph support
+    # matrix before merging one, same as every other cluster.
     tag: v1.20.6
   url: oci://ghcr.io/rook/rook-ceph

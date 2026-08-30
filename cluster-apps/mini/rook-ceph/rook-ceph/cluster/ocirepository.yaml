@@ -10,7 +10,6 @@ spec:
     mediaType: application/vnd.cncf.helm.chart.content.v1.tar+gzip
     operation: copy
   ref:
-    # Matches the operator -- see operator/ocirepository.yaml for why mini
-    # tracks latest instead of the repo-wide v1.19.x hold.
+    # Matches the operator -- see operator/ocirepository.yaml.
     tag: v1.20.6
   url: oci://ghcr.io/rook/rook-ceph-cluster

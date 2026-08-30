@@ -4,11 +4,13 @@
 
 ## Overview
 
-This repository implements a GitOps-managed Kubernetes infrastructure using FluxCD, running two clusters: Chongus (primary, modern pattern) and Bitty (secondary, being phased out). The infrastructure is built on Talos Linux with a focus on automation, high availability, and disaster recovery.
+This repository implements a GitOps-managed Kubernetes infrastructure using FluxCD, running two clusters: Mini (primary, modern pattern) and Bitty (secondary, being phased out). The infrastructure is built on Talos Linux with a focus on automation, high availability, and disaster recovery.
+
+> Chongus (the original primary cluster) was decommissioned and its config removed from this repo. Its `database` (CloudNativePG, redis) and `actions-runner-system` namespaces were deliberately not migrated to Mini -- not currently needed, can be re-added later if that changes. Full history is in git.
 
 ## Key Principles
 
-1. **Always follow Chongus patterns** for new work
+1. **Always follow Mini's patterns** for new work
 2. **Use ExternalSecrets + Doppler** for all secrets
 3. **Pin images to SHA256** for reproducibility
 4. **One OCIRepository per app** for isolation
@@ -43,30 +45,35 @@ This repository implements a GitOps-managed Kubernetes infrastructure using Flux
 
 ## Cluster Specifications
 
-### Chongus Cluster (Primary - Follow This Pattern)
+### Mini Cluster (Primary - Follow This Pattern)
 
-**Summary:** 3x Dell R730 nodes with NVIDIA GPUs, primary production cluster. [Full hardware details](docs/HARDWARE.md)
+**Summary:** 3x Minisforum MS-A2 nodes (AMD Ryzen, dual NVMe: 2TB boot + 4TB storage), primary production cluster. [Full hardware details](docs/HARDWARE.md)
 
 **Critical Configuration:**
 
 - **Kubernetes**: v1.36.4 on Talos v1.13.9
 - **Pod CIDR**: 10.244.0.0/16
 - **Service CIDR**: 10.96.0.0/12
-- **Load Balancer Pool**: 172.22.12.0/24
-  - 172.22.12.1: envoy-internal (default, local network)
-  - 172.22.12.2: envoy-external (internet via Cloudflare)
+- **IP Range**: 172.21.31.1-3
+- **Load Balancer Pool**: 172.19.32.0/24 (Cilium LBIPAM, distinct from Bitty since these networks are routable to each other)
+  - 172.19.32.1: envoy-internal (default, local network)
+  - 172.19.32.2: envoy-external (internet via a dedicated `cloudflared` Cloudflare Tunnel, external hostname `min-ext.rtrox.io`). Its tunnel ingress covers `rtrox.io`/`*.rtrox.io` -- this doesn't collide with Bitty, since each hostname's DNS record (managed per-HTTPRoute by external-dns) only points at whichever cluster's tunnel is actually serving it.
 
 **Storage Classes:**
 
-- `ceph-block` - Default for persistent data (Rook-Ceph, 3x replication)
+- `ceph-block` - Default for persistent data (Rook-Ceph, 3x replication, all 3 nodes' 4TB storage NVMes via `useAllDevices: true`)
 - `openebs-hostpath` - Local cache/temp storage (Volsync operations)
 - NFS mounts: `nas.rtrox.io:/mnt/rusty/media/*`
+- `cephClusterSpec.security.cephx` is pinned to the `aes` key type (not the v1.20 default `aes256k`), since Talos v1.13.9 ships kernel 6.18, below the 7.0+ aes256k requires
+- Rook-Ceph chart/image versions are never auto-merged by Renovate (see `.github/renovate/autoMerge.json5`) -- check the Rook/Ceph support matrix before merging one, same rule for every cluster
 
 **Key Capabilities:**
 
-- GPU support (NVIDIA with nvidia-container-toolkit)
+- GPU support: every node has the AMD `amdgpu` iGPU (`siderolabs/amdgpu` + `siderolabs/amd-ucode`, applied at the `controlPlane:` group level in talconfig.yaml). **node03 additionally has an NVIDIA RTX 3050** (`siderolabs/nonfree-kmod-nvidia-production` + `siderolabs/nvidia-container-toolkit-production` + `nvidia`/`nvidia_uvm`/`nvidia_drm`/`nvidia_modeset` kernel modules), applied as a **node-level override** on node03 only in `clusters/mini/talos/talconfig.yaml` — talhelper node-level `schematic:` *replaces* (does not merge with) the group schematic, so node03's override repeats the full AMD extension list alongside the NVIDIA additions. **If more GPUs are added to other mini nodes, update that node's `schematic:`/`patches:` block in talconfig.yaml accordingly** — it won't inherit from node03 or from the group automatically. `nvidia-device-plugin` (`cluster-apps/mini/system/nvidia-device-plugin`) self-targets node03 via the NFD label `feature.node.kubernetes.io/pci-0300_10de.present: "true"`, so no manual node pinning is needed there.
+- Install disk: boot disk selected via `size: < 3TB` (picks the 2TB NVMe over the 4TB storage NVMe, which is reserved for Rook-Ceph)
 - Cilium CNI with Gateway API
 - External-DNS (Cloudflare)
+- Still pending: CloudNativePG. Observability (kube-prometheus-stack/Grafana/Loki/Alloy) is live.
 
 ### Bitty Cluster (Secondary - Being Phased Out)
 
@@ -75,27 +82,14 @@ This repository implements a GitOps-managed Kubernetes infrastructure using Flux
 - Kubernetes v1.36.4 on Talos v1.13.9
 - IP Range: 172.30.21.1-3
 - Use for: QuickSync video transcoding only
-- **Do not deploy new applications to Bitty** - migrate to Chongus
-- `clusters/bitty/` now bootstraps with the same helmfile/Talos pattern as Chongus (see below); `cluster-apps/bitty/` is still on the old pattern pending migration
-
-### Mini Cluster (New)
-
-**Summary:** 3x Minisforum MS-A2 nodes (AMD Ryzen, dual NVMe: 2TB boot + 4TB storage), bootstrapped directly on the Chongus helmfile/Talos pattern from day one.
-
-- Kubernetes v1.36.4 on Talos v1.13.9
-- IP Range: 172.21.31.1-3
-- Load Balancer Pool: 172.19.32.0/24 (Cilium LBIPAM, distinct from Chongus and Bitty since these networks are routable to each other)
-- GPU: every node has the AMD `amdgpu` iGPU (`siderolabs/amdgpu` + `siderolabs/amd-ucode`, applied at the `controlPlane:` group level in talconfig.yaml). **node03 additionally has an NVIDIA RTX 3050** (`siderolabs/nonfree-kmod-nvidia-production` + `siderolabs/nvidia-container-toolkit-production` + `nvidia`/`nvidia_uvm`/`nvidia_drm`/`nvidia_modeset` kernel modules), applied as a **node-level override** on node03 only in `clusters/mini/talos/talconfig.yaml` — talhelper node-level `schematic:` *replaces* (does not merge with) the group schematic, so node03's override repeats the full AMD extension list alongside the NVIDIA additions. **If more GPUs are added to other mini nodes, update that node's `schematic:`/`patches:` block in talconfig.yaml accordingly** — it won't inherit from node03 or from the group automatically. `nvidia-device-plugin` (`cluster-apps/mini/system/nvidia-device-plugin`) self-targets node03 via the NFD label `feature.node.kubernetes.io/pci-0300_10de.present: "true"`, so no manual node pinning is needed there.
-- Install disk: boot disk selected via `size: < 3TB` (picks the 2TB NVMe over the 4TB storage NVMe, which is reserved for future Rook-Ceph use)
-- Rook-Ceph is deployed using all 3 nodes' 4TB storage NVMes (`useAllDevices: true`), tracking true-latest chart/image versions rather than the repo-wide v1.19.x hold (see `cluster-apps/mini/rook-ceph/rook-ceph/{operator,cluster}/ocirepository.yaml` for why). `cephClusterSpec.security.cephx` is pinned to the `aes` key type (not the v1.20 default `aes256k`), since Talos v1.13.9 ships kernel 6.18, below the 7.0+ aes256k requires.
-- Network: both `envoy-internal` (172.19.32.1) and `envoy-external` (172.19.32.2, via a dedicated `cloudflared` Cloudflare Tunnel, external hostname `min-ext.rtrox.io`) are deployed. Mini's tunnel ingress covers `rtrox.io`/`*.rtrox.io`, same scope as chongus's — this doesn't collide, since each hostname's DNS record (managed per-HTTPRoute by external-dns) only points at whichever cluster's tunnel is actually serving it. The root domain is expected to move to mini once Bluesky moves over.
-- `clusters/mini/` and the `cluster-apps/mini/` baseline (cilium, coredns, flux-operator/instance, rook-ceph, cert-manager issuers, envoy-gateway incl. external, cloudflared, nvidia-device-plugin) follow the Chongus pattern; still pending: observability stack (kube-prometheus-stack/Grafana/Loki/Alloy — the `flux/alerts` component is already wired into several mini namespaces but points at a non-existent `observability` namespace) and CloudNativePG
+- **Do not deploy new applications to Bitty** - migrate to Mini
+- `clusters/bitty/` now bootstraps with the same helmfile/Talos pattern as Mini (see below); `cluster-apps/bitty/` is still on the old pattern pending migration
 
 ## Repository Structure
 
 ### Understanding Namespace Directories
 
-Directories immediately under `cluster-apps/chongus/` or `cluster-apps/bitty/` are **Kubernetes namespace directories**, NOT application directories. Each namespace directory:
+Directories immediately under `cluster-apps/mini/` or `cluster-apps/bitty/` are **Kubernetes namespace directories**, NOT application directories. Each namespace directory:
 
 - Represents a single Kubernetes namespace
 - Contains a `kustomization.yaml` that includes namespace components and lists all apps
@@ -104,7 +98,7 @@ Directories immediately under `cluster-apps/chongus/` or `cluster-apps/bitty/` a
 ### Directory Hierarchy
 
 ```text
-cluster-apps/chongus/
+cluster-apps/mini/
 ├── [namespace-name]/              # ← NAMESPACE DIRECTORY (e.g., "default", "system", "observability")
 │   ├── kustomization.yaml         # Namespace config + app list
 │   ├── [app-1]/                   # Application directory
@@ -123,7 +117,7 @@ cluster-apps/chongus/
 ├── cluster-apps/               # Main FluxCD source (ACTIVE)
 │   ├── base/                   # Shared across clusters
 │   │   └── [app]/app/         # Cross-cluster applications
-│   ├── chongus/               # Chongus-specific apps (NEW PATTERN)
+│   ├── mini/                  # Mini-specific apps (NEW PATTERN)
 │   │   ├── [namespace]/       # ← NAMESPACE DIRECTORY (K8s namespace)
 │   │   │   ├── kustomization.yaml  # Namespace config
 │   │   │   └── [app]/              # App in this namespace
@@ -131,10 +125,8 @@ cluster-apps/chongus/
 │   │   │       └── ks.yaml         # Flux Kustomization
 │   │   ├── default/           # "default" namespace
 │   │   ├── system/            # "system" namespace (privileged)
-│   │   ├── observability/     # "observability" namespace
-│   │   └── actions-runner-system/  # "actions-runner-system" namespace
+│   │   └── observability/     # "observability" namespace
 │   ├── bitty/                 # Bitty-specific apps (deprecated pattern, pending migration)
-│   ├── mini/                  # Mini-specific apps (baseline only: cilium, coredns, flux-operator)
 │   └── components/            # Reusable Kustomize components
 │       ├── flux/alerts/       # Flux error notifications
 │       ├── namespace/         # Basic namespace template
@@ -142,7 +134,7 @@ cluster-apps/chongus/
 │       └── volsync/           # PVC + backup templates
 ├── cluster-cd/                 # Legacy structure (DO NOT USE)
 ├── clusters/                   # Cluster definitions & bootstrap
-│   ├── chongus/
+│   ├── mini/
 │   │   ├── bootstrap/         # Helmfile-based bootstrap
 │   │   │   ├── helmfile.d/    # 00-crds.yaml, 01-apps.yaml
 │   │   │   ├── resources/
@@ -151,8 +143,7 @@ cluster-apps/chongus/
 │   │   │   └── cluster/
 │   │   └── talos/             # Talos configuration
 │   │       └── clusterconfig/
-│   ├── bitty/                 # Same helmfile/Talos bootstrap pattern as Chongus
-│   └── mini/                  # Same helmfile/Talos bootstrap pattern as Chongus
+│   └── bitty/                 # Same helmfile/Talos bootstrap pattern as Mini
 └── .taskfiles/                # Operational automation
     ├── k8s-bootstrap/
     ├── sops/
@@ -163,7 +154,7 @@ cluster-apps/chongus/
 
 ### Namespace Directory Structure
 
-Every namespace directory under `cluster-apps/chongus/[namespace]/` contains:
+Every namespace directory under `cluster-apps/mini/[namespace]/` contains:
 
 1. **`kustomization.yaml`** - Namespace configuration listing all apps
 2. **`[app-name]/`** - One directory per application
@@ -173,7 +164,7 @@ Every namespace directory under `cluster-apps/chongus/[namespace]/` contains:
 Every application follows this standard structure within its namespace directory:
 
 ```text
-cluster-apps/chongus/[namespace]/          ← Namespace directory (e.g., "default", "observability")
+cluster-apps/mini/[namespace]/              ← Namespace directory (e.g., "default", "observability")
 ├── kustomization.yaml                      ← Namespace config + app list
 └── [appname]/                              ← Application directory
     ├── app/                                ← Application manifests
@@ -195,15 +186,15 @@ cluster-apps/chongus/[namespace]/          ← Namespace directory (e.g., "defau
 
 ## Technology Stack
 
-### New Pattern (Chongus - FOLLOW THIS)
+### New Pattern (Mini - FOLLOW THIS)
 
 **HTTP Routing:**
 
 - Gateway API with Envoy Gateway
 - HTTPRoute resources for ingress
 - Two gateways:
-  - **`envoy-external` (172.22.12.2)**: Connected to Cloudflare Tunnel, internet-accessible
-  - **`envoy-internal` (172.22.12.1)**: Local network only (accessible via Tailscale)
+  - **`envoy-external` (172.19.32.2)**: Connected to Cloudflare Tunnel, internet-accessible
+  - **`envoy-internal` (172.19.32.1)**: Local network only (accessible via Tailscale)
 - **Default Preference**: Use `envoy-internal` unless internet access is explicitly needed by the user
 - TLS certificates via cert-manager with Let's Encrypt
 
@@ -336,7 +327,7 @@ spec:
   interval: 1h
   retryInterval: 2m
   timeout: 5m
-  path: ./cluster-apps/chongus/namespace/app-name/app
+  path: ./cluster-apps/mini/namespace/app-name/app
   prune: true
   sourceRef:
     kind: GitRepository
@@ -431,7 +422,7 @@ components:
 When implementing apps from external repos (kubesearch.dev, bjw-s-labs/home-ops, etc.):
 
 1. **Extract** patterns (images, probes, volumes) exactly as-is
-2. **Adapt** to Chongus standards (nas.rtrox.io, Doppler secrets, envoy-internal, flux-system)
+2. **Adapt** to Mini standards (nas.rtrox.io, Doppler secrets, envoy-internal, flux-system)
 3. **Validate** with flux-local test before committing
 
 See [full guide](docs/REFERENCE_IMPLEMENTATIONS.md) for detailed workflow and common mistakes.
@@ -467,9 +458,9 @@ See [full guide](docs/REFERENCE_IMPLEMENTATIONS.md) for detailed workflow and co
 
 ### Load Balancer IP Allocation
 
-- **Pool**: 172.22.12.0/24 (Cilium LBIPAM)
-- **External Gateway**: 172.22.12.2 (Cloudflare Tunnel, internet-accessible)
-- **Internal Gateway**: 172.22.12.1 (Local network, Tailscale-accessible)
+- **Pool**: 172.19.32.0/24 (Cilium LBIPAM)
+- **External Gateway**: 172.19.32.2 (Cloudflare Tunnel, internet-accessible)
+- **Internal Gateway**: 172.19.32.1 (Local network, Tailscale-accessible)
 
 ### DNS
 
@@ -540,7 +531,7 @@ mise install
 **Quick validation** (recommended for iterative development):
 
 ```bash
-export CLUSTER_NAME=chongus
+export CLUSTER_NAME=mini
 task flux:test-quick
 ```
 
@@ -552,7 +543,7 @@ task flux:test-quick
 **Full validation** (comprehensive, may hit rate limits):
 
 ```bash
-export CLUSTER_NAME=chongus
+export CLUSTER_NAME=mini
 task flux:test
 ```
 
@@ -570,23 +561,23 @@ task flux:test
 
 ```bash
 # List all Flux resources
-task flux:list CLUSTER_NAME=chongus
+task flux:list CLUSTER_NAME=mini
 
 # Build specific resources
-task flux:build CLUSTER_NAME=chongus RESOURCE_TYPE=hr RESOURCE_NAME=tuppr
+task flux:build CLUSTER_NAME=mini RESOURCE_TYPE=hr RESOURCE_NAME=tuppr
 
 # Compare against main branch
-task flux:diff CLUSTER_NAME=chongus
+task flux:diff CLUSTER_NAME=mini
 
 # Test Talos configuration
-task talos:generate-clusterconfig CLUSTER_NAME=chongus
+task talos:generate-clusterconfig CLUSTER_NAME=mini
 ```
 
 ### Recommended Workflow After Making Changes
 
 1. **Make changes** to Flux resources
-2. **Quick validate**: `task flux:test-quick CLUSTER_NAME=chongus`
-3. **Review diff**: `task flux:diff CLUSTER_NAME=chongus` (if comparing to main)
+2. **Quick validate**: `task flux:test-quick CLUSTER_NAME=mini`
+3. **Review diff**: `task flux:diff CLUSTER_NAME=mini` (if comparing to main)
 4. **Commit** if validation passes
 5. **CI will run** full validation with authenticated GHCR access
 
@@ -613,7 +604,7 @@ task k8s-bootstrap:apps
 ```
 ## Common Operations
 
-### Adding a New Application (Chongus Pattern)
+### Adding a New Application (Mini Pattern)
 
 #### First: Determine the Namespace
 
@@ -627,8 +618,8 @@ Before adding an application, decide which Kubernetes namespace it belongs in:
 
 #### To add an app to an EXISTING namespace
 
-1. Navigate to: `cluster-apps/chongus/[namespace]/`
-2. Create app directory: `cluster-apps/chongus/[namespace]/[app-name]/`
+1. Navigate to: `cluster-apps/mini/[namespace]/`
+2. Create app directory: `cluster-apps/mini/[namespace]/[app-name]/`
 3. Create `app/` subdirectory
 4. Add `helmrelease.yaml` with chartRef to OCIRepository
 5. Add `ocirepository.yaml` for chart source
@@ -640,7 +631,7 @@ Before adding an application, decide which Kubernetes namespace it belongs in:
 
 #### To create a NEW namespace directory
 
-1. Create directory: `cluster-apps/chongus/[namespace-name]/`
+1. Create directory: `cluster-apps/mini/[namespace-name]/`
 2. Create `kustomization.yaml` with:
    - `namespace: [namespace-name]`
    - `components:` - Use `../../components/namespace` (standard) or `../../components/privileged-namespace` (if elevated permissions needed)
@@ -648,7 +639,7 @@ Before adding an application, decide which Kubernetes namespace it belongs in:
 3. Follow steps above to add first app
 4. Commit and push - Flux will auto-discover the new namespace
 
-### Migrating App from Bitty to Chongus
+### Migrating App from Bitty to Mini
 
 1. Review Bitty app configuration
 2. Convert Ingress to HTTPRoute
@@ -656,7 +647,7 @@ Before adding an application, decide which Kubernetes namespace it belongs in:
 4. Move SOPS secrets to Doppler + ExternalSecret
 5. Remove postBuild substitution from SOPS
 6. Add components for namespace/volsync if needed
-7. Deploy to Chongus
+7. Deploy to Mini
 8. Test thoroughly
 9. Remove from Bitty
 

@@ -16,10 +16,10 @@ Most tasks require `CLUSTER_NAME` to be set:
 
 ```bash
 # Set for individual commands
-task flux:test CLUSTER_NAME=chongus
+task flux:test CLUSTER_NAME=mini
 
 # Or export for the session
-export CLUSTER_NAME=chongus
+export CLUSTER_NAME=mini
 ```
 
 ---
@@ -33,7 +33,7 @@ Tasks for validating and inspecting Flux resources.
 Validate all Flux resources with flux-local.
 
 ```bash
-task flux:test CLUSTER_NAME=chongus
+task flux:test CLUSTER_NAME=mini
 ```
 
 ### `flux:build`
@@ -42,13 +42,13 @@ Build Flux resources (Kustomizations or HelmReleases).
 
 ```bash
 # Build all Kustomizations
-task flux:build CLUSTER_NAME=chongus
+task flux:build CLUSTER_NAME=mini
 
 # Build HelmReleases
-task flux:build CLUSTER_NAME=chongus RESOURCE_TYPE=hr
+task flux:build CLUSTER_NAME=mini RESOURCE_TYPE=hr
 
 # Build a specific resource
-task flux:build CLUSTER_NAME=chongus RESOURCE_NAME=qbittorrent
+task flux:build CLUSTER_NAME=mini RESOURCE_NAME=qbittorrent
 ```
 
 | Variable | Default | Description |
@@ -61,8 +61,8 @@ task flux:build CLUSTER_NAME=chongus RESOURCE_NAME=qbittorrent
 List Flux resources.
 
 ```bash
-task flux:list CLUSTER_NAME=chongus
-task flux:list CLUSTER_NAME=chongus RESOURCE_TYPE=hr
+task flux:list CLUSTER_NAME=mini
+task flux:list CLUSTER_NAME=mini RESOURCE_TYPE=hr
 ```
 
 ### `flux:diff`
@@ -71,10 +71,10 @@ Compare Flux resources against a base branch.
 
 ```bash
 # Diff against main
-task flux:diff CLUSTER_NAME=chongus
+task flux:diff CLUSTER_NAME=mini
 
 # Diff HelmReleases against a different branch
-task flux:diff CLUSTER_NAME=chongus RESOURCE_TYPE=hr BASE_BRANCH=develop
+task flux:diff CLUSTER_NAME=mini RESOURCE_TYPE=hr BASE_BRANCH=develop
 ```
 
 | Variable | Default | Description |
@@ -87,7 +87,7 @@ task flux:diff CLUSTER_NAME=chongus RESOURCE_TYPE=hr BASE_BRANCH=develop
 Compare both Kustomizations and HelmReleases against main.
 
 ```bash
-task flux:diff-all CLUSTER_NAME=chongus
+task flux:diff-all CLUSTER_NAME=mini
 ```
 
 ---
@@ -101,7 +101,7 @@ Tasks for managing Talos Linux nodes.
 Generate Talos machine configurations using talhelper.
 
 ```bash
-task talos:generate-clusterconfig CLUSTER_NAME=chongus
+task talos:generate-clusterconfig CLUSTER_NAME=mini
 ```
 
 **Prerequisites:**
@@ -115,13 +115,13 @@ Apply machine configurations to all nodes in a cluster.
 
 ```bash
 # Normal apply
-task talos:apply-clusterconfig CLUSTER_NAME=chongus
+task talos:apply-clusterconfig CLUSTER_NAME=mini
 
 # Dry run
-task talos:apply-clusterconfig CLUSTER_NAME=chongus DRY_RUN=true
+task talos:apply-clusterconfig CLUSTER_NAME=mini DRY_RUN=true
 
 # Insecure mode (for initial bootstrap)
-task talos:apply-clusterconfig CLUSTER_NAME=chongus INSECURE=true
+task talos:apply-clusterconfig CLUSTER_NAME=mini INSECURE=true
 ```
 
 | Variable | Default | Description |
@@ -134,7 +134,7 @@ task talos:apply-clusterconfig CLUSTER_NAME=chongus INSECURE=true
 Apply configuration to a single node.
 
 ```bash
-task talos:apply-node CLUSTER_NAME=chongus NODE=chongus-01
+task talos:apply-node CLUSTER_NAME=mini NODE=node01
 ```
 
 ### `talos:upgrade-node`
@@ -142,7 +142,7 @@ task talos:apply-node CLUSTER_NAME=chongus NODE=chongus-01
 Upgrade Talos on a single node.
 
 ```bash
-task talos:upgrade-node CLUSTER_NAME=chongus NODE=chongus-01
+task talos:upgrade-node CLUSTER_NAME=mini NODE=node01
 ```
 
 ---
@@ -156,7 +156,7 @@ Tasks for bootstrapping a new Kubernetes cluster.
 Bootstrap the Talos cluster and generate kubeconfig.
 
 ```bash
-task k8s-bootstrap:talos-cluster CLUSTER_NAME=chongus
+task k8s-bootstrap:talos-cluster CLUSTER_NAME=mini
 ```
 
 This will:
@@ -169,7 +169,7 @@ This will:
 Bootstrap core applications and CRDs.
 
 ```bash
-task k8s-bootstrap:apps CLUSTER_NAME=chongus
+task k8s-bootstrap:apps CLUSTER_NAME=mini
 ```
 
 This will:
@@ -259,26 +259,26 @@ Use this when a backup was interrupted and left a lock behind.
 
 ```bash
 # 1. Generate Talos configs
-task talos:generate-clusterconfig CLUSTER_NAME=chongus
+task talos:generate-clusterconfig CLUSTER_NAME=mini
 
 # 2. Apply to nodes (insecure for first time)
-task talos:apply-clusterconfig CLUSTER_NAME=chongus INSECURE=true
+task talos:apply-clusterconfig CLUSTER_NAME=mini INSECURE=true
 
 # 3. Bootstrap Talos
-task k8s-bootstrap:talos-cluster CLUSTER_NAME=chongus
+task k8s-bootstrap:talos-cluster CLUSTER_NAME=mini
 
 # 4. Deploy apps
-task k8s-bootstrap:apps CLUSTER_NAME=chongus
+task k8s-bootstrap:apps CLUSTER_NAME=mini
 ```
 
 ### Validate Changes Before PR
 
 ```bash
 # Test all Flux resources
-task flux:test CLUSTER_NAME=chongus
+task flux:test CLUSTER_NAME=mini
 
 # See what will change
-task flux:diff-all CLUSTER_NAME=chongus
+task flux:diff-all CLUSTER_NAME=mini
 ```
 
 ### Restore a Backup
