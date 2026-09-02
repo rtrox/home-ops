@@ -11,5 +11,5 @@ spec:
     operation: copy
   ref:
     # Matches the operator -- see operator/ocirepository.yaml.
-    tag: v1.20.6
+    tag: v1.20.7
   url: oci://ghcr.io/rook/rook-ceph-cluster
