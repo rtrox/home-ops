@@ -13,5 +13,5 @@ spec:
     # Tracks latest. Rook chart bumps never auto-merge (see
     # .github/renovate/autoMerge.json5) -- check the Rook/Ceph support
     # matrix before merging one, same as every other cluster.
-    tag: v1.20.6
+    tag: v1.20.7
   url: oci://ghcr.io/rook/rook-ceph
