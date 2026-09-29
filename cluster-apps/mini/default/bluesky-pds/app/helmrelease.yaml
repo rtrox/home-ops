@@ -100,7 +100,7 @@ spec:
     route:
       main:
         annotations:
-          external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+          external-dns.kubernetes.io/cloudflare-proxied: "true"
         hostnames:
           - &host "rtrox.io"
         parentRefs:

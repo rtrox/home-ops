@@ -65,7 +65,7 @@ spec:
         type: LoadBalancer
         controller: main
         annotations:
-          external-dns.alpha.kubernetes.io/hostname: mqtt.${SECRET_DOMAIN}
+          external-dns.kubernetes.io/hostname: mqtt.${SECRET_DOMAIN}
           io.cilium/lb-ipam-ips: ${MOSQUITTO_LB_IPV4},${MOSQUITTO_LB_IPV6}
         externalTrafficPolicy: Cluster
         ports:

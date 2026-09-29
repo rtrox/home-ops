@@ -9,7 +9,7 @@ spec:
           targets:
             - ENC[AES256_GCM,data:ddBnedMTvNxaTTZApu9jexQlihyIx28SFD0xBHjn/ERYZKoDkUqdZ5lVhCilntNIBklVn1g=,iv:3zKnRLErQE9UPiRYXKVp7oYq/XYY5fnaB1TaNWBuFvk=,tag:fsdB39tRy5LHYIJNFG4Q1Q==,type:str]
           providerSpecific:
-            - name: external-dns.alpha.kubernetes.io/cloudflare-proxied
+            - name: external-dns.kubernetes.io/cloudflare-proxied
               value: "true"
 sops:
     kms: []

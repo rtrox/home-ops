@@ -64,7 +64,7 @@ spec:
             port: 8080
       rtmp:
         annotations:
-          external-dns.alpha.kubernetes.io/hostname: owncast-stream.rtrox.io
+          external-dns.kubernetes.io/hostname: owncast-stream.rtrox.io
         type: LoadBalancer
         controller: owncast
         ports:
