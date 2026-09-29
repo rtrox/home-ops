@@ -1,0 +1,124 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: sure
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: sure
+  interval: 30m
+  values:
+    controllers:
+      server:
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          app: &appContainer
+            image: &img
+              repository: ghcr.io/we-promise/sure
+              tag: 0.7.4@sha256:391b2c52acfe538065a41cdd1c9755f90d95ba17a2c06e9b6438b12098df3f3a
+            env: &env
+              SELF_HOSTED: "true"
+              ONBOARDING_STATE: open
+              APP_DOMAIN: sure.rtrox.io
+              # envoy-internal terminates TLS in front of this -- don't have
+              # rails redirect, but do trust X-Forwarded-Proto so links/
+              # cookies are generated as https.
+              RAILS_FORCE_SSL: "false"
+              RAILS_ASSUME_SSL: "true"
+              DB_HOST: postgres17-rw.database.svc.cluster.local
+              DB_PORT: "5432"
+              POSTGRES_USER: sure
+              POSTGRES_DB: sure
+              REDIS_URL: redis://valkey.database.svc.cluster.local:6379/1
+              # No API key required, unlike the twelve_data default
+              EXCHANGE_RATE_PROVIDER: yahoo_finance
+              SECURITIES_PROVIDER: yahoo_finance
+              # Active Storage on S3 (MinIO) instead of a local volume --
+              # the server and worker controllers are separate pods, and
+              # ceph-block (RWO) can't be mounted by both at once.
+              ACTIVE_STORAGE_SERVICE: generic_s3
+              GENERIC_S3_REGION: us-east-1
+              GENERIC_S3_FORCE_PATH_STYLE: "true"
+            envFrom: &envFrom
+              - secretRef:
+                  name: sure-secret
+              - secretRef:
+                  name: sure-minio-secret
+            probes:
+              liveness: &probe
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /up
+                    port: &port 3000
+                  initialDelaySeconds: 20
+                  periodSeconds: 10
+                  timeoutSeconds: 2
+                  failureThreshold: 6
+              readiness: *probe
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /up
+                    port: *port
+                  failureThreshold: 10
+                  periodSeconds: 5
+            resources:
+              requests:
+                cpu: 100m
+                memory: 256Mi
+              limits:
+                memory: 1Gi
+            securityContext: &sec
+              allowPrivilegeEscalation: false
+              capabilities: { drop: ["ALL"] }
+        initContainers:
+          migration:
+            image: *img
+            command: ["bash", "-lc"]
+            args: "DISABLE_DATABASE_ENVIRONMENT_CHECK=1 bundle exec rake db:prepare"
+            env: *env
+            envFrom: *envFrom
+            securityContext: *sec
+      worker:
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          app:
+            <<: *appContainer
+            command: ["bash", "-lc"]
+            args: "bundle exec sidekiq"
+            probes:
+              liveness:
+                enabled: false
+              readiness:
+                enabled: false
+              startup:
+                enabled: false
+    defaultPodOptions:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+    service:
+      app:
+        controller: server
+        ports:
+          http:
+            port: *port
+    route:
+      app:
+        hostnames:
+          - sure.rtrox.io
+        parentRefs:
+          - name: envoy-internal
+            namespace: network
+            sectionName: https

@@ -6,7 +6,7 @@
 
 This repository implements a GitOps-managed Kubernetes infrastructure using FluxCD, running two clusters: Mini (primary, modern pattern) and Bitty (secondary, being phased out). The infrastructure is built on Talos Linux with a focus on automation, high availability, and disaster recovery.
 
-> Chongus (the original primary cluster) was decommissioned and its config removed from this repo. Its `database` (CloudNativePG, redis) and `actions-runner-system` namespaces were deliberately not migrated to Mini -- not currently needed, can be re-added later if that changes. Full history is in git.
+> Chongus (the original primary cluster) was decommissioned and its config removed from this repo. Its `actions-runner-system` namespace was deliberately not migrated to Mini -- not currently needed, can be re-added later if that changes. Full history is in git. Its `database` namespace (CloudNativePG, redis) *has* been re-added to Mini, rebuilt from that same git history -- see [CloudNativePG & Valkey (`database` namespace)](#cloudnativepg--valkey-database-namespace) below.
 
 ## Key Principles
 
@@ -73,7 +73,7 @@ This repository implements a GitOps-managed Kubernetes infrastructure using Flux
 - Install disk: boot disk selected via `size: < 3TB` (picks the 2TB NVMe over the 4TB storage NVMe, which is reserved for Rook-Ceph)
 - Cilium CNI with Gateway API
 - External-DNS (Cloudflare)
-- Still pending: CloudNativePG. Observability (kube-prometheus-stack/Grafana/Loki/Alloy) is live.
+- CloudNativePG and Valkey are live (`database` namespace). Observability (kube-prometheus-stack/Grafana/Loki/Alloy) is live.
 
 ### Bitty Cluster (Secondary - Being Phased Out)
 
@@ -399,6 +399,17 @@ components:
   - ../../../components/volsync              # PVC + backup
   - ../../../components/flux/alerts          # Error notifications
 ```
+
+### CloudNativePG & Valkey (`database` namespace)
+
+Shared, cluster-wide database infra for apps that need Postgres or a Redis-compatible cache, in `cluster-apps/mini/database/`. Rebuilt from Chongus's git history (see the note in Overview), adjusted for Mini's Doppler/MinIO conventions.
+
+- **CloudNativePG operator** (`cloudnative-pg/app/`): installed via its own OCI Helm chart (`oci://ghcr.io/cloudnative-pg/charts/cloudnative-pg`), `crds.create: true`. Its ExternalSecret (`cloudnative-pg-secret`) merges two Doppler JSON secrets via `dataFrom.extract`: the Postgres superuser creds (`CNPG_ROOT_CREDENTIALS` -- `username`/`password`) and the WAL/base-backup MinIO bucket (`CNPG_MINIO_BUCKET`, same `endpoint`/`bucket`/`application_key_id`/`application_key` shape as the volsync/thanos MinIO secrets).
+- **One shared `Cluster`** (`cloudnative-pg/cluster/cluster.yaml`, named `postgres17`): 3-node HA, backs up to MinIO (Barman, bzip2, 14-day retention, `@daily` + immediate `ScheduledBackup`) using `${ENDPOINT}`/`${BUCKET}` substituted from `cloudnative-pg-secret` via the `cloudnative-pg-cluster` Kustomization's `postBuild.substituteFrom` -- never hardcode the MinIO endpoint/bucket in the manifest.
+- **Per-app database**: each consuming app gets (a) an entry in the shared Cluster's `spec.managed.roles` (password via a `passwordSecret`, *not* auto-generated -- see below) and (b) its own `postgresql.cnpg.io/v1 Database` CR pointing at `postgres17`. Add both directly in `cloudnative-pg/cluster/` (e.g. `database-<app>.yaml`) rather than creating a whole new Cluster per app.
+- **Why not CNPG's auto-generated app secret**: the Cluster lives in `database`, but consuming apps live in their own namespace (e.g. `default`), and Kubernetes secrets can't be referenced cross-namespace. So the role's password is *not* left to CNPG to generate -- it's sourced from one Doppler secret (e.g. `SURE` with a `postgres_password` key) via **two** ExternalSecrets: one in `database` (feeding `managed.roles[].passwordSecret`) and one in the app's own namespace (feeding the app's env). `DB_HOST`/`DB_PORT`/`POSTGRES_DB`/`POSTGRES_USER` aren't secret -- set them as plain values (`<cluster>-rw.database.svc.cluster.local`, role/db name) directly in the app's HelmRelease.
+- **Valkey** (`valkey/app/`): single unauthenticated instance, no persistence -- a pure cache/job-queue store (mirrors the existing `paperless-redis` pattern, swapped to the `valkey/valkey` image). Reachable cluster-wide at `valkey.database.svc.cluster.local:6379`; since there's no auth, no cross-namespace secret problem.
+- **App storage that needs multi-pod access** (e.g. a web + worker controller pair both touching uploaded files): don't reach for a `ceph-block` PVC -- it's ReadWriteOnce and can't be mounted by both pods reliably. Point the app at a MinIO bucket instead (`GENERIC_S3_*`-style env vars, or equivalent) via its own dedicated MinIO bucket secret, same shape as the CNPG one above.
 
 ## Anti-Patterns (DO NOT USE)
 

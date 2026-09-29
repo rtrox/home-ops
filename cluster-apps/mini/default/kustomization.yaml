@@ -4,6 +4,7 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
+  - ./actual/ks.yaml
   - ./atuin/ks.yaml
   - ./bluesky-pds/ks.yaml
   - ./echo-server/ks.yaml
@@ -13,4 +14,5 @@ resources:
   - ./minecraft-vanilla/ks.yaml
   - ./owncast/ks.yaml
   - ./paperless/ks.yaml
+  - ./sure/ks.yaml
   - ./thelounge/ks.yaml
