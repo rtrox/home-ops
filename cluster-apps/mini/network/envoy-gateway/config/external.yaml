@@ -4,8 +4,8 @@ kind: Gateway
 metadata:
   name: envoy-external
   annotations:
-    external-dns.alpha.kubernetes.io/target: &hostname min-ext.rtrox.io
-    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+    external-dns.kubernetes.io/target: &hostname min-ext.rtrox.io
+    external-dns.kubernetes.io/cloudflare-proxied: "true"
 spec:
   gatewayClassName: envoy
   infrastructure:
@@ -35,8 +35,8 @@ kind: HTTPRoute
 metadata:
   name: envoy-external
   annotations:
-    external-dns.alpha.kubernetes.io/controller: none
-    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+    external-dns.kubernetes.io/controller: none
+    external-dns.kubernetes.io/cloudflare-proxied: "true"
 spec:
   parentRefs:
     - name: envoy-external

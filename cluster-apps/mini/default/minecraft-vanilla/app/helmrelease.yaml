@@ -50,7 +50,7 @@ spec:
         enabled: true
         existingClaim: *app
     serviceAnnotations:
-      external-dns.alpha.kubernetes.io/hostname: "mc.rtrox.io"
+      external-dns.kubernetes.io/hostname: "mc.rtrox.io"
     minecraftServer:
       eula: true
       version: "1.21.8"
