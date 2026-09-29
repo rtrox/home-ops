@@ -42,11 +42,19 @@ spec:
               ACTIVE_STORAGE_SERVICE: generic_s3
               GENERIC_S3_REGION: us-east-1
               GENERIC_S3_FORCE_PATH_STYLE: "true"
+              # pocket-id OIDC -- adds a login option alongside the local
+              # password, same as komga/grafana/qui/autobrr. Not enforced
+              # (ACTUAL_OPENID_ENFORCE-style flag doesn't exist here; Sure
+              # just shows both options on the login page).
+              OIDC_ISSUER: https://auth.rtrox.io
+              OIDC_REDIRECT_URI: https://sure.rtrox.io/auth/openid_connect/callback
             envFrom: &envFrom
               - secretRef:
                   name: sure-secret
               - secretRef:
                   name: sure-minio-secret
+              - secretRef:
+                  name: sure-oidc-secret
             probes:
               liveness: &probe
                 enabled: true
