@@ -1,0 +1,37 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: valkey
+spec:
+  interval: 30m
+  chartRef:
+    kind: OCIRepository
+    name: valkey
+  values:
+    controllers:
+      valkey:
+        containers:
+          app:
+            image:
+              repository: docker.io/valkey/valkey
+              tag: 9.1.2-trixie@sha256:418652cfb58ef879d4978c33553735d7147016032d5aefaa14c828e611eb9dfd
+            # Pure cache/job-queue store for consumers like Sure's sidekiq
+            # worker -- no auth, no persistence, matches the paperless-redis
+            # pattern already used elsewhere in this repo. Left running as
+            # the image's own default (root) user: the official valkey
+            # image's entrypoint owns /data itself, and there's nothing
+            # sensitive to isolate here.
+            resources:
+              requests:
+                cpu: 5m
+                memory: 32Mi
+              limits:
+                memory: 128Mi
+    service:
+      app:
+        controller: valkey
+        ports:
+          valkey:
+            port: 6379
