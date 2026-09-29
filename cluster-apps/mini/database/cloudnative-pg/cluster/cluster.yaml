@@ -44,10 +44,10 @@ spec:
       s3Credentials:
         accessKeyId:
           name: cloudnative-pg-secret
-          key: aws-access-key-id
+          key: AWS_ACCESS_KEY_ID
         secretAccessKey:
           name: cloudnative-pg-secret
-          key: aws-secret-access-key
+          key: AWS_SECRET_ACCESS_KEY
   # Per-app roles are added here as new apps need Postgres; each also gets
   # a Database resource (see ./database-<app>.yaml) pointing at this cluster.
   managed:
