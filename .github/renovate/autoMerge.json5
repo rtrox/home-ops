@@ -53,8 +53,12 @@
       matchDatasources: ["docker"],
       automerge: false,
       matchPackageNames: ["ghcr.io/home-operations/qbittorrent"],
+      // Only open a PR once someone approves it on the Dependency Dashboard:
+      // new versions may not yet be on private trackers' client allowlists.
+      dependencyDashboardApproval: true,
       prBodyNotes: [
         ":warning: **Manual Review Required**: Check [qbittorrent changelog](https://github.com/qbittorrent/qBittorrent/blob/master/Changelog) and [libtorrent releases](https://github.com/arvidn/libtorrent/releases) for breaking changes before merging.",
+        ":no_entry: **Tracker Compatibility**: Check that the new version is on your trackers' approved-client lists before merging.",
       ],
     },
     {
