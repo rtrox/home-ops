@@ -14,9 +14,8 @@ jobs:
       - uses: actions/setup-python@v7
       # Without --all-files or a ref range, `pre-commit run` only checks
       # *staged* files -- of which there are none in CI, so every hook used to
-      # report "(no files to check) Skipped". Check what the branch changed vs
-      # the default branch instead; this works the same for pull_request (the
-      # PR merge commit) and push (Renovate's renovate/** branches).
+      # report "(no files to check) Skipped". Check what the PR changed vs the
+      # default branch instead.
       - uses: pre-commit/action@v3.0.1
         with:
           extra_args: >-

@@ -11,10 +11,6 @@ concurrency:
   # workflows share the same caller (on-pr.yaml), so using github.workflow
   # here collides them into one concurrency group and they cancel each
   # other out. Hardcode a unique key per cluster instead.
-  # github.event.number is the PR number on pull_request and empty on push
-  # (Renovate branch automerge), where this falls back to the branch ref --
-  # so a push run and a pull_request run for the same branch land in
-  # different groups and never cancel each other.
   group: flux-local-bitty-${{ github.event.number || github.ref }}
   cancel-in-progress: true
 
@@ -27,11 +23,10 @@ jobs:
     name: Filter changes
     runs-on: ubuntu-latest
     outputs:
-      changed-files: ${{ steps.changed-files.outputs.changed_files || steps.changed-files-push.outputs.changed_files }}
+      changed-files: ${{ steps.changed-files.outputs.changed_files }}
     steps:
       - name: Get changed files
         id: changed-files
-        if: ${{ github.event_name == 'pull_request' }}
         uses: bjw-s-labs/action-changed-files@147be9638332cf68fd60714a610509d7a9360d60 # v0.7.0
         with:
           patterns: |-
@@ -39,35 +34,6 @@ jobs:
             cluster-apps/bitty/**/*
             clusters/base/**/*
             clusters/bitty/**/*
-
-      # On push (Renovate's renovate/** branches), action-changed-files diffs
-      # the push's `before`...`after`, which is the wrong question for a
-      # branch that's been rebased/force-pushed or had commits appended --
-      # always diff the whole branch against the default branch instead
-      # (three-dot, i.e. from the merge-base), same as a PR would show.
-      - name: Checkout
-        if: ${{ github.event_name == 'push' }}
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-
-      - name: Get changed files (push)
-        id: changed-files-push
-        if: ${{ github.event_name == 'push' }}
-        # shell: bash adds pipefail, so a failed git diff fails the job
-        # instead of quietly producing "[]" and skipping the flux-local jobs.
-        shell: bash
-        env:
-          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
-        run: |
-          changed_files="$(
-              git diff --name-only --diff-filter=d "origin/${DEFAULT_BRANCH}...HEAD" -- \
-                  cluster-apps/base/ cluster-apps/bitty/ clusters/base/ clusters/bitty/ \
-                  | jq --raw-input --slurp --compact-output 'split("\n") | map(select(length > 0))'
-          )"
-          echo "Changes: ${changed_files}"
-          echo "changed_files=${changed_files}" >> "${GITHUB_OUTPUT}"
 
   test:
     if: ${{ needs.filter-changes.outputs.changed-files != '[]' }}
@@ -152,17 +118,15 @@ jobs:
               } >> "${GITHUB_OUTPUT}"
           fi
 
-      # There's no PR to comment on for a push-triggered run (Renovate
-      # branch automerge) -- the diff is still in the job summary above.
       - name: Generate Token
         uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
-        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && steps.diff.outputs.diff != '' }}
+        if: ${{ github.event.pull_request.head.repo.full_name == github.repository && steps.diff.outputs.diff != '' }}
         id: app-token
         with:
           app-id: ${{ vars.HOMELAB_APP_ID }}
           private-key: ${{ secrets.HOMELAB_APP_KEY }}
 
-      - if: ${{ github.event_name == 'pull_request' && steps.diff.outputs.diff != '' }}
+      - if: ${{ steps.diff.outputs.diff != '' }}
         name: Add Comment
         uses: marocchino/sticky-pull-request-comment@5770ad5eb8f42dd2c4f34da00c94c5381e49af88 # v3.0.5
         with:
