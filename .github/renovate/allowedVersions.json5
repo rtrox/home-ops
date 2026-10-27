@@ -6,5 +6,13 @@
       matchPackageNames: ["ghcr.io/linuxserver/calibre-web"],
       allowedVersions: "<1",
     },
+    {
+      description: "Envoy proxy image must stay within Envoy Gateway's compatibility matrix (EG v1.9.x supports envoy distroless-v1.39.x). Bump this range in lockstep with the EG minor.",
+      matchDatasources: ["docker"],
+      matchPackageNames: ["mirror.gcr.io/envoyproxy/envoy"],
+      matchFileNames: ["**/cluster-apps/mini/**"],
+      versioning: "regex:^distroless-v(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)$",
+      allowedVersions: "/^distroless-v1\\.39\\.\\d+$/",
+    },
   ],
 }
