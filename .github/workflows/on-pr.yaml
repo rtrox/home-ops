@@ -10,16 +10,35 @@ on:
       - ready_for_review
     branches:
       - main
+  # Renovate's branch automerge (automergeType: "branch") never opens a PR,
+  # so with only the pull_request trigger above its renovate/** branches got
+  # zero check runs -- and with ignoreTests: false, Renovate treats "no checks
+  # at all" as pending, leaving them stuck in "Pending Branch Automerge" on
+  # the Dependency Dashboard forever. Run the same checks on those pushes.
+  #
+  # Once Renovate does open a PR for one of these branches (e.g. ticked on the
+  # dashboard), both events fire for the same commit. That's harmless: the
+  # flux-local-* concurrency groups key on the PR number for pull_request and
+  # on the ref for push, so the two runs never cancel each other (a cancelled
+  # check run would leave Renovate's branch status pending, not green).
+  push:
+    branches:
+      - "renovate/**"
 
+# NOTE: the reusable workflows are referenced locally (./.github/workflows/...)
+# rather than as rtrox/home-ops/...@main, so a PR (or Renovate branch) that
+# changes one of them -- including Renovate bumping an action pinned inside
+# one -- is actually exercised by its own checks instead of silently running
+# main's copy until after merge.
 jobs:
   simple-checks:
-    uses: rtrox/home-ops/.github/workflows/simple-checks.yaml@main
+    uses: ./.github/workflows/simple-checks.yaml
     permissions:
       contents: read
       pull-requests: write
 
   flux-local-bitty:
-    uses: rtrox/home-ops/.github/workflows/flux-local-bitty.yaml@main
+    uses: ./.github/workflows/flux-local-bitty.yaml
     permissions:
       contents: read
       pull-requests: write
@@ -28,7 +47,7 @@ jobs:
       - simple-checks
 
   flux-local-mini:
-    uses: rtrox/home-ops/.github/workflows/flux-local-mini.yaml@main
+    uses: ./.github/workflows/flux-local-mini.yaml
     permissions:
       contents: read
       pull-requests: write
