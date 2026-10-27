@@ -71,7 +71,6 @@
       group: {
         commitMessageTopic: "{{{groupName}}} group",
       },
-      separateMinorPatch: false,
     },
     {
       description: "Vector image and chart - versions do not match",
@@ -82,7 +81,6 @@
       group: {
         commitMessageTopic: "{{{groupName}}} group",
       },
-      separateMinorPatch: false,
     },
     {
       description: "Maker Management Platform",
