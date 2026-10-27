@@ -139,6 +139,7 @@ jobs:
 
   flux-local-success:
     needs:
+      - filter-changes
       - test
       - diff
     if: ${{ !cancelled() }}

@@ -9,10 +9,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v7
+      # Without --all-files or a ref range, `pre-commit run` only checks
+      # *staged* files -- of which there are none in CI, so every hook used to
+      # report "(no files to check) Skipped". Check what the PR changed vs the
+      # default branch instead.
       - uses: pre-commit/action@v3.0.1
         with:
-          extra_args: --config .pre-commit-config.yaml
+          extra_args: >-
+            --config .pre-commit-config.yaml
+            --from-ref origin/${{ github.event.repository.default_branch }}
+            --to-ref HEAD
 
   lint-yaml:
     name: Lint Yaml Files

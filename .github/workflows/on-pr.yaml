@@ -11,15 +11,20 @@ on:
     branches:
       - main
 
+# NOTE: the reusable workflows are referenced locally (./.github/workflows/...)
+# rather than as rtrox/home-ops/...@main, so a PR that changes one of them --
+# including Renovate bumping an action pinned inside one -- is actually
+# exercised by its own checks instead of silently running main's copy until
+# after merge.
 jobs:
   simple-checks:
-    uses: rtrox/home-ops/.github/workflows/simple-checks.yaml@main
+    uses: ./.github/workflows/simple-checks.yaml
     permissions:
       contents: read
       pull-requests: write
 
   flux-local-bitty:
-    uses: rtrox/home-ops/.github/workflows/flux-local-bitty.yaml@main
+    uses: ./.github/workflows/flux-local-bitty.yaml
     permissions:
       contents: read
       pull-requests: write
@@ -28,7 +33,7 @@ jobs:
       - simple-checks
 
   flux-local-mini:
-    uses: rtrox/home-ops/.github/workflows/flux-local-mini.yaml@main
+    uses: ./.github/workflows/flux-local-mini.yaml
     permissions:
       contents: read
       pull-requests: write

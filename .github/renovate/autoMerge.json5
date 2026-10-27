@@ -1,11 +1,27 @@
 {
   $schema: "https://docs.renovatebot.com/renovate-schema.json",
+  // The "Protect main" ruleset requires a pull request (and signed commits)
+  // for every change to main, with no bypass actors, so branch automerge --
+  // which pushes straight to main -- can never succeed. Automerge via PRs
+  // instead, merged by Renovate itself through the API (not GitHub's native
+  // auto-merge) as a squash, which GitHub signs.
+  automergeType: "pr",
+  platformAutomerge: false,
+  automergeStrategy: "squash",
   packageRules: [
+    {
+      // packageRules override top-level settings, and the shared
+      // github>rtrox/renovate-config preset (extended before this file) sets
+      // automergeType: "branch" in its own packageRules for minor/patch/digest
+      // and github-actions updates -- re-assert PR automerge after it.
+      description: "Automerge via PRs, never branches (see top-level comment)",
+      matchPackageNames: ["*"],
+      automergeType: "pr",
+    },
     {
       description: "Auto merge container digests",
       matchDatasources: ["docker"],
       automerge: true,
-      automergeType: "branch",
       matchUpdateTypes: ["digest"],
       matchPackagePrefixes: ["ghcr.io/onedr0p", "ghcr.io/bjw-s"],
       ignoreTests: true,
