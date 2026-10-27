@@ -28,6 +28,15 @@ spec:
               tag: 26.10.0@sha256:24645e971da6bb1a1f953d6859e307a0b29be1e8b4130a35b3220c209b5b860c
             env:
               ACTUAL_PORT: &httpPort 5006
+              # pocket-id OIDC -- adds a login option alongside the server
+              # password, same as komga/grafana/qui/autobrr. Not enforced
+              # (ACTUAL_OPENID_ENFORCE unset/false): both login methods stay
+              # available.
+              ACTUAL_OPENID_DISCOVERY_URL: https://auth.rtrox.io/.well-known/openid-configuration
+              ACTUAL_OPENID_SERVER_HOSTNAME: https://actual.rtrox.io
+            envFrom:
+              - secretRef:
+                  name: actual-oidc-secret
             securityContext:
               allowPrivilegeEscalation: false
               capabilities: { drop: ["ALL"] }
