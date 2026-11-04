@@ -23,7 +23,7 @@
       matchDatasources: ["docker"],
       automerge: true,
       matchUpdateTypes: ["digest"],
-      matchPackagePrefixes: ["ghcr.io/onedr0p", "ghcr.io/bjw-s"],
+      matchPackageNames: ["ghcr.io/onedr0p{/,}**", "ghcr.io/bjw-s{/,}**"],
       ignoreTests: true,
     },
     {
@@ -65,6 +65,14 @@
         "ghcr.io/openebs/charts/openebs",
         "registry.k8s.io/nfd/charts/node-feature-discovery",
       ],
+    },
+    {
+      // CNPG 1.31 removes native Barman Cloud support, which the postgres17
+      // backups rely on. Migrate them to the Barman plugin before upgrading.
+      description: "Never Automerge CloudNativePG",
+      matchDatasources: ["docker"],
+      automerge: false,
+      matchPackageNames: ["ghcr.io/cloudnative-pg/charts/cloudnative-pg"],
     },
     {
       description: "Never Automerge qbittorrent",

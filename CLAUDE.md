@@ -510,6 +510,7 @@ See [full guide](docs/REFERENCE_IMPLEMENTATIONS.md) for detailed workflow and co
 
 - **Flux errors**: Automatic notifications to Alertmanager
 - **PrometheusRule**: Custom rules for Volsync, CNPG, Flux
+- **Pushover priority**: firing `severity=critical` alerts, plus `KubePodCrashLooping` and `LastFailedArchiveTime`, send at priority 1. Everything else, including all resolved notices, sends at -1 (quiet). Keep critical for things that need action
 
 ## Testing and Validation
 
