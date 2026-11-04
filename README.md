@@ -96,12 +96,12 @@ This repository follows a structured GitOps layout:
 
 **Gateway API:**
 
-- `envoy-external` (172.22.12.2) - Internet-accessible via Cloudflare Tunnel
-- `envoy-internal` (172.22.12.1) - Local network only (Tailscale)
+- `envoy-external` (172.19.32.2) - Internet-accessible via Cloudflare Tunnel
+- `envoy-internal` (172.19.32.1) - Local network only (Tailscale)
 
 **Load Balancing:**
 
-- Cilium LBIPAM (172.22.12.0/24)
+- Cilium LBIPAM (172.19.32.0/24)
 - Maglev algorithm with DSR mode
 
 **DNS:**
