@@ -11,7 +11,7 @@ spec:
         spec:
           containers:
             - name: rcon
-              image: ghcr.io/itzg/minecraft-server:java21@sha256:f519b2ba600a1c493f0d8fe496ac24195a45d717393ae28791d5345f6162f453
+              image: ghcr.io/itzg/minecraft-server:java21@sha256:49544c0a15ede66914451b3c6cb880cb0bd2470b2bfa6f39794f14da02cca79a
               imagePullPolicy: IfNotPresent
               command:
                 - bash
@@ -34,7 +34,7 @@ spec:
         spec:
           containers:
             - name: rcon
-              image: ghcr.io/itzg/minecraft-server:java21@sha256:f519b2ba600a1c493f0d8fe496ac24195a45d717393ae28791d5345f6162f453
+              image: ghcr.io/itzg/minecraft-server:java21@sha256:49544c0a15ede66914451b3c6cb880cb0bd2470b2bfa6f39794f14da02cca79a
               imagePullPolicy: IfNotPresent
               command:
                 - bash
@@ -57,7 +57,7 @@ spec:
         spec:
           containers:
             - name: rcon
-              image: ghcr.io/itzg/minecraft-server:java21@sha256:f519b2ba600a1c493f0d8fe496ac24195a45d717393ae28791d5345f6162f453
+              image: ghcr.io/itzg/minecraft-server:java21@sha256:49544c0a15ede66914451b3c6cb880cb0bd2470b2bfa6f39794f14da02cca79a
               imagePullPolicy: IfNotPresent
               command:
                 - bash
@@ -80,7 +80,7 @@ spec:
         spec:
           containers:
             - name: rcon
-              image: ghcr.io/itzg/minecraft-server:java21@sha256:f519b2ba600a1c493f0d8fe496ac24195a45d717393ae28791d5345f6162f453
+              image: ghcr.io/itzg/minecraft-server:java21@sha256:49544c0a15ede66914451b3c6cb880cb0bd2470b2bfa6f39794f14da02cca79a
               imagePullPolicy: IfNotPresent
               command:
                 - bash
@@ -103,7 +103,7 @@ spec:
         spec:
           containers:
             - name: rcon
-              image: ghcr.io/itzg/minecraft-server:java21@sha256:f519b2ba600a1c493f0d8fe496ac24195a45d717393ae28791d5345f6162f453
+              image: ghcr.io/itzg/minecraft-server:java21@sha256:49544c0a15ede66914451b3c6cb880cb0bd2470b2bfa6f39794f14da02cca79a
               imagePullPolicy: IfNotPresent
               command:
                 - bash

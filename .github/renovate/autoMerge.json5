@@ -41,12 +41,30 @@
       ignoreTests: false,
     },
     {
+      // The chart comes from an OCI registry, so Renovate sees it as a docker
+      // package, not a helm one. Match every update type: unlike the helm
+      // datasource, docker can also produce digest/pin updates.
       description: "Never Automerge Cilium",
-      matchDatasources: ["helm"],
+      matchDatasources: ["docker"],
       automerge: false,
-      matchUpdateTypes: ["minor", "patch"],
-      matchPackageNames: ["cilium"],
+      matchPackageNames: ["quay.io/cilium/charts/cilium"],
       ignoreTests: false,
+    },
+    {
+      // Temporary hold: these updates want manual review, so don't automerge
+      // them. Drop this rule once they've been reviewed and merged. Has to
+      // stay after "Auto merge all patches" to win. "gateway-api-crd" PRs are
+      // covered too: that's only the depName of the flux GitRepository, whose
+      // packageName is kubernetes-sigs/gateway-api. OpenEBS and NFD are here
+      // because the move off charts-mirror exposes minors they'd missed.
+      description: "Hold CoreDNS, Gateway API, OpenEBS and NFD for manual review",
+      automerge: false,
+      matchPackageNames: [
+        "ghcr.io/coredns/charts/coredns",
+        "kubernetes-sigs/gateway-api",
+        "ghcr.io/openebs/charts/openebs",
+        "registry.k8s.io/nfd/charts/node-feature-discovery",
+      ],
     },
     {
       description: "Never Automerge qbittorrent",
