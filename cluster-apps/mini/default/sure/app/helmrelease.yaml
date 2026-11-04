@@ -22,6 +22,9 @@ spec:
             env: &env
               SELF_HOSTED: "true"
               ONBOARDING_STATE: open
+              # Opt out of the daily usage events self-hosted installs send to
+              # the upstream project's PostHog by default.
+              POSTHOG_FEEDBACK_ENABLED: "false"
               APP_DOMAIN: sure.rtrox.io
               # envoy-internal terminates TLS in front of this -- don't have
               # rails redirect, but do trust X-Forwarded-Proto so links/
