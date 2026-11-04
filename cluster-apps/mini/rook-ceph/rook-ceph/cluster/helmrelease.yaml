@@ -95,6 +95,20 @@ spec:
             - key: "node-role.kubernetes.io/master"
               operator: "Exists"
               effect: "NoSchedule"
+      # Helm deep-merges these over the chart defaults, so only the changed
+      # values are listed: mon cpu request, mgr requests and every other
+      # daemon keep their defaults. Mon and mgr memory grows steadily on
+      # Ceph 20.2.4 and hit the default limits (2Gi/1Gi). mon_memory_target
+      # stays at 2GiB.
+      resources:
+        mgr:
+          limits:
+            memory: 2Gi
+        mon:
+          limits:
+            memory: 4Gi
+          requests:
+            memory: 2Gi
       storage:
         useAllNodes: false
         useAllDevices: true
