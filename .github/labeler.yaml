@@ -12,11 +12,6 @@ cluster/base:
       - any-glob-to-any-file: "cluster-apps/base/**/*"
       - any-glob-to-any-file: "cluster-cd/base/*"
       - any-glob-to-any-file: "clusters/base/*"
-cluster/bitty:
-  - changed-files:
-      - any-glob-to-any-file: "cluster-apps/bitty/**/*"
-      - any-glob-to-any-file: "cluster-cd/bitty/*"
-      - any-glob-to-any-file: "clusters/bitty/*"
 cluster/mini:
   - changed-files:
       - any-glob-to-any-file: "cluster-apps/mini/**/*"
