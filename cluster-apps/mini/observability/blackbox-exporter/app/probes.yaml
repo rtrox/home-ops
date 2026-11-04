@@ -12,6 +12,6 @@ spec:
     staticConfig:
       static:
         - nas.rtrox.io
-        - backup.rtrox.io
+        # backup.rtrox.io is in storage until about May 2027; add it back then.
         - ns1.rtrox.io
         - ns2.rtrox.io
