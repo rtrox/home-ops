@@ -4,9 +4,11 @@
 
 ## Overview
 
-This repository implements a GitOps-managed Kubernetes infrastructure using FluxCD, running two clusters: Mini (primary, modern pattern) and Bitty (secondary, being phased out). The infrastructure is built on Talos Linux with a focus on automation, high availability, and disaster recovery.
+This repository implements a GitOps-managed Kubernetes infrastructure using FluxCD, running one cluster: Mini (primary, modern pattern). The infrastructure is built on Talos Linux with a focus on automation, high availability, and disaster recovery.
 
 > Chongus (the original primary cluster) was decommissioned and its config removed from this repo. Its `actions-runner-system` namespace was deliberately not migrated to Mini -- not currently needed, can be re-added later if that changes. Full history is in git. Its `database` namespace (CloudNativePG, redis) *has* been re-added to Mini, rebuilt from that same git history -- see [CloudNativePG & Valkey (`database` namespace)](#cloudnativepg--valkey-database-namespace) below.
+
+> Bitty (the secondary cluster) was decommissioned and its config archived, not deleted, at `.archive/bitty/` (2026-11-04). A new Bitty is planned; the archive is kept as reference for that rebuild, since it holds hardware details like the Talos install-disk selectors. Nothing in `.archive/` is deployed, and Renovate doesn't track it.
 
 ## Key Principles
 
@@ -55,9 +57,9 @@ This repository implements a GitOps-managed Kubernetes infrastructure using Flux
 - **Pod CIDR**: 10.244.0.0/16
 - **Service CIDR**: 10.96.0.0/12
 - **IP Range**: 172.21.31.1-3
-- **Load Balancer Pool**: 172.19.32.0/24 (Cilium LBIPAM, distinct from Bitty since these networks are routable to each other)
+- **Load Balancer Pool**: 172.19.32.0/24 (Cilium LBIPAM, must stay distinct from any other cluster's pool since these networks are routable to each other)
   - 172.19.32.1: envoy-internal (default, local network)
-  - 172.19.32.2: envoy-external (internet via a dedicated `cloudflared` Cloudflare Tunnel, external hostname `min-ext.rtrox.io`). Its tunnel ingress covers `rtrox.io`/`*.rtrox.io` -- this doesn't collide with Bitty, since each hostname's DNS record (managed per-HTTPRoute by external-dns) only points at whichever cluster's tunnel is actually serving it.
+  - 172.19.32.2: envoy-external (internet via a dedicated `cloudflared` Cloudflare Tunnel, external hostname `min-ext.rtrox.io`). Its tunnel ingress covers `rtrox.io`/`*.rtrox.io` -- this won't collide with another cluster's tunnel, since each hostname's DNS record (managed per-HTTPRoute by external-dns) only points at whichever cluster's tunnel is actually serving it.
 
 **Storage Classes:**
 
@@ -75,21 +77,20 @@ This repository implements a GitOps-managed Kubernetes infrastructure using Flux
 - External-DNS (Cloudflare)
 - CloudNativePG and Valkey are live (`database` namespace). Observability (kube-prometheus-stack/Grafana/Loki/Alloy) is live.
 
-### Bitty Cluster (Secondary - Being Phased Out)
+### Bitty Cluster (Decommissioned - Archived)
 
-**Summary:** 3x Intel NUC nodes with QuickSync iGPU, secondary cluster for smaller workloads.
+**Summary:** The previous Bitty was 3x Intel NUC nodes with QuickSync iGPU. It no longer exists; a new Bitty is planned.
 
-- Kubernetes v1.36.4 on Talos v1.13.9
-- IP Range: 172.30.21.1-3
-- Use for: QuickSync video transcoding only
-- **Do not deploy new applications to Bitty** - migrate to Mini
-- `clusters/bitty/` now bootstraps with the same helmfile/Talos pattern as Mini (see below); `cluster-apps/bitty/` is still on the old pattern pending migration
+- Config archived at `.archive/bitty/` (`clusters/` and `cluster-apps/`, see its [README](.archive/bitty/README.md)). Reference only: nothing there is deployed, and Renovate doesn't track it, so its versions go stale
+- Hardware facts: [docs/HARDWARE.md](docs/HARDWARE.md) and `.archive/bitty/clusters/talos/talconfig.yaml`
+- **Do not deploy applications to Bitty** - deploy to Mini
+- `flux`/`talos`/`k8s-bootstrap` tasks stay generic on `CLUSTER_NAME`, so a new Bitty built under `clusters/bitty/` works without rewriting them
 
 ## Repository Structure
 
 ### Understanding Namespace Directories
 
-Directories immediately under `cluster-apps/mini/` or `cluster-apps/bitty/` are **Kubernetes namespace directories**, NOT application directories. Each namespace directory:
+Directories immediately under `cluster-apps/mini/` are **Kubernetes namespace directories**, NOT application directories. Each namespace directory:
 
 - Represents a single Kubernetes namespace
 - Contains a `kustomization.yaml` that includes namespace components and lists all apps
@@ -112,6 +113,8 @@ cluster-apps/mini/
 
 ```text
 /home/rtrox/home-ops/
+├── .archive/                   # Archived config, not deployed, ignored by Renovate
+│   └── bitty/                 # Decommissioned Bitty cluster (clusters/ + cluster-apps/)
 ├── ansible/                    # Non-k8s machines (Raspberry Pis)
 │   └── roles/
 ├── cluster-apps/               # Main FluxCD source (ACTIVE)
@@ -126,7 +129,6 @@ cluster-apps/mini/
 │   │   ├── default/           # "default" namespace
 │   │   ├── system/            # "system" namespace (privileged)
 │   │   └── observability/     # "observability" namespace
-│   ├── bitty/                 # Bitty-specific apps (deprecated pattern, pending migration)
 │   └── components/            # Reusable Kustomize components
 │       ├── flux/alerts/       # Flux error notifications
 │       ├── namespace/         # Basic namespace template
@@ -134,16 +136,15 @@ cluster-apps/mini/
 │       └── volsync/           # PVC + backup templates
 ├── cluster-cd/                 # Legacy structure (DO NOT USE)
 ├── clusters/                   # Cluster definitions & bootstrap
-│   ├── mini/
-│   │   ├── bootstrap/         # Helmfile-based bootstrap
-│   │   │   ├── helmfile.d/    # 00-crds.yaml, 01-apps.yaml
-│   │   │   ├── resources/
-│   │   │   └── templates/
-│   │   ├── flux/              # Flux Kustomizations
-│   │   │   └── cluster/
-│   │   └── talos/             # Talos configuration
-│   │       └── clusterconfig/
-│   └── bitty/                 # Same helmfile/Talos bootstrap pattern as Mini
+│   └── mini/
+│       ├── bootstrap/         # Helmfile-based bootstrap
+│       │   ├── helmfile.d/    # 00-crds.yaml, 01-apps.yaml
+│       │   ├── resources/
+│       │   └── templates/
+│       ├── flux/              # Flux Kustomizations
+│       │   └── cluster/
+│       └── talos/             # Talos configuration
+│           └── clusterconfig/
 └── .taskfiles/                # Operational automation
     ├── k8s-bootstrap/
     ├── sops/
@@ -650,17 +651,19 @@ Before adding an application, decide which Kubernetes namespace it belongs in:
 3. Follow steps above to add first app
 4. Commit and push - Flux will auto-discover the new namespace
 
-### Migrating App from Bitty to Mini
+### Porting Archived Bitty Config to Mini
 
-1. Review Bitty app configuration
+Bitty was decommissioned, so there's no live cluster to migrate from. To reuse something from `.archive/bitty/cluster-apps/`, which is on the old pattern:
+
+1. Review the archived app configuration
 2. Convert Ingress to HTTPRoute
 3. Convert HelmRepository ref to OCIRepository
 4. Move SOPS secrets to Doppler + ExternalSecret
 5. Remove postBuild substitution from SOPS
 6. Add components for namespace/volsync if needed
-7. Deploy to Mini
-8. Test thoroughly
-9. Remove from Bitty
+7. Update versions, since Renovate doesn't track `.archive/`
+8. Deploy to Mini
+9. Test thoroughly
 
 ### Updating Application
 
