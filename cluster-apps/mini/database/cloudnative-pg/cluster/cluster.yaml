@@ -39,7 +39,7 @@ spec:
         compression: bzip2
         maxParallel: 8
       destinationPath: s3://${BUCKET}/
-      endpointURL: ${ENDPOINT}
+      endpointURL: http://${ENDPOINT}
       serverName: postgres17
       s3Credentials:
         accessKeyId:
