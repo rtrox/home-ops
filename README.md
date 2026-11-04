@@ -28,10 +28,11 @@ This repository contains the Infrastructure as Code (IaC) for my home Kubernetes
 
 ### Clusters
 
-I run two Kubernetes clusters:
+I run one Kubernetes cluster:
 
 - **Mini** (Primary) - Minisforum MS-A2 servers with AMD iGPUs (one with an NVIDIA GPU)
-- **Bitty** (Secondary) - Intel NUC cluster
+
+The previous secondary cluster, Bitty, was decommissioned. Its config is archived at [`.archive/bitty/`](.archive/bitty/README.md) as reference for a planned rebuild.
 
 ### Core Components
 
@@ -68,15 +69,16 @@ This repository follows a structured GitOps layout:
 │       └── 📁 [app]/
 │           ├── 📁 app/   # HelmRelease + configs
 │           └── ks.yaml   # Flux Kustomization
-├── 📁 bitty/             # Bitty cluster (partially migrated)
 └── 📁 components/        # Reusable Kustomize components
 
 📁 clusters/              # Cluster bootstrap configurations
-├── 📁 mini/
-│   ├── 📁 bootstrap/     # Helmfile-based bootstrap
-│   ├── 📁 flux/          # Flux Kustomizations
-│   └── 📁 talos/         # Talos configuration
-└── 📁 bitty/
+└── 📁 mini/
+    ├── 📁 bootstrap/     # Helmfile-based bootstrap
+    ├── 📁 flux/          # Flux Kustomizations
+    └── 📁 talos/         # Talos configuration
+
+📁 .archive/              # Archived config, not deployed
+└── 📁 bitty/             # Decommissioned Bitty cluster
 
 📁 .taskfiles/            # Operational automation
 ```
@@ -141,7 +143,9 @@ While most infrastructure runs on-premises, some cloud services are used:
 - Storage Class: `ceph-block` (default)
 - Replication: 3 replicas
 
-### Bitty Cluster (Secondary)
+### Previous Bitty Cluster (Decommissioned)
+
+Bitty's config is archived at [`.archive/bitty/`](.archive/bitty/README.md), and a new Bitty is planned.
 
 | Device       | CPU         | RAM   | Storage | Purpose                        |
 | ------------ | ----------- | ----- | ------- | ------------------------------ |
@@ -150,9 +154,6 @@ While most infrastructure runs on-premises, some cloud services are used:
 - Rook-Ceph: 3x 512GB SSDs (1 per node)
 - Storage Class: `ceph-block` (default)
 - Replication: 3 replicas
-
-- Rook-Ceph: planned on the 4TB storage NVMe (1 per node) - not yet deployed
-- Storage Class: `ceph-block` (planned)
 
 ### Supporting Infrastructure
 
