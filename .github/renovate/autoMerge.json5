@@ -51,20 +51,14 @@
       ignoreTests: false,
     },
     {
-      // Temporary hold: these updates want manual review, so don't automerge
-      // them. Drop this rule once they've been reviewed and merged. Has to
-      // stay after "Auto merge all patches" to win. "gateway-api-crd" PRs are
-      // covered too: that's only the depName of the flux GitRepository, whose
-      // packageName is kubernetes-sigs/gateway-api. OpenEBS and NFD are here
-      // because the move off charts-mirror exposes minors they'd missed.
-      description: "Hold CoreDNS, Gateway API, OpenEBS and NFD for manual review",
+      // Temporary hold: Gateway API 1.7 stays held until Envoy Gateway and
+      // Cilium support it. Drop this rule once they do. Has to stay after
+      // "Auto merge all patches" to win. "gateway-api-crd" PRs are covered
+      // too: that's only the depName of the flux GitRepository, whose
+      // packageName is kubernetes-sigs/gateway-api.
+      description: "Hold Gateway API 1.7 until Envoy Gateway and Cilium support it",
       automerge: false,
-      matchPackageNames: [
-        "ghcr.io/coredns/charts/coredns",
-        "kubernetes-sigs/gateway-api",
-        "ghcr.io/openebs/charts/openebs",
-        "registry.k8s.io/nfd/charts/node-feature-discovery",
-      ],
+      matchPackageNames: ["kubernetes-sigs/gateway-api"],
     },
     {
       // CNPG 1.31 removes native Barman Cloud support, which the postgres17
