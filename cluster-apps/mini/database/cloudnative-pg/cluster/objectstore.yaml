@@ -1,0 +1,41 @@
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/barmancloud.cnpg.io/objectstore_v1.json
+# Barman Cloud plugin object store: a 1:1 translation of postgres17's in-tree
+# spec.backup.barmanObjectStore (same bucket, endpoint, credentials and
+# compression), with the retention policy moved here from the Cluster.
+#
+# serverName is deliberately absent: the plugin's CRD rejects it here. It is
+# set as the `serverName` plugin parameter on the Cluster instead (keep it
+# postgres17 so the existing archive stays readable and paths don't change).
+apiVersion: barmancloud.cnpg.io/v1
+kind: ObjectStore
+metadata:
+  name: minio
+spec:
+  retentionPolicy: 14d
+  configuration:
+    data:
+      compression: bzip2
+    wal:
+      compression: bzip2
+      maxParallel: 8
+    destinationPath: s3://${BUCKET}/
+    endpointURL: http://${ENDPOINT}
+    s3Credentials:
+      accessKeyId:
+        name: cloudnative-pg-secret
+        key: AWS_ACCESS_KEY_ID
+      secretAccessKey:
+        name: cloudnative-pg-secret
+        key: AWS_SECRET_ACCESS_KEY
+  # Resources for the plugin-barman-cloud sidecar the plugin injects into each
+  # instance pod of every Cluster using this store (WAL archiving and base
+  # backups run there instead of in the postgres container). The limit leaves
+  # headroom for up to 8 parallel WAL uploads plus a bzip2 base backup.
+  instanceSidecarConfiguration:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        memory: 1Gi
