@@ -10,4 +10,4 @@ spec:
     operation: copy
   url: oci://quay.io/cilium/charts/cilium
   ref:
-    tag: 1.19.10
+    tag: 1.20.4
