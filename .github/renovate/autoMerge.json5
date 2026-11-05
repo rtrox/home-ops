@@ -74,6 +74,26 @@
       ],
     },
     {
+      // n8n runs one-way database migrations on startup, and Renovate follows
+      // every image tag, including ones upstream still marks as prerelease
+      // (2.47.x and the 3.x line while its stable tag stays on 2.46). Review
+      // each bump, and check the release is not flagged as a prerelease.
+      description: "Never Automerge n8n",
+      matchDatasources: ["docker"],
+      automerge: false,
+      matchPackageNames: ["ghcr.io/n8n-io/n8n"],
+      prBodyNotes: [
+        ":warning: **Manual Review Required**: n8n migrates its database on startup and the migration can't be rolled back. Check the [n8n releases](https://github.com/n8n-io/n8n/releases) and confirm this version is not flagged as a prerelease, and that the `stable` tag has reached it.",
+      ],
+    },
+    {
+      description: "Hold n8n major updates until approved on the Dependency Dashboard",
+      matchDatasources: ["docker"],
+      matchUpdateTypes: ["major"],
+      matchPackageNames: ["ghcr.io/n8n-io/n8n"],
+      dependencyDashboardApproval: true,
+    },
+    {
       description: "Never Automerge qbittorrent",
       matchDatasources: ["docker"],
       automerge: false,
