@@ -12,6 +12,7 @@ resources:
   - ./jellyfin/ks.yaml
   - ./komga/ks.yaml
   - ./minecraft-vanilla/ks.yaml
+  - ./n8n/ks.yaml
   - ./owncast/ks.yaml
   - ./paperless/ks.yaml
   - ./sure/ks.yaml
