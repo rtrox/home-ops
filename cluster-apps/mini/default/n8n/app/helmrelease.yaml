@@ -22,7 +22,7 @@ spec:
             env:
               TZ: America/Los_Angeles
               GENERIC_TIMEZONE: America/Los_Angeles
-              N8N_PORT: &port "5678"
+              N8N_PORT: "5678"
               N8N_HOST: n8n.rtrox.io
               N8N_PROTOCOL: https
               # envoy-internal terminates TLS and sits one proxy hop in front.
@@ -55,7 +55,7 @@ spec:
                 spec:
                   httpGet:
                     path: /healthz
-                    port: *port
+                    port: &port 5678
                   initialDelaySeconds: 20
                   periodSeconds: 10
                   timeoutSeconds: 2
