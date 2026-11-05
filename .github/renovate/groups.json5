@@ -4,8 +4,15 @@
     {
       description: "Flux Group",
       groupName: "Flux",
-      matchPackageNames: ["/^flux/", "/^ghcr.io/fluxcd//"],
-      matchDatasources: ["docker", "github-tags"],
+      // The Flux Operator charts and the Flux distribution live under
+      // controlplaneio-fluxcd, not fluxcd, so they need their own matchers.
+      matchPackageNames: [
+        "/^flux/",
+        "/^ghcr.io/fluxcd//",
+        "/^ghcr.io/controlplaneio-fluxcd//",
+        "controlplaneio-fluxcd/distribution",
+      ],
+      matchDatasources: ["docker", "github-tags", "github-releases"],
       versioning: "semver",
       group: {
         commitMessageTopic: "{{{groupName}}} group",
