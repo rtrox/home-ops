@@ -45,9 +45,18 @@ spec:
               # fsGroup owns the volume; n8n's 0600 check fights with it.
               N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: "false"
               N8N_LOG_LEVEL: info
+              # Code nodes run in a separate runner container (sidecar below)
+              # instead of inside the main process. The broker listens on
+              # localhost, which the sidecar reaches over the pod network.
+              N8N_RUNNERS_MODE: external
+              # What the internal default already was; set explicitly so the
+              # upcoming default change doesn't silently shorten it.
+              N8N_RUNNERS_TASK_TIMEOUT: "300"
             envFrom:
               - secretRef:
                   name: n8n-secret
+              - secretRef:
+                  name: n8n-runners-secret
             probes:
               liveness: &probe
                 enabled: true
@@ -85,6 +94,27 @@ spec:
                 memory: 256Mi
               limits:
                 memory: 2Gi
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: false
+              capabilities: { drop: ["ALL"] }
+          # JavaScript and Python task runners. The image version must match
+          # the n8n image above, so Renovate groups the two.
+          runner:
+            image:
+              repository: ghcr.io/n8n-io/runners
+              tag: 2.47.2@sha256:bf20c4b51e6d957ce9a6b306e398255705046835b3f472dc52cd01cc087b1922
+            env:
+              N8N_RUNNERS_TASK_BROKER_URI: http://127.0.0.1:5679
+            envFrom:
+              - secretRef:
+                  name: n8n-runners-secret
+            resources:
+              requests:
+                cpu: 50m
+                memory: 128Mi
+              limits:
+                memory: 1Gi
             securityContext:
               allowPrivilegeEscalation: false
               readOnlyRootFilesystem: false
