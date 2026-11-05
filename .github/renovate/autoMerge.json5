@@ -61,8 +61,10 @@
       matchPackageNames: ["kubernetes-sigs/gateway-api"],
     },
     {
-      // CNPG 1.31 removes native Barman Cloud support, which the postgres17
-      // backups rely on. Migrate them to the Barman plugin before upgrading.
+      // CNPG 1.32.0 removes native (in-tree) Barman Cloud support. postgres17's
+      // backups have moved to the Barman Cloud plugin (cloudnative-pg-barman-plugin
+      // + the ObjectStore in cloudnative-pg/cluster); confirm that migration is
+      // live, and check the plugin's CNPG compatibility, before upgrading.
       description: "Never Automerge CloudNativePG",
       matchDatasources: ["docker"],
       automerge: false,
