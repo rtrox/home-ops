@@ -30,24 +30,16 @@ spec:
     podMonitorMetricRelabelings:
       - { sourceLabels: [cluster], targetLabel: cnpg_cluster, action: replace }
       - { regex: cluster, action: labeldrop }
-  backup:
-    retentionPolicy: 14d
-    barmanObjectStore:
-      data:
-        compression: bzip2
-      wal:
-        compression: bzip2
-        maxParallel: 8
-      destinationPath: s3://${BUCKET}/
-      endpointURL: http://${ENDPOINT}
-      serverName: postgres17
-      s3Credentials:
-        accessKeyId:
-          name: cloudnative-pg-secret
-          key: AWS_ACCESS_KEY_ID
-        secretAccessKey:
-          name: cloudnative-pg-secret
-          key: AWS_SECRET_ACCESS_KEY
+  # WAL archiving and base backups go through the Barman Cloud plugin, using
+  # the ObjectStore in ./objectstore.yaml (bucket, compression, retention).
+  plugins:
+    - name: barman-cloud.cloudnative-pg.io
+      isWALArchiver: true
+      parameters:
+        barmanObjectName: minio
+        # Same server name the in-tree backups used, so the existing archive
+        # stays readable and the bucket paths don't change.
+        serverName: postgres17
   # Per-app roles are added here as new apps need Postgres; each also gets
   # a Database resource (see ./database-<app>.yaml) pointing at this cluster.
   managed:

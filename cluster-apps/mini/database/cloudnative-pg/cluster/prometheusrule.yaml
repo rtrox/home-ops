@@ -76,12 +76,27 @@ spec:
             severity: critical
         - alert: CNPGBackupTooOld
           annotations:
-            description: Cluster {{ $labels.job }} has no base backup from the last 36 hours, or has never completed one.
+            description: Cluster {{ $labels.job }} has no base backup from the last 36 hours, or has never completed one (or no backup timestamp metric is being scraped at all).
             summary: The newest available base backup is too old.
           # Only the primary reports a real timestamp, replicas report 0, so take
           # the max across instances. All 0 (never backed up) still fires.
+          #
+          # Transition from in-tree Barman to the Barman Cloud plugin: the plugin
+          # reports barman_cloud_cloudnative_pg_io_last_available_backup_timestamp,
+          # while the deprecated cnpg_collector_ metric keeps whatever the last
+          # in-tree backup left in the Cluster status. Taking the max over both
+          # (selected by __name__, not `or`, which would drop the plugin series
+          # wherever the label sets match) means the last in-tree backup covers
+          # the gap until the first plugin backup, and a frozen in-tree value
+          # can't hide a broken plugin for longer than the 36h threshold. The
+          # absent() arm fires if neither metric is scraped at all. Drop the
+          # cnpg_collector_ name once CNPG >= 1.32 no longer exports it.
           expr: |-
-            time() - max by (namespace, job) (cnpg_collector_last_available_backup_timestamp) > 129600
+            (
+              time() - max by (namespace, job) ({__name__=~"cnpg_collector_last_available_backup_timestamp|barman_cloud_cloudnative_pg_io_last_available_backup_timestamp"}) > 129600
+            )
+            or
+            absent({__name__=~"cnpg_collector_last_available_backup_timestamp|barman_cloud_cloudnative_pg_io_last_available_backup_timestamp", namespace="database"})
           for: 15m
           labels:
             severity: critical
