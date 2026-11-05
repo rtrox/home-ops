@@ -33,6 +33,22 @@ spec:
             image:
               repository: ghcr.io/calibrain/shelfmark
               tag: v1.6.1@sha256:0e5c9ff5f858a9695dc18bc355d8aa29dfee5c0d9c634919484c2bab9955ad5a
+            # OIDC via pocket-id. These match what was previously saved through
+            # Shelfmark's settings page (config volume), so behavior is unchanged;
+            # declaring them here makes it reproducible. The client id/secret come
+            # from the shelfmark-secret ExternalSecret. Local login stays enabled
+            # (HIDE_LOCAL_AUTH / DISABLE_LOCAL_AUTH unset) as a fallback.
+            env:
+              AUTH_METHOD: oidc
+              OIDC_DISCOVERY_URL: https://auth.rtrox.io/.well-known/openid-configuration
+              OIDC_SCOPES: openid,email,profile
+              OIDC_GROUP_CLAIM: groups
+              OIDC_USE_ADMIN_GROUP: "true"
+              OIDC_ADMIN_GROUP: admins
+              OIDC_AUTO_PROVISION: "true"
+            envFrom:
+              - secretRef:
+                  name: shelfmark-secret
             command:
               - gunicorn
             args:
