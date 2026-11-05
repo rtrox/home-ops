@@ -4,7 +4,7 @@
     {
       description: "Flux Group",
       groupName: "Flux",
-      matchPackagePatterns: ["^flux", "^ghcr.io/fluxcd/"],
+      matchPackageNames: ["/^flux/", "/^ghcr.io/fluxcd//"],
       matchDatasources: ["docker", "github-tags"],
       versioning: "semver",
       group: {
@@ -15,7 +15,7 @@
     {
       description: "Rook-Ceph image and chart",
       groupName: "Rook Ceph",
-      matchPackagePatterns: ["rook.ceph", "rook.ceph-csi-drivers"],
+      matchPackageNames: ["/rook.ceph/", "/rook.ceph-csi-drivers/"],
       matchDatasources: ["docker", "helm"],
       group: {
         commitMessageTopic: "{{{groupName}}} group",
@@ -66,7 +66,7 @@
     {
       description: "Thanos image and chart - versions do not match",
       groupName: "Thanos",
-      matchPackagePatterns: ["quay.io/thanos/thanos", "thanos"],
+      matchPackageNames: ["/quay.io/thanos/thanos/", "/thanos/"],
       matchDatasources: ["docker", "github-releases", "helm"],
       matchUpdateTypes: ["minor", "patch"],
       group: {
@@ -76,7 +76,7 @@
     {
       description: "Vector image and chart - versions do not match",
       groupName: "Vector",
-      matchPackagePatterns: ["vector"],
+      matchPackageNames: ["/vector/"],
       matchDatasources: ["docker", "github-releases", "helm"],
       matchUpdateTypes: ["minor", "patch"],
       group: {
@@ -100,7 +100,7 @@
     {
       description: "Dragonfly operator",
       groupName: "Dragonfly Operator",
-      matchPackagePatterns: ["dragonfly(?:db)?.operator"],
+      matchPackageNames: ["/dragonfly(?:db)?.operator/"],
       matchDatasources: ["docker", "github-releases"],
       group: {
         commitMessageTopic: "{{{groupName}}} group",

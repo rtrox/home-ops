@@ -65,3 +65,23 @@ spec:
           for: 1m
           labels:
             severity: warning
+        - alert: CNPGWALArchiveBacklog
+          annotations:
+            description: Pod {{ $labels.pod }} has {{ $value }} WAL segments waiting to be archived. Archiving is failing or falling behind.
+            summary: WAL segments are piling up instead of being archived.
+          expr: |-
+            cnpg_collector_pg_wal_archive_status{value="ready"} > 10
+          for: 15m
+          labels:
+            severity: critical
+        - alert: CNPGBackupTooOld
+          annotations:
+            description: Cluster {{ $labels.job }} has no base backup from the last 36 hours, or has never completed one.
+            summary: The newest available base backup is too old.
+          # Only the primary reports a real timestamp, replicas report 0, so take
+          # the max across instances. All 0 (never backed up) still fires.
+          expr: |-
+            time() - max by (namespace, job) (cnpg_collector_last_available_backup_timestamp) > 129600
+          for: 15m
+          labels:
+            severity: critical
