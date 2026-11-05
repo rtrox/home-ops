@@ -68,7 +68,10 @@
       description: "Never Automerge CloudNativePG",
       matchDatasources: ["docker"],
       automerge: false,
-      matchPackageNames: ["ghcr.io/cloudnative-pg/charts/cloudnative-pg"],
+      matchPackageNames: [
+        "ghcr.io/cloudnative-pg/charts/cloudnative-pg",
+        "ghcr.io/cloudnative-pg/charts/plugin-barman-cloud",
+      ],
     },
     {
       description: "Never Automerge qbittorrent",
