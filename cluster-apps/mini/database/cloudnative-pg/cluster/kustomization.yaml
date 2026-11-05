@@ -8,3 +8,4 @@ resources:
   - ./scheduledbackup.yaml
   - ./prometheusrule.yaml
   - ./database-sure.yaml
+  - ./database-n8n.yaml
