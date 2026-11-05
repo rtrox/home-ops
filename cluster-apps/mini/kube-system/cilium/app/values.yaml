@@ -65,10 +65,10 @@ envoy:
   enabled: false
 endpointRoutes:
   enabled: true
+# Unused: all HTTPRoutes attach to Envoy Gateway, not the cilium GatewayClass.
+# Disabled to decouple Cilium from the Gateway API CRD version.
 gatewayAPI:
-  enabled: true
-  enableAlpn: true
-  xffNumTrustedHops: 1
+  enabled: false
 
 securityContext:
   capabilities:
