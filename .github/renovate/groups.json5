@@ -20,6 +20,17 @@
       separateMinorPatch: true,
     },
     {
+      // n8n requires the task runner image to be the same version as the main
+      // image, so they have to move together.
+      description: "n8n and its task runner",
+      groupName: "n8n",
+      matchPackageNames: ["ghcr.io/n8n-io/n8n", "ghcr.io/n8n-io/runners"],
+      matchDatasources: ["docker"],
+      group: {
+        commitMessageTopic: "{{{groupName}}} group",
+      },
+    },
+    {
       description: "Rook-Ceph image and chart",
       groupName: "Rook Ceph",
       matchPackageNames: ["/rook.ceph/", "/rook.ceph-csi-drivers/"],
