@@ -29,7 +29,7 @@ spec:
               N8N_PROXY_HOPS: "1"
               # Webhook and OAuth-callback URLs n8n shows in the UI and hands
               # to third parties.
-              WEBHOOK_URL: https://n8n.rtrox.io/
+              N8N_WEBHOOK_URL: https://n8n.rtrox.io/
               N8N_EDITOR_BASE_URL: https://n8n.rtrox.io
               DB_TYPE: postgresdb
               DB_POSTGRESDB_HOST: postgres17-rw.database.svc.cluster.local
