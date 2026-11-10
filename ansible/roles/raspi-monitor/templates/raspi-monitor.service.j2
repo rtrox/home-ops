@@ -2,17 +2,21 @@
 Description=Raspi-Monitor I2C OLED Monitor
 After=docker.service
 Requires=docker.service
+# Give up after repeated failures (e.g. an OLED that isn't answering on I2C)
+# rather than restarting, pulling and logging forever.
+StartLimitIntervalSec=600
+StartLimitBurst=5
 
 [Service]
 TimeoutStartSec=0
 ExecStartPre=-/usr/bin/docker rm --force raspi-monitor
-ExecStart=/usr/bin/docker run --name raspi-monitor --pull always \
+ExecStart=/usr/bin/docker run --name raspi-monitor \
     --network host \
     --device /dev/i2c-1 \
     ghcr.io/rtrox/raspi-monitor:latest
 ExecStop=/usr/bin/docker stop raspi-monitor
-Restart=always
-RestartSec=5s
+Restart=on-failure
+RestartSec=60s
 
 [Install]
 WantedBy=multi-user.target
