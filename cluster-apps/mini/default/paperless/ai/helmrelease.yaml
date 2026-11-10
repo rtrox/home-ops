@@ -36,7 +36,13 @@ spec:
           app:
             image:
               repository: clusterzx/paperless-ai
-              tag: 3.0.9
+              tag: 4.0.0@sha256:bea1e218755ba7940da9748ce64e3d7020f15059eab8eb5c6e5470d3d60436a6
+            resources:
+              requests:
+                cpu: 10m
+                memory: 192Mi
+              limits:
+                memory: 768Mi
 
     service:
       app:
