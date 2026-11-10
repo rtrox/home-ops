@@ -19,6 +19,7 @@ includes:
   # postgres: .taskfiles/postgres/Taskfile.yaml
   # sops: .taskfiles/sops/Taskfile.yaml
   talos: .taskfiles/talos/Taskfile.yaml
+  upgrade-steward: .taskfiles/upgrade-steward/Taskfile.yaml
   # volsync: .taskfiles/volsync/Taskfile.yaml
 
 tasks:
