@@ -18,7 +18,7 @@ spec:
           app:
             image:
               repository: ghcr.io/n8n-io/n8n
-              tag: 2.47.2@sha256:83ec9349e09a8efdb51f7e2729f1f83503c038475747a351772ff6b78838f02a
+              tag: 2.48.0@sha256:416c29f75a0f9ac65b4339761a372af48f4a7e948de9df0d837b080d2b9d47a8
             env:
               TZ: America/Los_Angeles
               GENERIC_TIMEZONE: America/Los_Angeles
@@ -103,7 +103,7 @@ spec:
           runner:
             image:
               repository: ghcr.io/n8n-io/runners
-              tag: 2.47.2@sha256:bf20c4b51e6d957ce9a6b306e398255705046835b3f472dc52cd01cc087b1922
+              tag: 2.48.0@sha256:e5b1af111c98e59c37af498672fbbd88e93599d17e9d5933c27aa836ef0bc168
             env:
               N8N_RUNNERS_TASK_BROKER_URI: http://127.0.0.1:5679
             envFrom:
