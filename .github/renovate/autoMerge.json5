@@ -94,6 +94,16 @@
       dependencyDashboardApproval: true,
     },
     {
+      // Gotenberg 9 removes the /forms/pdfengines routes and renames the pdfa
+      // form field; paperless-ngx (via gotenberg-client) still uses the old API,
+      // so 9.x would break Office/email ingestion. Stay on 8.x until paperless-ngx
+      // supports 9, then drop this rule.
+      description: "Hold Gotenberg on 8.x until paperless-ngx supports 9",
+      matchDatasources: ["docker"],
+      matchPackageNames: ["docker.io/gotenberg/gotenberg"],
+      allowedVersions: "<9",
+    },
+    {
       description: "Never Automerge qbittorrent",
       matchDatasources: ["docker"],
       automerge: false,
