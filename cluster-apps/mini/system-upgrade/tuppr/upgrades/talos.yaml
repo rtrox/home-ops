@@ -6,7 +6,11 @@ metadata:
   name: talos
 spec:
   talos:
-    version: v1.13.12
+    # talconfig.yaml stays on 1.13.12 until its patches are migrated to the
+    # Talos 1.14 document kinds (talhelper rejects the 1.14 contract with the
+    # current v1alpha1 apiServer/scheduler/proxy/search-domain patches). The
+    # nodes keep their existing machine config, which 1.14 still accepts.
+    version: v1.14.5
   policy:
     rebootMode: default
   healthChecks:
