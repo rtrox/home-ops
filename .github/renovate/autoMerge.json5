@@ -123,11 +123,11 @@
       automerge: false,
       ignoreTests: false,
       prBodyNotes: [
-        ":warning: **Manual Review Required**: Confirm the new Kubernetes version is supported by the pinned Talos version in the same talconfig.yaml before merging -- check the [Talos support matrix](https://www.talos.dev/latest/introduction/support-matrix/). A mismatched pin will fail `talhelper genconfig`.",
+        ":warning: **Manual Review Required**: Confirm the new Kubernetes version is supported by the pinned Talos version in the same topf.yaml before merging -- check the [Talos support matrix](https://www.talos.dev/latest/introduction/support-matrix/). A mismatched pin will fail `topf render` or `talosctl validate`.",
       ],
     },
     {
-      // talosVersion in talconfig.yaml is tracked via an inline `# renovate:`
+      // talosVersion in clusters/mini/talos/topf.yaml is tracked via an inline `# renovate:`
       // comment against this same package (see the depName= annotation above
       // talosVersion), so this rule also gates the actual Talos version bump,
       // not just the installer image.
@@ -137,7 +137,18 @@
       automerge: false,
       ignoreTests: false,
       prBodyNotes: [
-        ":warning: **Manual Review Required**: Confirm the new Talos version still supports the pinned Kubernetes version in the same talconfig.yaml before merging -- check the [Talos support matrix](https://www.talos.dev/latest/introduction/support-matrix/). After merging, also update `talos.version` in the matching tuppr `TalosUpgrade` (system-upgrade/tuppr/upgrades/talos.yaml) -- it's kept in sync by hand, not auto-updated by this PR.",
+        ":warning: **Manual Review Required**: Confirm the new Talos version still supports the pinned Kubernetes version in the same topf.yaml before merging -- check the [Talos support matrix](https://www.talos.dev/latest/introduction/support-matrix/). After merging, also update `talos.version` in the matching tuppr `TalosUpgrade` (system-upgrade/tuppr/upgrades/talos.yaml) -- it's kept in sync by hand, not auto-updated by this PR.",
+      ],
+    },
+    {
+      // topf is pre-1.0 and applies machine config straight to the nodes, so a
+      // bump is reviewed by hand (render + `apply --dry-run` must stay clean).
+      description: "Never Automerge topf",
+      matchPackageNames: ["postfinance/topf"],
+      automerge: false,
+      ignoreTests: false,
+      prBodyNotes: [
+        ":warning: **Manual Review Required**: topf is pre-1.0. Run `task talos:generate-clusterconfig` and `task talos:apply-clusterconfig DRY_RUN=true CLUSTER_NAME=mini` and confirm every node reports \"no changes to apply\" before merging.",
       ],
     },
     {

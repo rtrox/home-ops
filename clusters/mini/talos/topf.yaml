@@ -1,0 +1,25 @@
+clusterName: mini
+clusterEndpoint: https://mini.rtrox.io:6443
+# renovate: depName=kubernetes/kubernetes datasource=github-releases extractVersion=^v(?<version>.*)$
+kubernetesVersion: 1.36.4
+# renovate: depName=ghcr.io/siderolabs/installer datasource=docker extractVersion=^(?<version>.*)$
+talosVersion: v1.13.12
+# metal-installer-secureboot variant (UKI + TPM-backed disk encryption)
+secureboot: true
+schematicId: "@schematic.yaml"
+secretsPath: secrets.sops.yaml
+
+nodes:
+  - host: node01.mini.rtrox.io
+    ip: 172.21.31.1
+    role: control-plane
+  - host: node02.mini.rtrox.io
+    ip: 172.21.31.2
+    role: control-plane
+  # node03 has an NVIDIA RTX 3050 in addition to the AMD iGPU shared by every
+  # node. A node-level schematic replaces (does not merge with) the cluster one,
+  # so schematic-node03.yaml repeats the full extension list.
+  - host: node03.mini.rtrox.io
+    ip: 172.21.31.3
+    role: control-plane
+    schematicId: "@schematic-node03.yaml"

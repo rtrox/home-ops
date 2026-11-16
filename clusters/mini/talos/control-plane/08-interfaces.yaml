@@ -1,0 +1,6 @@
+machine:
+  network:
+    interfaces:
+      - deviceSelector:
+          busPath: "0*"
+        dhcp: true

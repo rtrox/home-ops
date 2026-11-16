@@ -1,0 +1,9 @@
+customization:
+  extraKernelArgs:
+    - apparmor=0
+    - net.ifnames=0
+  systemExtensions:
+    officialExtensions:
+      - siderolabs/amd-ucode
+      - siderolabs/amdgpu
+      - siderolabs/iscsi-tools
