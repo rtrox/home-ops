@@ -5,6 +5,7 @@ kind: Kustomization
 namespace: database
 resources:
   - ./cloudnative-pg/ks.yaml
+  - ./cloudnative-pg-barman-plugin/ks.yaml
   - ./valkey/ks.yaml
 components:
   - ../../components/namespace

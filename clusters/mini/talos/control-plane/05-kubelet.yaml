@@ -1,0 +1,6 @@
+apiVersion: v1alpha1
+kind: KubeletConfig
+extraArgs:
+  rotate-server-certificates: "true"
+config:
+  maxPods: 150

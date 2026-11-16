@@ -61,12 +61,47 @@
       matchPackageNames: ["kubernetes-sigs/gateway-api"],
     },
     {
-      // CNPG 1.31 removes native Barman Cloud support, which the postgres17
-      // backups rely on. Migrate them to the Barman plugin before upgrading.
+      // CNPG 1.32.0 removes native (in-tree) Barman Cloud support. postgres17's
+      // backups have moved to the Barman Cloud plugin (cloudnative-pg-barman-plugin
+      // + the ObjectStore in cloudnative-pg/cluster); confirm that migration is
+      // live, and check the plugin's CNPG compatibility, before upgrading.
       description: "Never Automerge CloudNativePG",
       matchDatasources: ["docker"],
       automerge: false,
-      matchPackageNames: ["ghcr.io/cloudnative-pg/charts/cloudnative-pg"],
+      matchPackageNames: [
+        "ghcr.io/cloudnative-pg/charts/cloudnative-pg",
+        "ghcr.io/cloudnative-pg/charts/plugin-barman-cloud",
+      ],
+    },
+    {
+      // n8n runs one-way database migrations on startup, and Renovate follows
+      // every image tag, including ones upstream still marks as prerelease
+      // (2.47.x and the 3.x line while its stable tag stays on 2.46). Review
+      // each bump, and check the release is not flagged as a prerelease.
+      description: "Never Automerge n8n",
+      matchDatasources: ["docker"],
+      automerge: false,
+      matchPackageNames: ["ghcr.io/n8n-io/n8n", "ghcr.io/n8n-io/runners"],
+      prBodyNotes: [
+        ":warning: **Manual Review Required**: n8n migrates its database on startup and the migration can't be rolled back. Check the [n8n releases](https://github.com/n8n-io/n8n/releases) and confirm this version is not flagged as a prerelease, and that the `stable` tag has reached it.",
+      ],
+    },
+    {
+      description: "Hold n8n major updates until approved on the Dependency Dashboard",
+      matchDatasources: ["docker"],
+      matchUpdateTypes: ["major"],
+      matchPackageNames: ["ghcr.io/n8n-io/n8n", "ghcr.io/n8n-io/runners"],
+      dependencyDashboardApproval: true,
+    },
+    {
+      // Gotenberg 9 removes the /forms/pdfengines routes and renames the pdfa
+      // form field; paperless-ngx (via gotenberg-client) still uses the old API,
+      // so 9.x would break Office/email ingestion. Stay on 8.x until paperless-ngx
+      // supports 9, then drop this rule.
+      description: "Hold Gotenberg on 8.x until paperless-ngx supports 9",
+      matchDatasources: ["docker"],
+      matchPackageNames: ["docker.io/gotenberg/gotenberg"],
+      allowedVersions: "<9",
     },
     {
       description: "Never Automerge qbittorrent",
@@ -88,11 +123,11 @@
       automerge: false,
       ignoreTests: false,
       prBodyNotes: [
-        ":warning: **Manual Review Required**: Confirm the new Kubernetes version is supported by the pinned Talos version in the same talconfig.yaml before merging -- check the [Talos support matrix](https://www.talos.dev/latest/introduction/support-matrix/). A mismatched pin will fail `talhelper genconfig`.",
+        ":warning: **Manual Review Required**: Confirm the new Kubernetes version is supported by the pinned Talos version in the same topf.yaml before merging -- check the [Talos support matrix](https://www.talos.dev/latest/introduction/support-matrix/). A mismatched pin will fail `topf render` or `talosctl validate`.",
       ],
     },
     {
-      // talosVersion in talconfig.yaml is tracked via an inline `# renovate:`
+      // talosVersion in clusters/mini/talos/topf.yaml is tracked via an inline `# renovate:`
       // comment against this same package (see the depName= annotation above
       // talosVersion), so this rule also gates the actual Talos version bump,
       // not just the installer image.
@@ -102,7 +137,18 @@
       automerge: false,
       ignoreTests: false,
       prBodyNotes: [
-        ":warning: **Manual Review Required**: Confirm the new Talos version still supports the pinned Kubernetes version in the same talconfig.yaml before merging -- check the [Talos support matrix](https://www.talos.dev/latest/introduction/support-matrix/). After merging, also update `talos.version` in the matching tuppr `TalosUpgrade` (system-upgrade/tuppr/upgrades/talos.yaml) -- it's kept in sync by hand, not auto-updated by this PR.",
+        ":warning: **Manual Review Required**: Confirm the new Talos version still supports the pinned Kubernetes version in the same topf.yaml before merging -- check the [Talos support matrix](https://www.talos.dev/latest/introduction/support-matrix/). After merging, also update `talos.version` in the matching tuppr `TalosUpgrade` (system-upgrade/tuppr/upgrades/talos.yaml) -- it's kept in sync by hand, not auto-updated by this PR.",
+      ],
+    },
+    {
+      // topf is pre-1.0 and applies machine config straight to the nodes, so a
+      // bump is reviewed by hand (render + `apply --dry-run` must stay clean).
+      description: "Never Automerge topf",
+      matchPackageNames: ["postfinance/topf"],
+      automerge: false,
+      ignoreTests: false,
+      prBodyNotes: [
+        ":warning: **Manual Review Required**: topf is pre-1.0. Run `task talos:generate-clusterconfig` and `task talos:apply-clusterconfig DRY_RUN=true CLUSTER_NAME=mini` and confirm every node reports \"no changes to apply\" before merging.",
       ],
     },
     {

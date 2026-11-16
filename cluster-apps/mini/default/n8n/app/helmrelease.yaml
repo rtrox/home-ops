@@ -1,0 +1,147 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: n8n
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: n8n
+  interval: 30m
+  values:
+    controllers:
+      n8n:
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          app:
+            image:
+              repository: ghcr.io/n8n-io/n8n
+              tag: 2.48.0@sha256:416c29f75a0f9ac65b4339761a372af48f4a7e948de9df0d837b080d2b9d47a8
+            env:
+              TZ: America/Los_Angeles
+              GENERIC_TIMEZONE: America/Los_Angeles
+              N8N_PORT: "5678"
+              N8N_HOST: n8n.rtrox.io
+              N8N_PROTOCOL: https
+              # envoy-internal terminates TLS and sits one proxy hop in front.
+              N8N_PROXY_HOPS: "1"
+              # Webhook and OAuth-callback URLs n8n shows in the UI and hands
+              # to third parties.
+              N8N_WEBHOOK_URL: https://n8n.rtrox.io/
+              N8N_EDITOR_BASE_URL: https://n8n.rtrox.io
+              DB_TYPE: postgresdb
+              DB_POSTGRESDB_HOST: postgres17-rw.database.svc.cluster.local
+              DB_POSTGRESDB_PORT: "5432"
+              DB_POSTGRESDB_DATABASE: n8n
+              DB_POSTGRESDB_USER: n8n
+              # Keep execution history from growing without bound (hours).
+              EXECUTIONS_DATA_PRUNE: "true"
+              EXECUTIONS_DATA_MAX_AGE: "336"
+              # Opt out of anonymous telemetry and the update-check ping.
+              N8N_DIAGNOSTICS_ENABLED: "false"
+              N8N_VERSION_NOTIFICATIONS_ENABLED: "false"
+              # fsGroup owns the volume; n8n's 0600 check fights with it.
+              N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: "false"
+              N8N_LOG_LEVEL: info
+              # Code nodes run in a separate runner container (sidecar below)
+              # instead of inside the main process. The broker listens on
+              # localhost, which the sidecar reaches over the pod network.
+              N8N_RUNNERS_MODE: external
+              # What the internal default already was; set explicitly so the
+              # upcoming default change doesn't silently shorten it.
+              N8N_RUNNERS_TASK_TIMEOUT: "300"
+            envFrom:
+              - secretRef:
+                  name: n8n-secret
+              - secretRef:
+                  name: n8n-runners-secret
+            probes:
+              liveness: &probe
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /healthz
+                    port: &port 5678
+                  initialDelaySeconds: 20
+                  periodSeconds: 10
+                  timeoutSeconds: 2
+                  failureThreshold: 6
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /healthz/readiness
+                    port: *port
+                  periodSeconds: 10
+                  timeoutSeconds: 2
+                  failureThreshold: 6
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /healthz
+                    port: *port
+                  failureThreshold: 30
+                  periodSeconds: 5
+            resources:
+              requests:
+                cpu: 50m
+                memory: 256Mi
+              limits:
+                memory: 2Gi
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: false
+              capabilities: { drop: ["ALL"] }
+          # JavaScript and Python task runners. The image version must match
+          # the n8n image above, so Renovate groups the two.
+          runner:
+            image:
+              repository: ghcr.io/n8n-io/runners
+              tag: 2.48.0@sha256:e5b1af111c98e59c37af498672fbbd88e93599d17e9d5933c27aa836ef0bc168
+            env:
+              N8N_RUNNERS_TASK_BROKER_URI: http://127.0.0.1:5679
+            envFrom:
+              - secretRef:
+                  name: n8n-runners-secret
+            resources:
+              requests:
+                cpu: 50m
+                memory: 128Mi
+              limits:
+                memory: 1Gi
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: false
+              capabilities: { drop: ["ALL"] }
+    defaultPodOptions:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+    service:
+      app:
+        controller: n8n
+        ports:
+          http:
+            port: *port
+    route:
+      app:
+        hostnames:
+          - n8n.rtrox.io
+        parentRefs:
+          - name: envoy-internal
+            namespace: network
+            sectionName: https
+    persistence:
+      data:
+        existingClaim: n8n
+        globalMounts:
+          - path: /home/node/.n8n

@@ -38,6 +38,9 @@ spec:
   dependsOn:
     - name: cloudnative-pg
       namespace: database
+    # Provides the ObjectStore CRD (barmancloud.cnpg.io) used by objectstore.yaml.
+    - name: cloudnative-pg-barman-plugin
+      namespace: database
     - name: rook-ceph-cluster
       namespace: rook-ceph
   interval: 1h

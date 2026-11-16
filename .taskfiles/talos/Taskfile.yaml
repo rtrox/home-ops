@@ -2,6 +2,16 @@
 # yaml-language-server: $schema=https://taskfile.dev/schema.json
 version: "3"
 
+# Talos machine config is managed with topf (https://github.com/postfinance/topf).
+# Layout under clusters/<cluster>/talos/: topf.yaml, schematic*.yaml,
+# secrets.sops.yaml, and patches in all/, control-plane/, worker/, node/<host>/.
+# topf applies configs directly; Talos *upgrades* stay with tuppr
+# (system-upgrade/tuppr), `upgrade-node` below is a manual break-glass only.
+
+vars:
+  TOPF_CONFIG: "{{.TALOS_DIR}}/topf.yaml"
+  CLUSTERCONFIG_DIR: "{{.TALOS_DIR}}/clusterconfig"
+
 tasks:
   default-requires:
     internal: true
@@ -12,101 +22,71 @@ tasks:
           enum: [bitty, mini]
 
   generate-clusterconfig:
-    desc: Generate clusterconfig for Talos
+    desc: Render node machine configs and the talosconfig (output is gitignored)
     requires: *default-requires
     preconditions:
-      - which talhelper
-      - test -f {{.TALOS_DIR}}/talsecret.sops.yaml
-      - test -f {{.TALOS_DIR}}/talconfig.yaml
-      - test -f {{.TALOS_DIR}}/talenv.sops.yaml
+      - which topf sops
+      - test -f {{.TOPF_CONFIG}}
+      - test -f {{.TALOS_DIR}}/secrets.sops.yaml
     cmds:
-      - talhelper genconfig
-        --env-file {{.TALOS_DIR}}/talenv.sops.yaml
-        --secret-file {{.TALOS_DIR}}/talsecret.sops.yaml
-        --config-file {{.TALOS_DIR}}/talconfig.yaml
-        --out-dir {{.TALOS_DIR}}/clusterconfig
+      - mkdir -p {{.CLUSTERCONFIG_DIR}}
+      - topf --topfconfig {{.TOPF_CONFIG}} render --output {{.CLUSTERCONFIG_DIR}}
+      - topf --topfconfig {{.TOPF_CONFIG}} talosconfig > {{.TALOSCONFIG}}
+
+  validate-clusterconfig:
+    desc: Render and validate every node config with talosctl (run before applying)
+    requires: *default-requires
+    preconditions:
+      - which topf sops talosctl
+    cmds:
+      - task: generate-clusterconfig
+      - |-
+        for f in {{.CLUSTERCONFIG_DIR}}/node*.yaml; do
+          talosctl validate --mode metal --config "$f" || exit 1
+        done
 
   apply-clusterconfig:
-    desc: Apply clusterconfig for a Talos cluster
-    vars:
-      CLUSTERCONFIG_FILES:
-        sh: ls {{.TALOS_DIR}}/clusterconfig/*.yaml
+    desc: Apply topf config to all nodes (DRY_RUN=true to preview; exits 2 if changes)
+    requires: *default-requires
     preconditions:
-      - which ls yq
-      - test -f "{{.TALOSCONFIG}}"
-      - test -f "{{.TALOS_DIR}}/talconfig.yaml"
-    requires:
-      vars:
-        - *requires-cluster-name
+      - which topf sops
+      - test -f {{.TOPF_CONFIG}}
     cmds:
-      - for:
-          var: CLUSTERCONFIG_FILES
-        task: _apply-machineconfig
-        vars:
-          FILENAME: "{{.ITEM}}"
-          NODE_NUM: '{{ regexFind "node[0-9]+" (base .ITEM) }}'
-          TARGET:
-            sh: |-
-              yq -r '.nodes[] | select(.hostname | test("^{{ regexFind "node[0-9]+" (base .ITEM) }}")) | .ipAddress' {{.TALOS_DIR}}/talconfig.yaml
-          DRY_RUN: "{{ .DRY_RUN }}"
-          INSECURE: "{{ .INSECURE }}"
+      - topf --topfconfig {{.TOPF_CONFIG}} apply
+        {{ if eq "true" .DRY_RUN }}--dry-run{{ end }}
 
   apply-node:
-    desc: Apply Talos config to a node [NODE=required]
-    preconditions:
-      - which talosctl
-      - test -f "{{.TALOSCONFIG}}"
-      - talosctl --nodes {{.NODE}} get machineconfig
+    desc: Apply topf config to a single node [NODE=required, e.g. node01]
     requires:
       vars:
         - *requires-cluster-name
         - NODE
-    vars:
-      FILE:
-        sh: ls {{.TALOS_DIR}}/clusterconfig/{{.CLUSTER_NAME}}-{{.NODE}}*.yaml
+    preconditions:
+      - which topf sops talosctl
+      - test -f {{.TOPF_CONFIG}}
+      - test -f "{{.TALOSCONFIG}}"
     cmds:
-      - task: _apply-machineconfig
-        vars:
-          FILENAME: "{{.FILE}}"
-          TARGET: "{{.NODE}}"
-      - talosctl --nodes {{.NODE}} health
+      - topf --topfconfig {{.TOPF_CONFIG}} --nodes-filter '^{{.NODE}}(\.|$)' apply
+        {{ if eq "true" .DRY_RUN }}--dry-run{{ end }}
+      - talosctl --talosconfig {{.TALOSCONFIG}} --nodes {{.NODE}} health
 
   upgrade-node:
-    desc: Upgrade Talos on a single node [NODE=required]
-    preconditions:
-      - which talosctl
-      - which yq
-      - test -f "{{.TALOSCONFIG}}"
-      - talosctl --nodes {{.NODE}} get machineconfig
+    desc: Break-glass Talos upgrade of one node [NODE=required]; normally tuppr does this
     requires:
       vars:
         - *requires-cluster-name
         - NODE
+    preconditions:
+      - which topf sops talosctl yq
+      - test -f "{{.TALOSCONFIG}}"
+      - talosctl --talosconfig {{.TALOSCONFIG}} --nodes {{.NODE}} get machineconfig
     vars:
       FILE:
-        sh: ls {{.TALOS_DIR}}/clusterconfig/{{.CLUSTER_NAME}}-{{.NODE}}*.yaml
+        sh: ls {{.CLUSTERCONFIG_DIR}}/{{.NODE}}.*.yaml
+      # Talos < 1.14 keeps the installer image in .machine.install.image,
+      # Talos >= 1.14 in the UnattendedInstallConfig document.
       TALOS_IMAGE:
-        sh: yq 'select(.machine.install.image != null) | .machine.install.image' < "{{.FILE}}" | head -1
+        sh: yq eval-all 'select(.machine.install.image != null).machine.install.image, select(.kind == "UnattendedInstallConfig").installer.image' "{{.FILE}}" | grep -v '^null$' | head -1
     cmds:
-      - talosctl --nodes {{.NODE}} upgrade --image="{{.TALOS_IMAGE}}" --timeout=10m {{ if eq "true" .FORCE }}--force{{ end }}
-      - talosctl --nodes {{.NODE}} health
-
-  _apply-machineconfig:
-    internal: true
-    desc: Apply a single Talos machineConfig to a Talos node
-    preconditions:
-      - which talosctl
-      - test -f "{{.FILENAME}}"
-    requires:
-      vars:
-        - TARGET
-        - FILENAME
-    vars:
-      MODE: '{{.MODE | default "auto"}}'
-    cmds:
-      - talosctl apply-config
-        --nodes "{{.TARGET}}"
-        --file "{{.FILENAME}}"
-        --mode="{{.MODE}}"
-        {{ if eq "true" .INSECURE }}--insecure{{ end }}
-        {{ if eq "true" .DRY_RUN }}--dry-run{{ end }}
+      - talosctl --talosconfig {{.TALOSCONFIG}} --nodes {{.NODE}} upgrade --image="{{.TALOS_IMAGE}}" --timeout=10m {{ if eq "true" .FORCE }}--force{{ end }}
+      - talosctl --talosconfig {{.TALOSCONFIG}} --nodes {{.NODE}} health

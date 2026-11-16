@@ -1,0 +1,6 @@
+# Enable MutatingAdmissionPolicy
+apiVersion: v1alpha1
+kind: KubeAPIServerConfig
+extraArgs:
+  runtime-config: admissionregistration.k8s.io/v1alpha1=true
+  feature-gates: MutatingAdmissionPolicy=true

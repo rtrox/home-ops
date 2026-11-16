@@ -1,5 +1,5 @@
 ---
-# Keep in sync with clusters/mini/talos/talconfig.yaml's talosVersion.
+# Keep in sync with clusters/mini/talos/topf.yaml's talosVersion.
 apiVersion: tuppr.home-operations.com/v1alpha1
 kind: TalosUpgrade
 metadata:

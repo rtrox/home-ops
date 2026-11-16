@@ -8,7 +8,9 @@ spec:
   interval: 30m
   url: https://github.com/kubernetes-sigs/gateway-api
   ref:
-    # renovate: depName=kubernetes-sigs/gateway-api datasource=github-releases
+    # Tracked by Renovate's flux manager (gateway-api-crd). Don't add an inline
+    # Renovate depName annotation here: the shared regex manager would extract
+    # this same line a second time and open a duplicate PR.
     tag: v1.6.3
   ignore: |
     # exclude
