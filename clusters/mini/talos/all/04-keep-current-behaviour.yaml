@@ -1,0 +1,20 @@
+# Talos 1.14's base config for *new* clusters turns these on. This cluster was
+# upgraded from 1.13, where none of them were active, so pin today's behaviour
+# and decide on each deliberately later.
+
+# Run the container plane inside the sandbox namespace (off today).
+apiVersion: v1alpha1
+kind: SecurityProfileConfig
+$patch: delete
+---
+# Mount EPHEMERAL (/var) with nosuid,nodev (today: neither).
+apiVersion: v1alpha1
+kind: VolumeConfig
+name: EPHEMERAL
+mount:
+  secure: false
+---
+# Weekly fstrim of mounted filesystems (no trim today).
+apiVersion: v1alpha1
+kind: FilesystemTrimConfig
+$patch: delete
