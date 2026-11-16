@@ -13,8 +13,9 @@ conservative by design: when unsure, hold the PR and say why.
 
 The prompt says which mode to run. Default to **dry-run** if it does not.
 
-- **dry-run**: review and classify every PR, write the report, change nothing.
-  Do not merge, close, comment on, label, push, or revert anything.
+- **dry-run**: review and classify every PR, label and comment on it (see
+  "Labels and comments"), write the report. Do not merge, close, push, or revert
+  anything.
 - **merge**: as dry-run, then merge Tier-0 PRs one at a time with a soak, and
   roll back with a revert PR if the soak fails. Tier 1 is report-only unless the
   prompt says `TIER1=merge`.
@@ -42,7 +43,10 @@ The prompt says which mode to run. Default to **dry-run** if it does not.
 - Commits and PR bodies carry the attribution lines from the session reminder.
 - One merge at a time. At most **3 merges per run**. Stop on the first failed
   soak; do not merge anything else that run.
-- Never merge a draft PR, a PR labelled `hold`, or any PR that is Tier 2.
+- Never merge a draft PR, a PR labelled `hold` or `steward/hold`, or any PR that
+  is Tier 2.
+- Touch PRs only through labels and comments. Never edit a PR's title, body, base
+  or branch, and never create labels (they already exist).
 - Never merge when preflight fails.
 
 ## Preflight (abort the whole run if any fails)
@@ -114,6 +118,37 @@ Do not trust them. Verify instead:
 Output for each PR: number, title, tier, decision (merge / hold / report), the
 two or three facts that decided it, and what would change the decision.
 
+## Labels and comments (every mode, every open non-draft PR you classify)
+
+Each PR gets exactly one tier label and one decision label from this set; remove
+the stale one when the answer changes (`gh pr edit <n> --add-label X`, then
+`gh pr edit <n> --remove-label Y`, one command each):
+
+- Tier: `steward/tier-0`, `steward/tier-1`, `steward/tier-2`.
+- Decision: `steward/merge` (eligible; in dry-run this means "would merge"),
+  `steward/hold` (waiting on a dated hold, CI, or a fix), `steward/review` (needs a
+  human decision), `steward/rolled-back` (merged, then reverted).
+
+Comment with `gh pr comment <n> --body "..."` (never `--body-file`). Rules:
+
+- First line is the marker `<!-- upgrade-steward -->`; last line is
+  `<!-- tier=<0|1|2> action=<merge|hold|review|merged|rolled-back> mode=<dry-run|merge> -->`.
+- Before commenting, read the PR's existing comments (`gh pr view <n> --comments`
+  or `--json comments`). If the latest steward comment already has the same tier,
+  action and mode, and nothing material changed (CI, new commits, hold date), do
+  not comment again. Never edit or delete old comments; add a new one.
+- Say what you decided and why, in plain prose: the tier and the rule that set it,
+  the two or three facts that decided it (CI result, what really changes, release
+  note flags, config touched), what would change the decision, and what happens
+  next (in dry-run: "dry-run, no merge was attempted"). When merging, post a
+  comment at merge time and another with the soak result (pass or the evidence for
+  a failure). When rolling back, link the revert PR.
+- Sign as "Upgrade steward (automated, run by Claude on the owner's behalf)" and
+  give the time in Pacific. Comments are posted through the owner's GitHub
+  account, so keep them factual and short (under ~15 lines).
+- Public repo: no tracker names, no secrets, no hostnames beyond what the PR
+  already shows, no internal IPs.
+
 ## Merge and soak (merge mode only, Tier 0, one at a time)
 
 1. Re-check baseline is still clean; re-check CI and `mergeStateStatus`.
@@ -139,7 +174,8 @@ two or three facts that decided it, and what would change the decision.
 2. Push, open a PR titled `revert: <original title>`, wait for CI, merge it.
 3. Wait for the Flux object to return to the previous revision and Ready; confirm
    pods healthy and the baseline alert set restored.
-4. Comment on the original PR with the evidence, and record the package/version in
+4. Replace its decision label with `steward/rolled-back`, comment on the original
+   PR with the evidence and the revert PR link, and record the package/version in
    `~/.local/state/upgrade-steward/held.json` so it is not retried automatically.
 5. If the rollback itself does not recover the cluster, stop, change nothing else,
    and put it at the top of the report as URGENT with the exact state.
@@ -156,4 +192,5 @@ Tier 2. If a failed Tier-0 PR turns out to have done either, say so loudly.
 - Final output is the report, in this order: URGENT items; merged (with soak
   result); rolled back; held (Tier 2) with the reason and what to check; Tier 1
   report-only candidates; skipped PRs. Keep it short and specific. Times in Pacific.
-- In dry-run, also state which PRs **would** have been merged.
+- In dry-run, also state which PRs **would** have been merged, and list the
+  labels and comments you added (PR number, label, comment posted or skipped).
