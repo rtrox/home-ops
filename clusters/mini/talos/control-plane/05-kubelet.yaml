@@ -1,9 +1,6 @@
-machine:
-  kubelet:
-    extraArgs:
-      rotate-server-certificates: "true"
-    extraConfig:
-      maxPods: 150
-    nodeIP:
-      validSubnets:
-        - 172.16.0.0/12
+apiVersion: v1alpha1
+kind: KubeletConfig
+extraArgs:
+  rotate-server-certificates: "true"
+config:
+  maxPods: 150

@@ -110,6 +110,14 @@ task talos:generate-clusterconfig CLUSTER_NAME=mini
 - `schematic*.yaml` - Image Factory schematics (per node via `schematicId: "@file"`)
 - `all/`, `control-plane/`, `worker/`, `node/<host>/` - Strategic-merge patches, applied in that order (`.yaml.tpl` files are Go templates)
 
+### `talos:validate-clusterconfig`
+
+Render every node config and run `talosctl validate --mode metal` on each. Run this before applying, and in particular after any Talos version bump: Talos 1.14 rejects configs that set the same thing in both a legacy v1alpha1 field and its new document.
+
+```bash
+task talos:validate-clusterconfig CLUSTER_NAME=mini
+```
+
 ### `talos:apply-clusterconfig`
 
 Apply machine configurations to all nodes in a cluster.

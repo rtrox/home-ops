@@ -1,0 +1,16 @@
+apiVersion: v1alpha1
+kind: KubeNodeConfig
+nodeIP:
+  validSubnets:
+    - 172.16.0.0/12
+labels:
+  topology.kubernetes.io/region: mini
+  topology.kubernetes.io/zone: "1"
+  # Talos adds this to control planes by default; every node here is a control
+  # plane running workloads.
+  node.kubernetes.io/exclude-from-external-load-balancers:
+    $patch: delete
+taints:
+  # allowSchedulingOnControlPlanes
+  node-role.kubernetes.io/control-plane:
+    $patch: delete

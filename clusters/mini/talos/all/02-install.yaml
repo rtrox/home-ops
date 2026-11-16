@@ -1,5 +1,6 @@
-machine:
-  install:
-    diskSelector:
-      size: < 3TB
-    wipe: false
+apiVersion: v1alpha1
+kind: UnattendedInstallConfig
+provisioning:
+  diskSelector:
+    match: disk.size < 3u * TB
+  wipe: false
