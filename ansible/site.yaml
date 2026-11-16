@@ -17,6 +17,11 @@
     - role: geerlingguy.docker
       vars:
         docker_users: "{{ docker_users }}"
+        docker_daemon_options:
+          log-driver: json-file
+          log-opts:
+            max-size: "10m"
+            max-file: "3"
     - role: raspi-monitor
     - role: node-exporter
 

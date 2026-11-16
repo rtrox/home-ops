@@ -1,0 +1,36 @@
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2beta2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  # Named after the chart so the rendered resources keep their upstream names
+  # (deploy/plugin-barman-cloud, plugin-barman-cloud-selfsigned-issuer), which
+  # is what the plugin docs and troubleshooting commands refer to.
+  name: plugin-barman-cloud
+spec:
+  interval: 30m
+  chartRef:
+    kind: OCIRepository
+    name: plugin-barman-cloud
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  uninstall:
+    keepHistory: false
+  values:
+    crds:
+      create: true
+    # The chart sets no resources by default. This only covers the plugin
+    # Deployment; the per-instance sidecar it injects into the postgres17 pods
+    # gets its resources from the ObjectStore's instanceSidecarConfiguration
+    # (see ../cloudnative-pg/cluster/objectstore.yaml).
+    resources:
+      requests:
+        cpu: 10m
+        memory: 64Mi
+      limits:
+        memory: 256Mi

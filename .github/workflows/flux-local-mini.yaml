@@ -7,10 +7,10 @@ on:
 
 concurrency:
   # NOTE: github.workflow resolves to the CALLING workflow's name inside a
-  # workflow_call, not this file's own `name:` -- both flux-local-*
-  # workflows share the same caller (on-pr.yaml), so using github.workflow
-  # here collides them into one concurrency group and they cancel each
-  # other out. Hardcode a unique key per cluster instead.
+  # workflow_call, not this file's own `name:` -- any other reusable workflow
+  # called from on-pr.yaml that used github.workflow would land in the same
+  # concurrency group and they'd cancel each other out. Hardcode a unique key
+  # instead.
   group: flux-local-mini-${{ github.event.number || github.ref }}
   cancel-in-progress: true
 

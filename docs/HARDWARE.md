@@ -1,6 +1,6 @@
 # Hardware Specifications
 
-> Detailed hardware specifications for Mini and Bitty clusters
+> Detailed hardware specifications for the Mini cluster and the previous Bitty cluster
 
 ## Mini Cluster
 
@@ -24,7 +24,9 @@
 - Storage Class: `ceph-block` (default)
 - Replication: 3 replicas
 
-## Bitty Cluster
+## Previous Bitty Cluster (Decommissioned)
+
+> These facts describe the previous Bitty, kept as reference for a planned rebuild. Its config is archived at `.archive/bitty/`, and its install-disk selectors, Talos extensions and machine patches are in `.archive/bitty/clusters/talos/talconfig.yaml`.
 
 ### Intel NUC Nodes (3x)
 
@@ -46,7 +48,7 @@
 - Mini: 172.19.32.0/24
   - 172.19.32.1: envoy-internal gateway
   - 172.19.32.2: envoy-external gateway
-- Bitty: 172.19.12.0/24
+- Previous Bitty (decommissioned): 172.19.12.0/24
 
 **Pod Network:**
 - CIDR: 10.244.0.0/16

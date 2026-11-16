@@ -7,6 +7,6 @@ spec:
   scheme: HTTP
   staticConfigs:
     - targets:
-        - avahi.rtrox.io:9100
+        # avahi.rtrox.io:9100 is offline until about May 2027; add it back then.
         - ns1.rtrox.io:9100
         - ns2.rtrox.io:9100

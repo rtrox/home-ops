@@ -23,7 +23,7 @@
       matchDatasources: ["docker"],
       automerge: true,
       matchUpdateTypes: ["digest"],
-      matchPackagePrefixes: ["ghcr.io/onedr0p", "ghcr.io/bjw-s"],
+      matchPackageNames: ["ghcr.io/onedr0p{/,}**", "ghcr.io/bjw-s{/,}**"],
       ignoreTests: true,
     },
     {
@@ -41,12 +41,67 @@
       ignoreTests: false,
     },
     {
+      // The chart comes from an OCI registry, so Renovate sees it as a docker
+      // package, not a helm one. Match every update type: unlike the helm
+      // datasource, docker can also produce digest/pin updates.
       description: "Never Automerge Cilium",
-      matchDatasources: ["helm"],
+      matchDatasources: ["docker"],
       automerge: false,
-      matchUpdateTypes: ["minor", "patch"],
-      matchPackageNames: ["cilium"],
+      matchPackageNames: ["quay.io/cilium/charts/cilium"],
       ignoreTests: false,
+    },
+    {
+      // Temporary hold: Gateway API 1.7 stays held until Envoy Gateway and
+      // Cilium support it. Drop this rule once they do. Has to stay after
+      // "Auto merge all patches" to win. "gateway-api-crd" PRs are covered
+      // too: that's only the depName of the flux GitRepository, whose
+      // packageName is kubernetes-sigs/gateway-api.
+      description: "Hold Gateway API 1.7 until Envoy Gateway and Cilium support it",
+      automerge: false,
+      matchPackageNames: ["kubernetes-sigs/gateway-api"],
+    },
+    {
+      // CNPG 1.32.0 removes native (in-tree) Barman Cloud support. postgres17's
+      // backups have moved to the Barman Cloud plugin (cloudnative-pg-barman-plugin
+      // + the ObjectStore in cloudnative-pg/cluster); confirm that migration is
+      // live, and check the plugin's CNPG compatibility, before upgrading.
+      description: "Never Automerge CloudNativePG",
+      matchDatasources: ["docker"],
+      automerge: false,
+      matchPackageNames: [
+        "ghcr.io/cloudnative-pg/charts/cloudnative-pg",
+        "ghcr.io/cloudnative-pg/charts/plugin-barman-cloud",
+      ],
+    },
+    {
+      // n8n runs one-way database migrations on startup, and Renovate follows
+      // every image tag, including ones upstream still marks as prerelease
+      // (2.47.x and the 3.x line while its stable tag stays on 2.46). Review
+      // each bump, and check the release is not flagged as a prerelease.
+      description: "Never Automerge n8n",
+      matchDatasources: ["docker"],
+      automerge: false,
+      matchPackageNames: ["ghcr.io/n8n-io/n8n", "ghcr.io/n8n-io/runners"],
+      prBodyNotes: [
+        ":warning: **Manual Review Required**: n8n migrates its database on startup and the migration can't be rolled back. Check the [n8n releases](https://github.com/n8n-io/n8n/releases) and confirm this version is not flagged as a prerelease, and that the `stable` tag has reached it.",
+      ],
+    },
+    {
+      description: "Hold n8n major updates until approved on the Dependency Dashboard",
+      matchDatasources: ["docker"],
+      matchUpdateTypes: ["major"],
+      matchPackageNames: ["ghcr.io/n8n-io/n8n", "ghcr.io/n8n-io/runners"],
+      dependencyDashboardApproval: true,
+    },
+    {
+      // Gotenberg 9 removes the /forms/pdfengines routes and renames the pdfa
+      // form field; paperless-ngx (via gotenberg-client) still uses the old API,
+      // so 9.x would break Office/email ingestion. Stay on 8.x until paperless-ngx
+      // supports 9, then drop this rule.
+      description: "Hold Gotenberg on 8.x until paperless-ngx supports 9",
+      matchDatasources: ["docker"],
+      matchPackageNames: ["docker.io/gotenberg/gotenberg"],
+      allowedVersions: "<9",
     },
     {
       description: "Never Automerge qbittorrent",

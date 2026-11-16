@@ -77,10 +77,13 @@ redis:
   database: {{ blocky_redis_database }}
   required: false
 
+# Query logging disabled until a new postgres target replaces postgres.chongus.rtrox.io
+# queryLog:
+#   type: postgresql
+#   target: "{{ blocky_postgres_address }}"
+#   logRetentionDays: 30
 queryLog:
-  type: postgresql
-  target: "{{ blocky_postgres_address }}"
-  logRetentionDays: 30
+  type: none
 
 prometheus:
   enable: true

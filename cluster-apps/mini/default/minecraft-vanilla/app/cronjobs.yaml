@@ -11,12 +11,12 @@ spec:
         spec:
           containers:
             - name: rcon
-              image: ghcr.io/itzg/minecraft-server:java21@sha256:f519b2ba600a1c493f0d8fe496ac24195a45d717393ae28791d5345f6162f453
+              image: ghcr.io/itzg/minecraft-server:java21@sha256:ad1c2569ab3a4e6f032cb04e528455f8a2130196f82b2b37d5842abe032fda2e
               imagePullPolicy: IfNotPresent
               command:
                 - bash
                 - -c
-                - 'rcon-cli --host minecraft-vanilla-minecraft-rcon --port "25575" --password $$RCON_PASSWORD say "The server will restart in 30 minutes"'
+                - 'rcon-cli --host minecraft-vanilla-rcon --port "25575" --password $$RCON_PASSWORD say "The server will restart in 30 minutes"'
               envFrom:
                 - secretRef:
                     name: minecraft
@@ -34,12 +34,12 @@ spec:
         spec:
           containers:
             - name: rcon
-              image: ghcr.io/itzg/minecraft-server:java21@sha256:f519b2ba600a1c493f0d8fe496ac24195a45d717393ae28791d5345f6162f453
+              image: ghcr.io/itzg/minecraft-server:java21@sha256:ad1c2569ab3a4e6f032cb04e528455f8a2130196f82b2b37d5842abe032fda2e
               imagePullPolicy: IfNotPresent
               command:
                 - bash
                 - -c
-                - 'rcon-cli --host minecraft-vanilla-minecraft-rcon --port "25575" --password $$RCON_PASSWORD say "The server will restart in 15 minutes"'
+                - 'rcon-cli --host minecraft-vanilla-rcon --port "25575" --password $$RCON_PASSWORD say "The server will restart in 15 minutes"'
               envFrom:
                 - secretRef:
                     name: minecraft
@@ -57,12 +57,12 @@ spec:
         spec:
           containers:
             - name: rcon
-              image: ghcr.io/itzg/minecraft-server:java21@sha256:f519b2ba600a1c493f0d8fe496ac24195a45d717393ae28791d5345f6162f453
+              image: ghcr.io/itzg/minecraft-server:java21@sha256:ad1c2569ab3a4e6f032cb04e528455f8a2130196f82b2b37d5842abe032fda2e
               imagePullPolicy: IfNotPresent
               command:
                 - bash
                 - -c
-                - 'rcon-cli --host minecraft-vanilla-minecraft-rcon --port "25575" --password $$RCON_PASSWORD say "The server will restart in 5 minutes"'
+                - 'rcon-cli --host minecraft-vanilla-rcon --port "25575" --password $$RCON_PASSWORD say "The server will restart in 5 minutes"'
               envFrom:
                 - secretRef:
                     name: minecraft
@@ -80,12 +80,12 @@ spec:
         spec:
           containers:
             - name: rcon
-              image: ghcr.io/itzg/minecraft-server:java21@sha256:f519b2ba600a1c493f0d8fe496ac24195a45d717393ae28791d5345f6162f453
+              image: ghcr.io/itzg/minecraft-server:java21@sha256:ad1c2569ab3a4e6f032cb04e528455f8a2130196f82b2b37d5842abe032fda2e
               imagePullPolicy: IfNotPresent
               command:
                 - bash
                 - -c
-                - 'rcon-cli --host minecraft-vanilla-minecraft-rcon --port "25575" --password $$RCON_PASSWORD say "The server will restart in 1 minutes"'
+                - 'rcon-cli --host minecraft-vanilla-rcon --port "25575" --password $$RCON_PASSWORD say "The server will restart in 1 minutes"'
               envFrom:
                 - secretRef:
                     name: minecraft
@@ -103,12 +103,12 @@ spec:
         spec:
           containers:
             - name: rcon
-              image: ghcr.io/itzg/minecraft-server:java21@sha256:f519b2ba600a1c493f0d8fe496ac24195a45d717393ae28791d5345f6162f453
+              image: ghcr.io/itzg/minecraft-server:java21@sha256:ad1c2569ab3a4e6f032cb04e528455f8a2130196f82b2b37d5842abe032fda2e
               imagePullPolicy: IfNotPresent
               command:
                 - bash
                 - -c
-                - 'rcon-cli --host minecraft-vanilla-minecraft-rcon --port "25575" --password $$RCON_PASSWORD stop'
+                - 'rcon-cli --host minecraft-vanilla-rcon --port "25575" --password $$RCON_PASSWORD stop'
               envFrom:
                 - secretRef:
                     name: minecraft
