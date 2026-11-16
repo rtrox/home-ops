@@ -43,15 +43,19 @@
       "Bash(cat:*)",
       "Bash(ls:*)",
       "Bash(date:*)",
+      "Bash(TZ=America/Los_Angeles date:*)",
+      "Bash(gh run list:*)",
+      "Bash(gh run view:*)",
+      "Bash(gh label list:*)",
       "Bash(mktemp:*)",
       "Bash(sleep:*)",
       "Bash(curl -s:*)",
       "Bash(curl -sk:*)",
       "Bash(curl -sI:*)",
       "Bash(mkdir -p /home/rtrox/.local/state/upgrade-steward:*)",
-      "Edit(/home/rtrox/.local/state/upgrade-steward/**)",
-      "Read(/home/rtrox/.claude/projects/-home-rtrox-home-ops/memory/**)",
-      "Read(/home/rtrox/.local/state/upgrade-steward/**)"
+      "Edit(//home/rtrox/.local/state/upgrade-steward/**)",
+      "Read(//home/rtrox/.claude/projects/-home-rtrox-home-ops/memory/**)",
+      "Read(//home/rtrox/.local/state/upgrade-steward/**)"
     ],
     "deny": [
       "Bash(gh pr merge:*)",
