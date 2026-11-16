@@ -98,16 +98,17 @@ Tasks for managing Talos Linux nodes.
 
 ### `talos:generate-clusterconfig`
 
-Generate Talos machine configurations using talhelper.
+Render Talos machine configurations and the `talosconfig` using [topf](https://github.com/postfinance/topf). Output goes to `clusterconfig/` (gitignored).
 
 ```bash
 task talos:generate-clusterconfig CLUSTER_NAME=mini
 ```
 
-**Prerequisites:**
-- `talsecret.sops.yaml` - Encrypted cluster secrets
-- `talconfig.yaml` - Cluster configuration
-- `talenv.sops.yaml` - Environment variables
+**Inputs** (all in `clusters/<cluster>/talos/`):
+- `topf.yaml` - Cluster and node definitions (Talos/Kubernetes versions, schematics, secureboot)
+- `secrets.sops.yaml` - Encrypted cluster secrets (topf decrypts it with SOPS)
+- `schematic*.yaml` - Image Factory schematics (per node via `schematicId: "@file"`)
+- `all/`, `control-plane/`, `worker/`, `node/<host>/` - Strategic-merge patches, applied in that order (`.yaml.tpl` files are Go templates)
 
 ### `talos:apply-clusterconfig`
 
@@ -117,21 +118,19 @@ Apply machine configurations to all nodes in a cluster.
 # Normal apply
 task talos:apply-clusterconfig CLUSTER_NAME=mini
 
-# Dry run
+# Dry run (exits 2 if any node would change)
 task talos:apply-clusterconfig CLUSTER_NAME=mini DRY_RUN=true
-
-# Insecure mode (for initial bootstrap)
-task talos:apply-clusterconfig CLUSTER_NAME=mini INSECURE=true
 ```
+
+topf applies configs itself and detects nodes in maintenance mode, so no insecure flag is needed for a first bootstrap.
 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `DRY_RUN` | `false` | Preview changes without applying |
-| `INSECURE` | `false` | Skip TLS verification (for new nodes) |
 
 ### `talos:apply-node`
 
-Apply configuration to a single node.
+Apply configuration to a single node (supports `DRY_RUN=true`).
 
 ```bash
 task talos:apply-node CLUSTER_NAME=mini NODE=node01
@@ -139,7 +138,7 @@ task talos:apply-node CLUSTER_NAME=mini NODE=node01
 
 ### `talos:upgrade-node`
 
-Upgrade Talos on a single node.
+Break-glass Talos upgrade of one node. Normal upgrades are done by tuppr (`system-upgrade/tuppr`), not this task.
 
 ```bash
 task talos:upgrade-node CLUSTER_NAME=mini NODE=node01
@@ -261,8 +260,8 @@ Use this when a backup was interrupted and left a lock behind.
 # 1. Generate Talos configs
 task talos:generate-clusterconfig CLUSTER_NAME=mini
 
-# 2. Apply to nodes (insecure for first time)
-task talos:apply-clusterconfig CLUSTER_NAME=mini INSECURE=true
+# 2. Apply to nodes (topf handles maintenance mode itself)
+task talos:apply-clusterconfig CLUSTER_NAME=mini
 
 # 3. Bootstrap Talos
 task k8s-bootstrap:talos-cluster CLUSTER_NAME=mini

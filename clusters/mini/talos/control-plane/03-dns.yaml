@@ -1,0 +1,9 @@
+# Disable search domain everywhere, enable HostDNS
+machine:
+  network:
+    disableSearchDomain: true
+  features:
+    hostDNS:
+      enabled: true
+      resolveMemberNames: true
+      forwardKubeDNSToHost: false

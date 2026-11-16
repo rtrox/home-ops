@@ -1,5 +1,5 @@
 ---
-# Keep in sync with clusters/mini/talos/talconfig.yaml's kubernetesVersion --
+# Keep in sync with clusters/mini/talos/topf.yaml's kubernetesVersion --
 # this should always match what's actually running so there's nothing
 # spuriously pending. Bump both together, deliberately, checking Talos
 # compatibility first (see the "Never Automerge Kubernetes" Renovate rule).

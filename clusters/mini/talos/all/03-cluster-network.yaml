@@ -1,0 +1,16 @@
+machine:
+  certSANs:
+    - mini.rtrox.io
+    - 127.0.0.1 # KubePrism
+cluster:
+  apiServer:
+    certSANs:
+      - mini.rtrox.io
+      - 127.0.0.1 # KubePrism
+  network:
+    cni:
+      name: none
+    podSubnets:
+      - 10.244.0.0/16
+    serviceSubnets:
+      - 10.96.0.0/12

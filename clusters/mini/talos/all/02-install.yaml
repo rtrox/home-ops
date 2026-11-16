@@ -1,0 +1,5 @@
+machine:
+  install:
+    diskSelector:
+      size: < 3TB
+    wipe: false
