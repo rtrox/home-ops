@@ -33,6 +33,18 @@ tasks:
       - topf --topfconfig {{.TOPF_CONFIG}} render --output {{.CLUSTERCONFIG_DIR}}
       - topf --topfconfig {{.TOPF_CONFIG}} talosconfig > {{.TALOSCONFIG}}
 
+  validate-clusterconfig:
+    desc: Render and validate every node config with talosctl (run before applying)
+    requires: *default-requires
+    preconditions:
+      - which topf sops talosctl
+    cmds:
+      - task: generate-clusterconfig
+      - |-
+        for f in {{.CLUSTERCONFIG_DIR}}/node*.yaml; do
+          talosctl validate --mode metal --config "$f" || exit 1
+        done
+
   apply-clusterconfig:
     desc: Apply topf config to all nodes (DRY_RUN=true to preview; exits 2 if changes)
     requires: *default-requires
