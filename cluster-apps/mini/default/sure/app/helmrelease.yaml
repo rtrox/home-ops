@@ -105,6 +105,12 @@ spec:
             <<: *appContainer
             command: ["bash", "-lc"]
             args: "bundle exec sidekiq"
+            resources:
+              requests:
+                cpu: 100m
+                memory: 512Mi
+              limits:
+                memory: 2Gi
             probes:
               liveness:
                 enabled: false
