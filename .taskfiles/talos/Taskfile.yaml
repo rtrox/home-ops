@@ -46,7 +46,7 @@ tasks:
         done
 
   apply-clusterconfig:
-    desc: Apply topf config to all nodes (DRY_RUN=true to preview; exits 2 if changes)
+    desc: Apply topf config to all nodes (DRY_RUN=true to preview; exits 2 if changes; CONFIRM=false skips the prompt)
     requires: *default-requires
     preconditions:
       - which topf sops
@@ -54,9 +54,10 @@ tasks:
     cmds:
       - topf --topfconfig {{.TOPF_CONFIG}} apply
         {{ if eq "true" .DRY_RUN }}--dry-run{{ end }}
+        {{ if eq "false" .CONFIRM }}--confirm=false{{ end }}
 
   apply-node:
-    desc: Apply topf config to a single node [NODE=required, e.g. node01]
+    desc: Apply topf config to a single node [NODE=required, e.g. node01; CONFIRM=false skips the prompt]
     requires:
       vars:
         - *requires-cluster-name
@@ -68,6 +69,7 @@ tasks:
     cmds:
       - topf --topfconfig {{.TOPF_CONFIG}} --nodes-filter '^{{.NODE}}(\.|$)' apply
         {{ if eq "true" .DRY_RUN }}--dry-run{{ end }}
+        {{ if eq "false" .CONFIRM }}--confirm=false{{ end }}
       - talosctl --talosconfig {{.TALOSCONFIG}} --nodes {{.NODE}} health
 
   upgrade-node:
