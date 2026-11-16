@@ -4,6 +4,10 @@ cluster-cd/
 node_modules/
 .git/
 
+# SOPS files are machine-managed (sops rewrites their formatting)
+*.sops.yaml
+*.sops.yml
+
 # Ignore non-YAML files
 *.json
 *.json5
