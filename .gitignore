@@ -33,8 +33,10 @@ inventory.ini
 .flux-worktree/
 flux-diff.patch
 
-# Claude Code local files
-.claude/
+# Claude Code local files (the upgrade-steward skill and its settings are versioned)
+.claude/*
+!.claude/skills/
+!.claude/upgrade-steward/
 
 # Node modules (prettier)
 node_modules/

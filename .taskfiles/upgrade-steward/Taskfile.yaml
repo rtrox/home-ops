@@ -1,0 +1,19 @@
+---
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+version: "3"
+
+vars:
+  STEWARD_SETTINGS_DIR: "{{.ROOT_DIR}}/.claude/upgrade-steward"
+
+tasks:
+  dry-run:
+    desc: Review open update PRs and report what would be merged (changes nothing)
+    dir: "{{.ROOT_DIR}}"
+    cmds:
+      - mkdir -p "${HOME}/.local/state/upgrade-steward/runs"
+      - >-
+        claude -p "Run the upgrade-steward skill in dry-run mode."
+        --settings {{.STEWARD_SETTINGS_DIR}}/settings.dry-run.json
+        --permission-mode dontAsk
+        --max-budget-usd {{.BUDGET | default "5"}}
+        --no-session-persistence
