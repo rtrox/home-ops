@@ -135,6 +135,7 @@ topf applies configs itself and detects nodes in maintenance mode, so no insecur
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `DRY_RUN` | `false` | Preview changes without applying |
+| `CONFIRM` | (prompt) | Set `false` to skip topf's confirmation prompt. Required without a terminal: topf auto-declines and skips the apply, and the task still exits 0 |
 
 ### `talos:apply-node`
 
@@ -142,7 +143,10 @@ Apply configuration to a single node (supports `DRY_RUN=true`).
 
 ```bash
 task talos:apply-node CLUSTER_NAME=mini NODE=node01
+task talos:apply-node CLUSTER_NAME=mini NODE=node01 CONFIRM=false  # non-interactive
 ```
+
+Applying restarts that node's kube-apiserver static pod, and topf's dry-run reports the node as not ready until it is back. Do one node at a time and re-run the dry-run afterwards: every node must say "no changes to apply".
 
 ### `talos:upgrade-node`
 
