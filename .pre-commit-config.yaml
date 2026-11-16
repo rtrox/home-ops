@@ -26,6 +26,9 @@ repos:
     rev: v4.0.0-alpha.8
     hooks:
       - id: prettier
+        # A change touching only prettier-ignored YAML (Taskfiles, *.sops.yaml)
+        # would otherwise fail with "No files matching the given patterns".
+        args: [--no-error-on-unmatched-pattern]
         types:
           - yaml
         exclude: |
