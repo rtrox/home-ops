@@ -46,7 +46,8 @@ The prompt says which mode to run. Default to **dry-run** if it does not.
 - Never merge a draft PR, a PR labelled `hold` or `steward/hold`, or any PR that
   is Tier 2.
 - Touch PRs only through labels and comments. Never edit a PR's title, body, base
-  or branch, and never create labels (they already exist).
+  or branch, and never create labels (they already exist). The one extra action is
+  asking Renovate to rebase (see "Unblock a PR").
 - Never merge when preflight fails.
 
 ## Preflight (abort the whole run if any fails)
@@ -117,6 +118,16 @@ Do not trust them. Verify instead:
 
 Output for each PR: number, title, tier, decision (merge / hold / report), the
 two or three facts that decided it, and what would change the decision.
+
+## Unblock a PR (every mode, before deciding)
+
+If a Renovate PR's `mergeStateStatus` is BEHIND or DIRTY (out of date or
+conflicting with `main`), add the `rebase` label: `gh pr edit <n> --add-label rebase`.
+Renovate rebases the branch itself and removes the label. Never rebase, push to,
+or edit the branch yourself. Do it at most once per PR per run, hold the PR for
+this run (CI must rerun on the new commit), and mention it in the comment and the
+report. If the PR is still BEHIND/DIRTY on the next run, say so and set
+`steward/review`; the conflict needs a human.
 
 ## Labels and comments (every mode, every open non-draft PR you classify)
 
@@ -192,5 +203,6 @@ Tier 2. If a failed Tier-0 PR turns out to have done either, say so loudly.
 - Final output is the report, in this order: URGENT items; merged (with soak
   result); rolled back; held (Tier 2) with the reason and what to check; Tier 1
   report-only candidates; skipped PRs. Keep it short and specific. Times in Pacific.
+- Include any `rebase` requests you made.
 - In dry-run, also state which PRs **would** have been merged, and list the
   labels and comments you added (PR number, label, comment posted or skipped).

@@ -16,6 +16,7 @@
       "Bash(gh pr comment * --body *)",
       "Bash(gh pr edit * --add-label steward/*)",
       "Bash(gh pr edit * --remove-label steward/*)",
+      "Bash(gh pr edit * --add-label rebase)",
       "Bash(gh api repos/*)",
       "Bash(git fetch:*)",
       "Bash(git log:*)",
