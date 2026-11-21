@@ -31,3 +31,15 @@ jobs:
     secrets: inherit
     needs:
       - simple-checks
+
+  # Trial run of flate alongside flux-local, to compare them on real PRs before
+  # flux-local (deprecated upstream) is removed. Informational only: nothing
+  # here gates merging.
+  flate-mini:
+    uses: ./.github/workflows/flate-mini.yaml
+    permissions:
+      contents: read
+      pull-requests: write
+    secrets: inherit
+    needs:
+      - simple-checks
