@@ -54,6 +54,13 @@ jobs:
   renovate-config-validator:
     name: Validate Renovate Config
     runs-on: ubuntu-latest
+    # The official Renovate image ships the validator and its dependencies, so
+    # the check runs the same Renovate version as the real thing (pinned and
+    # bumped by Renovate itself) instead of whatever an action bundles.
+    container:
+      image: ghcr.io/renovatebot/renovate:44.257.9@sha256:d6b65ff3562dd499240b23d34ef806ec7e5fd2675e4236a027dfb36774f2aa75
+      # The image runs as an unprivileged user that cannot write the workspace.
+      options: --user root
     steps:
       - uses: actions/checkout@v7
 
@@ -65,12 +72,20 @@ jobs:
             renovate:
               - added|modified: ".github/renovate.json5"
               - added|modified: ".github/renovate/**.json5"
+              - added|modified: ".github/workflows/simple-checks.yaml"
 
+      # Validate every file, not just renovate.json5: the presets under
+      # .github/renovate/ are pulled in as remote presets from main, so a PR
+      # that edits one would otherwise be checked against main's old copy.
+      # --strict fails on warnings (e.g. "config migration necessary") too.
       - name: Validate Renovate Config
         if: ${{ steps.filter.outputs.renovate == 'true' }}
-        uses: rinchsan/renovate-config-validator@v0.2.1
-        with:
-          pattern: ".github/*.json5"
+        env:
+          GITHUB_COM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >-
+          renovate-config-validator --strict --no-global
+          .github/renovate.json5
+          .github/renovate/*.json5
 
   lint_success:
     needs:

@@ -85,6 +85,19 @@ spec:
 
     dashboards:
       default:
+        blocky:
+          # renovate: dashboardName="Blocky"
+          gnetId: 13768
+          revision: 8
+          datasource:
+            - name: DS_PROMETHEUS
+              value: Prometheus
+            - name: VAR_BLOCKY_URL
+              # The chart drops this into sed 's/.../VALUE/g', so the slashes
+              # must be escaped or the init container dies (sed: bad option in
+              # substitution expression) and the new pod never starts.
+              value: http:\/\/ns1.rtrox.io
+
         cert-manager:
           # renovate: dashboardName="Cert-manager-Kubernetes"
           gnetId: 20842

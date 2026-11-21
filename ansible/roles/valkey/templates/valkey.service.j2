@@ -1,0 +1,20 @@
+[Unit]
+Description=Valkey (shared Blocky cache)
+After=docker.service
+Requires=docker.service
+
+[Service]
+TimeoutStartSec=0
+ExecStartPre=-/usr/bin/docker rm --force valkey
+ExecStart=/usr/bin/docker run --name valkey \
+    --pull always \
+    --network host \
+    -v /etc/valkey/valkey.conf:/etc/valkey/valkey.conf:ro \
+    {{ valkey_image }} \
+    valkey-server /etc/valkey/valkey.conf
+ExecStop=/usr/bin/docker stop valkey
+Restart=always
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target

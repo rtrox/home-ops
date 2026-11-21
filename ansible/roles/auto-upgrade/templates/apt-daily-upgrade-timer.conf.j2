@@ -1,0 +1,7 @@
+# Managed by Ansible (roles/auto-upgrade). Run this host's upgrade in its own
+# fixed slot instead of the package default (06:00 + up to 60m random), so
+# hosts never upgrade at the same time.
+[Timer]
+OnCalendar=
+OnCalendar=*-*-* {{ auto_upgrade_time }}:00 UTC
+RandomizedDelaySec=0

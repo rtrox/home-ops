@@ -1,0 +1,76 @@
+---
+# Upgrade OS packages and reboot, one host at a time.
+#
+#   task ansible:upgrade HOST=ns2.rtrox.io
+#
+# serial: 1 + max_fail_percentage: 0 means a host that fails to upgrade, reboot,
+# or come back serving DNS stops the run before the next host is touched.
+- name: Upgrade packages and reboot
+  hosts: all
+  become: true
+  serial: 1
+  max_fail_percentage: 0
+
+  vars:
+    upgrade_dns_probe: cloudflare.com
+    upgrade_is_dns: "{{ inventory_hostname in groups.get('dns', []) }}"
+    upgrade_dns_peers: "{{ groups.get('dns', []) | difference([inventory_hostname]) }}"
+
+  tasks:
+    - name: Make sure the other DNS servers are answering before taking this one down
+      ansible.builtin.command: >-
+        dig +short +time=2 +tries=2 @{{ hostvars[item].ansible_host }} {{ upgrade_dns_probe }}
+      loop: "{{ upgrade_dns_peers }}"
+      register: upgrade_peer_dns
+      # Retry so one slow answer doesn't block the run; a peer that is really
+      # down still fails it.
+      until: upgrade_peer_dns.rc == 0 and upgrade_peer_dns.stdout | length > 0
+      retries: 3
+      delay: 5
+      changed_when: false
+      check_mode: false # read-only
+      when: upgrade_is_dns | bool
+
+    - name: Record kernel before upgrade
+      ansible.builtin.command: uname -r
+      register: upgrade_kernel_before
+      changed_when: false
+      check_mode: false # read-only
+
+    - name: Upgrade all packages
+      ansible.builtin.apt:
+        update_cache: true
+        upgrade: dist
+        autoremove: true
+      environment:
+        DEBIAN_FRONTEND: noninteractive
+      register: upgrade_apt
+
+    - name: Reboot
+      ansible.builtin.reboot:
+        reboot_timeout: 900
+        post_reboot_delay: 15
+      when: upgrade_apt is changed
+
+    - name: Wait for this host to answer DNS again
+      ansible.builtin.command: >-
+        dig +short +time=2 +tries=1 @127.0.0.1 {{ upgrade_dns_probe }}
+      register: upgrade_self_dns
+      until: upgrade_self_dns.rc == 0 and upgrade_self_dns.stdout | length > 0
+      retries: 30
+      delay: 10
+      changed_when: false
+      check_mode: false # read-only
+      when: upgrade_is_dns | bool
+
+    - name: Record kernel after upgrade
+      ansible.builtin.command: uname -r
+      register: upgrade_kernel_after
+      changed_when: false
+      check_mode: false # read-only
+
+    - name: Summary
+      ansible.builtin.debug:
+        msg: >-
+          kernel {{ upgrade_kernel_before.stdout }} -> {{ upgrade_kernel_after.stdout }},
+          packages {{ 'upgraded' if upgrade_apt is changed else 'already up to date' }}

@@ -1,1 +1,5 @@
+---
+# Off by default: set raspi_monitor_enabled: true per host in inventory.yaml
+# once that host has a working I2C OLED.
+raspi_monitor_enabled: false
 raspi_monitor_orangepi_overlay: rk3588-i2c1-m4

@@ -60,6 +60,9 @@ This repository implements a GitOps-managed Kubernetes infrastructure using Flux
 - **Load Balancer Pool**: 172.19.32.0/24 (Cilium LBIPAM, must stay distinct from any other cluster's pool since these networks are routable to each other)
   - 172.19.32.1: envoy-internal (default, local network)
   - 172.19.32.2: envoy-external (internet via a dedicated `cloudflared` Cloudflare Tunnel, external hostname `min-ext.rtrox.io`). Its tunnel ingress covers `rtrox.io`/`*.rtrox.io` -- this won't collide with another cluster's tunnel, since each hostname's DNS record (managed per-HTTPRoute by external-dns) only points at whichever cluster's tunnel is actually serving it.
+  - 172.19.32.3-.7: assigned automatically (lowest free address) to LoadBalancer Services that don't request one: scrypted-nvr, qbittorrent-gluetun, owncast-rtmp, minecraft-vanilla, graphite-exporter. Not pinned, so they can change if a Service is recreated
+  - 172.19.32.200: loki-lan, Loki's push endpoint for Alloy on the Ansible DNS hosts (source-restricted to ns1/ns2)
+  - **Picking a fixed address:** `kubectl get svc -A | grep LoadBalancer` shows what's actually taken; grepping the repo for `lbipam.cilium.io/ips` misses the automatic ones. Pin new addresses high in the pool (e.g. .200+) so they can't collide with automatic ones
 
 **Storage Classes:**
 

@@ -1,0 +1,4 @@
+# Managed by Ansible (roles/auto-upgrade). Skip the unattended upgrade unless
+# every other DNS server is answering (see /usr/local/sbin/dns-peer-check).
+[Service]
+ExecCondition=/usr/local/sbin/dns-peer-check
