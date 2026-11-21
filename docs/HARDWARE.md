@@ -1,6 +1,6 @@
 # Hardware Specifications
 
-> Detailed hardware specifications for the Mini cluster and the previous Bitty cluster
+> Detailed hardware specifications for the Mini cluster, the previous Bitty cluster, and the Ansible-managed single-board computers
 
 ## Mini Cluster
 
@@ -59,6 +59,19 @@
 - DNS: CoreDNS
 
 ## Supporting Infrastructure
+
+### Single-Board Computers (Ansible-managed)
+
+Not part of any Kubernetes cluster. Configured by the playbook in [`ansible/`](../ansible/README.md), and every service on them runs as a Docker container under systemd.
+
+| Host             | Address     | Board                   | OS                          | RAM  | Storage                 | Role                                           |
+| ---------------- | ----------- | ----------------------- | --------------------------- | ---- | ----------------------- | ---------------------------------------------- |
+| `ns1.rtrox.io`   | 172.30.99.1 | Raspberry Pi 5 Model B  | Debian 12 (bookworm), arm64 | 4GB  | 64GB SD card (boot + root) | DNS (Blocky), keepalived `MASTER`, Tailscale   |
+| `ns2.rtrox.io`   | 172.30.99.2 | Orange Pi 5 Pro         | Armbian (bookworm), arm64   | 8GB  | 500GB NVMe root (WD `WDS500G2B0C`), 32GB SD card for `/boot` | DNS (Blocky), keepalived `BACKUP`, Tailscale |
+| `avahi.rtrox.io` | 172.30.99.3 | Raspberry Pi (model not recorded) | -                 | -    | -                       | Avahi mDNS reflector across VLANs 200 and 300  |
+
+- ns1 and ns2 share a keepalived virtual IP for DNS, so either one can be down for maintenance as long as the other is healthy.
+- Every board runs `raspi-monitor`, which drives an I2C OLED status display. The role handles both Raspberry Pi and Orange Pi I2C setup.
 
 **NAS (nas.rtrox.io):**
 - Storage backend for shared media

@@ -1,5 +1,5 @@
 ---
-- include_tasks: restart_networking.yml
+- import_tasks: restart-networking.yaml
 - name: restart cloudflared
   systemd:
     name: cloudflared

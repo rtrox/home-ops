@@ -1,2 +1,3 @@
-inventory.yml
+inventory.yaml
 inventory.ini
+.ansible-vault-pass
