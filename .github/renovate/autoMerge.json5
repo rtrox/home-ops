@@ -6,7 +6,6 @@
   // instead, merged by Renovate itself through the API (not GitHub's native
   // auto-merge) as a squash, which GitHub signs.
   automergeType: "pr",
-  bogusOptionForTesting: true,
   platformAutomerge: false,
   automergeStrategy: "squash",
   packageRules: [
