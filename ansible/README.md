@@ -53,17 +53,15 @@ SSH access is by key only (`secure-ssh` disables password auth), and the `ansibl
 
 ## Running
 
+From the repo root, via [Task](../.taskfiles/README.md#ansible-tasks):
+
 ```sh
-cd ansible
-
-# Dry run one host, showing file diffs
-ansible-playbook -i inventory.yaml site.yaml -l <host> \
-  --vault-password-file .ansible-vault-pass --check --diff
-
-# Apply
-ansible-playbook -i inventory.yaml site.yaml -l <host> \
-  --vault-password-file .ansible-vault-pass
+task ansible:syntax                     # syntax-check the playbook
+task ansible:check HOST=ns2.rtrox.io    # dry run, showing file diffs
+task ansible:apply HOST=ns2.rtrox.io    # apply
 ```
+
+`HOST` can be a single host or a group (`dns`). Tasks always run with `--forks 1`, so a group is applied one host at a time. Extra flags go after `--`, e.g. `task ansible:check HOST=dns -- -v`.
 
 Apply one DNS server at a time. Restarting Docker (any `daemon.json` change does it) briefly takes DNS down on that host, and keepalived only covers for it if the other one is healthy.
 
@@ -106,4 +104,8 @@ All secrets files are Ansible Vault-encrypted, named `<thing>_secrets.yaml`:
 ansible-vault edit --vault-password-file .ansible-vault-pass blocky_secrets.yaml
 ```
 
-Never commit a decrypted secrets file. Check that the first line is `$ANSIBLE_VAULT;1.1;AES256` before staging.
+Never commit a decrypted secrets file. The `ansible-vault-encrypted` pre-commit hook (also run in CI) rejects any `*_secrets.yaml` without the `$ANSIBLE_VAULT;` header.
+
+## Linting
+
+`ansible/` is covered by the repo's yamllint config (`.github/lint/.yamllint.yaml`), except the vault-encrypted `*_secrets.yaml` files. It runs in pre-commit and CI.

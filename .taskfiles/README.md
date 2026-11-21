@@ -193,6 +193,37 @@ This will:
 
 ---
 
+## Ansible Tasks
+
+Tasks for the Ansible-managed single-board computers (see [ansible/README.md](../ansible/README.md)). They need the local-only `ansible/inventory.yaml` and `ansible/.ansible-vault-pass`, and always run with `--forks 1` so group targets are applied one host at a time.
+
+### `ansible:syntax`
+
+Syntax-check the playbook.
+
+```bash
+task ansible:syntax
+```
+
+### `ansible:check`
+
+Dry-run against a host or group, showing file diffs.
+
+```bash
+task ansible:check HOST=ns2.rtrox.io
+```
+
+### `ansible:apply`
+
+Apply to a host or group. Extra `ansible-playbook` flags go after `--`.
+
+```bash
+task ansible:apply HOST=ns2.rtrox.io
+task ansible:apply HOST=dns -- -v
+```
+
+---
+
 ## Volsync Tasks
 
 Tasks for interacting with Volsync backups using restic.

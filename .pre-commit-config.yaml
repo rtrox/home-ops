@@ -47,3 +47,13 @@ repos:
     rev: v2.1.1
     hooks:
       - id: forbid-secrets
+  - repo: local
+    hooks:
+      # Ansible secrets files must stay vault-encrypted. --negate fails any
+      # matching file that does NOT contain the vault header.
+      - id: ansible-vault-encrypted
+        name: Check Ansible secrets files are vault-encrypted
+        language: pygrep
+        entry: '^\$ANSIBLE_VAULT;'
+        args: [--negate]
+        files: ^ansible/.*_secrets\.yaml$

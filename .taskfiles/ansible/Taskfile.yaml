@@ -1,0 +1,46 @@
+---
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+version: "3"
+
+vars:
+  ANSIBLE_DIR: "{{.ROOT_DIR}}/ansible"
+  # --forks 1 applies to one host at a time, so a group target like `dns` never
+  # restarts Docker (and drops DNS) on both name servers at once.
+  ANSIBLE_ARGS: >-
+    -i inventory.yaml site.yaml
+    --vault-password-file .ansible-vault-pass
+    --forks 1
+
+tasks:
+  _preconditions:
+    internal: true
+    dir: "{{.ANSIBLE_DIR}}"
+    preconditions:
+      - sh: which ansible-playbook
+        msg: "ansible-playbook not found on PATH"
+      - sh: test -f inventory.yaml
+        msg: "ansible/inventory.yaml is missing (local-only, see ansible/README.md)"
+      - sh: test -f .ansible-vault-pass
+        msg: "ansible/.ansible-vault-pass is missing (local-only, see ansible/README.md)"
+
+  syntax:
+    desc: Syntax-check the Ansible playbook
+    dir: "{{.ANSIBLE_DIR}}"
+    deps: [_preconditions]
+    cmd: ansible-playbook {{.ANSIBLE_ARGS}} --syntax-check
+
+  check:
+    desc: Dry-run the playbook against a host or group, showing diffs (HOST=ns2.rtrox.io)
+    dir: "{{.ANSIBLE_DIR}}"
+    deps: [_preconditions]
+    requires:
+      vars: [HOST]
+    cmd: ansible-playbook {{.ANSIBLE_ARGS}} --limit {{.HOST}} --check --diff {{.CLI_ARGS}}
+
+  apply:
+    desc: Apply the playbook to a host or group (HOST=ns2.rtrox.io)
+    dir: "{{.ANSIBLE_DIR}}"
+    deps: [_preconditions]
+    requires:
+      vars: [HOST]
+    cmd: ansible-playbook {{.ANSIBLE_ARGS}} --limit {{.HOST}} {{.CLI_ARGS}}
