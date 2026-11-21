@@ -93,7 +93,10 @@ spec:
             - name: DS_PROMETHEUS
               value: Prometheus
             - name: VAR_BLOCKY_URL
-              value: http://ns1.rtrox.io
+              # The chart drops this into sed 's/.../VALUE/g', so the slashes
+              # must be escaped or the init container dies (sed: bad option in
+              # substitution expression) and the new pod never starts.
+              value: http:\/\/ns1.rtrox.io
 
         cert-manager:
           # renovate: dashboardName="Cert-manager-Kubernetes"
