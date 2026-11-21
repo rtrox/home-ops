@@ -14,3 +14,11 @@
 - name: Apt repositories and plugin cleanup
   import_tasks: apt.yaml
   tags: [apt]
+
+- name: Web UI tweaks
+  import_tasks: ui.yaml
+  tags: [ui]
+
+- name: Proxmox users and ACLs
+  import_tasks: pve-users.yaml
+  tags: [pve-users]
