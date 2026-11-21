@@ -5,3 +5,13 @@ keepalived_state: MASTER
 keepalived_priority: "{{ 100 if keepalived_state == 'MASTER' else 99 }}"
 keepalived_auth_password: ""
 keepalived_docker_image: "ghcr.io/rtrox/keepalived:latest"
+
+# Give up the VIP when the local DNS server stops accepting connections, so
+# the peer takes over. A TCP connect rather than a real lookup: it needs no
+# upstream, so an internet outage can't make both hosts drop the VIP at once.
+# (Wrong-but-up answers are caught by the blackbox DNS probe instead.)
+keepalived_track_dns: true
+keepalived_dns_check_port: 53
+keepalived_dns_check_interval: 2 # seconds between checks
+keepalived_dns_check_fall: 3 # consecutive failures before giving up the VIP
+keepalived_dns_check_rise: 2 # consecutive successes before taking it back

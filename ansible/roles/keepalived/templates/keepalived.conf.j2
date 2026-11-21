@@ -1,8 +1,26 @@
+# Managed by Ansible (roles/keepalived).
+global_defs {
+    script_user root
+    enable_script_security
+}
+
+{% if keepalived_track_dns | bool %}
+# FAULT (releasing the VIP) when the local DNS server isn't accepting
+# connections, e.g. Blocky crashed or is restarting.
+vrrp_script chk_dns {
+    script "/usr/bin/nc -z -w 2 127.0.0.1 {{ keepalived_dns_check_port }}"
+    interval {{ keepalived_dns_check_interval }}
+    timeout {{ keepalived_dns_check_interval + 1 }}
+    fall {{ keepalived_dns_check_fall }}
+    rise {{ keepalived_dns_check_rise }}
+}
+{% endif %}
+
 {% if keepalived_vip_address_v6 is defined %}
 vrrp_sync_group VI_1 {
     group {
         VI_1_4
-        VI_I_6
+        VI_1_6
     }
 }
 {% endif %}
@@ -17,13 +35,18 @@ vrrp_instance VI_1_4 {
         auth_type PASS
         auth_pass {{ keepalived_auth_password }}
     }
+{% if keepalived_track_dns | bool %}
+    track_script {
+        chk_dns
+    }
+{% endif %}
     virtual_ipaddress {
         {{ keepalived_vip_address }}
     }
 }
 
 {% if keepalived_vip_address_v6 is defined %}
-vrrp_instance VI_1_6{
+vrrp_instance VI_1_6 {
     state {{ keepalived_state }}
     interface {{ keepalived_interface }}
     virtual_router_id {{ keepalived_virtual_router_id }}
@@ -33,6 +56,11 @@ vrrp_instance VI_1_6{
         auth_type PASS
         auth_pass {{ keepalived_auth_password }}
     }
+{% if keepalived_track_dns | bool %}
+    track_script {
+        chk_dns
+    }
+{% endif %}
     virtual_ipaddress {
         {{ keepalived_vip_address_v6 }}
     }
