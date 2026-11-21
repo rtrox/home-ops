@@ -116,7 +116,7 @@ cluster-apps/mini/
 /home/rtrox/home-ops/
 ├── .archive/                   # Archived config, not deployed, ignored by Renovate
 │   └── bitty/                 # Decommissioned Bitty cluster (clusters/ + cluster-apps/)
-├── ansible/                    # Non-k8s machines (Raspberry Pis)
+├── ansible/                    # Non-k8s machines (Raspberry Pis), see ansible/README.md
 │   └── roles/
 ├── cluster-apps/               # Main FluxCD source (ACTIVE)
 │   ├── base/                   # Shared across clusters

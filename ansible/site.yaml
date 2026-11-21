@@ -1,6 +1,7 @@
 ---
 - name: Common configuration for all hosts
   hosts: all
+  become: true
 
   pre_tasks:
     - name: Set docker_users dynamically
@@ -69,9 +70,10 @@
 
 - name: Configure DNS Server hosts
   hosts: dns
+  become: true
 
   vars_files:
-    - blocky_secrets.yml
+    - blocky_secrets.yaml
     - keepalived_secrets.yaml
 
   tasks:
@@ -89,6 +91,7 @@
 
 - name: Configure  Avahi Hosts
   hosts: avahi
+  become: true
 
   tasks:
     - name: Configure Avahi-related services

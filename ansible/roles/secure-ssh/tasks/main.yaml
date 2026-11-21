@@ -23,7 +23,8 @@
     url: "https://github.com/{{ ssh_github_username }}.keys"
     return_content: yes
   register: github_keys
-  when: ssh_get_public_keys_from_github and ssh_github_username is defined
+  check_mode: false # read-only GET; needed so --check can diff authorized_keys
+  when: ssh_get_public_keys_from_github and ssh_github_username | length > 0
 
 - name: Ensure GitHub SSH keys are up-to-date in authorized_keys
   blockinfile:
@@ -34,12 +35,15 @@
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"
     mode: "0600"
-  when: github_keys is defined
+  when:
+    - github_keys is not skipped
+    - github_keys.content | trim | length > 0
 
 - name: Verify at least one SSH key is present
   shell: "grep -E -v '^(#|$)' /home/{{ ansible_user }}/.ssh/authorized_keys | wc -l"
   register: ssh_key_count
   changed_when: false
+  check_mode: false # read-only
 
 - name: Fail if no SSH keys were written
   fail:

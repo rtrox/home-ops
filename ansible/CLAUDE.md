@@ -1,0 +1,12 @@
+# Ansible: agent notes
+
+See [README.md](README.md) for hosts, roles and how to run things. This file holds the non-obvious rules.
+
+- **File naming**: every YAML file is `.yaml` (never `.yml`), and every vault file is `<thing>_secrets.yaml`. The one exception is files deployed to hosts whose name the app dictates (e.g. `/etc/blocky/config.yaml`).
+- **Never print secrets**: don't `cat`/`view` vault files or `.ansible-vault-pass`. To check encryption state, look only at the first line (`$ANSIBLE_VAULT;1.1;AES256`). Re-encrypt any decrypted file before committing.
+- **Local-only files**: `inventory.yaml` and `.ansible-vault-pass` are gitignored. `ansible_user` is set in the inventory and differs from the local username. The SSH username is treated as secret: never write it into committed files (README, CLAUDE.md, roles), only `inventory.yaml`. Hostnames and IPs are fine to document.
+- **Privilege**: plays use `become: true`, and the `ansible_user` has passwordless sudo. Paths under the user's home use `/home/{{ ansible_user }}`, so they stay correct under become.
+- **Check mode**: always dry-run with `--check --diff -l <host>` first. A read-only task whose result later tasks depend on (`uri` fetches, `shell` probes) needs `check_mode: false`, or it's skipped and the dependent task breaks. Test a skipped registered result with `is not skipped`, not `is defined` (a skipped result is still defined).
+- **Handlers**: shared handler files go in with `import_tasks` (static), not `include_tasks`. Handlers inside a dynamic include, including any `listen:` handlers, don't exist until the include itself runs, so their notifies fail.
+- **DNS hosts**: apply ns1 and ns2 one at a time. A Docker restart takes DNS down on that box.
+- **Validate**: `ansible-playbook -i inventory.yaml site.yaml --syntax-check --vault-password-file .ansible-vault-pass`.
