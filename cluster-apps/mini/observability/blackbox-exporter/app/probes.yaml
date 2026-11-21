@@ -15,3 +15,22 @@ spec:
         # backup.rtrox.io is in storage until about May 2027; add it back then.
         - ns1.rtrox.io
         - ns2.rtrox.io
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/monitoring.coreos.com/probe_v1.json
+# Ansible-managed DNS servers (ansible/README.md), probed by IP so the check
+# doesn't depend on DNS. 172.30.99.10 is the keepalived VIP clients use.
+# Failures alert through BlackboxProbeFailed (helmrelease.yaml).
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  name: dns-servers
+spec:
+  module: dns_udp
+  prober:
+    url: blackbox-exporter.observability.svc.cluster.local:9115
+  targets:
+    staticConfig:
+      static:
+        - 172.30.99.1:53 # ns1
+        - 172.30.99.2:53 # ns2
+        - 172.30.99.10:53 # VIP
