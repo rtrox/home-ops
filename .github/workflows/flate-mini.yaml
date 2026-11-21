@@ -1,0 +1,140 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+name: Flate
+
+# Trial of flate (https://github.com/home-operations/flate), the maintained
+# replacement for flux-local. Runs next to flux-local-mini.yaml so the two can
+# be compared on real PRs. Informational: both jobs set continue-on-error, so
+# a flate failure is visible in the job but does not turn the PR red or gate
+# merging. Once flate has proven itself, flux-local-mini.yaml is replaced by
+# this file and the jobs become the required checks.
+
+on:
+  workflow_call:
+
+concurrency:
+  # See the note in flux-local-mini.yaml: github.workflow inside a
+  # workflow_call resolves to the caller's name, so use a unique literal key.
+  group: flate-mini-${{ github.event.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+env:
+  # Match the cluster's Kubernetes version (flate defaults to the newest). Bump
+  # this together with kubernetes/kubernetes in clusters/mini/talos/topf.yaml.
+  FLATE_KUBE_VERSION: "1.36.4"
+  FLUX_PATH: clusters/mini/flux/cluster
+
+jobs:
+  filter-changes:
+    name: Filter changes
+    runs-on: ubuntu-latest
+    outputs:
+      changed-files: ${{ steps.changed-files.outputs.changed_files }}
+    steps:
+      - name: Get changed files
+        id: changed-files
+        uses: bjw-s-labs/action-changed-files@147be9638332cf68fd60714a610509d7a9360d60 # v0.7.0
+        with:
+          patterns: |-
+            cluster-apps/base/**/*
+            cluster-apps/mini/**/*
+            clusters/base/**/*
+            clusters/mini/**/*
+            .github/workflows/flate-mini.yaml
+
+  test:
+    if: ${{ needs.filter-changes.outputs.changed-files != '[]' }}
+    name: Flate Test
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    needs:
+      - filter-changes
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install flate
+        uses: home-operations/flate/action@4e07f351352d235a335e5a1f0a088eab7ec40997 # v0.8.0
+        with:
+          cache: true
+
+      # --base= (empty) tests the whole tree, the same scope as flux-local test,
+      # instead of only what the PR changes.
+      - name: Run flate test
+        run: flate test --base= --path "${FLUX_PATH}"
+
+  diff:
+    if: ${{ needs.filter-changes.outputs.changed-files != '[]' && github.event_name == 'pull_request' }}
+    name: Flate Diff
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    needs:
+      - filter-changes
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # flate compares against a Git revision, so it needs the base branch.
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install flate
+        uses: home-operations/flate/action@4e07f351352d235a335e5a1f0a088eab7ec40997 # v0.8.0
+        with:
+          cache: true
+
+      - name: Run flate diff
+        run: >-
+          flate diff
+          --path "${FLUX_PATH}"
+          --base "origin/${{ github.event.repository.default_branch }}"
+          --output github
+          > diff.md
+
+      - name: Generate summary
+        id: diff
+        run: |
+          {
+              echo "## Flate diff"
+              cat diff.md
+          } >> "${GITHUB_STEP_SUMMARY}"
+          # Same guard as flux-local-mini.yaml: a large body blows the
+          # argument/environment size limit of the comment action, so only
+          # post a comment below a conservative size.
+          if [ "$(wc -c < diff.md)" -gt 20000 ]; then
+              echo "diff too large for a PR comment ($(wc -c < diff.md) bytes) -- see the job summary for the full output" >> "${GITHUB_STEP_SUMMARY}"
+          elif [ -s diff.md ]; then
+              {
+                  echo 'diff<<EOF'
+                  cat diff.md
+                  echo EOF
+              } >> "${GITHUB_OUTPUT}"
+          fi
+
+      - name: Generate Token
+        uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3.4.0
+        if: ${{ github.event.pull_request.head.repo.full_name == github.repository && steps.diff.outputs.diff != '' }}
+        id: app-token
+        with:
+          app-id: ${{ vars.HOMELAB_APP_ID }}
+          private-key: ${{ secrets.HOMELAB_APP_KEY }}
+
+      - if: ${{ steps.diff.outputs.diff != '' }}
+        name: Add Comment
+        uses: marocchino/sticky-pull-request-comment@5770ad5eb8f42dd2c4f34da00c94c5381e49af88 # v3.0.5
+        with:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+          header: ${{ github.event.pull_request.number }}/kubernetes/mini/flate
+          message: |
+            **Flate diff** (trial, informational)
+            ```diff
+            ${{ steps.diff.outputs.diff }}
+            ```
