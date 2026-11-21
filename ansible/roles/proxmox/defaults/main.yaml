@@ -1,0 +1,13 @@
+---
+# Named admin account on the Proxmox host. The username is treated as secret
+# (see ansible/CLAUDE.md): set proxmox_admin_user in the local inventory.yaml.
+proxmox_admin_user: ""
+
+# GitHub account whose public keys are authorised for the admin user.
+proxmox_ssh_github_username: ""
+
+# Hardening is a separate switch so a first bootstrap run (as root, with
+# -e proxmox_ssh_harden=false) can create the admin user and prove key login
+# works before password SSH is turned off.
+proxmox_ssh_harden: true
+

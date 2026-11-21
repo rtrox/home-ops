@@ -1,0 +1,72 @@
+---
+- name: Install sudo
+  apt:
+    name: sudo
+    state: present
+
+- name: Create the admin user
+  user:
+    name: "{{ proxmox_admin_user }}"
+    shell: /bin/bash
+    groups: sudo
+    append: true
+    create_home: true
+
+- name: Allow passwordless sudo for the admin user
+  copy:
+    dest: "/etc/sudoers.d/90-{{ proxmox_admin_user }}"
+    content: "{{ proxmox_admin_user }} ALL=(ALL) NOPASSWD:ALL\n"
+    owner: root
+    group: root
+    mode: "0440"
+    validate: /usr/sbin/visudo -cf %s
+
+- name: Ensure .ssh directory exists for the admin user
+  file:
+    path: "/home/{{ proxmox_admin_user }}/.ssh"
+    state: directory
+    owner: "{{ proxmox_admin_user }}"
+    group: "{{ proxmox_admin_user }}"
+    mode: "0700"
+
+- name: Fetch GitHub SSH keys
+  uri:
+    url: "https://github.com/{{ proxmox_ssh_github_username }}.keys"
+    return_content: true
+  register: proxmox_github_keys
+  check_mode: false # read-only GET; needed so --check can diff authorized_keys
+
+- name: Authorise the GitHub keys for the admin user
+  blockinfile:
+    path: "/home/{{ proxmox_admin_user }}/.ssh/authorized_keys"
+    marker: "# {mark} ANSIBLE MANAGED GITHUB SSH KEYS"
+    block: "{{ proxmox_github_keys.content }}"
+    create: true
+    owner: "{{ proxmox_admin_user }}"
+    group: "{{ proxmox_admin_user }}"
+    mode: "0600"
+  when: proxmox_github_keys.content | trim | length > 0
+
+- name: Harden SSH
+  when: proxmox_ssh_harden | bool
+  block:
+    - name: Refuse to harden without a working admin key
+      shell: "grep -E -v '^(#|$)' /home/{{ proxmox_admin_user }}/.ssh/authorized_keys | wc -l"
+      register: proxmox_key_count
+      changed_when: false
+      check_mode: false # read-only
+
+    - name: Fail if the admin user has no keys
+      fail:
+        msg: "No SSH keys for {{ proxmox_admin_user }}. Not hardening SSH."
+      when: proxmox_key_count.stdout | int == 0
+
+    - name: Drop-in sshd config (key-only, root only by key)
+      template:
+        src: sshd-hardening.conf.j2
+        dest: /etc/ssh/sshd_config.d/10-hardening.conf
+        owner: root
+        group: root
+        mode: "0644"
+        validate: /usr/sbin/sshd -t -f %s
+      notify: Reload SSH service

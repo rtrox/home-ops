@@ -1,0 +1,43 @@
+---
+# Remove the third-party TrueNAS iSCSI storage plugin. VM disks live on
+# local-lvm and backups on plain NFS (see docs/proxmox/), so it isn't needed,
+# and it kept an API key in /etc/pve/storage.cfg.
+- name: Check whether the truenas storage is defined
+  command:
+    argv: [grep, -q, "^truenas: truenas$", /etc/pve/storage.cfg]
+  register: proxmox_truenas_storage
+  changed_when: false
+  failed_when: proxmox_truenas_storage.rc > 1
+  check_mode: false # read-only
+
+- name: Remove the truenas storage definition
+  command: pvesm remove truenas
+  when: proxmox_truenas_storage.rc == 0
+  changed_when: true
+
+- name: Purge the TrueNAS plugin package
+  apt:
+    name: proxmox-truenas-native
+    state: absent
+    purge: true
+
+- name: Remove the TrueNAS plugin apt repo and keyring
+  file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/apt/sources.list.d/proxmox-truenas.sources
+    - /etc/apt/keyrings/proxmox-truenas.gpg
+  register: proxmox_truenas_repo
+
+# No subscription: the enterprise repo is disabled and only produces noise.
+- name: Remove the disabled PVE enterprise repo
+  file:
+    path: /etc/apt/sources.list.d/pve-enterprise.sources
+    state: absent
+  register: proxmox_enterprise_repo
+
+- name: Refresh the apt cache after repo changes
+  apt:
+    update_cache: true
+  when: proxmox_truenas_repo is changed or proxmox_enterprise_repo is changed

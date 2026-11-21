@@ -1,0 +1,16 @@
+---
+- name: Fail if the admin user is not configured
+  assert:
+    that:
+      - proxmox_admin_user | length > 0
+      - proxmox_ssh_github_username | length > 0
+    fail_msg: "Set proxmox_admin_user and proxmox_ssh_github_username in inventory.yaml"
+  tags: [always]
+
+- name: Access and SSH
+  import_tasks: access.yaml
+  tags: [access]
+
+- name: Apt repositories and plugin cleanup
+  import_tasks: apt.yaml
+  tags: [apt]
