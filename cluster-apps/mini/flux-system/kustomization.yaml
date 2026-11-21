@@ -1,0 +1,11 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/kustomization
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+# Deliberately NOT the usual `namespace:` + components/namespace: that would
+# make cluster-apps (prune: true) the owner of the flux-system Namespace
+# itself. Without this file Flux auto-includes every subfolder, which made
+# cluster-apps apply flux-operator/app and flux-operator/instance directly on
+# top of the Kustomizations (ks.yaml) that are meant to own them.
+resources:
+  - ./flux-operator/ks.yaml
