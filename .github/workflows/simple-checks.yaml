@@ -83,7 +83,7 @@ jobs:
         env:
           GITHUB_COM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: >-
-          renovate-config-validator --strict
+          renovate-config-validator --strict --no-global
           .github/renovate.json5
           .github/renovate/*.json5
 
