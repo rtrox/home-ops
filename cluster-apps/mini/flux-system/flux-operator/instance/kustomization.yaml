@@ -5,6 +5,11 @@ kind: Kustomization
 
 namespace: flux-system
 
+# Flux's own instance must never be garbage-collected by a Kustomization that
+# is merely tidying up (e.g. cluster-apps). Removing it takes a deliberate delete.
+commonAnnotations:
+  kustomize.toolkit.fluxcd.io/prune: disabled
+
 resources:
   - ./ocirepository.yaml
   - ./helmrelease.yaml
