@@ -1,0 +1,14 @@
+// Managed by Ansible (roles/auto-upgrade). Loads after the package's
+// 50unattended-upgrades; list values here are added to its defaults.
+
+Unattended-Upgrade::Origins-Pattern {
+{% for origin in auto_upgrade_host_origins %}
+        "{{ origin }}";
+{% endfor %}
+};
+
+// Reboot right after the upgrade, inside this host's slot ({{ auto_upgrade_time }} UTC),
+// when a package (e.g. the kernel) requires it.
+Unattended-Upgrade::Automatic-Reboot "{{ 'true' if auto_upgrade_reboot | bool else 'false' }}";
+Unattended-Upgrade::Automatic-Reboot-WithUsers "true";
+Unattended-Upgrade::Automatic-Reboot-Time "now";
