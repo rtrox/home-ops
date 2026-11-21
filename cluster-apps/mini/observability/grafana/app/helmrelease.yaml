@@ -85,6 +85,16 @@ spec:
 
     dashboards:
       default:
+        blocky:
+          # renovate: dashboardName="Blocky"
+          gnetId: 13768
+          revision: 8
+          datasource:
+            - name: DS_PROMETHEUS
+              value: Prometheus
+            - name: VAR_BLOCKY_URL
+              value: http://ns1.rtrox.io
+
         cert-manager:
           # renovate: dashboardName="Cert-manager-Kubernetes"
           gnetId: 20842

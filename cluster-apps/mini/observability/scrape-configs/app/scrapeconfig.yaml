@@ -10,3 +10,17 @@ spec:
         # avahi.rtrox.io:9100 is offline until about May 2027; add it back then.
         - ns1.rtrox.io:9100
         - ns2.rtrox.io:9100
+---
+# Blocky's own metrics (queries, blocks, cache, per-client counts) on the
+# Ansible-managed DNS hosts. Served on Blocky's HTTP port.
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ScrapeConfig
+metadata:
+  name: blocky
+spec:
+  scheme: HTTP
+  metricsPath: /metrics
+  staticConfigs:
+    - targets:
+        - ns1.rtrox.io:80
+        - ns2.rtrox.io:80
