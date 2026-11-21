@@ -144,6 +144,11 @@ spec:
     ###
     prometheus:
       prometheusSpec:
+        # The chart derives spec.version from image.tag, and the operator parses
+        # that as semver, which fails once the tag carries a @sha256 digest
+        # ("Invalid character(s) found in prerelease"). Set it explicitly.
+        # Keep in step with the tag below.
+        version: 2.53.2-0.4.0
         image:
           registry: docker.io
           repository: prompp/prompp
