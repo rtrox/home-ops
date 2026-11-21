@@ -10,4 +10,3 @@ proxmox_ssh_github_username: ""
 # -e proxmox_ssh_harden=false) can create the admin user and prove key login
 # works before password SSH is turned off.
 proxmox_ssh_harden: true
-

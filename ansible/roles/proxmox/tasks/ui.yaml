@@ -20,7 +20,11 @@
 
 - name: Check whether the popup is already patched
   command:
-    argv: [grep, -q, "void({ //Ext.Msg.show", /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js]
+    argv:
+      - grep
+      - -q
+      - "void({ //Ext.Msg.show"
+      - /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js
   register: proxmox_nag_patched
   changed_when: false
   failed_when: proxmox_nag_patched.rc > 1
