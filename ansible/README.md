@@ -89,9 +89,6 @@ Apply one DNS server at a time. Restarting Docker (any `daemon.json` change does
 | `tailscaled`     | yes            | Tailscale daemon container (pulls the latest image on every start)                                 |
 | `vlans`          | yes            | 802.1q VLAN interfaces via NetworkManager                                                          |
 | `avahi`          | yes            | Avahi mDNS reflector container (masks the host's own avahi-daemon)                                 |
-| `adguardhome`    | no             | AdGuard Home container (superseded by Blocky)                                                      |
-| `dns-over-https` | no             | cloudflared DoH proxy                                                                              |
-| `coredns`        | no             | Corefile template only, no tasks                                                                   |
 
 Role variables and their defaults live in each role's `defaults/main.yaml`.
 
@@ -104,7 +101,6 @@ All secrets files are Ansible Vault-encrypted, named `<thing>_secrets.yaml`:
 | `blocky_secrets.yaml`     | `blocky` (upstream, Postgres address) |
 | `valkey_secrets.yaml`     | `valkey`, `blocky` (Valkey password)  |
 | `keepalived_secrets.yaml` | `keepalived` (VIP, auth password)    |
-| `adguard_secrets.yaml`    | `adguardhome` (not currently loaded) |
 
 ```sh
 ansible-vault edit --vault-password-file .ansible-vault-pass blocky_secrets.yaml
