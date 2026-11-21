@@ -1,0 +1,24 @@
+#!/bin/sh
+# Managed by Ansible (roles/auto-upgrade).
+#
+# ExecCondition for apt-daily-upgrade.service on DNS hosts. Exit 0 lets the
+# night's unattended upgrade run; exit 1 skips it (systemd treats 1-254 from an
+# ExecCondition as "condition not met", not as a failure). The skip is logged
+# to the journal: journalctl -u apt-daily-upgrade.service
+#
+# Peers default to the other DNS servers; pass addresses to test by hand:
+#   dns-peer-check 192.0.2.1
+set -u
+probe="{{ auto_upgrade_dns_probe }}"
+[ "$#" -gt 0 ] || set -- {{ auto_upgrade_dns_peers | join(' ') }}
+
+for peer in "$@"; do
+  # Require a real A record: dig also exits 0 on SERVFAIL/REFUSED.
+  if dig +short +time=3 +tries=3 "@${peer}" "${probe}" A | grep -qE '^[0-9]+(\.[0-9]+){3}$'; then
+    echo "dns-peer-check: ${peer} answered for ${probe}" >&2
+  else
+    echo "dns-peer-check: ${peer} did not answer for ${probe}; skipping unattended upgrade" >&2
+    exit 1
+  fi
+done
+exit 0

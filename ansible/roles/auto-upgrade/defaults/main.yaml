@@ -1,4 +1,43 @@
-# defaults/main.yml
-auto_update_package: "unattended-upgrades" # For Ubuntu/Debian
-auto_update_service: "apt-daily-upgrade.timer" # For Ubuntu/Debian
-reboot_time: "09:00" # Automatic reboot time (UTC) for Ubuntu/Debian
+---
+auto_update_package: "unattended-upgrades"
+auto_update_service: "apt-daily-upgrade.timer"
+
+# Each host upgrades (and, if a package asks for it, reboots right after) in
+# its own fixed slot, so two DNS servers never restart Docker or reboot at the
+# same time. Slots start at auto_upgrade_base_time (UTC) and are
+# auto_upgrade_slot_minutes apart. The default slot is the host's position in
+# the sorted inventory, so every host gets a distinct one; override
+# auto_upgrade_slot per host to reorder.
+auto_upgrade_base_time: "09:00"
+auto_upgrade_slot_minutes: 30
+auto_upgrade_slot: "{{ (groups['all'] | sort).index(inventory_hostname) }}"
+auto_upgrade_minute_of_day: >-
+  {{ ((auto_upgrade_base_time.split(':')[0] | int) * 60
+      + (auto_upgrade_base_time.split(':')[1] | int)
+      + (auto_upgrade_slot | int) * (auto_upgrade_slot_minutes | int)) % 1440 }}
+auto_upgrade_time: >-
+  {{ '%02d:%02d' | format((auto_upgrade_minute_of_day | int) // 60, (auto_upgrade_minute_of_day | int) % 60) }}
+
+# Reboot automatically when an upgrade requires it (kernel, libc, ...).
+auto_upgrade_reboot: true
+
+# Repos unattended-upgrades may install from, on top of Debian's own defaults
+# (main + security). auto_upgrade_origins goes on every host; the distro
+# lists are added only where the role detects that distro, so each host's
+# config names only repos it can actually have.
+auto_upgrade_origins:
+  - "origin=Debian,codename=${distro_codename}-updates"
+  - "origin=Docker,label=Docker CE"
+auto_upgrade_origins_raspberry_pi:
+  - "origin=Raspberry Pi Foundation,codename=${distro_codename}"
+auto_upgrade_origins_armbian:
+  - "origin=Armbian"
+
+# DNS hosts skip the night's upgrade unless every other DNS server answers, so
+# one name server that didn't come back from its upgrade can't take the other
+# down with it. Peers default to the other `dns` hosts' addresses.
+auto_upgrade_dns_peer_check: "{{ inventory_hostname in groups.get('dns', []) }}"
+auto_upgrade_dns_peers: >-
+  {{ groups.get('dns', []) | difference([inventory_hostname])
+     | map('extract', hostvars, 'ansible_host') | list }}
+auto_upgrade_dns_probe: cloudflare.com

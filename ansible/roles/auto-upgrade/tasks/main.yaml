@@ -1,37 +1,105 @@
-# tasks/main.yml
 ---
-- name: Ensure apt package update tool is installed (Ubuntu/Debian)
-  apt:
-    name: "{{ auto_update_package }}"
-    state: present
+- name: Configure unattended upgrades (Debian family)
   when: ansible_facts['os_family'] == 'Debian'
+  block:
+    - name: Ensure unattended-upgrades is installed
+      ansible.builtin.apt:
+        name: "{{ auto_update_package }}"
+        state: present
 
-- name: Enable automatic updates service (Ubuntu/Debian)
-  systemd:
-    name: "{{ auto_update_service }}"
-    enabled: yes
-    state: started
-  when: ansible_facts['os_family'] == 'Debian'
+    - name: Enable the daily apt job
+      ansible.builtin.copy:
+        src: 20-auto-upgrades.conf
+        dest: /etc/apt/apt.conf.d/20auto-upgrades
+        mode: "0644"
 
-- name: Configure automatic updates (Ubuntu/Debian)
-  copy:
-    src: "20-auto-upgrades.conf"
-    dest: "/etc/apt/apt.conf.d/20auto-upgrades"
-    mode: "0644"
-  when: ansible_facts['os_family'] == 'Debian'
+    - name: Check whether this is an Armbian host
+      ansible.builtin.stat:
+        path: /etc/armbian-release
+      register: auto_upgrade_armbian
 
-- name: Ensure Docker is included in auto-upgrades (Ubuntu/Debian)
-  lineinfile:
-    path: /etc/apt/apt.conf.d/50unattended-upgrades
-    regexp: '^//.*"docker-ce"'
-    line: '"docker-ce";'
-    create: yes
-  when: ansible_facts['os_family'] == 'Debian'
+    - name: Read the board model
+      ansible.builtin.slurp:
+        src: /sys/firmware/devicetree/base/model
+      register: auto_upgrade_board_model
+      failed_when: false
 
-- name: Set automatic reboot time for Ubuntu/Debian
-  lineinfile:
-    path: /etc/apt/apt.conf.d/50unattended-upgrades
-    regexp: "^//.*Unattended-Upgrade::Automatic-Reboot-Time"
-    line: 'Unattended-Upgrade::Automatic-Reboot-Time "{{ reboot_time }}";'
-    create: yes
-  when: ansible_facts['os_family'] == 'Debian'
+    - name: Build this host's allowed origins
+      ansible.builtin.set_fact:
+        auto_upgrade_host_origins: >-
+          {{ auto_upgrade_origins
+             + (auto_upgrade_origins_raspberry_pi if 'Raspberry Pi' in (auto_upgrade_board_model.content | default('') | b64decode) else [])
+             + (auto_upgrade_origins_armbian if auto_upgrade_armbian.stat.exists else []) }}
+
+    - name: Configure allowed origins and automatic reboot
+      ansible.builtin.template:
+        src: 52unattended-upgrades-local.j2
+        dest: /etc/apt/apt.conf.d/52unattended-upgrades-local
+        mode: "0644"
+
+    # Earlier versions of this role edited the package's own config file; it
+    # left a stray `"docker-ce";` line (outside any list, so it did nothing) and
+    # a reboot time without Automatic-Reboot enabled. Both now live in
+    # 52unattended-upgrades-local instead.
+    - name: Remove settings earlier versions wrote into 50unattended-upgrades
+      ansible.builtin.lineinfile:
+        path: /etc/apt/apt.conf.d/50unattended-upgrades
+        regexp: '^("docker-ce";|Unattended-Upgrade::Automatic-Reboot-Time )'
+        state: absent
+
+    - name: Create apt-daily-upgrade timer override directory
+      ansible.builtin.file:
+        path: /etc/systemd/system/apt-daily-upgrade.timer.d
+        state: directory
+        mode: "0755"
+
+    - name: Schedule this host's upgrade slot
+      ansible.builtin.template:
+        src: apt-daily-upgrade-timer.conf.j2
+        dest: /etc/systemd/system/apt-daily-upgrade.timer.d/override.conf
+        mode: "0644"
+      notify: reload apt-daily-upgrade timer
+
+    - name: Install dig for the DNS peer check
+      ansible.builtin.apt:
+        name: dnsutils
+        state: present
+      when: auto_upgrade_dns_peer_check | bool
+
+    - name: Install the DNS peer check
+      ansible.builtin.template:
+        src: dns-peer-check.sh.j2
+        dest: /usr/local/sbin/dns-peer-check
+        mode: "0755"
+      when: auto_upgrade_dns_peer_check | bool
+
+    - name: Create apt-daily-upgrade service override directory
+      ansible.builtin.file:
+        path: /etc/systemd/system/apt-daily-upgrade.service.d
+        state: directory
+        mode: "0755"
+      when: auto_upgrade_dns_peer_check | bool
+
+    - name: Gate unattended upgrades on the DNS peer check
+      ansible.builtin.template:
+        src: apt-daily-upgrade-peer-check.conf.j2
+        dest: /etc/systemd/system/apt-daily-upgrade.service.d/dns-peer-check.conf
+        mode: "0644"
+      when: auto_upgrade_dns_peer_check | bool
+      notify: reload systemd
+
+    - name: Remove the DNS peer check from non-DNS hosts
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /etc/systemd/system/apt-daily-upgrade.service.d/dns-peer-check.conf
+        - /usr/local/sbin/dns-peer-check
+      when: not auto_upgrade_dns_peer_check | bool
+      notify: reload systemd
+
+    - name: Enable the upgrade timer
+      ansible.builtin.systemd:
+        name: "{{ auto_update_service }}"
+        enabled: true
+        state: started
