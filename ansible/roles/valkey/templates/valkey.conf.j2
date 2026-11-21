@@ -1,0 +1,12 @@
+# Managed by Ansible (roles/valkey). Disposable cache for Blocky.
+port {{ valkey_port }}
+bind * -::*
+protected-mode yes
+requirepass "{{ valkey_password }}"
+
+# No persistence: a wiped cache just refills.
+save ""
+appendonly no
+
+maxmemory {{ valkey_maxmemory }}
+maxmemory-policy allkeys-lru

@@ -72,8 +72,11 @@ caching:
   cacheTimeNegative: 30m
   prefetching: true
 
+# Shared with the other DNS host through the keepalived VIP (see roles/valkey).
+# Not required: if Valkey is unreachable, Blocky keeps resolving on its own cache.
 redis:
   address: "{{ blocky_redis_address }}"
+  password: "{{ blocky_redis_password }}"
   database: {{ blocky_redis_database }}
   required: false
 

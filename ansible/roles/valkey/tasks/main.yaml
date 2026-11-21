@@ -1,0 +1,46 @@
+---
+- name: Fail if the Valkey password is not set
+  ansible.builtin.fail:
+    msg: "valkey_password must be set (valkey_secrets.yaml)"
+  when: valkey_password is not defined or valkey_password | length == 0
+
+- name: Ensure Docker service is enabled and running
+  ansible.builtin.systemd:
+    name: docker
+    enabled: true
+    state: started
+
+- name: Create Valkey config directory
+  ansible.builtin.file:
+    path: /etc/valkey
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Write Valkey config
+  ansible.builtin.template:
+    src: valkey.conf.j2
+    dest: /etc/valkey/valkey.conf
+    owner: "{{ valkey_uid }}"
+    group: "{{ valkey_uid }}"
+    mode: "0600"
+  no_log: true # contains the password
+  notify: restart valkey service
+
+- name: Create systemd service for Valkey
+  ansible.builtin.template:
+    src: valkey.service.j2
+    dest: /etc/systemd/system/valkey.service
+    mode: "0644"
+  notify: restart valkey service
+
+- name: Enable and start the Valkey service
+  ansible.builtin.systemd:
+    name: valkey
+    enabled: true
+    state: started
+    daemon_reload: true
+  # On a first deploy, --check doesn't write the unit file, so there's no unit
+  # to find yet.
+  ignore_errors: "{{ ansible_check_mode }}"

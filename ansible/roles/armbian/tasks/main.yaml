@@ -1,0 +1,21 @@
+---
+# Keep Armbian hosts on the stable package repo. Nightly images point apt at
+# beta.armbian.com, which ships untested -trunk kernels, DTBs and u-boot
+# packages, and unattended-upgrades' origin=Armbian pattern would install them.
+- name: Check whether this is an Armbian host
+  ansible.builtin.stat:
+    path: /etc/armbian-release
+  register: armbian_release
+
+- name: Point Armbian apt source at the stable repo
+  ansible.builtin.replace:
+    path: /etc/apt/sources.list.d/armbian.list
+    regexp: 'https?://beta\.armbian\.com'
+    replace: "https://apt.armbian.com"
+  register: armbian_repo
+  when: armbian_release.stat.exists
+
+- name: Refresh apt cache after switching Armbian repo
+  ansible.builtin.apt:
+    update_cache: true
+  when: armbian_repo is changed

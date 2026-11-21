@@ -59,29 +59,34 @@ From the repo root, via [Task](../.taskfiles/README.md#ansible-tasks):
 task ansible:syntax                     # syntax-check the playbook
 task ansible:check HOST=ns2.rtrox.io    # dry run, showing file diffs
 task ansible:apply HOST=ns2.rtrox.io    # apply
+task ansible:upgrade HOST=ns2.rtrox.io  # OS upgrade + reboot (add -- --check for a dry run)
 ```
 
 `HOST` can be a single host or a group (`dns`). Tasks always run with `--forks 1`, so a group is applied one host at a time. Extra flags go after `--`, e.g. `task ansible:check HOST=dns -- -v`.
+
+`ansible:upgrade` runs `upgrade.yaml`: one host at a time, and on DNS hosts it first checks that the other name server is answering, then `apt dist-upgrade`, reboots if anything changed, and waits until the host answers DNS again. It stops at the first host that fails, so a bad upgrade on one name server never reaches the other.
 
 Apply one DNS server at a time. Restarting Docker (any `daemon.json` change does it) briefly takes DNS down on that host, and keepalived only covers for it if the other one is healthy.
 
 ## Playbook layout (`site.yaml`)
 
-1. **All hosts**: `auto-upgrade`, `secure-ssh`, `geerlingguy.docker`, `raspi-monitor`, `node-exporter`, then hostname, UTC timezone and common packages.
-2. **`dns`**: `blocky`, `keepalived`, `tailscaled`. Loads `blocky_secrets.yaml` and `keepalived_secrets.yaml`.
+1. **All hosts**: `armbian`, `auto-upgrade`, `secure-ssh`, `geerlingguy.docker`, `raspi-monitor`, `node-exporter`, then hostname, UTC timezone and common packages.
+2. **`dns`**: `valkey`, `blocky`, `keepalived`, `tailscaled`. Loads `blocky_secrets.yaml`, `keepalived_secrets.yaml` and `valkey_secrets.yaml`.
 3. **`avahi`**: `vlans`, `avahi`.
 
 ## Roles
 
 | Role             | In `site.yaml` | What it does                                                                                       |
 | ---------------- | -------------- | -------------------------------------------------------------------------------------------------- |
-| `auto-upgrade`   | yes            | `unattended-upgrades` (Docker included), automatic reboot at 09:00 UTC                             |
+| `armbian`        | yes            | On Armbian hosts, keeps apt on the stable repo (`apt.armbian.com`) instead of the nightly `beta.armbian.com` |
+| `auto-upgrade`   | yes            | Installs `unattended-upgrades`. **Known gaps:** automatic reboot is never enabled, only Debian origins are allowed (no Raspberry Pi or Docker repos), and it hasn't been running on ns2. Use `task ansible:upgrade` until this is fixed |
 | `secure-ssh`     | yes            | Syncs `authorized_keys` from `github.com/<user>.keys` and/or `ssh_public_keys`, then disables password auth (refuses to if no keys ended up in the file) |
-| `raspi-monitor`  | yes            | Enables I2C (Raspberry Pi or Orange Pi) and runs the OLED status display container                 |
+| `raspi-monitor`  | yes (opt-in)   | Enables I2C (Raspberry Pi or Orange Pi) and runs the OLED status display container. Off unless `raspi_monitor_enabled: true` is set for the host; when off, it stops and disables any existing unit |
 | `node-exporter`  | yes            | Prometheus node-exporter container                                                                 |
-| `blocky`         | yes            | Blocky DNS container, frees port 53 from systemd-resolved, pins `/etc/resolv.conf`                 |
+| `valkey`         | yes (`dns`)    | Valkey container used as Blocky's shared cache. Runs on both DNS hosts; Blocky on both connects through the keepalived VIP, so whichever host holds the VIP serves the cache for both. No persistence, password required |
+| `blocky`         | yes            | Blocky DNS container, frees port 53 from systemd-resolved, pins `/etc/resolv.conf`. Syncs its cache and blocking state with the other DNS host through Valkey (optional: DNS keeps working without it) |
 | `keepalived`     | yes            | VRRP virtual IP shared between ns1/ns2                                                             |
-| `tailscaled`     | yes            | Tailscale daemon container                                                                         |
+| `tailscaled`     | yes            | Tailscale daemon container (pulls the latest image on every start)                                 |
 | `vlans`          | yes            | 802.1q VLAN interfaces via NetworkManager                                                          |
 | `avahi`          | yes            | Avahi mDNS reflector container (masks the host's own avahi-daemon)                                 |
 | `adguardhome`    | no             | AdGuard Home container (superseded by Blocky)                                                      |
@@ -96,7 +101,8 @@ All secrets files are Ansible Vault-encrypted, named `<thing>_secrets.yaml`:
 
 | File                      | Used by                              |
 | ------------------------- | ------------------------------------ |
-| `blocky_secrets.yaml`     | `blocky` (Postgres/Redis addresses)  |
+| `blocky_secrets.yaml`     | `blocky` (upstream, Postgres address) |
+| `valkey_secrets.yaml`     | `valkey`, `blocky` (Valkey password)  |
 | `keepalived_secrets.yaml` | `keepalived` (VIP, auth password)    |
 | `adguard_secrets.yaml`    | `adguardhome` (not currently loaded) |
 
