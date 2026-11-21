@@ -8,7 +8,10 @@ kind: Service
 metadata:
   name: loki-lan
   annotations:
-    lbipam.cilium.io/ips: 172.19.32.3
+    # Kept high in the pool: Services without this annotation are given the
+    # lowest free addresses (.3-.7 are taken that way), so a low fixed address
+    # can collide. .3 did (scrypted-nvr).
+    lbipam.cilium.io/ips: 172.19.32.200
 spec:
   type: LoadBalancer
   loadBalancerSourceRanges:
