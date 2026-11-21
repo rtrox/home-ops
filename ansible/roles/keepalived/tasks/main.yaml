@@ -20,7 +20,8 @@
   template:
     src: keepalived.conf.j2
     dest: /etc/keepalived/keepalived.conf
-    mode: "0644"
+    mode: "0600"
+  diff: false # the rendered config contains auth_pass from the vault
   notify: restart keepalived service
 
 - name: Generate systemd Service for Keepalived
