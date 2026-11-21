@@ -18,3 +18,8 @@ proxmox_terraform_token_id: terraform
 proxmox_terraform_doppler_secret: PVE_TERRAFORM_API_TOKEN
 proxmox_doppler_project: hosts-at-home
 proxmox_doppler_config: prd
+
+# Let's Encrypt account. Only root@pam can create it (see tasks/acme.yaml).
+proxmox_acme_account_name: letsencrypt
+proxmox_acme_directory: https://acme-v02.api.letsencrypt.org/directory
+proxmox_acme_email_secret: PVE_ACME_EMAIL

@@ -1,0 +1,58 @@
+---
+# Registers the Let's Encrypt account. Proxmox only lets root@pam create ACME
+# accounts (an API token with Administrator gets a 403), so this lives here and
+# not in the Terraform stack. The DNS plugin and the certificate order are in
+# terraform-record/proxmox. The contact email is a manual Doppler input and is
+# never written to git or printed.
+- name: List ACME accounts
+  command: pvesh get /cluster/acme/account --output-format json
+  register: proxmox_acme_accounts
+  changed_when: false
+  check_mode: false # read-only
+
+- name: Fetch the ACME directory (for the terms-of-service URL)
+  uri:
+    url: "{{ proxmox_acme_directory }}"
+    return_content: true
+  register: proxmox_acme_dir
+  check_mode: false # read-only
+
+- name: Read the contact email from Doppler
+  delegate_to: localhost
+  become: false
+  command: >-
+    doppler secrets get {{ proxmox_acme_email_secret }}
+    -p {{ proxmox_doppler_project }} -c {{ proxmox_doppler_config }} --plain
+  register: proxmox_acme_email
+  changed_when: false
+  no_log: true
+  check_mode: false # read-only
+
+- name: Register the ACME account
+  command:
+    argv:
+      - pvesh
+      - create
+      - /cluster/acme/account
+      - --name
+      - "{{ proxmox_acme_account_name }}"
+      - --contact
+      - "{{ proxmox_acme_email.stdout | trim }}"
+      - --directory
+      - "{{ proxmox_acme_directory }}"
+      - --tos_url
+      - "{{ proxmox_acme_dir.json.meta.termsOfService }}"
+  when: proxmox_acme_account_name not in (proxmox_acme_accounts.stdout | from_json | map(attribute='name') | list)
+  changed_when: true
+  no_log: true # the arguments include the contact email
+
+- name: Wait for the account to appear
+  command: pvesh get /cluster/acme/account --output-format json
+  register: proxmox_acme_after
+  until: proxmox_acme_account_name in (proxmox_acme_after.stdout | from_json | map(attribute='name') | list)
+  retries: 10
+  delay: 3
+  changed_when: false
+  when:
+    - not ansible_check_mode
+    - proxmox_acme_account_name not in (proxmox_acme_accounts.stdout | from_json | map(attribute='name') | list)

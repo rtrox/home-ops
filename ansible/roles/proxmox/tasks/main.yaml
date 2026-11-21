@@ -26,3 +26,7 @@
 - name: Terraform service account
   import_tasks: terraform-user.yaml
   tags: [terraform-user]
+
+- name: Let's Encrypt account
+  import_tasks: acme.yaml
+  tags: [acme]
