@@ -23,7 +23,7 @@ spec:
           app:
             image:
               repository: owncast/owncast
-              tag: 0.3.0
+              tag: 0.3.0@sha256:0f35b568b1098d2badbde2dbf3c73a902009c95eb687c647edea04d6da079a78
             env:
               TZ: America/Los_Angeles
             probes:
