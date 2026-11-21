@@ -10,6 +10,7 @@
           - "{{ ansible_user }}"
 
   roles:
+    - role: journald
     - role: armbian
     - role: auto-upgrade
     - role: secure-ssh
@@ -19,11 +20,12 @@
     - role: geerlingguy.docker
       vars:
         docker_users: "{{ docker_users }}"
+        # Container output goes to journald, which keeps it in RAM (roles/journald),
+        # instead of json-file logs on disk. `docker logs` still works.
         docker_daemon_options:
-          log-driver: json-file
+          log-driver: journald
           log-opts:
-            max-size: "10m"
-            max-file: "3"
+            tag: !unsafe "{{.Name}}"
     - role: raspi-monitor
     - role: node-exporter
 
