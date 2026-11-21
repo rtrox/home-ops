@@ -1,0 +1,32 @@
+---
+- name: Fail if the admin user is not configured
+  assert:
+    that:
+      - proxmox_admin_user | length > 0
+      - proxmox_ssh_github_username | length > 0
+    fail_msg: "Set proxmox_admin_user and proxmox_ssh_github_username in inventory.yaml"
+  tags: [always]
+
+- name: Access and SSH
+  import_tasks: access.yaml
+  tags: [access]
+
+- name: Apt repositories and plugin cleanup
+  import_tasks: apt.yaml
+  tags: [apt]
+
+- name: Web UI tweaks
+  import_tasks: ui.yaml
+  tags: [ui]
+
+- name: Proxmox users and ACLs
+  import_tasks: pve-users.yaml
+  tags: [pve-users]
+
+- name: Terraform service account
+  import_tasks: terraform-user.yaml
+  tags: [terraform-user]
+
+- name: Let's Encrypt account
+  import_tasks: acme.yaml
+  tags: [acme]

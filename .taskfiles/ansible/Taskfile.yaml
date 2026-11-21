@@ -54,3 +54,13 @@ tasks:
     requires:
       vars: [HOST]
     cmd: ansible-playbook {{.ANSIBLE_ARGS}} upgrade.yaml --limit {{.HOST}} {{.CLI_ARGS}}
+
+  proxmox-check:
+    desc: Dry-run the Proxmox playbook, showing diffs (extra args after --, e.g. -e proxmox_ssh_harden=true)
+    dir: "{{.ANSIBLE_DIR}}"
+    cmd: mise exec -- ansible-playbook -i inventory.yaml proxmox.yaml --check --diff {{.CLI_ARGS}}
+
+  proxmox-apply:
+    desc: Apply the Proxmox playbook (extra args after --, e.g. -e proxmox_ssh_harden=true)
+    dir: "{{.ANSIBLE_DIR}}"
+    cmd: mise exec -- ansible-playbook -i inventory.yaml proxmox.yaml {{.CLI_ARGS}}

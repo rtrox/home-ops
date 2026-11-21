@@ -1,0 +1,30 @@
+---
+# Named admin for the web UI, so day-to-day use isn't root@pam. Authenticates
+# through PAM, so the password is the Linux account's (set it by hand, never in
+# git). Add TOTP in the UI under Datacenter > Permissions > Two Factor.
+- name: List PVE users
+  command: pveum user list --output-format json
+  register: proxmox_pve_users
+  changed_when: false
+  check_mode: false # read-only
+
+- name: Create the PVE admin user
+  command: "pveum user add {{ proxmox_admin_user }}@pam"
+  when: (proxmox_pve_users.stdout | from_json | map(attribute='userid') | list) is not contains(proxmox_admin_user ~ '@pam')
+  changed_when: true
+
+- name: List PVE ACLs
+  command: pveum acl list --output-format json
+  register: proxmox_pve_acls
+  changed_when: false
+  check_mode: false # read-only
+
+- name: Grant the PVE admin user the Administrator role on /
+  command: "pveum acl modify / --users {{ proxmox_admin_user }}@pam --roles Administrator"
+  when: >-
+    proxmox_pve_acls.stdout | from_json
+    | selectattr('path', 'equalto', '/')
+    | selectattr('ugid', 'equalto', proxmox_admin_user ~ '@pam')
+    | selectattr('roleid', 'equalto', 'Administrator')
+    | list | length == 0
+  changed_when: true

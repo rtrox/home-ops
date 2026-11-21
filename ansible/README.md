@@ -9,6 +9,7 @@ Configuration for the non-Kubernetes machines: the Raspberry Pi / Orange Pi boxe
 | `ns1.rtrox.io`   | 172.30.99.1 | `dns`   | Blocky + keepalived `MASTER`, Tailscale      |
 | `ns2.rtrox.io`   | 172.30.99.2 | `dns`   | Blocky + keepalived `BACKUP`, Tailscale      |
 | `avahi.rtrox.io` | 172.30.99.3 | `avahi` | VLAN interfaces (200, 300) + Avahi reflector |
+| `pve.rtrox.io`   | 172.21.1.21 | `proxmox` | Proxmox VE host, run with `proxmox.yaml` (see [docs/proxmox](../docs/proxmox/README.md)) |
 
 ## Setup
 
@@ -47,9 +48,35 @@ The `geerlingguy.docker` role is installed from Galaxy, not vendored:
 
 ```sh
 ansible-galaxy role install geerlingguy.docker
+ansible-galaxy collection install community.general
 ```
 
 SSH access is by key only (`secure-ssh` disables password auth), and the `ansible_user` needs passwordless sudo, since every play runs with `become: true`.
+
+## Proxmox
+
+`pve.rtrox.io` has its own playbook, `proxmox.yaml`, with the `proxmox` role. It is kept out of
+`site.yaml` so it never needs the vault password. The inventory group sets its SSH user and the
+admin account name (both local-only):
+
+```yaml
+proxmox:
+  vars:
+    ansible_user: <admin-user>
+  hosts:
+    pve.rtrox.io:
+      ansible_host: 172.21.1.21
+      proxmox_admin_user: <admin-user>
+      proxmox_ssh_github_username: rtrox
+```
+
+```sh
+task ansible:proxmox-check -- -e proxmox_ssh_harden=true   # dry run
+task ansible:proxmox-apply
+```
+
+On a fresh host, connect as root once with `-e proxmox_ssh_harden=false`, confirm the admin user
+can log in by key, then run again with hardening on.
 
 ## Running
 
