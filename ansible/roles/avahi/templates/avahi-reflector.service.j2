@@ -9,7 +9,7 @@ ExecStartPre=-/usr/bin/docker rm --force avahi-reflector
 ExecStart=/usr/bin/docker run --name avahi-reflector \
     --pull always                                    \
     --network host                                   \
-    -e SERVER_HOST_NAME={{ ansible_hostname }}       \
+    -e SERVER_HOST_NAME={{ ansible_facts.hostname }}       \
     -e SERVER_USE_IPV4=yes                           \
     -e SERVER_USE_IPV6=no                            \
     -e RATELIMIT_INTERVAL_USEC=1000000               \
