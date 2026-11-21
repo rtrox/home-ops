@@ -71,7 +71,7 @@ Apply one DNS server at a time. Restarting Docker (any `daemon.json` change does
 ## Playbook layout (`site.yaml`)
 
 1. **All hosts**: `journald`, `armbian`, `auto-upgrade`, `secure-ssh`, `geerlingguy.docker`, `raspi-monitor`, `node-exporter`, then hostname, UTC timezone and common packages.
-2. **`dns`**: `valkey`, `blocky`, `keepalived`, `tailscaled`. Loads `blocky_secrets.yaml`, `keepalived_secrets.yaml` and `valkey_secrets.yaml`.
+2. **`dns`**: `valkey`, `blocky`, `alloy`, `keepalived`, `tailscaled`. Loads `blocky_secrets.yaml`, `keepalived_secrets.yaml` and `valkey_secrets.yaml`.
 3. **`avahi`**: `vlans`, `avahi`.
 
 ## Roles
@@ -86,6 +86,7 @@ Apply one DNS server at a time. Restarting Docker (any `daemon.json` change does
 | `node-exporter`  | yes            | Prometheus node-exporter container                                                                 |
 | `valkey`         | yes (`dns`)    | Valkey container used as Blocky's shared cache. Runs on both DNS hosts; Blocky on both connects through the keepalived VIP, so whichever host holds the VIP serves the cache for both. No persistence, password required |
 | `blocky`         | yes            | Blocky DNS container, frees port 53 from systemd-resolved, pins `/etc/resolv.conf`. Syncs its cache and blocking state with the other DNS host through Valkey (optional: DNS keeps working without it) |
+| `alloy`          | yes (`dns`)    | Grafana Alloy container that ships the host's in-RAM journal to Loki on Mini (`loki-lan`, 172.19.32.200), including Blocky's per-query JSON lines as `stream="dns-query"`. Writes nothing to disk: positions on a tmpfs, unsent logs in memory only. In Grafana: `{host="ns1"}` for host logs, `{stream="dns-query"} \| json` for queries |
 | `keepalived`     | yes            | VRRP virtual IP shared between ns1/ns2                                                             |
 | `tailscaled`     | yes            | Tailscale daemon container (pulls the latest image on every start)                                 |
 | `vlans`          | yes            | 802.1q VLAN interfaces via NetworkManager                                                          |

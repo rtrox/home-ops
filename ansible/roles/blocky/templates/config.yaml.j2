@@ -80,13 +80,15 @@ redis:
   database: {{ blocky_redis_database }}
   required: false
 
-# Query logging disabled until a new postgres target replaces postgres.chongus.rtrox.io
-# queryLog:
-#   type: postgresql
-#   target: "{{ blocky_postgres_address }}"
-#   logRetentionDays: 30
+# One JSON line per query on stdout. Docker's journald driver keeps it in the
+# in-RAM journal (roles/journald), and Alloy ships it to Loki (roles/alloy),
+# so query logs never touch the disk.
+log:
+  level: info
+  format: json
+
 queryLog:
-  type: none
+  type: {{ 'console' if blocky_query_log | bool else 'none' }}
 
 prometheus:
   enable: true

@@ -89,6 +89,9 @@
         - name: Set up Blocky
           include_role:
             name: blocky
+        - name: Set up Alloy (ships the journal, incl. DNS query logs, to Loki)
+          include_role:
+            name: alloy
         - name: Set up Keepalived
           include_role:
             name: keepalived

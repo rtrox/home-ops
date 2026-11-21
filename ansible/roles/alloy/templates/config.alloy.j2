@@ -1,0 +1,57 @@
+// Managed by Ansible (roles/alloy).
+
+// Only warnings and errors, so a long Loki outage can't flood the journal.
+logging {
+  level  = "warn"
+  format = "logfmt"
+}
+
+loki.relabel "journal" {
+  forward_to = []
+
+  rule {
+    source_labels = ["__journal__systemd_unit"]
+    target_label  = "unit"
+  }
+  // Set by Docker's journald log driver.
+  rule {
+    source_labels = ["__journal_container_name"]
+    target_label  = "container"
+  }
+  rule {
+    source_labels = ["__journal_priority_keyword"]
+    target_label  = "level"
+  }
+}
+
+loki.source.journal "journal" {
+  max_age       = "{{ alloy_journal_max_age }}"
+  relabel_rules = loki.relabel.journal.rules
+  labels        = {
+    job  = "systemd-journal",
+    host = "{{ inventory_hostname_short }}",
+  }
+  forward_to = [loki.process.blocky_queries.receiver]
+}
+
+// Give Blocky's per-query lines their own stream, so dashboards can select
+// them cheaply: {stream="dns-query"} | json
+loki.process "blocky_queries" {
+  stage.match {
+    selector = "{container=\"blocky\"} |= \"queryLog\""
+
+    stage.static_labels {
+      values = { stream = "dns-query" }
+    }
+  }
+  forward_to = [loki.write.default.receiver]
+}
+
+loki.write "default" {
+  endpoint {
+    url                 = "{{ alloy_loki_push_url }}"
+    min_backoff_period  = "{{ alloy_min_backoff }}"
+    max_backoff_period  = "{{ alloy_max_backoff }}"
+    max_backoff_retries = {{ alloy_max_backoff_retries }}
+  }
+}
