@@ -222,6 +222,15 @@ task ansible:apply HOST=ns2.rtrox.io
 task ansible:apply HOST=dns -- -v
 ```
 
+### `ansible:upgrade`
+
+Upgrade OS packages and reboot, one host at a time (`ansible/upgrade.yaml`). On DNS hosts it checks that the other name server is answering before starting, and waits for DNS to come back afterwards. Add `-- --check` for a dry run.
+
+```bash
+task ansible:upgrade HOST=ns2.rtrox.io -- --check
+task ansible:upgrade HOST=dns
+```
+
 ---
 
 ## Volsync Tasks

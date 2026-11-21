@@ -1,0 +1,46 @@
+---
+- name: Check Hardware Version
+  command: cat /sys/firmware/devicetree/base/model
+  register: hardware_version
+  changed_when: false
+
+- include_tasks: raspberry-pi.yaml
+  when: hardware_version.stdout.find("Raspberry Pi") != -1
+
+- include_tasks: orange-pi.yaml
+  when: hardware_version.stdout.find("Orange Pi") != -1
+
+- name: Load I2C kernel module
+  modprobe:
+    name: i2c-dev
+    state: present
+
+- name: Ensure I2C kernel module is loaded on boot
+  lineinfile:
+    path: /etc/modules
+    line: i2c-dev
+    state: present
+
+- name: Install i2c-tools package
+  apt:
+    name: i2c-tools
+    state: present
+    update_cache: yes
+
+- name: Ensure Docker service is enabled and running
+  systemd:
+    name: docker
+    enabled: true
+    state: started
+
+- name: Create systemd service for Raspi-Monitor
+  template:
+    src: raspi-monitor.service.j2
+    dest: /etc/systemd/system/raspi-monitor.service
+  notify: restart raspi-monitor service
+
+- name: Enable and start the Raspi-Monitor service
+  systemd:
+    name: raspi-monitor
+    enabled: true
+    state: started

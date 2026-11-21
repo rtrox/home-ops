@@ -8,6 +8,7 @@ Requires=docker.service
 TimeoutStartSec=0
 ExecStartPre=-/usr/bin/docker rm --force tailscaled
 ExecStart=/usr/bin/docker run --name=tailscaled \
+    --pull always \
     -v /var/lib/tailscale:/var/lib/tailscale \
     -v /dev/net/tun:/dev/net/tun \
     --network=host \

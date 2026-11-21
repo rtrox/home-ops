@@ -10,6 +10,7 @@
           - "{{ ansible_user }}"
 
   roles:
+    - role: armbian
     - role: auto-upgrade
     - role: secure-ssh
       vars:
@@ -46,7 +47,7 @@
       block:
         - name: Ensure timezone is set to UTC
           timezone:
-            name: UTC
+            name: Etc/UTC # canonical name; tzdata upgrades rewrite the "UTC" alias to this
         # - name: Ensure locale is set to US English
         #   command: localectl set-locale LANG=en_US.UTF-8
         #   changed_when: false
@@ -75,10 +76,14 @@
   vars_files:
     - blocky_secrets.yaml
     - keepalived_secrets.yaml
+    - valkey_secrets.yaml
 
   tasks:
     - name: Configure DNS-related services
       block:
+        - name: Set up Valkey
+          include_role:
+            name: valkey
         - name: Set up Blocky
           include_role:
             name: blocky

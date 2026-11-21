@@ -1,0 +1,8 @@
+---
+- name: restart valkey service
+  ansible.builtin.systemd:
+    name: valkey
+    state: restarted
+    daemon_reload: true
+  # Same as the enable task: under --check on a first deploy there's no unit yet.
+  ignore_errors: "{{ ansible_check_mode }}"

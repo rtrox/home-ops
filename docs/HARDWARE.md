@@ -71,7 +71,7 @@ Not part of any Kubernetes cluster. Configured by the playbook in [`ansible/`](.
 | `avahi.rtrox.io` | 172.30.99.3 | Raspberry Pi (model not recorded) | -                 | -    | -                       | Avahi mDNS reflector across VLANs 200 and 300  |
 
 - ns1 and ns2 share a keepalived virtual IP for DNS, so either one can be down for maintenance as long as the other is healthy.
-- Every board runs `raspi-monitor`, which drives an I2C OLED status display. The role handles both Raspberry Pi and Orange Pi I2C setup.
+- The boards had I2C OLED status displays driven by `raspi-monitor`. The current OLEDs are broken, so the role is disabled everywhere (`raspi_monitor_enabled` defaults to `false`) until a replacement board is built. The role handles both Raspberry Pi and Orange Pi I2C setup.
 
 **NAS (nas.rtrox.io):**
 - Storage backend for shared media
