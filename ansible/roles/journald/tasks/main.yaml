@@ -1,0 +1,14 @@
+---
+- name: Create journald drop-in directory
+  ansible.builtin.file:
+    path: /etc/systemd/journald.conf.d
+    state: directory
+    mode: "0755"
+
+- name: Configure journald storage
+  ansible.builtin.template:
+    src: journald.conf.j2
+    # 50- so it overrides lower-numbered drop-ins from the OS or packages.
+    dest: /etc/systemd/journald.conf.d/50-ansible.conf
+    mode: "0644"
+  notify: restart journald

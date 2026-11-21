@@ -1,0 +1,9 @@
+---
+# Keep the systemd journal in RAM (/run/log/journal) instead of on disk, to
+# spare SD cards. Docker logs to journald too (site.yaml), so container output
+# stays in RAM as well. Logs don't survive a reboot; ship anything worth
+# keeping off the host.
+journald_storage: volatile
+# Cap for the in-RAM journal. Oldest entries rotate out first.
+journald_runtime_max_use: 128M
+journald_runtime_max_file_size: 16M

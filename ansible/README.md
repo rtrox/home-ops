@@ -70,7 +70,7 @@ Apply one DNS server at a time. Restarting Docker (any `daemon.json` change does
 
 ## Playbook layout (`site.yaml`)
 
-1. **All hosts**: `armbian`, `auto-upgrade`, `secure-ssh`, `geerlingguy.docker`, `raspi-monitor`, `node-exporter`, then hostname, UTC timezone and common packages.
+1. **All hosts**: `journald`, `armbian`, `auto-upgrade`, `secure-ssh`, `geerlingguy.docker`, `raspi-monitor`, `node-exporter`, then hostname, UTC timezone and common packages.
 2. **`dns`**: `valkey`, `blocky`, `keepalived`, `tailscaled`. Loads `blocky_secrets.yaml`, `keepalived_secrets.yaml` and `valkey_secrets.yaml`.
 3. **`avahi`**: `vlans`, `avahi`.
 
@@ -78,6 +78,7 @@ Apply one DNS server at a time. Restarting Docker (any `daemon.json` change does
 
 | Role             | In `site.yaml` | What it does                                                                                       |
 | ---------------- | -------------- | -------------------------------------------------------------------------------------------------- |
+| `journald`       | yes            | Keeps the systemd journal in RAM (`Storage=volatile`, capped at 128M) to spare SD cards. Docker logs to journald (`site.yaml`), so container output stays in RAM too; read it with `docker logs` or `journalctl CONTAINER_NAME=<name>`. Logs don't survive a reboot |
 | `armbian`        | yes            | On Armbian hosts, keeps apt on the stable repo (`apt.armbian.com`) instead of the nightly `beta.armbian.com` |
 | `auto-upgrade`   | yes            | Daily `unattended-upgrades` from Debian (main, security, updates) and Docker on every host, plus the Raspberry Pi repo on Pis and the Armbian repo on Armbian hosts (detected per host), rebooting right after an upgrade that requires it. On `dns` hosts, the run is skipped unless every other DNS server answers (`/usr/local/sbin/dns-peer-check`, an `ExecCondition`; skips are logged in `journalctl -u apt-daily-upgrade`). Each host gets its own 30-minute slot starting 09:00 UTC (by position in the sorted inventory: avahi 09:00, ns1 09:30, ns2 10:00), so name servers never upgrade or reboot together. Override with `auto_upgrade_slot` / `auto_upgrade_base_time` |
 | `secure-ssh`     | yes            | Syncs `authorized_keys` from `github.com/<user>.keys` and/or `ssh_public_keys`, then disables password auth (refuses to if no keys ended up in the file) |
