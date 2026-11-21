@@ -2,7 +2,8 @@
 blocky_redis_address: "{{ keepalived_vip_address.split('/')[0] }}:{{ valkey_port | default(6379) }}"
 blocky_redis_password: "{{ valkey_password }}"
 blocky_redis_database: 0
-blocky_postgres_address: postgresql://user:pass@postgres:5432/blocky?sslmode=disable
+# Log every query (JSON, to stdout). Shipped to Loki by roles/alloy.
+blocky_query_log: true
 blocky_upstream: 192.168.0.1
 blocky_set_system_resolvers: true
 blocky_system_resolvers:

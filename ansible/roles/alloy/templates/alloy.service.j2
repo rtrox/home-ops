@@ -1,0 +1,29 @@
+[Unit]
+Description=Grafana Alloy (ships the journal to Loki)
+After=docker.service
+Requires=docker.service
+
+[Service]
+TimeoutStartSec=0
+ExecStartPre=-/usr/bin/docker rm --force alloy
+# Nothing here touches the disk: the journal is read from /run (RAM), read
+# positions live on a tmpfs, and unsent logs are buffered in memory only.
+ExecStart=/usr/bin/docker run --name alloy \
+    --pull always \
+    --memory {{ alloy_memory_limit }} \
+    --tmpfs /var/lib/alloy/data:size=32m \
+    -v /etc/alloy/config.alloy:/etc/alloy/config.alloy:ro \
+    -v /run/log/journal:/run/log/journal:ro \
+    -v /etc/machine-id:/etc/machine-id:ro \
+    {{ alloy_image }} \
+    run \
+    --storage.path=/var/lib/alloy/data \
+    --server.http.listen-addr=127.0.0.1:12345 \
+    --disable-reporting \
+    /etc/alloy/config.alloy
+ExecStop=/usr/bin/docker stop alloy
+Restart=always
+RestartSec=30s
+
+[Install]
+WantedBy=multi-user.target

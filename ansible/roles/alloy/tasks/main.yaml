@@ -1,0 +1,36 @@
+---
+- name: Ensure Docker service is enabled and running
+  ansible.builtin.systemd:
+    name: docker
+    enabled: true
+    state: started
+
+- name: Create Alloy config directory
+  ansible.builtin.file:
+    path: /etc/alloy
+    state: directory
+    mode: "0755"
+
+- name: Write Alloy config
+  ansible.builtin.template:
+    src: config.alloy.j2
+    dest: /etc/alloy/config.alloy
+    mode: "0644"
+  notify: restart alloy service
+
+- name: Create systemd service for Alloy
+  ansible.builtin.template:
+    src: alloy.service.j2
+    dest: /etc/systemd/system/alloy.service
+    mode: "0644"
+  notify: restart alloy service
+
+- name: Enable and start the Alloy service
+  ansible.builtin.systemd:
+    name: alloy
+    enabled: true
+    state: started
+    daemon_reload: true
+  # On a first deploy, --check doesn't write the unit file, so there's no unit
+  # to find yet.
+  ignore_errors: "{{ ansible_check_mode }}"
