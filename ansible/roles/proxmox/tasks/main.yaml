@@ -22,3 +22,7 @@
 - name: Proxmox users and ACLs
   import_tasks: pve-users.yaml
   tags: [pve-users]
+
+- name: Terraform service account
+  import_tasks: terraform-user.yaml
+  tags: [terraform-user]

@@ -10,3 +10,11 @@ proxmox_ssh_github_username: ""
 # -e proxmox_ssh_harden=false) can create the admin user and prove key login
 # works before password SSH is turned off.
 proxmox_ssh_harden: true
+
+# Service account for the Terraform stack (terraform-record/proxmox). Its API
+# token is written to Doppler by the play; it is never printed or logged.
+proxmox_terraform_user: terraform@pve
+proxmox_terraform_token_id: terraform
+proxmox_terraform_doppler_secret: PVE_TERRAFORM_API_TOKEN
+proxmox_doppler_project: hosts-at-home
+proxmox_doppler_config: prd
