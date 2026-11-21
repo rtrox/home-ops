@@ -6,6 +6,7 @@ configMapGenerator:
   - name: grafana-dashboard
     files:
       - home.json
+      - dns-queries.json
 generatorOptions:
   disableNameSuffixHash: true
   annotations:
