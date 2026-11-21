@@ -11,7 +11,7 @@ ignore: |
   *.sid-raw.yaml
   *.bty.yaml
   cluster-cd/
-  ansible/
+  ansible/*_secrets.yaml
 extends: default
 rules:
   truthy:
