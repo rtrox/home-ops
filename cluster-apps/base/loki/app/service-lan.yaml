@@ -1,0 +1,25 @@
+---
+# Loki push endpoint for log shippers outside the cluster: Alloy on the
+# Ansible-managed DNS hosts (ansible/roles/alloy). Loki runs with
+# auth_enabled: false, so access is limited to those hosts by source IP
+# (enforced by Cilium's kube-proxy replacement).
+apiVersion: v1
+kind: Service
+metadata:
+  name: loki-lan
+  annotations:
+    lbipam.cilium.io/ips: 172.19.32.3
+spec:
+  type: LoadBalancer
+  loadBalancerSourceRanges:
+    - 172.30.99.1/32 # ns1
+    - 172.30.99.2/32 # ns2
+  selector:
+    app.kubernetes.io/name: loki
+    app.kubernetes.io/instance: loki
+    app.kubernetes.io/component: single-binary
+  ports:
+    - name: http
+      port: 3100
+      targetPort: http-metrics
+      protocol: TCP
