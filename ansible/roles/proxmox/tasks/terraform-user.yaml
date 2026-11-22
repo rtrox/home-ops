@@ -1,10 +1,10 @@
 ---
-# Service account for the Terraform stack (terraform-record/proxmox).
+# Service account for the Terraform stack (terraform/stacks/proxmox).
 #
-# Privilege separation is on, so the token needs its own ACL as well as the
-# user. Administrator is used on purpose: a token that manages users and ACLs
-# (Permissions.Modify) can grant itself anything, so a narrower role would not
-# add real isolation here.
+# Privilege separation is on, so each token needs its own ACL as well as the
+# user. The apply token gets Administrator on purpose: a token that manages
+# users and ACLs (Permissions.Modify) can grant itself anything, so a narrower
+# role would not add real isolation there. CI's plan token gets PVEAuditor.
 #
 # A token's secret is only shown once, when it is created. So the secret goes
 # straight into Doppler from this play (never printed or logged). If either the
@@ -21,63 +21,15 @@
   when: (proxmox_tf_users.stdout | from_json | map(attribute='userid') | list) is not contains(proxmox_terraform_user)
   changed_when: true
 
-- name: List the Terraform user's tokens
-  command: "pveum user token list {{ proxmox_terraform_user }} --output-format json"
-  register: proxmox_tf_tokens
-  changed_when: false
-  failed_when: false
-  check_mode: false # read-only
+# The user itself gets Administrator; each privilege-separated token is limited
+# to its own ACL (terraform-token.yaml).
+- name: Grant the Terraform user the Administrator role on /
+  command: "pveum acl modify / --roles Administrator --users {{ proxmox_terraform_user }}"
+  changed_when: false # idempotent upsert
 
-- name: Check whether the token is already stored in Doppler
-  delegate_to: localhost
-  become: false
-  command: >-
-    doppler secrets get {{ proxmox_terraform_doppler_secret }}
-    -p {{ proxmox_doppler_project }} -c {{ proxmox_doppler_config }} --plain
-  register: proxmox_tf_doppler
-  changed_when: false
-  failed_when: false
-  no_log: true # the output is the secret
-  check_mode: false # read-only
-
-- name: Work out whether the token must be (re)created
-  set_fact:
-    proxmox_tf_token_exists: >-
-      {{ proxmox_terraform_token_id in
-         ((proxmox_tf_tokens.stdout | default('[]', true) | from_json) | map(attribute='tokenid') | list) }}
-    proxmox_tf_secret_stored: "{{ proxmox_tf_doppler.rc == 0 }}"
-
-- name: Remove a token whose secret is not in Doppler
-  command: "pveum user token remove {{ proxmox_terraform_user }} {{ proxmox_terraform_token_id }}"
-  when: proxmox_tf_token_exists and not proxmox_tf_secret_stored
-  changed_when: true
-
-- name: Create the token
-  command: >-
-    pveum user token add {{ proxmox_terraform_user }} {{ proxmox_terraform_token_id }}
-    --privsep 1 --output-format json
-  register: proxmox_tf_new_token
-  when: not (proxmox_tf_token_exists and proxmox_tf_secret_stored)
-  changed_when: true
-  no_log: true # the output contains the secret
-
-- name: Grant the Terraform user and token the Administrator role on /
-  command: >-
-    pveum acl modify / --roles Administrator
-    --users {{ proxmox_terraform_user }}
-    --tokens '{{ proxmox_terraform_user }}!{{ proxmox_terraform_token_id }}'
-  changed_when: false # idempotent upsert; "changed" would always be reported
-
-- name: Store the token in Doppler
-  delegate_to: localhost
-  become: false
-  command: >-
-    doppler secrets set {{ proxmox_terraform_doppler_secret }}
-    -p {{ proxmox_doppler_project }} -c {{ proxmox_doppler_config }}
-  args:
-    stdin: >-
-      {{ (proxmox_tf_new_token.stdout | from_json)['full-tokenid'] }}={{ (proxmox_tf_new_token.stdout | from_json)['value'] }}
-    stdin_add_newline: false
-  when: proxmox_tf_new_token is not skipped
-  changed_when: true
-  no_log: true # the value is the secret
+- name: Terraform API tokens
+  include_tasks: terraform-token.yaml
+  loop: "{{ proxmox_terraform_tokens }}"
+  loop_control:
+    loop_var: proxmox_tf_token
+    label: "{{ proxmox_tf_token.id }}"
