@@ -1,0 +1,50 @@
+---
+# Adds the admin user alongside whatever user Ansible connects as today, so a
+# host can switch its ansible_user to it. Never touches the connecting user.
+- name: Fetch the admin user's SSH keys from GitHub
+  uri:
+    url: "https://github.com/{{ admin_user_github }}.keys"
+    return_content: true
+  register: admin_user_keys
+  check_mode: false # read-only GET; lets --check show the authorized_keys diff
+
+- name: Refuse to create a key-only user without keys
+  fail:
+    msg: "https://github.com/{{ admin_user_github }}.keys returned no keys"
+  when: admin_user_keys.content | trim | length == 0
+
+- name: Create the admin user (password locked, key-only)
+  user:
+    name: "{{ admin_user }}"
+    shell: /bin/bash
+    groups: sudo
+    append: true
+    create_home: true
+    password_lock: true
+
+- name: Admin user's .ssh directory
+  file:
+    path: "/home/{{ admin_user }}/.ssh"
+    state: directory
+    owner: "{{ admin_user }}"
+    group: "{{ admin_user }}"
+    mode: "0700"
+
+- name: Admin user's authorized_keys (GitHub keys)
+  copy:
+    dest: "/home/{{ admin_user }}/.ssh/authorized_keys"
+    content: "{{ admin_user_keys.content | trim }}\n"
+    owner: "{{ admin_user }}"
+    group: "{{ admin_user }}"
+    mode: "0600"
+
+# Passwordless sudo, since the account has no password. visudo checks the file
+# before it's installed, so a bad file can't break sudo.
+- name: Passwordless sudo for the admin user
+  copy:
+    dest: "/etc/sudoers.d/90-{{ admin_user }}"
+    content: "{{ admin_user }} ALL=(ALL) NOPASSWD:ALL\n"
+    owner: root
+    group: root
+    mode: "0440"
+    validate: /usr/sbin/visudo -cf %s

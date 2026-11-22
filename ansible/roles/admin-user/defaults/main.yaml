@@ -1,0 +1,6 @@
+---
+# The admin account created on every host we build (the default ansible_user,
+# inventory/group_vars/all.yaml). Key-only: the password is locked.
+admin_user: rtrox
+# GitHub account whose public keys are authorised for it.
+admin_user_github: rtrox
