@@ -26,6 +26,7 @@ spec:
           schedule: "0 2 * * *"
           timeZone: Etc/UTC
           concurrencyPolicy: Forbid
+          startingDeadlineSeconds: 3600
           backoffLimit: 1
           # The initial seed can be slow; a normal night takes minutes.
           activeDeadlineSeconds: 7200
@@ -45,15 +46,25 @@ spec:
                 ping() { wget -q -O /dev/null -T 15 -t 3 "$HC_PING_URL$1" || true; }
                 die() { echo "FAILED: $1" >&2; ping /fail; exit 1; }
                 count() {
-                  out=$(rclone size --json --fast-list "OFFSITE:$DST_BUCKET") || return 1
+                  out=$(rclone size --json --fast-list "$1") || return 1
                   echo "$out" | sed -n 's/.*"count":\([0-9]*\).*/\1/p'
                 }
 
                 ping /start
 
-                before=$(count) || die "could not count destination objects before sync"
+                before=$(count "OFFSITE:$DST_BUCKET") || die "could not count destination objects before sync"
                 [ -n "$before" ] || die "empty destination count before sync"
                 echo "destination objects before: $before"
+
+                # Pre-sync guard: refuse to sync from an empty or wrong source
+                # (e.g. the job was not paused at the Garage cutover).
+                src=$(count "MINIO:$SRC_BUCKET") || die "could not count source objects"
+                [ -n "$src" ] || die "empty source count"
+                echo "source objects: $src"
+                [ "$src" -gt 0 ] || die "source bucket is empty"
+                if [ "$before" -gt 0 ] && [ $((src * 100)) -lt $((before * 50)) ]; then
+                  die "source has $src objects, under 50% of destination's $before"
+                fi
 
                 # Sync follows Barman's retention. --max-delete is ~3x the
                 # average and ~2x the peak daily prune (about one day of WAL
@@ -65,11 +76,12 @@ spec:
                   --stats-one-line --stats 60s -v \
                   || die "rclone sync failed"
 
-                after=$(count) || die "could not count destination objects after sync"
+                after=$(count "OFFSITE:$DST_BUCKET") || die "could not count destination objects after sync"
                 [ -n "$after" ] || die "empty destination count after sync"
                 echo "destination objects after: $after"
 
-                # Silent-loss guard: fail if the destination shrank below 80%.
+                # Detect-after-the-fact control: --max-delete 300 normally trips
+                # first, so this only catches shrinkage that slipped past it.
                 if [ "$before" -gt 0 ] && [ $((after * 100)) -lt $((before * 80)) ]; then
                   die "destination shrank from $before to $after objects"
                 fi
