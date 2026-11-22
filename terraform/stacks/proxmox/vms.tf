@@ -2,8 +2,7 @@
 # gateway come from inventory/ (hosts.yaml, sites.yaml); nothing about the network
 # is written here, so renumbering a site is an inventory edit.
 #
-# The runner never manages its own VM: prevent_destroy on all three (the two
-# VMs are temporarily false; see their lifecycle block), and this
+# The runner never manages its own VM: prevent_destroy on all three, and this
 # stack is applied from the laptop, never by the runner.
 #
 # TODO: back these VMs up with vzdump to the NAS (issue #2135).
@@ -237,10 +236,7 @@ resource "proxmox_virtual_environment_vm" "vm" {
   }
 
   lifecycle {
-    # TEMPORARY: false for one apply that replaces both VMs to switch their
-    # cloud-init user to rtrox (they hold nothing yet). Restore to true in the
-    # next PR.
-    prevent_destroy = false
+    prevent_destroy = true
     # cloud-init's user and keys apply at first boot only. Changing them later
     # (e.g. a new key on GitHub) would reboot the VM and, because Proxmox
     # derives the cloud-init instance-id from the user-data, re-run cloud-init
