@@ -15,14 +15,21 @@ vars:
     --forks 1
 
 tasks:
+  # The usernames, needed by every play (the Proxmox playbook included).
+  _doppler-preconditions:
+    internal: true
+    preconditions:
+      - sh: doppler run -p hosts-at-home -c prd -- sh -c 'test -n "$ANSIBLE_SSH_USER" && test -n "$PROXMOX_ADMIN_USER"'
+        msg: "ANSIBLE_SSH_USER or PROXMOX_ADMIN_USER is missing from Doppler hosts-at-home/prd (or doppler isn't logged in); see ansible/README.md"
+
+  # site.yaml and upgrade.yaml also need ansible on PATH and the vault password.
   _preconditions:
     internal: true
     dir: "{{.ANSIBLE_DIR}}"
+    deps: [_doppler-preconditions]
     preconditions:
       - sh: which ansible-playbook
         msg: "ansible-playbook not found on PATH"
-      - sh: doppler run -p hosts-at-home -c prd -- sh -c 'test -n "$ANSIBLE_SSH_USER" && test -n "$PROXMOX_ADMIN_USER"'
-        msg: "ANSIBLE_SSH_USER or PROXMOX_ADMIN_USER is missing from Doppler hosts-at-home/prd (or doppler isn't logged in); see ansible/README.md"
       - sh: test -f .ansible-vault-pass
         msg: "ansible/.ansible-vault-pass is missing (local-only, see ansible/README.md)"
 
@@ -61,11 +68,11 @@ tasks:
   proxmox-check:
     desc: Dry-run the Proxmox playbook, showing diffs (extra args after --, e.g. -e proxmox_ssh_harden=true)
     dir: "{{.ANSIBLE_DIR}}"
-    deps: [_preconditions]
+    deps: [_doppler-preconditions]
     cmd: "{{.DOPPLER_RUN}} mise exec -- ansible-playbook -i ../inventory/hosts.yaml proxmox.yaml --check --diff {{.CLI_ARGS}}"
 
   proxmox-apply:
     desc: Apply the Proxmox playbook (extra args after --, e.g. -e proxmox_ssh_harden=true)
     dir: "{{.ANSIBLE_DIR}}"
-    deps: [_preconditions]
+    deps: [_doppler-preconditions]
     cmd: "{{.DOPPLER_RUN}} mise exec -- ansible-playbook -i ../inventory/hosts.yaml proxmox.yaml {{.CLI_ARGS}}"

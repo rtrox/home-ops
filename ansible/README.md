@@ -13,7 +13,7 @@ Configuration for the non-Kubernetes machines: the Raspberry Pi / Orange Pi boxe
 
 ## Setup
 
-The hosts live in the committed [`inventory/hosts.yaml`](../inventory/hosts.yaml) (see [inventory/README.md](../inventory/README.md)); `ansible.cfg` points at it. Hosts in its `unmanaged` group need DNS but run no plays, and the plays exclude them. These files are **local only** (gitignored) and must exist before running anything:
+The hosts live in the committed [`inventory/hosts.yaml`](../inventory/hosts.yaml) (see [inventory/README.md](../inventory/README.md)); `ansible.cfg` points at it. Hosts in its `unmanaged` group need DNS but run no plays, and the plays exclude them. Before running anything you need:
 
 - **Two Doppler secrets** in `hosts-at-home/prd`: `ANSIBLE_SSH_USER` (the SSH user on the Pis) and `PROXMOX_ADMIN_USER` (the Proxmox admin account, also its SSH user). The committed `inventory/group_vars/` files read them with `lookup('env', ...)`, and the `task ansible:*` tasks run under `doppler run -p hosts-at-home -c prd --`, so a fresh clone needs only a Doppler login. Running `ansible-playbook` directly, outside `task`, fails with a hint before connecting. Set them once:
 
