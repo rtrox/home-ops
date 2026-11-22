@@ -1,0 +1,46 @@
+---
+- name: Read the board model
+  ansible.builtin.slurp:
+    src: /sys/firmware/devicetree/base/model
+  register: raspberry_pi_model
+  failed_when: false
+
+- name: Configure the kernel command line
+  when: "'Raspberry Pi' in (raspberry_pi_model.content | default('') | b64decode)"
+  block:
+    - name: Read cmdline.txt
+      ansible.builtin.slurp:
+        src: "{{ raspberry_pi_cmdline_file }}"
+      register: raspberry_pi_cmdline
+
+    # Ansible's own `backup: true` names the copy with ':' and '@', which the
+    # FAT boot partition rejects; keep one copy of the original instead
+    # (force: false never overwrites it).
+    - name: Keep a copy of the original cmdline.txt
+      ansible.builtin.copy:
+        src: "{{ raspberry_pi_cmdline_file }}"
+        dest: "{{ raspberry_pi_cmdline_file }}.bak"
+        remote_src: true
+        force: false
+        mode: preserve
+
+    # cmdline.txt must stay a single line; append only the missing parameters.
+    - name: Append missing kernel parameters
+      vars:
+        current: "{{ raspberry_pi_cmdline.content | b64decode | trim }}"
+        missing: "{{ raspberry_pi_cmdline_params | difference(current.split()) }}"
+      ansible.builtin.copy:
+        content: "{{ ([current] + missing) | join(' ') }}\n"
+        dest: "{{ raspberry_pi_cmdline_file }}"
+        mode: preserve
+      when: missing | length > 0
+      register: raspberry_pi_cmdline_changed
+
+    # Picked up by `task ansible:upgrade` (upgrade.yaml), which reboots
+    # with the DNS peer checks, and by unattended-upgrades' Automatic-Reboot.
+    - name: Mark a reboot as required for the new kernel parameters
+      ansible.builtin.copy:
+        content: "*** System restart required (kernel cmdline changed by Ansible) ***\n"
+        dest: /var/run/reboot-required
+        mode: "0644"
+      when: raspberry_pi_cmdline_changed is changed

@@ -14,4 +14,7 @@ alloy_journal_max_age: 12h
 alloy_min_backoff: 500ms
 alloy_max_backoff: 5m
 alloy_max_backoff_retries: 10
-alloy_memory_limit: 256m
+# Alloy itself uses ~40MiB, but its ~530MiB binary is mmapped and counted as
+# (reclaimable) page cache. 256m kept it pinned at the limit, so the kernel kept
+# evicting and re-reading binary pages; leave room for them.
+alloy_memory_limit: 512m

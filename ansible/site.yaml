@@ -12,6 +12,7 @@
   roles:
     - role: journald
     - role: armbian
+    - role: raspberry-pi
     - role: auto-upgrade
     - role: secure-ssh
       vars:

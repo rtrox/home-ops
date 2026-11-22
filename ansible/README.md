@@ -91,13 +91,13 @@ task ansible:upgrade HOST=ns2.rtrox.io  # OS upgrade + reboot (add -- --check fo
 
 `HOST` can be a single host or a group (`dns`). Tasks always run with `--forks 1`, so a group is applied one host at a time. Extra flags go after `--`, e.g. `task ansible:check HOST=dns -- -v`.
 
-`ansible:upgrade` runs `upgrade.yaml`: one host at a time, and on DNS hosts it first checks that the other name server is answering, then `apt dist-upgrade`, reboots if anything changed, and waits until the host answers DNS again. It stops at the first host that fails, so a bad upgrade on one name server never reaches the other.
+`ansible:upgrade` runs `upgrade.yaml`: one host at a time, and on DNS hosts it first checks that the other name server is answering, then `apt dist-upgrade`, reboots if packages changed or a reboot is pending (`/var/run/reboot-required`), and waits until the host answers DNS again. It stops at the first host that fails, so a bad upgrade on one name server never reaches the other.
 
 Apply one DNS server at a time. Restarting Docker (any `daemon.json` change does it) briefly takes DNS down on that host, and keepalived only covers for it if the other one is healthy.
 
 ## Playbook layout (`site.yaml`)
 
-1. **All hosts**: `journald`, `armbian`, `auto-upgrade`, `secure-ssh`, `geerlingguy.docker`, `raspi-monitor`, `node-exporter`, then hostname, UTC timezone and common packages.
+1. **All hosts**: `journald`, `armbian`, `raspberry-pi`, `auto-upgrade`, `secure-ssh`, `geerlingguy.docker`, `raspi-monitor`, `node-exporter`, then hostname, UTC timezone and common packages.
 2. **`dns`**: `valkey`, `blocky`, `alloy`, `keepalived`, `tailscaled`. Loads `blocky_secrets.yaml`, `keepalived_secrets.yaml` and `valkey_secrets.yaml`.
 3. **`avahi`**: `vlans`, `avahi`.
 
@@ -107,6 +107,7 @@ Apply one DNS server at a time. Restarting Docker (any `daemon.json` change does
 | ---------------- | -------------- | -------------------------------------------------------------------------------------------------- |
 | `journald`       | yes            | Keeps the systemd journal in RAM (`Storage=volatile`, capped at 128M) to spare SD cards. Docker logs to journald (`site.yaml`), so container output stays in RAM too; read it with `docker logs` or `journalctl CONTAINER_NAME=<name>`. Logs don't survive a reboot |
 | `armbian`        | yes            | On Armbian hosts, keeps apt on the stable repo (`apt.armbian.com`) instead of the nightly `beta.armbian.com` |
+| `raspberry-pi`   | yes            | On Raspberry Pis, appends `cgroup_enable=memory cgroup_memory=1` to `/boot/firmware/cmdline.txt` (the Pi 5 firmware itself adds `cgroup_disable=memory`, so Docker memory limits weren't enforced). Keeps the original as `cmdline.txt.bak` and marks a reboot as pending; `task ansible:upgrade` then reboots safely |
 | `auto-upgrade`   | yes            | Daily `unattended-upgrades` from Debian (main, security, updates) and Docker on every host, plus the Raspberry Pi repo on Pis and the Armbian repo on Armbian hosts (detected per host), rebooting right after an upgrade that requires it. On `dns` hosts, the run is skipped unless every other DNS server answers (`/usr/local/sbin/dns-peer-check`, an `ExecCondition`; skips are logged in `journalctl -u apt-daily-upgrade`). Each host gets its own 30-minute slot starting 09:00 UTC (by position in the sorted inventory: avahi 09:00, ns1 09:30, ns2 10:00), so name servers never upgrade or reboot together. Override with `auto_upgrade_slot` / `auto_upgrade_base_time` |
 | `secure-ssh`     | yes            | Syncs `authorized_keys` from `github.com/<user>.keys` and/or `ssh_public_keys`, then disables password auth (refuses to if no keys ended up in the file) |
 | `raspi-monitor`  | yes (opt-in)   | Enables I2C (Raspberry Pi or Orange Pi) and runs the OLED status display container. Off unless `raspi_monitor_enabled: true` is set for the host; when off, it stops and disables any existing unit |

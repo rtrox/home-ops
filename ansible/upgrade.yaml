@@ -46,11 +46,19 @@
         DEBIAN_FRONTEND: noninteractive
       register: upgrade_apt
 
+    # Also reboot when something else asked for it (a kernel package's hook,
+    # or the raspberry-pi role changing the kernel command line), even if no
+    # packages changed in this run.
+    - name: Check whether a reboot is pending
+      ansible.builtin.stat:
+        path: /var/run/reboot-required
+      register: upgrade_reboot_required
+
     - name: Reboot
       ansible.builtin.reboot:
         reboot_timeout: 900
         post_reboot_delay: 15
-      when: upgrade_apt is changed
+      when: upgrade_apt is changed or upgrade_reboot_required.stat.exists
 
     - name: Wait for this host to answer DNS again
       ansible.builtin.command: >-
@@ -73,4 +81,5 @@
       ansible.builtin.debug:
         msg: >-
           kernel {{ upgrade_kernel_before.stdout }} -> {{ upgrade_kernel_after.stdout }},
-          packages {{ 'upgraded' if upgrade_apt is changed else 'already up to date' }}
+          packages {{ 'upgraded' if upgrade_apt is changed else 'already up to date' }},
+          {{ 'rebooted' if (upgrade_apt is changed or upgrade_reboot_required.stat.exists) else 'no reboot needed' }}

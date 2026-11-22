@@ -1,0 +1,10 @@
+---
+# Kernel parameters appended to /boot/firmware/cmdline.txt on Raspberry Pis.
+# The Pi 5 firmware itself prepends cgroup_disable=memory, so Docker can't
+# enforce container memory limits; cgroup_enable=memory overrides it (the
+# Raspberry Pi kernel honours it for exactly this). Takes effect on reboot:
+# `task ansible:upgrade HOST=<host>` reboots safely when one is pending.
+raspberry_pi_cmdline_params:
+  - cgroup_enable=memory
+  - cgroup_memory=1
+raspberry_pi_cmdline_file: /boot/firmware/cmdline.txt
