@@ -7,12 +7,12 @@ Requires=docker.service
 TimeoutStartSec=0
 ExecStartPre=-/usr/bin/docker rm --force node-exporter
 ExecStart=/usr/bin/docker run --name node-exporter \
-    --pull always \
+    --pull missing \
     --restart unless-stopped \
     --net="host" \
     --pid="host" \
     -v "/:/host:ro,rslave" \
-    prom/node-exporter:latest \
+    {{ node_exporter_image }} \
     --path.rootfs=/host
 ExecStop=/usr/bin/docker stop node-exporter
 Restart=always

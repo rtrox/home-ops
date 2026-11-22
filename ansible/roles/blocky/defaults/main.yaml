@@ -9,3 +9,6 @@ blocky_set_system_resolvers: true
 blocky_system_resolvers:
   - 1.1.1.1
   - 1.0.0.1
+# Pinned by digest; Renovate bumps tag and digest together (.github/renovate/ansibleImages.json5).
+# renovate: datasource=docker
+blocky_image: "spx01/blocky:v0.37.0@sha256:d9b6344d7c8f3fe577a47bc97b523faa116f7ea8a8901bfaf800a4dbdce64c96"

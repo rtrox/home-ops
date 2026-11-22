@@ -7,7 +7,7 @@ Wants=network-online.target
 ExecStartPre=-/usr/bin/docker stop keepalived
 ExecStartPre=-/usr/bin/docker rm keepalived
 ExecStart=/usr/bin/docker run --name keepalived \
-    --pull always \
+    --pull missing \
     --restart unless-stopped \
     --cap-add=NET_ADMIN \
     --cap-add=NET_BROADCAST \

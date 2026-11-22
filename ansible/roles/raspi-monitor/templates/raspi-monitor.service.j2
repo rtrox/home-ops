@@ -13,7 +13,7 @@ ExecStartPre=-/usr/bin/docker rm --force raspi-monitor
 ExecStart=/usr/bin/docker run --name raspi-monitor \
     --network host \
     --device /dev/i2c-1 \
-    ghcr.io/rtrox/raspi-monitor:latest
+    {{ raspi_monitor_image }}
 ExecStop=/usr/bin/docker stop raspi-monitor
 Restart=on-failure
 RestartSec=60s
