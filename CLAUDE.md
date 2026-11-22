@@ -547,6 +547,7 @@ See [full guide](docs/REFERENCE_IMPLEMENTATIONS.md) for detailed workflow and co
 
 - **Flux errors**: Automatic notifications to Alertmanager
 - **PrometheusRule**: Custom rules for Volsync, CNPG, Flux
+- **Dead-man's switch**: the always-firing `Watchdog` alert routes to healthchecks.io about once a minute (`healthchecks-watchdog` receiver, URL from the `alertmanager-healthchecks` ExternalSecret, Doppler `HEALTHCHECKS` / `watchdog_ping_url`). The check (5m period, 5m grace) alerts if pings stop. Created by hand; imported into Terraform in migration phase 7
 - **Pushover priority**: firing `severity=critical` alerts, plus `KubePodCrashLooping` and `LastFailedArchiveTime`, send at priority 1. Everything else, including all resolved notices, sends at -1 (quiet). Keep critical for things that need action
 
 ## Testing and Validation

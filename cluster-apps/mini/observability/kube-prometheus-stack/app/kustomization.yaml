@@ -8,3 +8,4 @@ resources:
   - ./alertmanagerconfig.yaml
   - ./externalsecret.yaml
   - ./pushoverexternalsecret.yaml
+  - ./healthchecksexternalsecret.yaml
