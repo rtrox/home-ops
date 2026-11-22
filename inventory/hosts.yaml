@@ -8,8 +8,8 @@
 # `address` and `dns_name`. `subnet` is optional. Validated in CI by
 # `task inventory:check`.
 #
-# The SSH user is NOT here (it is treated as secret). inventory/group_vars/ reads
-# it from Doppler through `doppler run`; see ansible/README.md.
+# The SSH user is rtrox (inventory/group_vars/all.yaml); the Pis' original user
+# comes from Doppler through group_vars/pis.yaml. See ansible/README.md.
 #
 # `unmanaged` holds hosts that need DNS (and DHCP leases, firewall rules) but
 # don't run Ansible plays. The plays that target `all` exclude it.
@@ -54,6 +54,13 @@ all:
             # TODO: the sheet has 172.31.99.3 for the guest VLAN, which is
             # outside the guest subnet (172.31.0.0/24). Pick an address inside
             # 172.31.0.0/24 and add {vlan: guest, address: ...} here.
+
+    # TEMPORARY: the Raspberry Pis, which still use their original SSH user
+    # (group_vars/pis.yaml) until the admin-user role adds rtrox.
+    pis:
+      children:
+        dns:
+        avahi:
 
     proxmox:
       hosts:

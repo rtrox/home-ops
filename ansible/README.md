@@ -15,11 +15,10 @@ Configuration for the non-Kubernetes machines: the Raspberry Pi / Orange Pi boxe
 
 The hosts live in the committed [`inventory/hosts.yaml`](../inventory/hosts.yaml) (see [inventory/README.md](../inventory/README.md)); `ansible.cfg` points at it. Hosts in its `unmanaged` group need DNS but run no plays, and the plays exclude them. Before running anything you need:
 
-- **Two Doppler secrets** in `hosts-at-home/prd`: `ANSIBLE_SSH_USER` (the SSH user on the Pis) and `PROXMOX_ADMIN_USER` (the Proxmox admin account, also its SSH user). The committed `inventory/group_vars/` files read them with `lookup('env', ...)`, and the `task ansible:*` tasks run under `doppler run -p hosts-at-home -c prd --`, so a fresh clone needs only a Doppler login. Running `ansible-playbook` directly, outside `task`, fails with a hint before connecting. Set them once:
+- **The SSH user** is `rtrox` everywhere (committed in `inventory/group_vars/all.yaml`), except the Pis, which still use their original user until the admin-user role adds `rtrox` to them. That user comes from Doppler `hosts-at-home/prd` `ANSIBLE_SSH_USER`, read by the committed `inventory/group_vars/pis.yaml`; the `task ansible:*` tasks run under `doppler run -p hosts-at-home -c prd --`. Set it once:
 
   ```sh
-  read 'U?SSH user: '; print -rn -- "$U" | doppler secrets set ANSIBLE_SSH_USER -p hosts-at-home -c prd --silent
-  read 'U?Proxmox admin user: '; print -rn -- "$U" | doppler secrets set PROXMOX_ADMIN_USER -p hosts-at-home -c prd --silent; unset U
+  read 'U?Pi SSH user: '; print -rn -- "$U" | doppler secrets set ANSIBLE_SSH_USER -p hosts-at-home -c prd --silent; unset U
   ```
 
 - **`.ansible-vault-pass`**: the Ansible Vault password, mode `600`.
@@ -37,7 +36,7 @@ SSH access is by key only (`secure-ssh` disables password auth), and the `ansibl
 
 `pve.rtrox.io` has its own playbook, `proxmox.yaml`, with the `proxmox` role. It is kept out of
 `site.yaml` so it never needs the vault password. The group vars set its SSH user and the
-admin account name, both from Doppler `PROXMOX_ADMIN_USER` (see Setup).
+admin account name, both `rtrox` (see Setup).
 
 ```sh
 task ansible:proxmox-check -- -e proxmox_ssh_harden=true   # dry run

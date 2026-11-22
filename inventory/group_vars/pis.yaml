@@ -1,0 +1,5 @@
+---
+# TEMPORARY: the Pis still use their original user, which isn't committed: it
+# comes from Doppler (hosts-at-home/prd, ANSIBLE_SSH_USER) through `doppler run`.
+# Remove this file once the admin-user role has added rtrox to them.
+ansible_user: "{{ lookup('env', 'ANSIBLE_SSH_USER') or undef(hint='ANSIBLE_SSH_USER is empty: run via task ansible:..., which wraps doppler run (see ansible/README.md)') }}"

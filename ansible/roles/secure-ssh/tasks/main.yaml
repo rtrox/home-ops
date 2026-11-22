@@ -50,11 +50,42 @@
     msg: "No SSH keys found in /home/{{ ansible_user }}/.ssh/authorized_keys. Not disabling password authentication!"
   when: ssh_key_count.stdout | int == 0
 
-- name: Disable password authentication in SSHD config
+# Key-only SSH. A drop-in that sorts first wins over later drop-ins (e.g.
+# cloud-init's 50-cloud-init.conf) and over sshd_config, since sshd keeps the
+# first value it reads. The sshd_config lines are kept as well, for an image
+# whose sshd_config doesn't include sshd_config.d. Every file is checked with
+# `sshd -t` before it's written, and sshd is reloaded (Debian tests the config
+# again before reloading), so a bad config can't stop sshd on a remote host.
+- name: Key-only SSH drop-in
+  copy:
+    dest: /etc/ssh/sshd_config.d/00-hardening.conf
+    content: |
+      # Managed by Ansible (roles/secure-ssh): key-only login.
+      PasswordAuthentication no
+      KbdInteractiveAuthentication no
+    owner: root
+    group: root
+    mode: "0644"
+    validate: /usr/sbin/sshd -t -f %s
+  notify: Reload SSH service
+
+- name: Disable password authentication in sshd_config
   lineinfile:
     path: /etc/ssh/sshd_config
     regexp: "^#?PasswordAuthentication"
     line: "PasswordAuthentication no"
     state: present
     backup: yes
-  notify: Restart SSH service
+    validate: /usr/sbin/sshd -t -f %s
+  notify: Reload SSH service
+
+# Keyboard-interactive can still accept a password through PAM.
+- name: Disable keyboard-interactive authentication in sshd_config
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "^#?(KbdInteractiveAuthentication|ChallengeResponseAuthentication)"
+    line: "KbdInteractiveAuthentication no"
+    state: present
+    backup: yes
+    validate: /usr/sbin/sshd -t -f %s
+  notify: Reload SSH service

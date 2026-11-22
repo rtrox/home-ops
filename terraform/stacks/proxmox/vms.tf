@@ -2,7 +2,8 @@
 # gateway come from inventory/ (hosts.yaml, sites.yaml); nothing about the network
 # is written here, so renumbering a site is an inventory edit.
 #
-# The runner never manages its own VM: prevent_destroy on all three, and this
+# The runner never manages its own VM: prevent_destroy on all three (the two
+# VMs are temporarily false; see their lifecycle block), and this
 # stack is applied from the laptop, never by the runner.
 #
 # TODO: back these VMs up with vzdump to the NAS (issue #2135).
@@ -53,7 +54,8 @@ locals {
     }
   }
 
-  ssh_user = data.doppler_secrets.hosts.map.ANSIBLE_SSH_USER
+  # The same default user Ansible connects as (one source for both).
+  ssh_user = yamldecode(file("${path.module}/../../../inventory/group_vars/all.yaml")).ansible_user
   # One key per line; drop blank lines.
   ssh_keys = [for k in split("\n", data.http.github_keys.response_body) : trimspace(k) if trimspace(k) != ""]
 }
@@ -235,7 +237,10 @@ resource "proxmox_virtual_environment_vm" "vm" {
   }
 
   lifecycle {
-    prevent_destroy = true
+    # TEMPORARY: false for one apply that replaces both VMs to switch their
+    # cloud-init user to rtrox (they hold nothing yet). Restore to true in the
+    # next PR.
+    prevent_destroy = false
     # cloud-init's user and keys apply at first boot only. Changing them later
     # (e.g. a new key on GitHub) would reboot the VM and, because Proxmox
     # derives the cloud-init instance-id from the user-data, re-run cloud-init
@@ -244,8 +249,9 @@ resource "proxmox_virtual_environment_vm" "vm" {
     ignore_changes = [initialization[0].user_account]
 
     precondition {
-      condition     = local.ssh_user != ""
-      error_message = "ANSIBLE_SSH_USER is empty in Doppler hosts-at-home/prd."
+      # A plain Linux username: rejects empty, null and a templated value.
+      condition     = can(regex("^[a-z_][a-z0-9_-]{0,31}$", coalesce(local.ssh_user, "")))
+      error_message = "ansible_user in inventory/group_vars/all.yaml is empty."
     }
   }
 }

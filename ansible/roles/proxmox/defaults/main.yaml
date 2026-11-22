@@ -1,7 +1,6 @@
 ---
-# Named admin account on the Proxmox host. The username is treated as secret
-# (see ansible/CLAUDE.md): inventory/group_vars/proxmox.yaml sets it from
-# Doppler's PROXMOX_ADMIN_USER (hosts-at-home/prd).
+# Named admin account on the Proxmox host.
+# inventory/group_vars/proxmox.yaml sets it to the default user (rtrox).
 proxmox_admin_user: ""
 
 # GitHub account whose public keys are authorised for the admin user.

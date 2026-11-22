@@ -137,7 +137,12 @@ def check_sites(sites: dict) -> dict:
 
 def flatten_hosts(doc: dict) -> dict:
     hosts: dict = {}
-    for gname, group in doc["all"]["children"].items():
+    groups = doc["all"]["children"]
+    for gname, group in groups.items():
+        for child in (group.get("children") or {}):
+            if child not in groups:
+                err(f"hosts: group {gname} lists unknown child group {child!r}")
+    for gname, group in groups.items():
         for hname, h in (group.get("hosts") or {}).items():
             if hname in hosts:
                 err(f"hosts: {hname} is defined in more than one group ({hosts[hname][0]}, {gname})")
