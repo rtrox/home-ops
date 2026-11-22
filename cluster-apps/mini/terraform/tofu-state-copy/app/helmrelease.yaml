@@ -59,8 +59,11 @@ spec:
                   eval "val=\${$v:-}"
                   case "$val" in ""|"{"*|"http://{"*|"https://{"*) bad "$v" ;; esac
                 done
+                # Lock files (*.tflock) exist only while a plan or apply runs;
+                # never copy or count them, or a run caught mid-apply would keep
+                # a stray lock in history under Object Lock for 90 days.
                 count() {
-                  out=$(rclone size --json --fast-list "$1") || return 1
+                  out=$(rclone size --json --fast-list --exclude '*.tflock' "$1") || return 1
                   echo "$out" | sed -n 's/.*"count":\([0-9]*\).*/\1/p'
                 }
 
@@ -88,7 +91,8 @@ spec:
                 # No --b2-hard-delete: a deletion only hides the file version,
                 # and B2 keeps the old versions, so history stays recoverable.
                 rclone sync "R2:$SRC_BUCKET" "HISTORY:$DST_BUCKET" \
-                  --fast-list --transfers 4 --checkers 8 --max-delete 50 \
+                  --fast-list --transfers 4 --checkers 8 --max-delete 5 \
+                  --exclude '*.tflock' \
                   --stats-one-line --stats 60s -v \
                   || die "rclone sync failed"
 
