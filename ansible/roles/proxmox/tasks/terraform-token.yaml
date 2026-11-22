@@ -1,0 +1,62 @@
+---
+# One API token of the Terraform PVE user (see terraform-user.yaml), looped over
+# proxmox_terraform_tokens with loop_var proxmox_tf_token.
+- name: List the Terraform user's tokens ({{ proxmox_tf_token.id }})
+  command: "pveum user token list {{ proxmox_terraform_user }} --output-format json"
+  register: proxmox_tf_tokens
+  changed_when: false
+  failed_when: false
+  check_mode: false # read-only
+
+- name: Check whether {{ proxmox_tf_token.id }} is stored in Doppler
+  delegate_to: localhost
+  become: false
+  command: >-
+    doppler secrets get {{ proxmox_terraform_doppler_secret }}
+    -p {{ proxmox_doppler_project }} -c {{ proxmox_tf_token.doppler_config }} --plain
+  register: proxmox_tf_doppler
+  changed_when: false
+  failed_when: false
+  no_log: true # the output is the secret
+  check_mode: false # read-only
+
+- name: Work out whether the token must be (re)created
+  set_fact:
+    proxmox_tf_token_exists: >-
+      {{ proxmox_tf_token.id in
+         ((proxmox_tf_tokens.stdout | default('[]', true) | from_json) | map(attribute='tokenid') | list) }}
+    proxmox_tf_secret_stored: "{{ proxmox_tf_doppler.rc == 0 }}"
+
+- name: Remove {{ proxmox_tf_token.id }} if its secret is not in Doppler
+  command: "pveum user token remove {{ proxmox_terraform_user }} {{ proxmox_tf_token.id }}"
+  when: proxmox_tf_token_exists and not proxmox_tf_secret_stored
+  changed_when: true
+
+- name: Create the {{ proxmox_tf_token.id }} token
+  command: >-
+    pveum user token add {{ proxmox_terraform_user }} {{ proxmox_tf_token.id }}
+    --privsep 1 --output-format json
+  register: proxmox_tf_new_token
+  when: not (proxmox_tf_token_exists and proxmox_tf_secret_stored)
+  changed_when: true
+  no_log: true # the output contains the secret
+
+- name: Grant the token its role on / ({{ proxmox_tf_token.role }})
+  command: >-
+    pveum acl modify / --roles {{ proxmox_tf_token.role }}
+    --tokens '{{ proxmox_terraform_user }}!{{ proxmox_tf_token.id }}'
+  changed_when: false # idempotent upsert; "changed" would always be reported
+
+- name: Store {{ proxmox_tf_token.id }} in Doppler
+  delegate_to: localhost
+  become: false
+  command: >-
+    doppler secrets set {{ proxmox_terraform_doppler_secret }}
+    -p {{ proxmox_doppler_project }} -c {{ proxmox_tf_token.doppler_config }}
+  args:
+    stdin: >-
+      {{ (proxmox_tf_new_token.stdout | from_json)['full-tokenid'] }}={{ (proxmox_tf_new_token.stdout | from_json)['value'] }}
+    stdin_add_newline: false
+  when: proxmox_tf_new_token is not skipped
+  changed_when: true
+  no_log: true # the value is the secret

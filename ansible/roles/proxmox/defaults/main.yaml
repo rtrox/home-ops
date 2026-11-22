@@ -11,13 +11,29 @@ proxmox_ssh_github_username: ""
 # works before password SSH is turned off.
 proxmox_ssh_harden: true
 
-# Service account for the Terraform stack (terraform-record/proxmox). Its API
+# Service account for the Terraform stack (terraform/stacks/proxmox). Each API
 # token is written to Doppler by the play; it is never printed or logged.
+# Privilege separation is on, so a token gets only its own ACL's role:
+#   terraform  Administrator, for applies (owner's laptop), in hosts-at-home/prd
+#   ci-plan    PVEAuditor (read-only), for CI plan jobs, in hosts-at-home/ci,
+#              under the same key name so the generated provider reads it as is.
+#              On PVE 9 PVEAuditor includes VM.GuestAgent.Audit, which plans of
+#              agent-enabled VMs need.
+# `pveum acl modify` only adds entries: changing a token's role here later
+# leaves the old one in place, so remove it by hand (pveum acl delete).
+# hosts-at-home/ci must be a root config (a Doppler environment), not a branch
+# of prd, which would inherit prd's PVE_TERRAFORM_API_TOKEN.
 proxmox_terraform_user: terraform@pve
-proxmox_terraform_token_id: terraform
 proxmox_terraform_doppler_secret: PVE_TERRAFORM_API_TOKEN
 proxmox_doppler_project: hosts-at-home
 proxmox_doppler_config: prd
+proxmox_terraform_tokens:
+  - id: terraform
+    role: Administrator
+    doppler_config: prd
+  - id: ci-plan
+    role: PVEAuditor
+    doppler_config: ci
 
 # Let's Encrypt account. Only root@pam can create it (see tasks/acme.yaml).
 proxmox_acme_account_name: letsencrypt
