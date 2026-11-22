@@ -10,7 +10,7 @@
     "github>rtrox/home-ops//.github/renovate/grafanaDashboards.json5",
     "github>rtrox/home-ops//.github/renovate/ansibleImages.json5",
   ],
-  ignorePaths: [".archive/**", "cluster-cd/**"],
+  ignorePaths: [".archive/**"],
   flux: {
     managerFilePatterns: ["/^cluster-apps/.+\\.ya?ml$/"],
   },

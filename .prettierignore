@@ -1,6 +1,5 @@
 # Ignore directories
 .archive/
-cluster-cd/
 node_modules/
 .git/
 

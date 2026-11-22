@@ -171,7 +171,6 @@ cluster-apps/mini/
 │       ├── namespace/         # Basic namespace template
 │       ├── privileged-namespace/  # Privileged workload namespace
 │       └── volsync/           # PVC + backup templates
-├── cluster-cd/                 # Legacy structure (DO NOT USE)
 ├── clusters/                   # Cluster definitions & bootstrap
 │   └── mini/
 │       ├── bootstrap/         # Helmfile-based bootstrap
@@ -459,13 +458,12 @@ Shared, cluster-wide database infra for apps that need Postgres or a Redis-compa
 5. **Shell scripts for automation** - Use Taskfiles instead
 6. **Ingress resources** - Use Gateway API HTTPRoute
 7. **Storing secrets in Git** - Even encrypted, prefer ExternalSecrets
-8. **cluster-cd/ directory** - Use cluster-apps/ instead
-9. **Mutable image tags** - Always pin to SHA256 digest
-10. **Missing resource limits** - All containers must have memory limits
-11. **Raw manifests over Helm charts** - Prefer Helm charts for easier Flux management (not a hard rule, but best practice)
-12. **Velero for backups** - Use Volsync instead (Velero is legacy/deprecated)
-13. **envoy-external for internal apps** - Prefer envoy-internal unless internet access is explicitly needed
-14. **Wrong GitRepository name** - ALWAYS use `flux-system` in sourceRef, never `home-ops` or other names
+8. **Mutable image tags** - Always pin to SHA256 digest
+9. **Missing resource limits** - All containers must have memory limits
+10. **Raw manifests over Helm charts** - Prefer Helm charts for easier Flux management (not a hard rule, but best practice)
+11. **Velero for backups** - Use Volsync instead (Velero is legacy/deprecated)
+12. **envoy-external for internal apps** - Prefer envoy-internal unless internet access is explicitly needed
+13. **Wrong GitRepository name** - ALWAYS use `flux-system` in sourceRef, never `home-ops` or other names
 
 ## Working with External References
 
