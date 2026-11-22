@@ -12,8 +12,9 @@ locals {
 
   inventory_vm_hosts = local.inventory_hosts.all.children.vms.hosts
 
-  pve_node      = "pve"
-  vm_bridge     = "vmbr0"
+  pve_node  = "pve"
+  vm_bridge = "vmbr0"
+  # Until the apartment resolvers exist (#9); then dns-a1 and dns-a2.
   vm_dns_server = "1.1.1.1"
 
   template_vmid = 9000
@@ -119,6 +120,7 @@ resource "proxmox_virtual_environment_vm" "debian13_template" {
     datastore_id = "local-lvm"
     interface    = "scsi0"
     import_from  = proxmox_download_file.debian13.id
+    size         = 8 # GiB; clones grow it (see local.vms)
     iothread     = true
     discard      = "on"
   }
@@ -234,6 +236,17 @@ resource "proxmox_virtual_environment_vm" "vm" {
 
   lifecycle {
     prevent_destroy = true
+    # cloud-init's user and keys apply at first boot only. Changing them later
+    # (e.g. a new key on GitHub) would reboot the VM and, because Proxmox
+    # derives the cloud-init instance-id from the user-data, re-run cloud-init
+    # as a new instance (new SSH host keys). Ansible manages keys after boot.
+    # ip_config and dns stay managed, so renumbering via the inventory works.
+    ignore_changes = [initialization[0].user_account]
+
+    precondition {
+      condition     = local.ssh_user != ""
+      error_message = "ANSIBLE_SSH_USER is empty in Doppler hosts-at-home/prd."
+    }
   }
 }
 
@@ -243,7 +256,7 @@ resource "cloudflare_dns_record" "vm" {
   for_each = local.vms
 
   zone_id = data.cloudflare_zone.rtrox_io.zone_id
-  name    = each.value.fqdn
+  name    = local.inventory_vm_hosts[each.value.fqdn].dns_name
   type    = "A"
   content = local.vm_network[each.key].address
   ttl     = 1

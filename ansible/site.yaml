@@ -1,6 +1,7 @@
 ---
 - name: Common configuration for all hosts
-  hosts: all:!unmanaged
+  # vms (runner, dns-a1) get their roles in later items; keep them out until then.
+  hosts: all:!unmanaged:!vms
   become: true
 
   pre_tasks:

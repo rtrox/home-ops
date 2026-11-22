@@ -5,7 +5,7 @@
 # Addresses" spreadsheet (VLANs and Firewall Rules tabs). Hosts live in hosts.yaml.
 # Validated in CI by `task inventory:check` (see inventory/README.md).
 #
-# Scheme: each site is a /14, each VLAN a /16 inside it (guest: a /24), and the
+# Scheme: each site is a /14, each VLAN a /16 inside it (the house guest VLAN is a /24), and the
 # third octet means the same thing at every site (Trusted .1 servers, .x1 cluster
 # nodes, .x2 cluster LoadBalancer pool, .99 network services; Management .x1
 # cluster KVMs/DRACs, .99 network gear; IoT .10-.15 device classes).
