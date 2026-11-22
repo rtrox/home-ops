@@ -103,6 +103,8 @@ sites:
         id: 11
         purpose: Management network for DRACs, IPMIs, KVMs, network gear
         cidr: 172.20.0.0/16
+        # From the Mikrotik's /ip pool (pool-mgmt), 2026-11-22.
+        dhcp: { start: 172.20.250.2, end: 172.20.252.254 }
         subnets:
           network-gear: { cidr: 172.20.99.0/24, purpose: "Switches, etc" }
           mini-kvms:
@@ -113,7 +115,8 @@ sites:
         purpose: Trusted network, only controlled devices
         cidr: 172.21.0.0/16
         router: 172.21.254.1
-        # TODO: record the Mikrotik pool (dhcp: { start, end }). Unknown for now.
+        # From the Mikrotik's /ip pool (pool-trusted), 2026-11-22.
+        dhcp: { start: 172.21.250.2, end: 172.21.252.254 }
         subnets:
           # The sheet had the NAS under 172.21.11.0/24, which is cluster slot 1.
           # Servers go under .1, as at the house.
@@ -124,6 +127,8 @@ sites:
         id: 200
         purpose: IoT devices, limited privileges
         cidr: 172.22.0.0/16
+        # From the Mikrotik's /ip pool (pool-iot), 2026-11-22.
+        dhcp: { start: 172.22.250.2, end: 172.22.252.254 }
         subnets:
           home-automation:
             {
@@ -139,6 +144,10 @@ sites:
         id: 300
         purpose: Guest network, no privileges, port isolation
         cidr: 172.23.0.0/24
+        # TODO: the Mikrotik's pool-guest is 172.23.250.2-172.23.252.254, which
+        # is outside this /24 (from the sheet), so the router's guest network
+        # is probably a /16. Confirm with /ip address print, fix cidr, then add
+        # dhcp: { start: 172.23.250.2, end: 172.23.252.254 }.
     clusters:
       mini:
         slot: 3 # nodes .31, LoadBalancer pool .32
