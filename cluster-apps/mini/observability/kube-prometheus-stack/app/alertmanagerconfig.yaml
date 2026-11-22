@@ -16,10 +16,13 @@ spec:
     routes:
       # Dead-man's switch: Watchdog fires continuously; healthchecks.io alerts if pings stop.
       # groupInterval must be shorter than the check period (5m), or the check flaps.
+      # repeatInterval is below groupInterval on purpose: at 1m/1m the dedup check
+      # skips every other tick (the last send's timestamp lands just after it),
+      # halving the cadence. 30s makes every 1m tick send.
       - receiver: healthchecks-watchdog
         groupWait: 10s
         groupInterval: 1m
-        repeatInterval: 1m
+        repeatInterval: 30s
         matchers:
           - name: alertname
             value: Watchdog
