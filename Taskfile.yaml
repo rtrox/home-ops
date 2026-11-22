@@ -8,6 +8,10 @@ shopt:
   - globstar
 
 vars:
+  # Mini is the only cluster. Override with the environment variable
+  # (CLUSTER_NAME=bitty task ...): in go-task 3.46, `task foo CLUSTER_NAME=x`
+  # on the command line doesn't reach these top-level vars.
+  CLUSTER_NAME: '{{.CLUSTER_NAME | default "mini"}}'
   CLUSTER_DIR: "{{.ROOT_DIR}}/clusters/{{.CLUSTER_NAME}}"
   TALOS_DIR: "{{.CLUSTER_DIR}}/talos"
   TALOSCONFIG: "{{.TALOS_DIR}}/clusterconfig/talosconfig"
