@@ -148,7 +148,16 @@ spec:
                   fi
                   # Count excludes the keys Doppler adds itself; zero left is a failure.
                   count=$(jq 'del(.DOPPLER_PROJECT, .DOPPLER_CONFIG, .DOPPLER_ENVIRONMENT) | length' "$plain" 2>/dev/null)
-                  case "$count" in ""|*[!0-9]*|0) echo "config $key: no secrets besides Doppler's own"; rm -f "${plain:?}"; continue ;; esac
+                  case "$count" in
+                    ""|*[!0-9]*) echo "config $key: could not count secrets"; rm -f "${plain:?}"; continue ;;
+                    0)
+                      # Only configs listed in ALLOW_EMPTY_CONFIGS may be empty;
+                      # an unexpected empty config may have been wiped.
+                      case " ${ALLOW_EMPTY_CONFIGS:-} " in
+                        *" $key "*) echo "config $key: empty (allowed)" ;;
+                        *) echo "config $key: no secrets besides Doppler's own"; rm -f "${plain:?}"; continue ;;
+                      esac ;;
+                  esac
                   # shellcheck disable=SC2086
                   if ! age $rargs -o "$out/$name" "$plain" >/dev/null 2>&1; then
                     echo "config $key: encryption failed"; rm -f "${plain:?}" "${out:?}/${name:?}"; continue
@@ -191,6 +200,8 @@ spec:
               HOME: /tmp
               XDG_CONFIG_HOME: /tmp
               XDG_CACHE_HOME: /tmp
+              # Configs that legitimately hold no secrets of their own.
+              ALLOW_EMPTY_CONFIGS: chezmoi-secrets/dsk
               # Public age keys from .sops.yaml (Ubuntu WSL, work macbook,
               # Endeavour laptop); not secret.
               AGE_RECIPIENTS: >-
