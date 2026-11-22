@@ -25,6 +25,36 @@ This repository implements a GitOps-managed Kubernetes infrastructure using Flux
 11. **Prefer Helm charts** over raw manifests for easier management
 12. **Keep CLAUDE.md updated** with each significant change to patterns or architecture
 
+## Infrastructure Migration (in progress)
+
+Terraform is moving from the private `terraform-record` repo into this repo, reorganized by consumer, with internal DNS, Garage storage and a Proxmox-hosted CI runner. The design lives in two docs the repo owner keeps outside the repo: **Home infrastructure: target architecture** and **Home infrastructure: migration plan** (nine phases, 0 to 8, each with tasks and exit checks).
+
+**Current phase:** 0 (safety net). Nothing in the new layout exists yet.
+
+### Agents
+
+Agent definitions live in `.claude/agents/`. The lead (the main session) breaks a phase into PR-sized tasks and delegates:
+
+| Agent | Model | Effort | Use for |
+| --- | --- | --- | --- |
+| Lead (main session) | Opus 5.5 | high | Planning a phase, delegating, checking exit criteria, keeping the docs current |
+| `recon` | Haiku 5.5 | low | Read-only extraction and comparison |
+| `iac-implementer` | Sonnet 5.5 | medium | One well-specified task per worktree, validated, ready for a PR |
+| `state-mover` | Opus 5.5 | high | Phase 2 stack moves and the phase 0 pocket-id reconcile |
+| `plan-reviewer` | Opus 5.5 | high | Independent review of every infrastructure PR |
+| `plan-reviewer` as a second opinion | Fable 5.2 | high | Phase 2 stack moves, the phase 6 firewall import, the phase 8 rebuild runbook |
+| `docs-keeper` | Haiku 5.5 | low | Documentation after a change lands |
+
+These model and effort levels are deliberate; the lead may set them explicitly when delegating. Escalation: an implementer task that fails validation twice moves to Opus 5.5; an uncertain review on a high-risk change gets the Fable 5.2 second opinion.
+
+### Rules
+
+- **Agents never apply.** No `tofu apply`, imports or state edits, Doppler writes, router changes, `kubectl` mutations, Talos applies or non-check Ansible runs. `.claude/settings.json` denies those commands, but that's a guard rail, not a sandbox: the real boundary is that agents hold read-only credentials. Applies run in CI behind GitHub Environment approval, or by hand for laptop-only stacks.
+- **Reviews are independent.** The reviewer gets the diff and the plan, never the implementer's reasoning. Mechanical checks (no destroys, sensitive PII, `doppler_secret` values unchanged) also run in CI regardless.
+- **One worktree per implementer**, and at most two implementer tracks at once, since every apply waits on a human.
+- **Never print secret values.** Pulled state and exports stay in the session scratchpad and are deleted after use.
+- **The repo owner does the learning-heavy parts by hand**: the Terramate skeleton, the first stack, and the Knot/external-dns spike, with the lead as pair and reviewer.
+
 ## Table of Contents
 
 1. [Key Principles](#key-principles)
