@@ -153,7 +153,8 @@ jobs:
             excludes=()
             if [ -f ci-plan-exclude.txt ]; then
               while IFS= read -r addr; do
-                addr=${addr%%#*}; addr=$(echo "$addr" | xargs)
+                addr=${addr%%#*}
+                addr=$(sed -E 's/^[[:space:]]+|[[:space:]]+$//g' <<<"$addr")
                 [ -n "$addr" ] && excludes+=("-exclude=$addr")
               done < ci-plan-exclude.txt
             fi
@@ -173,6 +174,7 @@ jobs:
               fi
               printf '%s\n' "${totals:-Plan finished, no summary line found.}"
               if [ ${#excludes[@]} -gt 0 ]; then
+                printf '\n> [!WARNING]\n> **PARTIAL PLAN: %d address(es) excluded.** Check any change to ci-plan-exclude.txt in this PR.\n' "${#excludes[@]}"
                 printf '\nNot planned in CI (ci-plan-exclude.txt, and anything depending on them): %s. Plan these from the laptop.\n' \
                   "$(printf '`%s` ' "${excludes[@]#-exclude=}")"
               fi
