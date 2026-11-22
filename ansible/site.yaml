@@ -2,7 +2,7 @@
 - name: Common configuration for the Raspberry Pis
   # Pi-oriented roles (Armbian, Raspberry Pi, raspi-monitor, Docker). Proxmox
   # has its own playbook; the VMs get theirs in later migration items.
-  hosts: pis
+  hosts: pis:!offline
   become: true
 
   pre_tasks:
@@ -104,7 +104,7 @@
             name: tailscaled
 
 - name: Configure  Avahi Hosts
-  hosts: avahi
+  hosts: avahi:!offline
   become: true
 
   tasks:
