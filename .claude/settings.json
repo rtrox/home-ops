@@ -70,7 +70,6 @@
       "Bash(rclone deletefile:*)",
       "Bash(git push --force:*)",
       "Bash(git push -f:*)",
-      "Bash(gh pr merge:*)",
       "Bash(gh workflow run:*)",
       "Bash(gh secret set:*)",
       "Bash(gh secret delete:*)",

@@ -58,6 +58,7 @@ These model and effort levels are deliberate; the lead may set them explicitly w
 ### Rules
 
 - **Agents never apply.** No `tofu apply`, imports or state edits, Doppler writes, router changes, `kubectl` mutations, Talos applies or non-check Ansible runs. `.claude/settings.json` denies those commands, but that's a guard rail, not a sandbox: the real boundary is that agents hold read-only credentials. Applies run in CI behind GitHub Environment approval, or by hand for laptop-only stacks.
+- **Agents may merge** a PR (`gh pr merge --squash`) once its required CI checks pass and an independent review approved it, with every BLOCK resolved. A merge into `cluster-apps/` or `clusters/` is an apply (Flux reconciles it), so only easily reverted changes are merged without asking. Ask the owner first for anything that destroys, migrates data, touches credentials or networking (DNS, LoadBalancers, firewall), or can't be undone by a revert. Merging Terraform or Ansible code applies nothing by itself; the owner still runs those applies, so state the next apply step after merging.
 - **Reviews are independent.** The reviewer gets the diff and the plan, never the implementer's reasoning. Mechanical checks (no destroys, sensitive PII, `doppler_secret` values unchanged) also run in CI regardless.
 - **One worktree per implementer**, and at most two implementer tracks at once, since every apply waits on a human.
 - **Never print secret values.** Pulled state and exports stay in the session scratchpad and are deleted after use.
