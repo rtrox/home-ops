@@ -64,6 +64,10 @@ globals {
 
   # Doppler config -> the tf-at-home/prd secret holding its write token.
   # (Renamed with the Doppler projects after phase 4.)
+  #
+  # NOTE for CI (var.doppler_config = "ci"): a stack with doppler_writes needs
+  # these same key names in tf-at-home/ci, holding READ-ONLY tokens, or its
+  # plan can't configure the aliased providers. The proxmox stack has none.
   doppler_write_tokens = {
     "hosts-at-home/prd" = "DOPPLER_TRUENAS_WRITE_TOKEN"
     "k8s-at-home/min"   = "DOPPLER_MINI_WRITE_TOKEN"

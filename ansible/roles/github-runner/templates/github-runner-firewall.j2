@@ -49,3 +49,19 @@ ipt -A "$CHAIN" -j REJECT
 # Hook the chain into DOCKER-USER for traffic coming from the job bridge.
 ipt -D DOCKER-USER -i "$BRIDGE" -j "$CHAIN" 2>/dev/null || true
 ipt -I DOCKER-USER 1 -i "$BRIDGE" -j "$CHAIN"
+
+# Jobs can't reach this host itself (sshd, LLMNR, ...): only replies to traffic
+# the host started. Docker's embedded DNS lives inside the container, and the
+# resolvers are reached by forwarding, so nothing else is needed on INPUT.
+ipt -N "$CHAIN-IN" 2>/dev/null || true
+ipt -F "$CHAIN-IN"
+ipt -A "$CHAIN-IN" -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+ipt -A "$CHAIN-IN" -j REJECT
+ipt -D INPUT -i "$BRIDGE" -j "$CHAIN-IN" 2>/dev/null || true
+ipt -I INPUT 1 -i "$BRIDGE" -j "$CHAIN-IN"
+
+# IPv6 backstop: the VM has global and ULA addresses. Docker's IPv6 is off, but
+# nothing from the job bridge may be forwarded or reach the host over v6.
+ip6t() { ip6tables -w 10 "$@"; }
+ip6t -C FORWARD -i "$BRIDGE" -j DROP 2>/dev/null || ip6t -I FORWARD 1 -i "$BRIDGE" -j DROP
+ip6t -C INPUT -i "$BRIDGE" -j DROP 2>/dev/null || ip6t -I INPUT 1 -i "$BRIDGE" -j DROP

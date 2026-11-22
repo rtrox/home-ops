@@ -71,7 +71,6 @@ jobs:
             "https://api.doppler.com/v3/configs/config/secrets/download?format=json" \
             <<<"header = \"Authorization: Bearer ${CI_DOPPLER_TF_READ}\"" 2>/dev/null) || fail
           r2=$(get '.R2_STATE_READONLY' <<<"$secrets") || fail
-          echo "::add-mask::$r2"
           passphrase=$(get '.TOFU_STATE_PASSPHRASE' <<<"$secrets") || fail
           echo "::add-mask::$passphrase"
           access_key=$(get '.access_key_id' <<<"$r2") || fail
