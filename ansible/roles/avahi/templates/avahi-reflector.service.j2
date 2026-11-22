@@ -7,7 +7,7 @@ Requires=docker.service
 TimeoutStartSec=0
 ExecStartPre=-/usr/bin/docker rm --force avahi-reflector
 ExecStart=/usr/bin/docker run --name avahi-reflector \
-    --pull missing                                    \
+    --pull missing                                   \
     --network host                                   \
     -e SERVER_HOST_NAME={{ ansible_facts.hostname }}       \
     -e SERVER_USE_IPV4=yes                           \
