@@ -9,6 +9,8 @@
     name: docker
     enabled: true
     state: started
+  # On a fresh host Docker isn't installed yet under --check.
+  ignore_errors: "{{ ansible_check_mode }}"
 
 - name: Create Valkey config directory
   ansible.builtin.file:

@@ -33,6 +33,7 @@
     backup: true
   when: blocky_set_system_resolvers
 
+# Skipped where dhclient isn't in use (dns-a1 has static netplan addressing).
 - name: System Resolvers - Prevent DHCP from overwriting /etc/resolv.conf
   lineinfile:
     path: /etc/dhcp/dhclient.conf
@@ -40,6 +41,9 @@
     line: supersede domain-name-servers {{ blocky_system_resolvers | join(" ") }};
     state: present
     create: true
+  when:
+    - blocky_set_system_resolvers
+    - blocky_dhclient_supersede
   notify: restart networking
 
 - name: Check if Systemd-Resolved is active
@@ -47,14 +51,48 @@
   register: systemd_resolved_status
   failed_when: false
   changed_when: false
+  check_mode: false # read-only; lets --check show the drop-in below
+
+# resolved's stub holds 127.0.0.53:53, so Blocky (--net host) can't bind :53.
+# A drop-in, not an edit of resolved.conf. /etc/resolv.conf (the stub symlink on
+# Debian cloud images) is replaced by a static file above when
+# blocky_set_system_resolvers is on, so the host keeps resolving without the stub.
+- name: Ensure the resolved drop-in directory exists
+  file:
+    path: /etc/systemd/resolved.conf.d
+    state: directory
+    mode: "0755"
+  when: systemd_resolved_status.stdout == "active"
 
 - name: Disable Stub Listener to free port 53
-  lineinfile:
-    path: /etc/systemd/resolved.conf
-    line: DNSStubListener=no
-    state: present
+  copy:
+    dest: /etc/systemd/resolved.conf.d/90-ansible-no-stub.conf
+    content: |
+      # Managed by Ansible (roles/blocky). Blocky owns port 53.
+      [Resolve]
+      DNSStubListener=no
+    mode: "0644"
   when: systemd_resolved_status.stdout == "active"
-  notify: restart systemd-resolved
+  register: blocky_resolved_dropin
+
+# Self-healing: also restart if the stub is still listening, so a run that wrote
+# the drop-in and then failed before the restart is fixed by a rerun.
+- name: Check whether the resolved stub still holds port 53
+  shell: ss -lnuH | grep -E '127\.0\.0\.(53|54):53 ' || true
+  register: blocky_resolved_stub
+  changed_when: false
+  check_mode: false # read-only
+  when: systemd_resolved_status.stdout == "active"
+
+# Restarted here, before Blocky starts, not as a handler (handlers run at the
+# end of the play, after Blocky has failed to bind).
+- name: Restart systemd-resolved so the stub releases port 53
+  systemd:
+    name: systemd-resolved
+    state: restarted
+  when:
+    - systemd_resolved_status.stdout == "active"
+    - blocky_resolved_dropin is changed or blocky_resolved_stub.stdout | length > 0
 
 - name: Ensure required directories for Blocky exist
   file:
@@ -69,11 +107,22 @@
     name: docker
     enabled: true
     state: started
+  # On a fresh host Docker isn't installed yet under --check.
+  ignore_errors: "{{ ansible_check_mode }}"
 
-- name: Configure Blocky Home using template
+# Blocky loads every YAML file in /etc/blocky and merges them (--config
+# /etc/blocky, see blocky.service.j2): the shared file first, then this host's.
+- name: Copy the shared Blocky config (upstreams, blocklists, client groups)
+  copy:
+    src: "{{ blocky_shared_config }}"
+    dest: /etc/blocky/00-shared.yaml
+    mode: "0644"
+  notify: restart blocky service
+
+- name: Configure Blocky per-host settings using template
   template:
-    src: config.yaml.j2
-    dest: /etc/blocky/config.yaml
+    src: host.yaml.j2
+    dest: /etc/blocky/10-host.yaml
     mode: "0644"
   diff: false # the rendered config contains the Valkey password
   notify: restart blocky service
@@ -84,9 +133,52 @@
     dest: /etc/systemd/system/blocky.service
   notify: restart blocky service
 
+# Blocky merges EVERY yaml file in /etc/blocky, so a stray one would silently
+# change the config. config.yaml is the old single-file config, removed below.
+- name: Find YAML files in /etc/blocky
+  find:
+    paths: /etc/blocky
+    patterns: ["*.yaml", "*.yml"]
+    recurse: true
+  register: blocky_yaml_files
+  check_mode: false # read-only
+
+- name: Fail on unexpected YAML files in /etc/blocky
+  fail:
+    msg: "Blocky would merge unmanaged files: {{ unexpected }}"
+  vars:
+    unexpected: "{{ blocky_yaml_files.files | map(attribute='path') | difference(['/etc/blocky/00-shared.yaml', '/etc/blocky/10-host.yaml', '/etc/blocky/config.yaml']) }}"
+  when: unexpected | length > 0
+
+# Validate the NEW config before anything restarts: only the two managed files,
+# copied to a temp dir (the old config.yaml may still be in /etc/blocky and would
+# override them). A failure stops the play before the handlers run, so a bad
+# config never reaches the running container.
+- name: Validate the Blocky config
+  shell: |
+    set -e
+    d=$(mktemp -d)
+    trap 'rm -rf "$d"' EXIT
+    cp /etc/blocky/00-shared.yaml /etc/blocky/10-host.yaml "$d"/
+    docker run --rm -v "$d":/cfg:ro {{ blocky_image }} validate --config /cfg
+  args:
+    executable: /bin/bash
+  changed_when: false
+  when: not ansible_check_mode
+
 - name: Enable and start the Blocky service
   systemd:
     name: blocky
     enabled: true
     state: started
     daemon_reload: yes
+  # Check mode doesn't write the unit on a first deploy.
+  ignore_errors: "{{ ansible_check_mode }}"
+
+# The single-file config this replaced. Removed last: until the new unit is in
+# place it is a complete config, and with it gone Blocky would have nothing.
+- name: Remove the old single-file Blocky config
+  file:
+    path: /etc/blocky/config.yaml
+    state: absent
+  notify: restart blocky service

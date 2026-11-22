@@ -1,4 +1,8 @@
-# Valkey on whichever DNS host holds the keepalived VIP (roles/valkey).
+# The config every resolver shares (upstreams, blocklists, client groups). Lives
+# outside the role so mini's ConfigMap can render from the same file.
+blocky_shared_config: "{{ playbook_dir }}/../dns/blocky/00-shared.yaml"
+# Valkey on whichever DNS host holds the keepalived VIP (roles/valkey). The
+# apartment overrides it (inventory/group_vars/dns_apartment.yaml).
 blocky_redis_address: "{{ keepalived_vip_address.split('/')[0] }}:{{ valkey_port | default(6379) }}"
 blocky_redis_password: "{{ valkey_password }}"
 blocky_redis_database: 0
@@ -12,3 +16,8 @@ blocky_system_resolvers:
 # Pinned by digest; Renovate bumps tag and digest together (.github/renovate/ansibleImages.json5).
 # renovate: datasource=docker
 blocky_image: "spx01/blocky:v0.37.0@sha256:d9b6344d7c8f3fe577a47bc97b523faa116f7ea8a8901bfaf800a4dbdce64c96"
+# dhclient.conf supersede (Pis). Off where dhclient isn't in use.
+blocky_dhclient_supersede: true
+# Keep a site's own upstreams instead of the shared DoH ones (see
+# inventory/group_vars/dns.yaml): emits the pre-shared-config upstreams.
+blocky_legacy_upstreams: false
