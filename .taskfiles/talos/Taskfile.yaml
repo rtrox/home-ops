@@ -25,19 +25,19 @@ tasks:
     desc: Render node machine configs and the talosconfig (output is gitignored)
     requires: *default-requires
     preconditions:
-      - which topf sops
+      - mise which topf >/dev/null && which sops
       - test -f {{.TOPF_CONFIG}}
       - test -f {{.TALOS_DIR}}/secrets.sops.yaml
     cmds:
       - mkdir -p {{.CLUSTERCONFIG_DIR}}
-      - topf --topfconfig {{.TOPF_CONFIG}} render --output {{.CLUSTERCONFIG_DIR}}
-      - topf --topfconfig {{.TOPF_CONFIG}} talosconfig > {{.TALOSCONFIG}}
+      - mise exec -- topf --topfconfig {{.TOPF_CONFIG}} render --output {{.CLUSTERCONFIG_DIR}}
+      - mise exec -- topf --topfconfig {{.TOPF_CONFIG}} talosconfig > {{.TALOSCONFIG}}
 
   validate-clusterconfig:
     desc: Render and validate every node config with talosctl (run before applying)
     requires: *default-requires
     preconditions:
-      - which topf sops talosctl
+      - mise which topf >/dev/null && which sops talosctl
     cmds:
       - task: generate-clusterconfig
       - |-
@@ -49,10 +49,10 @@ tasks:
     desc: Apply topf config to all nodes (DRY_RUN=true to preview; exits 2 if changes; CONFIRM=false skips the prompt)
     requires: *default-requires
     preconditions:
-      - which topf sops
+      - mise which topf >/dev/null && which sops
       - test -f {{.TOPF_CONFIG}}
     cmds:
-      - topf --topfconfig {{.TOPF_CONFIG}} apply
+      - mise exec -- topf --topfconfig {{.TOPF_CONFIG}} apply
         {{ if eq "true" .DRY_RUN }}--dry-run{{ end }}
         {{ if eq "false" .CONFIRM }}--confirm=false{{ end }}
 
@@ -63,11 +63,11 @@ tasks:
         - *requires-cluster-name
         - NODE
     preconditions:
-      - which topf sops talosctl
+      - mise which topf >/dev/null && which sops talosctl
       - test -f {{.TOPF_CONFIG}}
       - test -f "{{.TALOSCONFIG}}"
     cmds:
-      - topf --topfconfig {{.TOPF_CONFIG}} --nodes-filter '^{{.NODE}}(\.|$)' apply
+      - mise exec -- topf --topfconfig {{.TOPF_CONFIG}} --nodes-filter '^{{.NODE}}(\.|$)' apply
         {{ if eq "true" .DRY_RUN }}--dry-run{{ end }}
         {{ if eq "false" .CONFIRM }}--confirm=false{{ end }}
       - talosctl --talosconfig {{.TALOSCONFIG}} --nodes {{.NODE}} health
@@ -79,7 +79,7 @@ tasks:
         - *requires-cluster-name
         - NODE
     preconditions:
-      - which topf sops talosctl yq
+      - mise which topf >/dev/null && which sops talosctl yq
       - test -f "{{.TALOSCONFIG}}"
       - talosctl --talosconfig {{.TALOSCONFIG}} --nodes {{.NODE}} get machineconfig
     vars:
