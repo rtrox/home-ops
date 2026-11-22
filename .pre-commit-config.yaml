@@ -66,7 +66,7 @@ repos:
         entry: >-
           sh -c 'cd terraform && mise exec -- tflint --init >/dev/null &&
           mise exec -- tflint --recursive --config "$PWD/.tflint.hcl"'
-        files: ^terraform/.*\.tf$
+        files: ^terraform/(.*\.tf|\.tflint\.hcl)$
         pass_filenames: false
       - id: terramate-generate
         name: terramate generated files are up to date
