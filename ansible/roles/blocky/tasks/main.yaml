@@ -75,13 +75,24 @@
   when: systemd_resolved_status.stdout == "active"
   register: blocky_resolved_dropin
 
+# Self-healing: also restart if the stub is still listening, so a run that wrote
+# the drop-in and then failed before the restart is fixed by a rerun.
+- name: Check whether the resolved stub still holds port 53
+  shell: ss -lnuH | grep -E '127\.0\.0\.(53|54):53 ' || true
+  register: blocky_resolved_stub
+  changed_when: false
+  check_mode: false # read-only
+  when: systemd_resolved_status.stdout == "active"
+
 # Restarted here, before Blocky starts, not as a handler (handlers run at the
 # end of the play, after Blocky has failed to bind).
 - name: Restart systemd-resolved so the stub releases port 53
   systemd:
     name: systemd-resolved
     state: restarted
-  when: blocky_resolved_dropin is changed
+  when:
+    - systemd_resolved_status.stdout == "active"
+    - blocky_resolved_dropin is changed or blocky_resolved_stub.stdout | length > 0
 
 - name: Ensure required directories for Blocky exist
   file:
@@ -139,12 +150,19 @@
     unexpected: "{{ blocky_yaml_files.files | map(attribute='path') | difference(['/etc/blocky/00-shared.yaml', '/etc/blocky/10-host.yaml', '/etc/blocky/config.yaml']) }}"
   when: unexpected | length > 0
 
-# Validate the merged config before anything restarts. A failure stops the play
-# before the handlers run, so a bad config never reaches the running container.
+# Validate the NEW config before anything restarts: only the two managed files,
+# copied to a temp dir (the old config.yaml may still be in /etc/blocky and would
+# override them). A failure stops the play before the handlers run, so a bad
+# config never reaches the running container.
 - name: Validate the Blocky config
-  command: >-
-    docker run --rm -v /etc/blocky:/etc/blocky:ro {{ blocky_image }}
-    validate --config /etc/blocky
+  shell: |
+    set -e
+    d=$(mktemp -d)
+    trap 'rm -rf "$d"' EXIT
+    cp /etc/blocky/00-shared.yaml /etc/blocky/10-host.yaml "$d"/
+    docker run --rm -v "$d":/cfg:ro {{ blocky_image }} validate --config /cfg
+  args:
+    executable: /bin/bash
   changed_when: false
   when: not ansible_check_mode
 
