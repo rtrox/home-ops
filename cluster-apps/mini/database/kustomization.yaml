@@ -8,7 +8,6 @@ resources:
   - ./cloudnative-pg-barman-plugin/ks.yaml
   - ./valkey/ks.yaml
   - ./cnpg-offsite/ks.yaml
-  - ./cnpg-restore-test/ks.yaml
 components:
   - ../../components/namespace
   - ../../components/flux/alerts
