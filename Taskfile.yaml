@@ -19,6 +19,7 @@ vars:
 includes:
   ansible: .taskfiles/ansible/Taskfile.yaml
   flux: .taskfiles/flux/Taskfile.yaml
+  inventory: .taskfiles/inventory/Taskfile.yaml
   # k8s: .taskfiles/k8s/Taskfile.yaml
   k8s-bootstrap: .taskfiles/k8s-bootstrap/Taskfile.yaml
   # postgres: .taskfiles/postgres/Taskfile.yaml

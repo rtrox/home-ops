@@ -10,7 +10,7 @@ auto_update_service: "apt-daily-upgrade.timer"
 # auto_upgrade_slot per host to reorder.
 auto_upgrade_base_time: "09:00"
 auto_upgrade_slot_minutes: 30
-auto_upgrade_slot: "{{ (groups['all'] | sort).index(inventory_hostname) }}"
+auto_upgrade_slot: "{{ (groups['all'] | difference(groups.get('unmanaged', [])) | sort).index(inventory_hostname) }}"
 auto_upgrade_minute_of_day: >-
   {{ ((auto_upgrade_base_time.split(':')[0] | int) * 60
       + (auto_upgrade_base_time.split(':')[1] | int)

@@ -7,7 +7,7 @@ vars:
   # --forks 1 applies to one host at a time, so a group target like `dns` never
   # restarts Docker (and drops DNS) on both name servers at once.
   ANSIBLE_ARGS: >-
-    -i inventory.yaml
+    -i ../inventory/hosts.yaml
     --vault-password-file .ansible-vault-pass
     --forks 1
 
@@ -18,8 +18,8 @@ tasks:
     preconditions:
       - sh: which ansible-playbook
         msg: "ansible-playbook not found on PATH"
-      - sh: test -f inventory.yaml
-        msg: "ansible/inventory.yaml is missing (local-only, see ansible/README.md)"
+      - sh: test -f ../inventory/group_vars/all.yaml
+        msg: "inventory/group_vars/all.yaml is missing (local-only, see ansible/README.md)"
       - sh: test -f .ansible-vault-pass
         msg: "ansible/.ansible-vault-pass is missing (local-only, see ansible/README.md)"
 
@@ -58,9 +58,9 @@ tasks:
   proxmox-check:
     desc: Dry-run the Proxmox playbook, showing diffs (extra args after --, e.g. -e proxmox_ssh_harden=true)
     dir: "{{.ANSIBLE_DIR}}"
-    cmd: mise exec -- ansible-playbook -i inventory.yaml proxmox.yaml --check --diff {{.CLI_ARGS}}
+    cmd: mise exec -- ansible-playbook -i ../inventory/hosts.yaml proxmox.yaml --check --diff {{.CLI_ARGS}}
 
   proxmox-apply:
     desc: Apply the Proxmox playbook (extra args after --, e.g. -e proxmox_ssh_harden=true)
     dir: "{{.ANSIBLE_DIR}}"
-    cmd: mise exec -- ansible-playbook -i inventory.yaml proxmox.yaml {{.CLI_ARGS}}
+    cmd: mise exec -- ansible-playbook -i ../inventory/hosts.yaml proxmox.yaml {{.CLI_ARGS}}

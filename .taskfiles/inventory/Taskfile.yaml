@@ -1,0 +1,9 @@
+---
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+version: "3"
+
+tasks:
+  check:
+    desc: Validate inventory/sites.yaml and inventory/hosts.yaml (schema, addresses inside VLAN and subnet, no duplicates)
+    dir: "{{.ROOT_DIR}}/inventory"
+    cmd: mise exec -- uv run --script check.py

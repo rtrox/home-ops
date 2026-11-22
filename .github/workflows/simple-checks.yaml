@@ -51,6 +51,29 @@ jobs:
         env:
           GITHUB_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  inventory-check:
+    name: Validate Inventory
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: |
+            inventory:
+              - "inventory/**"
+              - ".github/workflows/simple-checks.yaml"
+
+      - uses: astral-sh/setup-uv@v7
+        if: ${{ steps.filter.outputs.inventory == 'true' }}
+
+      # Same as `task inventory:check`; the script pins its own dependencies.
+      - name: Check inventory schema and addresses
+        if: ${{ steps.filter.outputs.inventory == 'true' }}
+        working-directory: inventory
+        run: uv run --script check.py
+
   renovate-config-validator:
     name: Validate Renovate Config
     runs-on: ubuntu-latest
@@ -91,6 +114,7 @@ jobs:
     needs:
       - pre-commit-check
       - lint-yaml
+      - inventory-check
       - renovate-config-validator
     if: ${{ !cancelled() }}
     name: Lint successful

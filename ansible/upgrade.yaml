@@ -6,7 +6,7 @@
 # serial: 1 + max_fail_percentage: 0 means a host that fails to upgrade, reboot,
 # or come back serving DNS stops the run before the next host is touched.
 - name: Upgrade packages and reboot
-  hosts: all
+  hosts: all:!unmanaged
   become: true
   serial: 1
   max_fail_percentage: 0
