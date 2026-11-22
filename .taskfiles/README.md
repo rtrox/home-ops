@@ -30,7 +30,7 @@ Tasks for validating and inspecting Flux resources.
 
 ### `flux:test`
 
-Validate all Flux resources with flux-local.
+Validate all Flux resources with [flate](https://github.com/home-operations/flate), rendering every HelmRelease.
 
 ```bash
 task flux:test CLUSTER_NAME=mini
@@ -67,7 +67,7 @@ task flux:list CLUSTER_NAME=mini RESOURCE_TYPE=hr
 
 ### `flux:diff`
 
-Compare Flux resources against a base branch.
+Compare the rendered Flux resources against a Git revision (no temporary worktree needed).
 
 ```bash
 # Diff against main
@@ -79,12 +79,12 @@ task flux:diff CLUSTER_NAME=mini RESOURCE_TYPE=hr BASE_BRANCH=develop
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `RESOURCE_TYPE` | `hr` | Resource type: `ks` or `hr` |
-| `BASE_BRANCH` | `main` | Branch to compare against |
+| `RESOURCE_TYPE` | `all` | Resource type: `all`, `ks`, `hr` or `images` |
+| `BASE_BRANCH` | `main` | Revision to compare against |
 
 ### `flux:diff-all`
 
-Compare both Kustomizations and HelmReleases against main.
+Compare everything against main (alias for `flux:diff` with `RESOURCE_TYPE=all`).
 
 ```bash
 task flux:diff-all CLUSTER_NAME=mini

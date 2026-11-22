@@ -11,6 +11,5 @@ _.python.venv = { path = "{{config_root}}/.venv", create = true }
 "aqua:fluxcd/flux2" = ["latest"]
 "aqua:postfinance/topf" = ["0.6.2"]
 "aqua:home-operations/flate" = ["0.8.0"]
-"pipx:flux-local" = ["latest"]
 "pipx:ansible-core" = ["latest"]
 "pipx:pre-commit" = ["latest"]

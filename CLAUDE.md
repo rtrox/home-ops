@@ -21,7 +21,7 @@ This repository implements a GitOps-managed Kubernetes infrastructure using Flux
 7. **Flux Kustomization dependencies** for ordering
 8. **Volsync for stateful apps** with dual-backend
 9. **Resource limits** on all containers
-10. **Test with flux-local** before committing
+10. **Test with flate** before committing
 11. **Prefer Helm charts** over raw manifests for easier management
 12. **Keep CLAUDE.md updated** with each significant change to patterns or architecture
 
@@ -440,7 +440,7 @@ When implementing apps from external repos (kubesearch.dev, bjw-s-labs/home-ops,
 
 1. **Extract** patterns (images, probes, volumes) exactly as-is
 2. **Adapt** to Mini standards (nas.rtrox.io, Doppler secrets, envoy-internal, flux-system)
-3. **Validate** with flux-local test before committing
+3. **Validate** with flate test before committing
 
 See [full guide](docs/REFERENCE_IMPLEMENTATIONS.md) for detailed workflow and common mistakes.
 
@@ -541,8 +541,8 @@ mise install
 1. **Pre-commit checks**: Run hooks on changed files
 2. **YAML lint**: Validate all YAML syntax
 3. **Renovate validation**: Check Renovate config
-4. **Flux-local test**: Dry-run all Kustomizations and HelmReleases
-5. **Flux-local diff**: Generate PR diffs for review
+4. **Flate test**: Dry-run all Kustomizations and HelmReleases
+5. **Flate diff**: Generate PR diffs for review
 
 ### Local Validation
 
@@ -553,9 +553,9 @@ export CLUSTER_NAME=mini
 task flux:test-quick
 ```
 
-- Validates all Flux resource structure and syntax
-- Does NOT fetch Helm charts (avoids GHCR rate limits)
-- Fast: ~4 seconds
+- Validates the Flux Kustomizations (structure, kustomize builds, substitutions)
+- Does NOT render Helm charts (avoids registry rate limits)
+- Fast: ~7 seconds
 - Use this after making changes to verify correctness
 
 **Full validation** (comprehensive, may hit rate limits):
@@ -565,9 +565,13 @@ export CLUSTER_NAME=mini
 task flux:test
 ```
 
-- Validates structure AND templates all Helm charts
+- Validates structure AND renders every HelmRelease's chart (what CI runs)
 - May fail with `403: denied` if GHCR rate limits are hit
-- Slower: ~40+ seconds
+- Slower: ~15 seconds
+- Expect exactly 2 `ConflictingProducers` warnings for the Gateway API
+  `safe-upgrades` policy: a known false positive (the Envoy Gateway chart
+  skips that object via Helm `lookup` when the cluster already has it, which
+  flate cannot evaluate offline). Any other warning is worth a look.
 - To avoid rate limits, authenticate with GHCR:
 
   ```bash
@@ -584,7 +588,7 @@ task flux:list CLUSTER_NAME=mini
 # Build specific resources
 task flux:build CLUSTER_NAME=mini RESOURCE_TYPE=hr RESOURCE_NAME=tuppr
 
-# Compare against main branch
+# Compare rendered output against main (needs a local `main`; no worktree)
 task flux:diff CLUSTER_NAME=mini
 
 # Test Talos configuration

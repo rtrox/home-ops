@@ -29,10 +29,6 @@ inventory.yml
 inventory.yaml
 inventory.ini
 
-# Flux local temporary files
-.flux-worktree/
-flux-diff.patch
-
 # Claude Code local files
 .claude/
 
