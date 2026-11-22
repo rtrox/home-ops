@@ -4,6 +4,9 @@
     name: raspi-monitor
     state: restarted
     daemon_reload: true
+  when:
+    - not (docker_unchecked | default(false))
+    - not (ansible_check_mode and raspi_monitor_unit is changed)
 
 - name: Reboot the system
   reboot:

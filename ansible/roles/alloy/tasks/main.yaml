@@ -24,6 +24,7 @@
     src: alloy.service.j2
     dest: /etc/systemd/system/alloy.service
     mode: "0644"
+  register: alloy_unit
   notify: restart alloy service
 
 - name: Enable and start the Alloy service
@@ -33,4 +34,6 @@
     state: started
     daemon_reload: true
   # Skipped in --check on a host without Docker (see tasks/docker-present.yaml).
-  when: not (docker_unchecked | default(false))
+  when:
+    - not (docker_unchecked | default(false))
+    - not (ansible_check_mode and alloy_unit is changed)

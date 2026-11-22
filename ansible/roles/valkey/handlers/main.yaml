@@ -4,4 +4,6 @@
     name: valkey
     state: restarted
     daemon_reload: true
-  when: not (docker_unchecked | default(false))
+  when:
+    - not (docker_unchecked | default(false))
+    - not (ansible_check_mode and valkey_unit is changed)

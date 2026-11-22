@@ -10,6 +10,7 @@
   template:
     src: node-exporter.service.j2
     dest: /etc/systemd/system/node-exporter.service
+  register: node_exporter_unit
   notify: restart node-exporter service
 
 - name: Enable and start the node-exporter service
@@ -18,4 +19,6 @@
     enabled: true
     state: started
     daemon_reload: yes
-  when: not (docker_unchecked | default(false))
+  when:
+    - not (docker_unchecked | default(false))
+    - not (ansible_check_mode and node_exporter_unit is changed)

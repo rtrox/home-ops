@@ -12,11 +12,13 @@
     name: docker
     enabled: true
     state: started
+  when: not (docker_unchecked | default(false))
 
 - name: Create systemd service for Tailscale Daemon
   template:
     src: tailscaled.service.j2
     dest: /etc/systemd/system/tailscaled.service
+  register: tailscaled_unit
   notify: restart tailscaled service
 
 - name: Enable and start the Tailscale Daemon service
@@ -24,3 +26,6 @@
     name: tailscaled
     enabled: true
     state: started
+  when:
+    - not (docker_unchecked | default(false))
+    - not (ansible_check_mode and tailscaled_unit is changed)

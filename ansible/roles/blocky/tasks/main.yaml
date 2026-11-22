@@ -130,6 +130,7 @@
   template:
     src: blocky.service.j2
     dest: /etc/systemd/system/blocky.service
+  register: blocky_unit
   notify: restart blocky service
 
 # Blocky merges EVERY yaml file in /etc/blocky, so a stray one would silently
@@ -176,7 +177,9 @@
     state: started
     daemon_reload: yes
   # Skipped in --check on a host without Docker (see tasks/docker-present.yaml).
-  when: not (docker_unchecked | default(false))
+  when:
+    - not (docker_unchecked | default(false))
+    - not (ansible_check_mode and blocky_unit is changed)
 
 # The single-file config this replaced. Removed last: until the new unit is in
 # place it is a complete config, and with it gone Blocky would have nothing.

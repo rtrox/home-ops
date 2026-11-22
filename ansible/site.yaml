@@ -230,6 +230,10 @@
   hosts: avahi:!offline
   become: true
 
+  pre_tasks:
+    - name: Detect Docker (read-only; see tasks/docker-present.yaml)
+      ansible.builtin.import_tasks: tasks/docker-present.yaml
+
   tasks:
     - name: Configure Avahi-related services
       block:

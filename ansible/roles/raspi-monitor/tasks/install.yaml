@@ -32,11 +32,13 @@
     name: docker
     enabled: true
     state: started
+  when: not (docker_unchecked | default(false))
 
 - name: Create systemd service for Raspi-Monitor
   template:
     src: raspi-monitor.service.j2
     dest: /etc/systemd/system/raspi-monitor.service
+  register: raspi_monitor_unit
   notify: restart raspi-monitor service
 
 - name: Enable and start the Raspi-Monitor service
@@ -44,3 +46,6 @@
     name: raspi-monitor
     enabled: true
     state: started
+  when:
+    - not (docker_unchecked | default(false))
+    - not (ansible_check_mode and raspi_monitor_unit is changed)

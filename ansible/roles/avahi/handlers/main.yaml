@@ -3,3 +3,6 @@
   systemd:
     name: avahi-reflector
     state: restarted
+  when:
+    - not (docker_unchecked | default(false))
+    - not (ansible_check_mode and avahi_reflector_unit is changed)
