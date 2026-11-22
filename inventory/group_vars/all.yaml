@@ -7,4 +7,7 @@ ansible_user: rtrox
 # Loki's push endpoint (the cluster's loki-lan Service), read from the inventory so
 # the address lives in one place. ansible/roles/alloy builds its URL from this;
 # override alloy_loki_push_url to point elsewhere.
+# Read from the apartment site, where mini (and so Loki) runs today. At the move,
+# change the site key to house (or use the reserved address's moves_to): this
+# doesn't follow moves_to on its own.
 loki_lan_address: "{{ (lookup('file', inventory_dir + '/sites.yaml') | from_yaml).sites.apartment.loadbalancer_pools.mini.reserved['loki-lan'].address }}"
