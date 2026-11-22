@@ -1,8 +1,0 @@
----
-# TEMPORARY: restore test of the CNPG off-site copy. Delete (revert the PR) once the restore check passes.
-# yaml-language-server: $schema=https://json.schemastore.org/kustomization
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-resources:
-  - ./objectstore.yaml
-  - ./cluster.yaml
