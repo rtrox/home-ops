@@ -31,7 +31,7 @@ Terraform is moving from the private `terraform-record` repo into this repo, reo
 
 **Current phase:** 0 (safety net). Nothing in the new layout exists yet.
 
-**Lead sessions start with `.claude/migration/HANDOFF.md`** when it exists. It's local context, git-ignored: current state, decisions made, facts already gathered, and snapshots of both docs.
+**Lead sessions start with the migration plan doc's Handoff tab**: current state, decisions made, facts already gathered. Read and update it with the Claude Docs tools, from any machine. It replaces the local `.claude/migration/HANDOFF.md` earlier sessions used.
 
 ### Agents
 
@@ -43,11 +43,12 @@ Agent definitions live in `.claude/agents/`. The lead (the main session) breaks 
 | `recon` | Haiku 5.5 | low | Read-only extraction and comparison |
 | `iac-implementer` | Sonnet 5.5 | medium | One well-specified task per worktree, validated, ready for a PR |
 | `state-mover` | Opus 5.5 | high | Phase 2 stack moves and the phase 0 pocket-id reconcile |
-| `plan-reviewer` | Opus 5.5 | high | Independent review of every infrastructure PR |
+| `plan-reviewer` | Opus 5.5 | high | Independent review of every high-risk PR: Terraform plans, state or imports, credentials and keys, Doppler writes, anything that can destroy |
+| `plan-reviewer`, low-risk tier | Sonnet 5.5 | medium | Independent review of changes a revert fully undoes: Flux/Kubernetes config, CronJobs, docs |
 | `plan-reviewer` as a second opinion | Fable 5.2 | high | Phase 2 stack moves, the phase 6 firewall import, the phase 8 rebuild runbook |
 | `docs-keeper` | Haiku 5.5 | low | Documentation after a change lands |
 
-These model and effort levels are deliberate; the lead may set them explicitly when delegating. Escalation: an implementer task that fails validation twice moves to Opus 5.5; an uncertain review on a high-risk change gets the Fable 5.2 second opinion.
+These model and effort levels are deliberate; the lead may set them explicitly when delegating. `plan-reviewer`'s file defaults to Opus, so the lead passes Sonnet explicitly for the low-risk tier; when in doubt, use Opus. Escalation: an implementer task that fails validation twice moves to Opus 5.5; an uncertain review on a high-risk change gets the Fable 5.2 second opinion.
 
 ### Rules
 
