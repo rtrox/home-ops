@@ -6,6 +6,7 @@
 # stack is applied from the laptop, never by the runner.
 #
 # TODO: back these VMs up with vzdump to the NAS (issue #2135).
+# (Phase 1 exit check: a PR touching this stack gets a plan summary from the runner.)
 locals {
   inventory_hosts = yamldecode(file("${path.module}/../../../inventory/hosts.yaml"))
   inventory_sites = yamldecode(file("${path.module}/../../../inventory/sites.yaml"))
