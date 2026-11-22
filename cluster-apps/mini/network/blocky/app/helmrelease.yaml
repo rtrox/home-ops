@@ -83,8 +83,12 @@ spec:
     service:
       app:
         type: LoadBalancer
-        # Local: Blocky sees real client IPs (client groups, query log).
-        externalTrafficPolicy: Local
+        # Cluster, like every other LoadBalancer here: mini's LB IPs aren't
+        # announced per node (no L2 announcements or BGP), so traffic can arrive
+        # on any node, and Local made the nodes without the pod refuse it.
+        # Cilium runs in DSR mode (bpf-lb-mode=dsr), so client IPs are still
+        # preserved for Blocky's client groups and query log.
+        externalTrafficPolicy: Cluster
         annotations:
           # Reserved in inventory/sites.yaml (loadbalancer_pools.mini.reserved.dns-a2).
           # A hard-coded copy: change it there and here together (phase 8 move checklist).
