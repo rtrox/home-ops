@@ -2,3 +2,7 @@
 # The house Pis (ns1, ns2). The shared Blocky upstreams (dns/blocky/00-shared.yaml)
 # apply unless this is uncommented, which keeps the house's previous upstreams.
 # blocky_legacy_upstreams: true
+
+# The house resolvers' Valkey database number. Not a secret (it used to sit in
+# blocky_secrets.yaml, which made Ansible redact every "1" in its output).
+blocky_redis_database: 1
