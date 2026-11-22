@@ -1,0 +1,8 @@
+# Resource addresses CI's PR plans skip (one per line). Dependents are skipped
+# too, so the certificate is covered by the plugin.
+#
+# Proxmox needs Sys.Modify just to read an ACME plugin's config (it holds the
+# Cloudflare token), and CI's token is read-only (PVEAuditor) on purpose: it
+# must never hold that token or a write privilege. Plan ACME from the laptop
+# (task tf:plan STACK=proxmox).
+proxmox_acme_dns_plugin.cloudflare
