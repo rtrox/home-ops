@@ -9,6 +9,7 @@
     name: docker
     enabled: true
     state: started
+  when: not (docker_unchecked | default(false))
 
 - name: Create Keepalived Config Directory
   file:

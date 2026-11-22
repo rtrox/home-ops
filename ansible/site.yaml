@@ -6,6 +6,8 @@
   become: true
 
   pre_tasks:
+    - name: Detect Docker (read-only; see tasks/docker-present.yaml)
+      ansible.builtin.import_tasks: tasks/docker-present.yaml
     - name: Set docker_users dynamically
       set_fact:
         docker_users:
@@ -22,6 +24,7 @@
         ssh_get_public_keys_from_github: true
         ssh_github_username: "rtrox"
     - role: geerlingguy.docker
+      when: not (docker_unchecked | default(false))
       vars:
         docker_users: "{{ docker_users }}"
         # Container output goes to journald, which keeps it in RAM (roles/journald),
@@ -84,6 +87,10 @@
     - keepalived_secrets.yaml
     - valkey_secrets.yaml
 
+  pre_tasks:
+    - name: Detect Docker (read-only; see tasks/docker-present.yaml)
+      ansible.builtin.import_tasks: tasks/docker-present.yaml
+
   tasks:
     - name: Configure DNS-related services
       block:
@@ -118,6 +125,10 @@
   vars_files:
     - valkey_secrets.yaml
 
+  pre_tasks:
+    - name: Detect Docker (read-only; see tasks/docker-present.yaml)
+      ansible.builtin.import_tasks: tasks/docker-present.yaml
+
   roles:
     - role: admin-user
     - role: secure-ssh
@@ -125,6 +136,7 @@
         ssh_get_public_keys_from_github: true
         ssh_github_username: "rtrox"
     - role: geerlingguy.docker
+      when: not (docker_unchecked | default(false))
       vars:
         docker_users:
           - "{{ ansible_user }}"
@@ -146,6 +158,7 @@
         name: qemu-guest-agent
         state: present
         update_cache: true
+      register: qemu_guest_agent_install
 
     # Debian's unit is static (udev starts it when the VM's virtio port shows
     # up), so it's started, not enabled.
@@ -153,8 +166,8 @@
       systemd:
         name: qemu-guest-agent
         state: started
-      # The package's unit may not exist yet in --check on a first run.
-      ignore_errors: "{{ ansible_check_mode }}"
+      # In --check the package may only be simulated, so its unit doesn't exist yet.
+      when: not (ansible_check_mode and qemu_guest_agent_install is changed)
 
     - name: Install common packages
       apt:
@@ -175,6 +188,10 @@
   # TODO: auto-upgrade is left out for now. Add it once a reboot between jobs
   # is acceptable (the service restarts on boot, so a reboot only costs the
   # job in flight).
+  pre_tasks:
+    - name: Detect Docker (read-only; see tasks/docker-present.yaml)
+      ansible.builtin.import_tasks: tasks/docker-present.yaml
+
   roles:
     - role: admin-user
     - role: secure-ssh
@@ -182,6 +199,7 @@
         ssh_get_public_keys_from_github: true
         ssh_github_username: "rtrox"
     - role: geerlingguy.docker
+      when: not (docker_unchecked | default(false))
       vars:
         docker_users:
           - "{{ ansible_user }}"
@@ -197,6 +215,7 @@
         name: qemu-guest-agent
         state: present
         update_cache: true
+      register: qemu_guest_agent_install
 
     # Debian's unit is static (udev starts it when the VM's virtio port shows
     # up), so it's started, not enabled.
@@ -204,8 +223,8 @@
       systemd:
         name: qemu-guest-agent
         state: started
-      # The package's unit may not exist yet in --check on a first run.
-      ignore_errors: "{{ ansible_check_mode }}"
+      # In --check the package may only be simulated, so its unit doesn't exist yet.
+      when: not (ansible_check_mode and qemu_guest_agent_install is changed)
 
 - name: Configure  Avahi Hosts
   hosts: avahi:!offline

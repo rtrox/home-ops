@@ -4,6 +4,7 @@
     name: docker
     enabled: true
     state: started
+  when: not (docker_unchecked | default(false))
 
 - name: Create systemd service for node-exporter
   template:
@@ -17,3 +18,4 @@
     enabled: true
     state: started
     daemon_reload: yes
+  when: not (docker_unchecked | default(false))

@@ -4,6 +4,7 @@
     name: docker
     enabled: true
     state: started
+  when: not (docker_unchecked | default(false))
 
 - name: Create Alloy config directory
   ansible.builtin.file:
@@ -31,6 +32,5 @@
     enabled: true
     state: started
     daemon_reload: true
-  # On a first deploy, --check doesn't write the unit file, so there's no unit
-  # to find yet.
-  ignore_errors: "{{ ansible_check_mode }}"
+  # Skipped in --check on a host without Docker (see tasks/docker-present.yaml).
+  when: not (docker_unchecked | default(false))

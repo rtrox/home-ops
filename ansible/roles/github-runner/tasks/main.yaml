@@ -34,6 +34,7 @@
     name: docker
     enabled: true
     state: started
+  when: not (docker_unchecked | default(false))
 
 - name: Create the runner config directory (root only)
   ansible.builtin.file:
@@ -91,7 +92,7 @@
     enabled: true
     state: started
     daemon_reload: true
-  ignore_errors: "{{ ansible_check_mode }}"
+  when: not (docker_unchecked | default(false))
 
 - name: Install the runner loop
   ansible.builtin.copy:
@@ -117,6 +118,5 @@
     enabled: true
     state: started
     daemon_reload: true
-  # On a first deploy, --check doesn't write the unit file, so there's no unit
-  # to find yet.
-  ignore_errors: "{{ ansible_check_mode }}"
+  # Skipped in --check on a host without Docker (see tasks/docker-present.yaml).
+  when: not (docker_unchecked | default(false))
