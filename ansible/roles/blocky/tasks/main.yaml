@@ -160,6 +160,10 @@
     d=$(mktemp -d)
     trap 'rm -rf "$d"' EXIT
     cp /etc/blocky/00-shared.yaml /etc/blocky/10-host.yaml "$d"/
+    # mktemp -d makes a root-only 0700 directory, but the Blocky image runs as
+    # a non-root user: make the copy readable, like /etc/blocky itself.
+    chmod 0755 "$d"
+    chmod 0644 "$d"/*.yaml
     docker run --rm -v "$d":/cfg:ro {{ blocky_image }} validate --config /cfg
   args:
     executable: /bin/bash
