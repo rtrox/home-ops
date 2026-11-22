@@ -8,8 +8,8 @@
 # `address` and `dns_name`. `subnet` is optional. Validated in CI by
 # `task inventory:check`.
 #
-# The SSH user is NOT here (it is treated as secret). inventory/group_vars/ reads
-# it from Doppler through `doppler run`; see ansible/README.md.
+# The SSH user is rtrox (inventory/group_vars/all.yaml); the Pis' original user
+# comes from Doppler through group_vars/pis.yaml. See ansible/README.md.
 #
 # `unmanaged` holds hosts that need DNS (and DHCP leases, firewall rules) but
 # don't run Ansible plays. The plays that target `all` exclude it.

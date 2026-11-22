@@ -1,4 +1,7 @@
-- name: Restart SSH service
+---
+# Reload, not restart: Debian's ssh unit runs `sshd -t` before reloading, so a
+# bad config leaves the running daemon (and remote access) in place.
+- name: Reload SSH service
   service:
     name: ssh
-    state: restarted
+    state: reloaded

@@ -2,7 +2,8 @@
 # gateway come from inventory/ (hosts.yaml, sites.yaml); nothing about the network
 # is written here, so renumbering a site is an inventory edit.
 #
-# The runner never manages its own VM: prevent_destroy on all three, and this
+# The runner never manages its own VM: prevent_destroy on all three (the two
+# VMs are temporarily false; see their lifecycle block), and this
 # stack is applied from the laptop, never by the runner.
 #
 # TODO: back these VMs up with vzdump to the NAS (issue #2135).
@@ -248,7 +249,8 @@ resource "proxmox_virtual_environment_vm" "vm" {
     ignore_changes = [initialization[0].user_account]
 
     precondition {
-      condition     = local.ssh_user != ""
+      # A plain Linux username: rejects empty, null and a templated value.
+      condition     = can(regex("^[a-z_][a-z0-9_-]{0,31}$", coalesce(local.ssh_user, "")))
       error_message = "ansible_user in inventory/group_vars/all.yaml is empty."
     }
   }

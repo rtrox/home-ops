@@ -1,4 +1,4 @@
 ---
-# The Proxmox admin account is the default user (rtrox, group_vars/all.yaml),
-# which is also its SSH user.
-proxmox_admin_user: "{{ ansible_user }}"
+# The Proxmox admin account. Literal, not "{{ ansible_user }}": a bootstrap run
+# with -e ansible_user=root must not make root the admin.
+proxmox_admin_user: rtrox
