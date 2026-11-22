@@ -1,5 +1,12 @@
 apiVersion: v1alpha1
 kind: ResolverConfig
+# The nodes' own resolvers, pinned rather than taken from DHCP: dns-a1 (the
+# apartment's Proxmox VM resolver), then a public fallback. Never dns-a2: it runs
+# on these nodes, so they can't depend on it (architecture doc, DNS). Addresses
+# from inventory/hosts.yaml (dns-a1) -- on the phase 8 move checklist.
+nameservers:
+  - address: 172.21.99.1
+  - address: 1.1.1.1
 searchDomains:
   disableDefault: true # was machine.network.disableSearchDomain
 hostDNS:
