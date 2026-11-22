@@ -9,8 +9,7 @@
     name: docker
     enabled: true
     state: started
-  # On a fresh host Docker isn't installed yet under --check.
-  ignore_errors: "{{ ansible_check_mode }}"
+  when: not (docker_unchecked | default(false))
 
 - name: Create Valkey config directory
   ansible.builtin.file:
@@ -35,6 +34,7 @@
     src: valkey.service.j2
     dest: /etc/systemd/system/valkey.service
     mode: "0644"
+  register: valkey_unit
   notify: restart valkey service
 
 - name: Enable and start the Valkey service
@@ -43,6 +43,7 @@
     enabled: true
     state: started
     daemon_reload: true
-  # On a first deploy, --check doesn't write the unit file, so there's no unit
-  # to find yet.
-  ignore_errors: "{{ ansible_check_mode }}"
+  # Skipped in --check on a host without Docker (see tasks/docker-present.yaml).
+  when:
+    - not (docker_unchecked | default(false))
+    - not (ansible_check_mode and valkey_unit is changed)

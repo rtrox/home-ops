@@ -4,3 +4,6 @@
     name: node-exporter
     state: restarted
     daemon_reload: yes
+  when:
+    - not (docker_unchecked | default(false))
+    - not (ansible_check_mode and node_exporter_unit is changed)

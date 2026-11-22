@@ -34,6 +34,7 @@
     name: docker
     enabled: true
     state: started
+  when: not (docker_unchecked | default(false))
 
 - name: Create the runner config directory (root only)
   ansible.builtin.file:
@@ -83,6 +84,7 @@
     owner: root
     group: root
     mode: "0644"
+  register: github_runner_firewall_unit
   notify: restart github-runner-firewall service
 
 - name: Enable and start the job firewall service
@@ -91,7 +93,9 @@
     enabled: true
     state: started
     daemon_reload: true
-  ignore_errors: "{{ ansible_check_mode }}"
+  when:
+    - not (docker_unchecked | default(false))
+    - not (ansible_check_mode and github_runner_firewall_unit is changed)
 
 - name: Install the runner loop
   ansible.builtin.copy:
@@ -109,6 +113,7 @@
     owner: root
     group: root
     mode: "0644"
+  register: github_runner_unit
   notify: restart github-runner service
 
 - name: Enable and start the runner service
@@ -117,6 +122,7 @@
     enabled: true
     state: started
     daemon_reload: true
-  # On a first deploy, --check doesn't write the unit file, so there's no unit
-  # to find yet.
-  ignore_errors: "{{ ansible_check_mode }}"
+  # Skipped in --check on a host without Docker (see tasks/docker-present.yaml).
+  when:
+    - not (docker_unchecked | default(false))
+    - not (ansible_check_mode and github_runner_unit is changed)

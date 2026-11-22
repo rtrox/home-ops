@@ -4,6 +4,7 @@
     name: docker
     enabled: true
     state: started
+  when: not (docker_unchecked | default(false))
 
 - name: Create Alloy config directory
   ansible.builtin.file:
@@ -23,6 +24,7 @@
     src: alloy.service.j2
     dest: /etc/systemd/system/alloy.service
     mode: "0644"
+  register: alloy_unit
   notify: restart alloy service
 
 - name: Enable and start the Alloy service
@@ -31,6 +33,7 @@
     enabled: true
     state: started
     daemon_reload: true
-  # On a first deploy, --check doesn't write the unit file, so there's no unit
-  # to find yet.
-  ignore_errors: "{{ ansible_check_mode }}"
+  # Skipped in --check on a host without Docker (see tasks/docker-present.yaml).
+  when:
+    - not (docker_unchecked | default(false))
+    - not (ansible_check_mode and alloy_unit is changed)
