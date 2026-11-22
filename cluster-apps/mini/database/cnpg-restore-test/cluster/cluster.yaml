@@ -1,0 +1,31 @@
+---
+# TEMPORARY: restore test of the CNPG off-site copy. Delete (revert the PR) once the restore check passes.
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/postgresql.cnpg.io/cluster_v1.json
+# Scratch cluster recovered from the off-site copy. Deliberately has no
+# spec.plugins, backups or WAL archiving: it must never write to any bucket.
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: postgres17-restore-test
+spec:
+  instances: 1
+  imageName: ghcr.io/cloudnative-pg/postgresql:17-bookworm@sha256:f785551be35036d65a0f1ebe71995022d261a829391fc2f14222ca19795d7c20
+  storage:
+    storageClass: ceph-block
+    size: 20Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 1Gi
+  bootstrap:
+    recovery:
+      source: offsite
+  externalClusters:
+    - name: offsite
+      plugin:
+        name: barman-cloud.cloudnative-pg.io
+        parameters:
+          barmanObjectName: b2-offsite
+          serverName: postgres17

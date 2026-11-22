@@ -1,0 +1,32 @@
+---
+# TEMPORARY: restore test of the CNPG off-site copy. Delete (revert the PR) once the restore check passes.
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/barmancloud.cnpg.io/objectstore_v1.json
+# Read-only view of the B2 off-site copy. Only ever used as a recovery source.
+apiVersion: barmancloud.cnpg.io/v1
+kind: ObjectStore
+metadata:
+  name: b2-offsite
+spec:
+  configuration:
+    data:
+      compression: bzip2
+    wal:
+      compression: bzip2
+      maxParallel: 8
+    destinationPath: s3://${BUCKET}/
+    # ENDPOINT already includes the scheme (https://).
+    endpointURL: ${ENDPOINT}
+    s3Credentials:
+      accessKeyId:
+        name: cnpg-restore-test-secret
+        key: AWS_ACCESS_KEY_ID
+      secretAccessKey:
+        name: cnpg-restore-test-secret
+        key: AWS_SECRET_ACCESS_KEY
+  instanceSidecarConfiguration:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        memory: 1Gi
