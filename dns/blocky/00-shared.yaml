@@ -19,6 +19,12 @@ upstreams:
       - https://cloudflare-dns.com/dns-query
       - https://dns.quad9.net/dns-query
 
+# Connect to upstreams and list downloads over IPv4 only. The house's IPv6
+# (Hurricane Electric tunnel) can't reach GitHub: on 2026-11-22 ns2's
+# StevenBlack download timed out over IPv6 (instant over IPv4) and the ads
+# denylist came up nearly empty. Clients can still query Blocky over IPv6.
+connectIPVersion: v4
+
 # Resolve the upstream hostnames above without depending on the host's own
 # resolver (which is Blocky itself, or its neighbour).
 bootstrapDns:
