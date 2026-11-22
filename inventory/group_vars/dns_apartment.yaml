@@ -1,0 +1,10 @@
+---
+# The apartment's resolvers (dns-a1; dns-a2 is Blocky in mini). No keepalived
+# VIP here: each resolver has its own address, and the sync between them is
+# Valkey on dns-a1.
+#
+# Blocky connects to the Valkey on its own host. dns-a2 will connect to
+# dns-a1:6379 too.
+blocky_redis_address: "{{ ansible_host }}:{{ valkey_port | default(6379) }}"
+# Reverse lookups of client names go to the apartment's router (Mikrotik).
+blocky_upstream: 172.21.254.1

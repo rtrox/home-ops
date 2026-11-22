@@ -1,15 +1,35 @@
 ---
-ports:
-  dns: 53
-  http: 80
-  https: 443
+# yaml-language-server: $schema=https://raw.githubusercontent.com/0xERR0R/blocky/main/docs/config.schema.json
+#
+# The shared Blocky config: upstreams, bootstrap resolvers, blocklists,
+# allowlists, client groups and caching. One source for every resolver (ns1,
+# ns2, dns-a1 now; dns-a2 in mini later), so none of them drifts.
+#
+# Blocky loads a directory of YAML files and merges them (--config <dir>, since
+# v0.37; https://0xerr0r.github.io/blocky/v0.37.0/configuration/ "Multiple
+# configuration files"). Ansible (roles/blocky) copies this file to
+# /etc/blocky/00-shared.yaml next to a rendered 10-host.yaml with the per-host
+# settings (ports, Valkey, query log, clientLookup). Mappings merge recursively
+# and lists are replaced, so keep a key in ONE of the two files. Don't put
+# secrets here.
 
 upstreams:
   groups:
     default:
-      - tcp-tls:1.1.1.1:853
-      - tcp-tls:1.0.0.1:853
       - https://cloudflare-dns.com/dns-query
+      - https://dns.quad9.net/dns-query
+
+# Resolve the upstream hostnames above without depending on the host's own
+# resolver (which is Blocky itself, or its neighbour).
+bootstrapDns:
+  - upstream: https://cloudflare-dns.com/dns-query
+    ips:
+      - 1.1.1.1
+      - 1.0.0.1
+  - upstream: https://dns.quad9.net/dns-query
+    ips:
+      - 9.9.9.9
+      - 149.112.112.112
 
 ede:
   enable: true
@@ -61,35 +81,7 @@ blocking:
       - ads
   blockType: zeroIp
 
-clientLookup:
-  upstream: {{ blocky_upstream }}
-  singleNameOrder:
-    - 2
-    - 1
-
 caching:
   minTime: 5m
   cacheTimeNegative: 30m
   prefetching: true
-
-# Shared with the other DNS host through the keepalived VIP (see roles/valkey).
-# Not required: if Valkey is unreachable, Blocky keeps resolving on its own cache.
-redis:
-  address: "{{ blocky_redis_address }}"
-  password: "{{ blocky_redis_password }}"
-  database: {{ blocky_redis_database }}
-  required: false
-
-# One JSON line per query on stdout. Docker's journald driver keeps it in the
-# in-RAM journal (roles/journald), and Alloy ships it to Loki (roles/alloy),
-# so query logs never touch the disk.
-log:
-  level: info
-  format: json
-
-queryLog:
-  type: {{ 'console' if blocky_query_log | bool else 'none' }}
-
-prometheus:
-  enable: true
-  path: /metrics

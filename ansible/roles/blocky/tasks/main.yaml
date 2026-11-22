@@ -70,12 +70,28 @@
     enabled: true
     state: started
 
-- name: Configure Blocky Home using template
+# Blocky loads every YAML file in /etc/blocky and merges them (--config
+# /etc/blocky, see blocky.service.j2): the shared file first, then this host's.
+- name: Copy the shared Blocky config (upstreams, blocklists, client groups)
+  copy:
+    src: "{{ blocky_shared_config }}"
+    dest: /etc/blocky/00-shared.yaml
+    mode: "0644"
+  notify: restart blocky service
+
+- name: Configure Blocky per-host settings using template
   template:
-    src: config.yaml.j2
-    dest: /etc/blocky/config.yaml
+    src: host.yaml.j2
+    dest: /etc/blocky/10-host.yaml
     mode: "0644"
   diff: false # the rendered config contains the Valkey password
+  notify: restart blocky service
+
+# The single-file config this replaced. Left in place it would be merged in too.
+- name: Remove the old single-file Blocky config
+  file:
+    path: /etc/blocky/config.yaml
+    state: absent
   notify: restart blocky service
 
 - name: Create systemd service for Blocky

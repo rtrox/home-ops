@@ -14,7 +14,7 @@ ExecStart=/usr/bin/docker run --name blocky \
     -p 4000:4000/tcp \
     -v /etc/blocky:/etc/blocky \
     {{ blocky_image }} \
-    --config /etc/blocky/config.yaml
+    --config /etc/blocky
 ExecStop=/usr/bin/docker stop blocky
 Restart=always
 RestartSec=5s

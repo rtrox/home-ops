@@ -103,6 +103,65 @@
           include_role:
             name: tailscaled
 
+# The apartment's first resolver, a Proxmox VM (Debian 13). Same roles as the
+# Pis where they apply; the Pi-only ones (journald, armbian, raspberry-pi,
+# raspi-monitor, keepalived) are left out. The `pis` common play doesn't cover
+# the VMs, so this play gives dns-a1 what it needs itself.
+- name: Configure the apartment DNS hosts
+  hosts: dns_apartment:!offline
+  become: true
+
+  # TODO: dns-a1 reuses the house's Valkey password (valkey_secrets.yaml) until
+  # the Doppler migration gives it its own. Blocky's per-host settings come
+  # from inventory/group_vars/dns_apartment.yaml, so blocky_secrets.yaml (the
+  # house router's address) is not loaded.
+  vars_files:
+    - valkey_secrets.yaml
+
+  roles:
+    - role: admin-user
+    - role: secure-ssh
+      vars:
+        ssh_get_public_keys_from_github: true
+        ssh_github_username: "rtrox"
+    - role: geerlingguy.docker
+      vars:
+        docker_users:
+          - "{{ ansible_user }}"
+        # Same as the Pis: container output goes to journald.
+        docker_daemon_options:
+          log-driver: journald
+          log-opts:
+            tag: !unsafe "{{.Name}}"
+    - role: node-exporter
+    - role: valkey
+    - role: blocky
+
+  tasks:
+    - name: Install qemu-guest-agent (Proxmox reads the VM's IPs and shuts it down cleanly through it)
+      apt:
+        name: qemu-guest-agent
+        state: present
+        update_cache: true
+
+    # Debian's unit is static (udev starts it when the VM's virtio port shows
+    # up), so it's started, not enabled.
+    - name: Start qemu-guest-agent
+      systemd:
+        name: qemu-guest-agent
+        state: started
+      # The package's unit may not exist yet in --check on a first run.
+      ignore_errors: "{{ ansible_check_mode }}"
+
+    - name: Install common packages
+      apt:
+        name:
+          - dnsutils # Provides dig
+          - curl
+          - htop
+          - vim
+        state: present
+
 - name: Configure  Avahi Hosts
   hosts: avahi:!offline
   become: true

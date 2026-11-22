@@ -1,0 +1,36 @@
+---
+# Per-host Blocky settings, rendered by roles/blocky to /etc/blocky/10-host.yaml.
+# Everything shared by all resolvers (upstreams, blocking, caching) lives in
+# dns/blocky/00-shared.yaml; Blocky merges the two files (--config /etc/blocky).
+ports:
+  dns: 53
+  http: 80
+  https: 443
+
+clientLookup:
+  upstream: {{ blocky_upstream }}
+  singleNameOrder:
+    - 2
+    - 1
+
+# Shared with the site's other resolver through Valkey (see roles/valkey).
+# Not required: if Valkey is unreachable, Blocky keeps resolving on its own cache.
+redis:
+  address: "{{ blocky_redis_address }}"
+  password: "{{ blocky_redis_password }}"
+  database: {{ blocky_redis_database }}
+  required: false
+
+# One JSON line per query on stdout. Docker's journald driver keeps it in the
+# journal (in RAM on the Pis, roles/journald), and Alloy ships it to Loki
+# (roles/alloy) where it runs, so query logs never touch the disk.
+log:
+  level: info
+  format: json
+
+queryLog:
+  type: {{ 'console' if blocky_query_log | bool else 'none' }}
+
+prometheus:
+  enable: true
+  path: /metrics

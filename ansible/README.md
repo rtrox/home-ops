@@ -9,6 +9,7 @@ Configuration for the non-Kubernetes machines: the Raspberry Pi / Orange Pi boxe
 | `ns1.rtrox.io`   | 172.30.99.1 | `dns`   | Blocky + keepalived `MASTER`, Tailscale      |
 | `ns2.rtrox.io`   | 172.30.99.2 | `dns`   | Blocky + keepalived `BACKUP`, Tailscale      |
 | `avahi.rtrox.io` | 172.30.99.3 | `avahi` | VLAN interfaces (200, 300) + Avahi reflector |
+| `dns-a1.rtrox.io` | 172.21.99.1 | `dns_apartment` (in `vms`) | Apartment resolver (Proxmox VM): Blocky + Valkey, no keepalived |
 | `pve.rtrox.io`   | 172.21.1.21 | `proxmox` | Proxmox VE host, run with `proxmox.yaml` (see [docs/proxmox](../docs/proxmox/README.md)) |
 
 ## Setup
@@ -42,6 +43,30 @@ task ansible:proxmox-apply
 On a fresh host, connect as root once with `-e proxmox_ssh_harden=false`, confirm the admin user
 can log in by key, then run again with hardening on.
 
+## Apartment DNS (`dns-a1`)
+
+`dns-a1` is a Proxmox VM (Debian 13) in the `dns_apartment` group, with its own play in `site.yaml`: `admin-user`, `secure-ssh`, `geerlingguy.docker`, `node-exporter`, `valkey`, `blocky`, plus `qemu-guest-agent`. It skips the Pi-only roles and keepalived. Its per-site settings are in `inventory/group_vars/dns_apartment.yaml` (Valkey on its own address, the apartment router for client-name lookups). `dns-a2` will be Blocky in mini and connect to the Valkey on dns-a1. The house Pis (`dns`) keep their own Valkey behind the keepalived VIP and are untouched by this play.
+
+```sh
+task ansible:check HOST=dns-a1.rtrox.io   # dry run first
+task ansible:apply HOST=dns-a1.rtrox.io
+```
+
+Verify (the API is on port 80):
+
+```sh
+dig @172.21.99.1 example.com
+dig @172.21.99.1 doubleclick.net                    # a blocked name answers 0.0.0.0
+curl http://172.21.99.1/api/blocking/status
+curl 'http://172.21.99.1/api/blocking/disable?duration=10m'   # pauses blocking (shared through Valkey)
+```
+
+TODO: dns-a1 reuses the house's Valkey password (`valkey_secrets.yaml`) until the Doppler migration gives it its own.
+
+### One Blocky config
+
+Blocky's upstreams (DoH to Cloudflare and Quad9, with their IPs as bootstrap resolvers), blocklists, allowlists, client groups and caching live once in [`dns/blocky/00-shared.yaml`](../dns/blocky/00-shared.yaml). The `blocky` role copies it to `/etc/blocky/00-shared.yaml` and renders the per-host settings (ports, Valkey address, query log, `clientLookup`, Prometheus) from `roles/blocky/templates/host.yaml.j2` to `/etc/blocky/10-host.yaml`. Blocky runs with `--config /etc/blocky` and merges every YAML file in the folder in alphabetical order (mappings merge, lists are replaced, so keep each key in one file). A later change renders the same shared file into mini's ConfigMap for dns-a2. Editing the shared file means re-applying every resolver (one at a time).
+
 ## Running
 
 From the repo root, via [Task](../.taskfiles/README.md#ansible-tasks):
@@ -63,7 +88,8 @@ Apply one DNS server at a time. Restarting Docker (any `daemon.json` change does
 
 1. **All hosts**: `journald`, `armbian`, `raspberry-pi`, `auto-upgrade`, `secure-ssh`, `geerlingguy.docker`, `raspi-monitor`, `node-exporter`, then hostname, UTC timezone and common packages.
 2. **`dns`**: `valkey`, `blocky`, `alloy`, `keepalived`, `tailscaled`. Loads `blocky_secrets.yaml`, `keepalived_secrets.yaml` and `valkey_secrets.yaml`.
-3. **`avahi`**: `vlans`, `avahi`.
+3. **`dns_apartment`** (dns-a1): `admin-user`, `secure-ssh`, `geerlingguy.docker`, `node-exporter`, `valkey`, `blocky`, then `qemu-guest-agent` and a few packages. Loads `valkey_secrets.yaml`.
+4. **`avahi`**: `vlans`, `avahi`.
 
 ## Roles
 
@@ -76,8 +102,8 @@ Apply one DNS server at a time. Restarting Docker (any `daemon.json` change does
 | `secure-ssh`     | yes            | Syncs `authorized_keys` from `github.com/<user>.keys` and/or `ssh_public_keys`, then disables password auth (refuses to if no keys ended up in the file) |
 | `raspi-monitor`  | yes (opt-in)   | Enables I2C (Raspberry Pi or Orange Pi) and runs the OLED status display container. Off unless `raspi_monitor_enabled: true` is set for the host; when off, it stops and disables any existing unit |
 | `node-exporter`  | yes            | Prometheus node-exporter container                                                                 |
-| `valkey`         | yes (`dns`)    | Valkey container used as Blocky's shared cache. Runs on both DNS hosts; Blocky on both connects through the keepalived VIP, so whichever host holds the VIP serves the cache for both. No persistence, password required |
-| `blocky`         | yes            | Blocky DNS container, frees port 53 from systemd-resolved, pins `/etc/resolv.conf`. Syncs its cache and blocking state with the other DNS host through Valkey (optional: DNS keeps working without it) |
+| `valkey`         | yes (`dns`, `dns_apartment`) | Valkey container used as Blocky's shared cache. At the house it runs on both DNS hosts; Blocky on both connects through the keepalived VIP, so whichever host holds the VIP serves the cache for both. No persistence, password required |
+| `blocky`         | yes            | Blocky DNS container (config: the shared `dns/blocky/00-shared.yaml` plus a per-host file), frees port 53 from systemd-resolved, pins `/etc/resolv.conf`. Syncs its cache and blocking state with the other DNS host through Valkey (optional: DNS keeps working without it) |
 | `alloy`          | yes (`dns`)    | Grafana Alloy container that ships the host's in-RAM journal to Loki on Mini (`loki-lan`, 172.19.32.200), including Blocky's per-query JSON lines as `stream="dns-query"`. Writes nothing to disk: positions on a tmpfs, unsent logs in memory only. In Grafana: `{host="ns1"}` for host logs, `{stream="dns-query"} \| json` for queries |
 | `keepalived`     | yes            | VRRP virtual IP shared between ns1/ns2 (v4 and v6, kept in sync). A host gives up the VIP when its local DNS server stops accepting connections on port 53 (`chk_dns`, ~6s to detect), so the peer takes over; tested at ~5s of VIP downtime when Blocky stops on the holder |
 | `tailscaled`     | yes            | Tailscale daemon container (pinned by digest; Renovate updates it)                                 |
