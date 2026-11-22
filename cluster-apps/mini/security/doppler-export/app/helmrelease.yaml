@@ -143,10 +143,12 @@ spec:
                     echo "config $key: download failed"; rm -f "${plain:?}"; continue
                   fi
                   unset token
-                  if ! jq -e 'type == "object" and length > 0' "$plain" >/dev/null 2>&1; then
-                    echo "config $key: response is not a non-empty JSON object"; rm -f "${plain:?}"; continue
+                  if ! jq -e 'type == "object"' "$plain" >/dev/null 2>&1; then
+                    echo "config $key: response is not a JSON object"; rm -f "${plain:?}"; continue
                   fi
-                  count=$(jq 'length' "$plain" 2>/dev/null)
+                  # Count excludes the keys Doppler adds itself; zero left is a failure.
+                  count=$(jq 'del(.DOPPLER_PROJECT, .DOPPLER_CONFIG, .DOPPLER_ENVIRONMENT) | length' "$plain" 2>/dev/null)
+                  case "$count" in ""|*[!0-9]*|0) echo "config $key: no secrets besides Doppler's own"; rm -f "${plain:?}"; continue ;; esac
                   # shellcheck disable=SC2086
                   if ! age $rargs -o "$out/$name" "$plain" >/dev/null 2>&1; then
                     echo "config $key: encryption failed"; rm -f "${plain:?}" "${out:?}/${name:?}"; continue
@@ -175,10 +177,11 @@ spec:
                 # --download, which would need readFiles.
                 rclone check "$out" "B2:$B2_BUCKET/doppler/$date" --one-way \
                   || die "B2 verification failed"
-                mkdir -p "/nas/doppler/$date" || die "cannot create NAS directory"
-                rclone copy "$out" "/nas/doppler/$date" --stats-one-line -v \
+                # /nas is the share's doppler/ subdirectory.
+                mkdir -p "/nas/$date" || die "cannot create NAS directory"
+                rclone copy "$out" "/nas/$date" --stats-one-line -v \
                   || die "copy to NAS failed"
-                rclone check "$out" "/nas/doppler/$date" --one-way \
+                rclone check "$out" "/nas/$date" --one-way \
                   || die "NAS verification failed"
 
                 [ "$ok" -eq "$total" ] || die "only $ok of $total configs exported"
@@ -241,3 +244,4 @@ spec:
           doppler-export:
             app:
               - path: /nas
+                subPath: doppler
