@@ -112,6 +112,8 @@ sites:
         id: 100
         purpose: Trusted network, only controlled devices
         cidr: 172.21.0.0/16
+        router: 172.21.254.1
+        # TODO: record the Mikrotik pool (dhcp: { start, end }). Unknown for now.
         subnets:
           # The sheet had the NAS under 172.21.11.0/24, which is cluster slot 1.
           # Servers go under .1, as at the house.

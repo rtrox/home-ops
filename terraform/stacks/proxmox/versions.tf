@@ -10,6 +10,10 @@ terraform {
       source  = "DopplerHQ/doppler"
       version = "1.23.2"
     }
+    http = {
+      source  = "hashicorp/http"
+      version = "3.5.0"
+    }
     proxmox = {
       source  = "bpg/proxmox"
       version = "0.123.1"
