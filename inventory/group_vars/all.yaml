@@ -1,5 +1,6 @@
 ---
-# The SSH user isn't committed: it comes from Doppler (hosts-at-home/prd,
-# ANSIBLE_SSH_USER). The ansible tasks run under `doppler run`, which puts it in
-# the environment. If it's empty, undef() fails the run before any connection.
-ansible_user: "{{ lookup('env', 'ANSIBLE_SSH_USER') or undef(hint='ANSIBLE_SSH_USER is empty: run via task ansible:..., which wraps doppler run (see ansible/README.md)') }}"
+# The default SSH user everywhere, and the cloud-init user of the Proxmox VMs
+# (terraform/stacks/proxmox reads this file). It's the owner's public handle.
+# The one exception is the Pis (group_vars/pis.yaml), until Ansible gives them
+# this user. SSH is key-only everywhere (no password or keyboard-interactive).
+ansible_user: rtrox

@@ -58,3 +58,14 @@
     state: present
     backup: yes
   notify: Restart SSH service
+
+# Keyboard-interactive can still accept a password through PAM, so key-only
+# login needs this off too (Proxmox's sshd-hardening.conf does the same).
+- name: Disable keyboard-interactive authentication in SSHD config
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "^#?(KbdInteractiveAuthentication|ChallengeResponseAuthentication)"
+    line: "KbdInteractiveAuthentication no"
+    state: present
+    backup: yes
+  notify: Restart SSH service

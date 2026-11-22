@@ -55,6 +55,13 @@ all:
             # outside the guest subnet (172.31.0.0/24). Pick an address inside
             # 172.31.0.0/24 and add {vlan: guest, address: ...} here.
 
+    # TEMPORARY: the Raspberry Pis, which still use their original SSH user
+    # (group_vars/pis.yaml) until the admin-user role adds rtrox.
+    pis:
+      children:
+        dns:
+        avahi:
+
     proxmox:
       hosts:
         pve.rtrox.io:
