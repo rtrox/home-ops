@@ -31,6 +31,8 @@ Terraform is moving from the private `terraform-record` repo into this repo, reo
 
 **Current phase:** 0 (safety net). Nothing in the new layout exists yet.
 
+**Lead sessions start with `.claude/migration/HANDOFF.md`** when it exists. It's local context, git-ignored: current state, decisions made, facts already gathered, and snapshots of both docs.
+
 ### Agents
 
 Agent definitions live in `.claude/agents/`. The lead (the main session) breaks a phase into PR-sized tasks and delegates:
