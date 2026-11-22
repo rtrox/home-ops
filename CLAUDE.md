@@ -487,6 +487,10 @@ See [full guide](docs/REFERENCE_IMPLEMENTATIONS.md) for detailed workflow and co
 - **Restoration**: Manual trigger via `restore-once` annotation
 - **Status**: Active, preferred backup mechanism for all stateful workloads
 
+### Doppler export
+
+- Weekly CronJob (`security/doppler-export`, Sun 03:00 UTC) downloads every Doppler config with per-config read-only tokens, age-encrypts each to the `.sops.yaml` recipients, and writes the ciphertext to `nas.rtrox.io:/mnt/rusty/backups/doppler/<date>/` and B2 (`doppler/<date>/`), monitored by healthchecks.io
+
 ### CloudNative-PG (PostgreSQL)
 
 - **HA**: 3-node cluster with streaming replication

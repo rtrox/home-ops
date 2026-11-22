@@ -1,0 +1,247 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: doppler-export
+spec:
+  interval: 30m
+  chartRef:
+    kind: OCIRepository
+    name: doppler-export
+  values:
+    defaultPodOptions:
+      restartPolicy: Never
+      securityContext:
+        runAsNonRoot: true
+        # backups:backups on TrueNAS; the share maps all writes to this user.
+        runAsUser: 3010
+        runAsGroup: 3010
+        fsGroup: 3010
+        seccompProfile:
+          type: RuntimeDefault
+    controllers:
+      doppler-export:
+        type: cronjob
+        cronjob:
+          schedule: "0 3 * * 0"
+          timeZone: Etc/UTC
+          concurrencyPolicy: Forbid
+          startingDeadlineSeconds: 3600
+          backoffLimit: 1
+          activeDeadlineSeconds: 1800
+          ttlSecondsAfterFinished: 604800
+          successfulJobsHistory: 3
+          failedJobsHistory: 3
+        initContainers:
+          # No official image ships age or jq alongside a shell, so fetch the
+          # two static binaries from their GitHub releases into /tools,
+          # verified against sha256 values pinned here (jq's matches the
+          # upstream sha256sum.txt; age publishes none, so its value was
+          # computed from the v1.3.2 release). Renovate does not track
+          # these; bump the version and hash together. amd64 only (mini).
+          # To update: change the version in both the URL and the hash.
+          # jq: copy the linux-amd64 line from the release's sha256sum.txt.
+          # age publishes no checksum: download the release tarball and
+          # compute it with `sha256sum age-vX.Y.Z-linux-amd64.tar.gz`.
+          fetch-tools:
+            image:
+              repository: docker.io/rclone/rclone
+              tag: 1.76.0@sha256:7cbeec24a44f206067597c0368be4de90ae19a64d5113c7d1938bd737a81e466
+            command: ["/bin/sh", "-c"]
+            args:
+              - |
+                set -eu
+                cd /tmp
+                wget -q -O age.tgz https://github.com/FiloSottile/age/releases/download/v1.3.2/age-v1.3.2-linux-amd64.tar.gz
+                echo "cbe24006683f8eb669266162894b9a522a1af52f2665fbc63a4bb032ed26ac10  age.tgz" | sha256sum -c - >/dev/null
+                tar xzf age.tgz age/age
+                cp age/age /tools/age
+                wget -q -O jq https://github.com/jqlang/jq/releases/download/jq-1.8.2/jq-linux-amd64
+                echo "b1c22172dd303f3be49e935aa56aa48a8b7a46e0bc838b4997d3bb451495870f  jq" | sha256sum -c - >/dev/null
+                cp jq /tools/jq
+                chmod 0555 /tools/age /tools/jq
+                echo "tools ready"
+            env:
+              HOME: /tmp
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities:
+                drop: ["ALL"]
+            resources:
+              requests:
+                cpu: 50m
+                memory: 64Mi
+              limits:
+                memory: 128Mi
+        containers:
+          app:
+            image:
+              repository: docker.io/rclone/rclone
+              tag: 1.76.0@sha256:7cbeec24a44f206067597c0368be4de90ae19a64d5113c7d1938bd737a81e466
+            # The image's entrypoint is rclone; run the wrapper script instead.
+            command: ["/bin/sh", "-c"]
+            args:
+              - |
+                set -u
+                PATH=/tools:$PATH
+                umask 077
+                # Pings are silent: wget echoes the URL (a secret) on errors.
+                ping() { wget -q -O /dev/null -T 10 -t 3 "$HC_PING_URL$1" >/dev/null 2>&1 || true; }
+                die() { echo "FAILED: $1" >&2; ping /fail; exit 1; }
+                # Input validation: print only the variable name, never a
+                # value, and exit without pinging.
+                bad() { echo "FAILED: invalid input $1" >&2; exit 1; }
+
+                case "${HC_PING_URL:-}" in https://hc-ping.com/*) ;; *) bad HC_PING_URL ;; esac
+                case "${B2_BUCKET:-}" in ""|*[!a-zA-Z0-9-]*) bad B2_BUCKET ;; esac
+                for v in RCLONE_CONFIG_B2_ACCOUNT RCLONE_CONFIG_B2_KEY; do
+                  eval "val=\${$v:-}"
+                  case "$val" in ""|"{"*) bad "$v" ;; esac
+                done
+                case "${AGE_RECIPIENTS:-}" in "") bad AGE_RECIPIENTS ;; esac
+                for r in $AGE_RECIPIENTS; do
+                  case "$r" in age1*[!a-z0-9]*|age1) bad AGE_RECIPIENTS ;; age1*) ;; *) bad AGE_RECIPIENTS ;; esac
+                done
+                [ -x /tools/age ] && [ -x /tools/jq ] || bad TOOLS
+                # Token map: object of "project/config" -> non-empty string.
+                printf '%s' "${DOPPLER_EXPORT_TOKENS:-}" \
+                  | jq -e 'type == "object" and length > 0 and all(.[]; type == "string" and length > 0)' >/dev/null 2>&1 \
+                  || bad DOPPLER_EXPORT_TOKENS
+                keys=$(printf '%s' "$DOPPLER_EXPORT_TOKENS" | jq -r 'keys[]') || bad DOPPLER_EXPORT_TOKENS
+                for k in $keys; do
+                  case "$k" in
+                    */*/*|/*|*/|*[!A-Za-z0-9._/-]*|"") bad DOPPLER_EXPORT_TOKENS ;;
+                    */*) ;;
+                    *) bad DOPPLER_EXPORT_TOKENS ;;
+                  esac
+                done
+
+                rargs=""
+                for r in $AGE_RECIPIENTS; do rargs="$rargs -r $r"; done
+                date=$(date -u +%Y-%m-%d)
+                out=/work/doppler/$date
+                mkdir -p "$out" || die "cannot create output directory"
+                plain=/mem/plain.json
+                trap 'rm -f "${plain:?}"' EXIT
+
+                ping /start
+
+                total=0
+                ok=0
+                echo "# file size_bytes sha256 secret_count" > "$out/manifest.txt"
+                for key in $keys; do
+                  total=$((total + 1))
+                  name="${key%%/*}__${key#*/}.json.age"
+                  # Per-config token; never printed.
+                  token=$(printf '%s' "$DOPPLER_EXPORT_TOKENS" | jq -r --arg k "$key" '.[$k]')
+                  # Plaintext lives only in the memory-backed /mem; wget exits
+                  # non-zero on any non-2xx response.
+                  if ! wget -q -O "$plain" -T 30 -t 2 --header "Authorization: Bearer $token" \
+                    "https://api.doppler.com/v3/configs/config/secrets/download?format=json" >/dev/null 2>&1; then
+                    echo "config $key: download failed"; rm -f "${plain:?}"; continue
+                  fi
+                  unset token
+                  if ! jq -e 'type == "object"' "$plain" >/dev/null 2>&1; then
+                    echo "config $key: response is not a JSON object"; rm -f "${plain:?}"; continue
+                  fi
+                  # Count excludes the keys Doppler adds itself; zero left is a failure.
+                  count=$(jq 'del(.DOPPLER_PROJECT, .DOPPLER_CONFIG, .DOPPLER_ENVIRONMENT) | length' "$plain" 2>/dev/null)
+                  case "$count" in ""|*[!0-9]*|0) echo "config $key: no secrets besides Doppler's own"; rm -f "${plain:?}"; continue ;; esac
+                  # shellcheck disable=SC2086
+                  if ! age $rargs -o "$out/$name" "$plain" >/dev/null 2>&1; then
+                    echo "config $key: encryption failed"; rm -f "${plain:?}" "${out:?}/${name:?}"; continue
+                  fi
+                  rm -f "${plain:?}"
+                  if [ ! -s "$out/$name" ]; then
+                    echo "config $key: encrypted file is empty"; rm -f "${out:?}/${name:?}"; continue
+                  fi
+                  size=$(wc -c < "$out/$name")
+                  sum=$(sha256sum "$out/$name" | cut -d' ' -f1)
+                  echo "$name $size $sum $count" >> "$out/manifest.txt"
+                  echo "config $key: ok ($count secrets)"
+                  ok=$((ok + 1))
+                done
+                echo "exported $ok of $total configs"
+                [ "$ok" -gt 0 ] || die "no configs exported"
+
+                # Upload what we have even if some configs failed; the run is
+                # still failed below. The B2 key can only list and write (no
+                # read, no delete, no bucket creation): nothing here reads from
+                # B2, and there is no --b2-hard-delete.
+                rclone copy "$out" "B2:$B2_BUCKET/doppler/$date" \
+                  --stats-one-line -v \
+                  || die "upload to B2 failed"
+                # Compares size and SHA1 from the B2 listing; never pass
+                # --download, which would need readFiles.
+                rclone check "$out" "B2:$B2_BUCKET/doppler/$date" --one-way \
+                  || die "B2 verification failed"
+                # /nas is the share's doppler/ subdirectory.
+                mkdir -p "/nas/$date" || die "cannot create NAS directory"
+                rclone copy "$out" "/nas/$date" --stats-one-line -v \
+                  || die "copy to NAS failed"
+                rclone check "$out" "/nas/$date" --one-way \
+                  || die "NAS verification failed"
+
+                [ "$ok" -eq "$total" ] || die "only $ok of $total configs exported"
+                ping ""
+                echo "done"
+            env:
+              HOME: /tmp
+              XDG_CONFIG_HOME: /tmp
+              XDG_CACHE_HOME: /tmp
+              # Public age keys from .sops.yaml (Ubuntu WSL, work macbook,
+              # Endeavour laptop); not secret.
+              AGE_RECIPIENTS: >-
+                age1ptsqml5nfm2rq004uprw4wf4ghc965cygut4n7ejkt0esfxr7a7sxpmz5m
+                age1ns2r38fd24cpfmhmn3qeu8x28nrq6ehjdc72yz4q44sxk8aej9vqtr5jue
+                age1lsf3sk6jdjgm49tna2g2s7hxdj5tvsqrvm0a9gwsuugdtwacfaeqsrwae3
+            envFrom:
+              - secretRef:
+                  name: doppler-export-secret
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities:
+                drop: ["ALL"]
+            resources:
+              requests:
+                cpu: 50m
+                memory: 128Mi
+              limits:
+                memory: 256Mi
+    persistence:
+      tmp:
+        type: emptyDir
+        globalMounts:
+          - path: /tmp
+      tools:
+        type: emptyDir
+        globalMounts:
+          - path: /tools
+      # Ciphertext and manifest only.
+      work:
+        type: emptyDir
+        advancedMounts:
+          doppler-export:
+            app:
+              - path: /work
+      # The only place plaintext ever exists.
+      mem:
+        type: emptyDir
+        medium: Memory
+        sizeLimit: 32Mi
+        advancedMounts:
+          doppler-export:
+            app:
+              - path: /mem
+      nas:
+        type: nfs
+        server: nas.rtrox.io
+        path: /mnt/rusty/backups
+        advancedMounts:
+          doppler-export:
+            app:
+              - path: /nas
+                subPath: doppler
