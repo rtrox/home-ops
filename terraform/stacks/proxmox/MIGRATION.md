@@ -77,6 +77,7 @@ STACK_DIR="$REPO/terraform/stacks/proxmox"
 MIG="$HOME/tofu-migrate/proxmox"          # scratch, outside the repo
 BACKUP_DIR="$HOME/tofu-backups"
 AGE_KEY="${SOPS_AGE_KEY_FILE:-$HOME/.config/sops/age/keys.txt}"
+BACKUP="$BACKUP_DIR/proxmox-b2-$(date +%Y%m%dT%H%M%S).tfstate.age"   # one file per run
 mkdir -p "$MIG" "$BACKUP_DIR" && chmod 700 "$MIG" "$BACKUP_DIR"
 test ! -e "$MIG/proxmox.tfstate" || echo "STOP: $MIG/proxmox.tfstate already exists"
 ```
@@ -97,14 +98,14 @@ subshell.
   export AWS_RESPONSE_CHECKSUM_VALIDATION=when_required
   aws s3 cp s3://rtrox-tf-state/proxmox/proxmox.tfstate - \
       --endpoint-url https://s3.us-west-004.backblazeb2.com --region us-west-004 \
-    | age --encrypt -i "$AGE_KEY" -o "$BACKUP_DIR/proxmox-b2-$(date +%F).tfstate.age"
+    | age --encrypt -i "$AGE_KEY" -o "$BACKUP"
 )
 ```
 
 Check that it decrypts. This prints only the metadata and addresses:
 
 ```sh
-age -d -i "$AGE_KEY" "$BACKUP_DIR"/proxmox-b2-*.tfstate.age \
+age -d -i "$AGE_KEY" "$BACKUP" \
   | jq -r '"serial=\(.serial) lineage=\(.lineage) tofu=\(.terraform_version)",
            (.resources[] | (if .mode == "data" then "data." else "" end) + .type + "." + .name)'
 ```
@@ -214,11 +215,17 @@ terraform {
 }
 EOF
 cd "$REPO"
-task tf:init STACK=proxmox
-
-rm "$STACK_DIR/migrate_override.tf"
-task tf:init STACK=proxmox -- -migrate-state
+# Stop at the first failure: running -migrate-state without a recorded local
+# backend would init R2 empty instead of copying the state.
+task tf:init STACK=proxmox ALLOW_OVERRIDE=true \
+  && [ "$(jq -r .backend.type "$STACK_DIR/.terraform/terraform.tfstate")" = local ] \
+  && rm "$STACK_DIR/migrate_override.tf" \
+  && task tf:init STACK=proxmox -- -migrate-state \
+  || echo "STOPPED: fix the error above before going on (override left in place)"
 ```
+
+The `jq` check must see `local` before the override is removed. If you see
+`STOPPED`, nothing was copied to R2; fix the error and rerun this block.
 
 At the prompt **"Do you want to copy existing state to the new backend?"**,
 answer `yes` only if its description says *"No existing state was found in
@@ -247,7 +254,8 @@ exactly:
 Plan: 2 to add, 1 to change, 0 to destroy.
 ```
 
-In the full plan, the plugin's only change is `data` (`CF_Token`), and
+In the full plan, the plugin's only changes are `data` (`CF_Token`) and
+`digest -> (known after apply)` (computed, recalculated on any update), and
 `proxmox_acme_certificate.pve` doesn't appear at all. An "Objects have changed
 outside of OpenTofu" note on the certificate is fine if it's refresh-only (its
 `not_after`/`fingerprint` change when Proxmox renews it). It isn't a planned
@@ -267,7 +275,7 @@ faithful copy, so the fix is in code. Re-plan until the plan matches.
 | --- | --- | --- |
 | plugin or certificate **will be created** | R2 state is empty or isn't this state | Re-check step 3's prompt answer and the lineage. Redo steps 2 and 3 from a fresh scratch dir (`rm -rf "$MIG" && mkdir -m 700 "$MIG"`). Step 3's prompt will now say "non-empty": answer `yes` to overwrite |
 | certificate **must be replaced** / **will be updated** / **destroyed** | `acme.tf` differs from the old `acme.tf` | Diff the two (`node_name`, `account`, `domains`) and fix `acme.tf` (`prevent_destroy` already blocks a destroy) |
-| plugin change beyond `data` | attribute drift | Match the old `acme.tf`, or record why it's intended before going on |
+| plugin change beyond `data` and `digest` | attribute drift | Match the old `acme.tf`, or record why it's intended before going on |
 | precondition "permission group was not found" | Cloudflare renamed `Zone Read`/`DNS Write` | Update `local.pve_acme_token_permissions` |
 | 403 reading permission groups or creating the token | `CLOUDFLARE_TERRAFORM_TOKEN` lacks API Tokens access | Same token the old cloudflare stack uses for `cloudflare_api_token`, so check it hasn't changed |
 | any `doppler_secret` | not expected, there are none | Stop |
