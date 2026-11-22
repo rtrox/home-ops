@@ -4,7 +4,7 @@
 # journal from /run, keeps its read positions on a tmpfs, and buffers unsent
 # logs only in memory.
 # renovate: datasource=docker
-alloy_image: "grafana/alloy:latest@sha256:9acc2529bc1edb7f5b2bd801dd8334ebc80c158e3a9e5526ecd7c9a273d43189"
+alloy_image: "grafana/alloy:v1.22.0@sha256:9acc2529bc1edb7f5b2bd801dd8334ebc80c158e3a9e5526ecd7c9a273d43189"
 # The cluster's loki-lan Service (cluster-apps/base/loki/app/service-lan.yaml),
 # which only accepts connections from the DNS hosts.
 alloy_loki_push_url: http://172.19.32.200:3100/loki/api/v1/push

@@ -1,4 +1,4 @@
 ---
 # Pinned by digest; Renovate bumps tag and digest together (.github/renovate/ansibleImages.json5).
 # renovate: datasource=docker
-node_exporter_image: "prom/node-exporter:latest@sha256:7296504d4ada44b7d7ab4431e27e9f9900d8488f8d55842f4b12ae2704e16dfe"
+node_exporter_image: "prom/node-exporter:v1.13.1@sha256:7296504d4ada44b7d7ab4431e27e9f9900d8488f8d55842f4b12ae2704e16dfe"

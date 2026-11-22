@@ -7,7 +7,7 @@ Requires=docker.service
 TimeoutStartSec=0
 ExecStartPre=-/usr/bin/docker rm --force node-exporter
 ExecStart=/usr/bin/docker run --name node-exporter \
-    --pull always \
+    --pull missing \
     --restart unless-stopped \
     --net="host" \
     --pid="host" \

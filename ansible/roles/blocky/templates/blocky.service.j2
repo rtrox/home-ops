@@ -7,7 +7,7 @@ Requires=docker.service
 TimeoutStartSec=0
 ExecStartPre=-/usr/bin/docker rm --force blocky
 ExecStart=/usr/bin/docker run --name blocky \
-    --pull always \
+    --pull missing \
     --restart unless-stopped \
     --net host \
     -p 53:53/tcp -p 53:53/udp \

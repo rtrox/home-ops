@@ -5,7 +5,7 @@ keepalived_state: MASTER
 keepalived_priority: "{{ 100 if keepalived_state == 'MASTER' else 99 }}"
 keepalived_auth_password: ""
 # renovate: datasource=docker
-keepalived_docker_image: "ghcr.io/rtrox/keepalived:latest@sha256:02e0545214bacffd6ae0b7d7ca20033f3682882286119f94d9b680aff9146f71"
+keepalived_docker_image: "ghcr.io/rtrox/keepalived:2.3.1-r0@sha256:02e0545214bacffd6ae0b7d7ca20033f3682882286119f94d9b680aff9146f71"
 
 # Give up the VIP when the local DNS server stops accepting connections, so
 # the peer takes over. A TCP connect rather than a real lookup: it needs no

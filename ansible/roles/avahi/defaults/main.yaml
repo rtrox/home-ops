@@ -1,4 +1,4 @@
 ---
 # Pinned by digest; Renovate bumps tag and digest together (.github/renovate/ansibleImages.json5).
 # renovate: datasource=docker
-avahi_image: "ghcr.io/rtrox/avahi:latest@sha256:4e88656682634f1ca1de4a1d13a7a54ad51f15375f8219bd205757094281f5bd"
+avahi_image: "ghcr.io/rtrox/avahi:0.8-r19@sha256:4e88656682634f1ca1de4a1d13a7a54ad51f15375f8219bd205757094281f5bd"
