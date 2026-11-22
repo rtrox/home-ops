@@ -1,0 +1,133 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: tofu-state-copy
+spec:
+  interval: 30m
+  chartRef:
+    kind: OCIRepository
+    name: tofu-state-copy
+  values:
+    defaultPodOptions:
+      restartPolicy: Never
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        fsGroup: 65534
+        seccompProfile:
+          type: RuntimeDefault
+    controllers:
+      tofu-state-copy:
+        type: cronjob
+        cronjob:
+          schedule: "0 4 * * *"
+          timeZone: Etc/UTC
+          concurrencyPolicy: Forbid
+          startingDeadlineSeconds: 3600
+          backoffLimit: 1
+          activeDeadlineSeconds: 3600
+          ttlSecondsAfterFinished: 86400
+          successfulJobsHistory: 3
+          failedJobsHistory: 3
+        containers:
+          app:
+            image:
+              repository: docker.io/rclone/rclone
+              tag: 1.76.0@sha256:7cbeec24a44f206067597c0368be4de90ae19a64d5113c7d1938bd737a81e466
+            # The image's entrypoint is rclone; run the wrapper script instead.
+            command: ["/bin/sh", "-c"]
+            args:
+              - |
+                set -u
+                # Pings are silent: wget echoes the URL (a secret) on errors.
+                ping() { wget -q -O /dev/null -T 10 -t 3 "$HC_PING_URL$1" >/dev/null 2>&1 || true; }
+                die() { echo "FAILED: $1" >&2; ping /fail; exit 1; }
+                # Input validation: print only the variable name, never a
+                # value, and exit without pinging.
+                bad() { echo "FAILED: invalid input $1" >&2; exit 1; }
+                case "${HC_PING_URL:-}" in https://hc-ping.com/*) ;; *) bad HC_PING_URL ;; esac
+                for v in SRC_BUCKET DST_BUCKET; do
+                  eval "val=\${$v:-}"
+                  case "$val" in ""|*[!a-zA-Z0-9-]*) bad "$v" ;; esac
+                done
+                for v in RCLONE_CONFIG_R2_ENDPOINT RCLONE_CONFIG_R2_ACCESS_KEY_ID \
+                  RCLONE_CONFIG_R2_SECRET_ACCESS_KEY RCLONE_CONFIG_HISTORY_ACCOUNT \
+                  RCLONE_CONFIG_HISTORY_KEY; do
+                  eval "val=\${$v:-}"
+                  case "$val" in ""|"{"*|"http://{"*|"https://{"*) bad "$v" ;; esac
+                done
+                # Lock files (*.tflock) exist only while a plan or apply runs;
+                # never copy or count them, or a run caught mid-apply would keep
+                # a stray lock in history under Object Lock for 90 days.
+                count() {
+                  out=$(rclone size --json --fast-list --exclude '*.tflock' "$1") || return 1
+                  echo "$out" | sed -n 's/.*"count":\([0-9]*\).*/\1/p'
+                }
+
+                ping /start
+
+                before=$(count "HISTORY:$DST_BUCKET") || die "could not count destination objects before sync"
+                [ -n "$before" ] || die "empty destination count before sync"
+                echo "destination objects before: $before"
+
+                # Pre-sync guard. Unlike a normal backup job, an EMPTY source is
+                # allowed: the state bucket is empty until the first stacks
+                # migrate to it, and an empty-to-empty run must succeed. The
+                # guard only refuses when the source has lost most of what the
+                # destination holds (0 vs a non-empty destination included).
+                src=$(count "R2:$SRC_BUCKET") || die "could not count source objects"
+                [ -n "$src" ] || die "empty source count"
+                echo "source objects: $src"
+                if [ "$before" -gt 0 ] && [ $((src * 100)) -lt $((before * 50)) ]; then
+                  die "source has $src objects, under 50% of destination's $before"
+                fi
+
+                # The source is read-only (the token cannot write); sync only
+                # ever writes to the destination. --max-delete bounds how many
+                # files one run may hide; rclone aborts (exit 8) beyond it.
+                # No --b2-hard-delete: a deletion only hides the file version,
+                # and B2 keeps the old versions, so history stays recoverable.
+                rclone sync "R2:$SRC_BUCKET" "HISTORY:$DST_BUCKET" \
+                  --fast-list --transfers 4 --checkers 8 --max-delete 5 \
+                  --exclude '*.tflock' \
+                  --stats-one-line --stats 60s -v \
+                  || die "rclone sync failed"
+
+                after=$(count "HISTORY:$DST_BUCKET") || die "could not count destination objects after sync"
+                [ -n "$after" ] || die "empty destination count after sync"
+                echo "destination objects after: $after"
+
+                # Detect-after-the-fact control: the destination must not drop
+                # below 80% of the source. Passes when both sides are empty.
+                if [ $((after * 100)) -lt $((src * 80)) ]; then
+                  die "destination has $after objects, under 80% of source's $src"
+                fi
+
+                ping ""
+                echo "done"
+            env:
+              HOME: /tmp
+              XDG_CONFIG_HOME: /tmp
+              XDG_CACHE_HOME: /tmp
+            envFrom:
+              - secretRef:
+                  name: tofu-state-copy-secret
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities:
+                drop: ["ALL"]
+            resources:
+              requests:
+                cpu: 50m
+                memory: 128Mi
+              limits:
+                memory: 256Mi
+    persistence:
+      tmp:
+        type: emptyDir
+        globalMounts:
+          - path: /tmp

@@ -498,6 +498,10 @@ See [full guide](docs/REFERENCE_IMPLEMENTATIONS.md) for detailed workflow and co
 - **Schedule**: Daily (@daily) + immediate on creation
 - **Off-site copy**: nightly rclone sync (`database/cnpg-offsite`, 02:00 UTC) of the MinIO bucket to B2 `k8s-mini-rtrox-io-cnpg-offsite` (Object Lock 45d, no delete key), monitored by a healthchecks.io cron check; pause the job before phase 4's Garage cutover
 
+### OpenTofu state history
+
+- **State copy**: nightly rclone sync (`terraform/tofu-state-copy`, 04:00 UTC) of the Cloudflare R2 `tofu-state` bucket (encrypted state, read-only token) to the versioned B2 bucket `rtrox-tofu-state-history` (no delete key, so B2 keeps old versions), monitored by a healthchecks.io cron check
+
 ## Network Architecture
 
 ### Cilium CNI
