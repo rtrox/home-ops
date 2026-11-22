@@ -13,6 +13,6 @@ task inventory:check
 
 CI runs the same check on every PR that touches `inventory/`. Warnings (a router outside its VLAN, which is a known TODO) don't fail it.
 
-`group_vars/` is committed. The SSH user is `rtrox` (`all.yaml`), except the Pis, whose original user `pis.yaml` reads from the environment, filled by `task ansible:*` from Doppler `hosts-at-home/prd` (see [ansible/README.md](../ansible/README.md)).
+`group_vars/` is committed. The SSH user is `rtrox` on every host (`all.yaml`).
 
 `TODO` comments mark values the sheet got wrong or didn't have; they are open questions, not decisions.

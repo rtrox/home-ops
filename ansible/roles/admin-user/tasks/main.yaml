@@ -1,6 +1,7 @@
 ---
-# Adds the admin user alongside whatever user Ansible connects as today, so a
-# host can switch its ansible_user to it. Never touches the connecting user.
+# Makes sure the admin user exists with passwordless sudo. On a new host,
+# bootstrap once as its original user (-e ansible_user=<user>); afterwards
+# Ansible connects as the admin user. Never touches the connecting user.
 - name: Fetch the admin user's SSH keys from GitHub
   uri:
     url: "https://github.com/{{ admin_user_github }}.keys"
@@ -38,13 +39,16 @@
     mode: "0700"
   when: not admin_user_pending
 
-- name: Admin user's authorized_keys (GitHub keys)
+# Only seeds the file on a host that doesn't have it yet (force: false). Once
+# Ansible connects as this user, secure-ssh keeps its keys up to date.
+- name: Admin user's authorized_keys (GitHub keys), if missing
   copy:
     dest: "/home/{{ admin_user }}/.ssh/authorized_keys"
     content: "{{ admin_user_keys.content | trim }}\n"
     owner: "{{ admin_user }}"
     group: "{{ admin_user }}"
     mode: "0600"
+    force: false
   when: not admin_user_pending
 
 # Passwordless sudo, since the account has no password. visudo checks the file

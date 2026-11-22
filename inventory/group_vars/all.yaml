@@ -1,6 +1,5 @@
 ---
 # The default SSH user everywhere, and the cloud-init user of the Proxmox VMs
 # (terraform/stacks/proxmox reads this file). It's the owner's public handle.
-# The one exception is the Pis (group_vars/pis.yaml), until Ansible gives them
-# this user. SSH is key-only everywhere (no password or keyboard-interactive).
+# SSH is key-only everywhere (no password or keyboard-interactive).
 ansible_user: rtrox

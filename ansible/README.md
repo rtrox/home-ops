@@ -15,11 +15,7 @@ Configuration for the non-Kubernetes machines: the Raspberry Pi / Orange Pi boxe
 
 The hosts live in the committed [`inventory/hosts.yaml`](../inventory/hosts.yaml) (see [inventory/README.md](../inventory/README.md)); `ansible.cfg` points at it. Hosts in its `unmanaged` group need DNS but run no plays, and the plays exclude them. Before running anything you need:
 
-- **The SSH user** is `rtrox` everywhere (committed in `inventory/group_vars/all.yaml`), except the Pis, which still use their original user until the `admin-user` role (in `site.yaml`'s common play) has added `rtrox` to each of them. That user comes from Doppler `hosts-at-home/prd` `ANSIBLE_SSH_USER`, read by the committed `inventory/group_vars/pis.yaml`; the `task ansible:*` tasks run under `doppler run -p hosts-at-home -c prd --`. Set it once:
-
-  ```sh
-  read 'U?Pi SSH user: '; print -rn -- "$U" | doppler secrets set ANSIBLE_SSH_USER -p hosts-at-home -c prd --silent; unset U
-  ```
+- **The SSH user** is `rtrox` everywhere (committed in `inventory/group_vars/all.yaml`). The `admin-user` role creates it with a locked password, passwordless sudo and the GitHub keys. On a brand-new host, bootstrap once as its original user: `task ansible:apply HOST=<host> -- -e ansible_user=<user>`.
 
 - **`.ansible-vault-pass`**: the Ansible Vault password, mode `600`.
 
