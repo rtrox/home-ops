@@ -14,11 +14,10 @@ spec:
       restartPolicy: Never
       securityContext:
         runAsNonRoot: true
-        # TODO(owner): placeholder. Set to the UID/GID the NAS share
-        # nas.rtrox.io:/mnt/rusty/backups expects for writes.
-        runAsUser: 65534
-        runAsGroup: 65534
-        fsGroup: 65534
+        # backups:backups on TrueNAS; the share maps all writes to this user.
+        runAsUser: 3010
+        runAsGroup: 3010
+        fsGroup: 3010
         seccompProfile:
           type: RuntimeDefault
     controllers:
@@ -41,6 +40,10 @@ spec:
           # upstream sha256sum.txt; age publishes none, so its value was
           # computed from the v1.3.2 release). Renovate does not track
           # these; bump the version and hash together. amd64 only (mini).
+          # To update: change the version in both the URL and the hash.
+          # jq: copy the linux-amd64 line from the release's sha256sum.txt.
+          # age publishes no checksum: download the release tarball and
+          # compute it with `sha256sum age-vX.Y.Z-linux-amd64.tar.gz`.
           fetch-tools:
             image:
               repository: docker.io/rclone/rclone
@@ -162,11 +165,14 @@ spec:
                 [ "$ok" -gt 0 ] || die "no configs exported"
 
                 # Upload what we have even if some configs failed; the run is
-                # still failed below. --no-check-bucket: the key cannot create
-                # buckets. No delete and no --b2-hard-delete.
-                rclone copy "$out" "B2:$B2_BUCKET/doppler/$date" --no-check-bucket \
+                # still failed below. The B2 key can only list and write (no
+                # read, no delete, no bucket creation): nothing here reads from
+                # B2, and there is no --b2-hard-delete.
+                rclone copy "$out" "B2:$B2_BUCKET/doppler/$date" \
                   --stats-one-line -v \
                   || die "upload to B2 failed"
+                # Compares size and SHA1 from the B2 listing; never pass
+                # --download, which would need readFiles.
                 rclone check "$out" "B2:$B2_BUCKET/doppler/$date" --one-way \
                   || die "B2 verification failed"
                 mkdir -p "/nas/doppler/$date" || die "cannot create NAS directory"
