@@ -3,3 +3,5 @@
 # once that host has a working I2C OLED.
 raspi_monitor_enabled: false
 raspi_monitor_orangepi_overlay: rk3588-i2c1-m4
+# renovate: datasource=docker
+raspi_monitor_image: "ghcr.io/rtrox/raspi-monitor:latest@sha256:e07144ac76b069635c71e678cec45dd4d63796a1d19653ceb3ff466df37e19d1"

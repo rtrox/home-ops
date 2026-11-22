@@ -12,7 +12,7 @@ ExecStart=/usr/bin/docker run --name node-exporter \
     --net="host" \
     --pid="host" \
     -v "/:/host:ro,rslave" \
-    prom/node-exporter:latest \
+    {{ node_exporter_image }} \
     --path.rootfs=/host
 ExecStop=/usr/bin/docker stop node-exporter
 Restart=always

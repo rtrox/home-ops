@@ -2,7 +2,8 @@
 # Shared cache for Blocky. Runs on every DNS host; Blocky on both hosts
 # connects through the keepalived VIP, so whichever host holds the VIP serves
 # the cache for both. Contents are disposable: no persistence, LRU eviction.
-valkey_image: valkey/valkey:9
+# renovate: datasource=docker
+valkey_image: "valkey/valkey:9@sha256:1c2b25b09f354c66fe994733acdf12fcfd4bdf6f3bd92b88a93a70378d884056"
 valkey_port: 6379
 valkey_maxmemory: 64mb
 # The official image runs as this uid/gid; it owns the config file so the

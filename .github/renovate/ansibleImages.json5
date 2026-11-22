@@ -1,0 +1,14 @@
+{
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+  customManagers: [
+    {
+      customType: "regex",
+      description: "Container images run by the Ansible roles (tag and digest bumped together)",
+      managerFilePatterns: ["/^ansible/roles/[^/]+/defaults/main\\.ya?ml$/"],
+      matchStrings: [
+        '# renovate: datasource=(?<datasource>\\S+)\\n\\w+:\\s*"?(?<depName>[^:"\\s]+):(?<currentValue>[^@"\\s]+)@(?<currentDigest>sha256:[a-f0-9]{64})"?',
+      ],
+      datasourceTemplate: "docker",
+    },
+  ],
+}

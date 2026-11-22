@@ -18,7 +18,7 @@ ExecStart=/usr/bin/docker run --name avahi-reflector \
     -e REFLECTOR_REFLECT_IPV=no                      \
     -e PUBLISH_PUBLISH_HINFO=no                      \
     -e PUBLISH_WORKSTATION=no                        \
-    ghcr.io/rtrox/avahi:latest
+    {{ avahi_image }}
 ExecStop=/usr/bin/docker stop avahi-reflector
 Restart=always
 RestartSec=5s
