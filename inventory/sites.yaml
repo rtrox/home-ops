@@ -5,7 +5,7 @@
 # Addresses" spreadsheet (VLANs and Firewall Rules tabs). Hosts live in hosts.yaml.
 # Validated in CI by `task inventory:check` (see inventory/README.md).
 #
-# Scheme: each site is a /14, each VLAN a /16 inside it (guest: a /24), and the
+# Scheme: each site is a /14, each VLAN a /16 inside it (the house guest VLAN is a /24), and the
 # third octet means the same thing at every site (Trusted .1 servers, .x1 cluster
 # nodes, .x2 cluster LoadBalancer pool, .99 network services; Management .x1
 # cluster KVMs/DRACs, .99 network gear; IoT .10-.15 device classes).
@@ -103,6 +103,8 @@ sites:
         id: 11
         purpose: Management network for DRACs, IPMIs, KVMs, network gear
         cidr: 172.20.0.0/16
+        # From the Mikrotik's /ip pool (pool-mgmt), 2026-11-22.
+        dhcp: { start: 172.20.250.2, end: 172.20.252.254 }
         subnets:
           network-gear: { cidr: 172.20.99.0/24, purpose: "Switches, etc" }
           mini-kvms:
@@ -112,6 +114,9 @@ sites:
         id: 100
         purpose: Trusted network, only controlled devices
         cidr: 172.21.0.0/16
+        router: 172.21.254.1
+        # From the Mikrotik's /ip pool (pool-trusted), 2026-11-22.
+        dhcp: { start: 172.21.250.2, end: 172.21.252.254 }
         subnets:
           # The sheet had the NAS under 172.21.11.0/24, which is cluster slot 1.
           # Servers go under .1, as at the house.
@@ -122,6 +127,8 @@ sites:
         id: 200
         purpose: IoT devices, limited privileges
         cidr: 172.22.0.0/16
+        # From the Mikrotik's /ip pool (pool-iot), 2026-11-22.
+        dhcp: { start: 172.22.250.2, end: 172.22.252.254 }
         subnets:
           home-automation:
             {
@@ -136,7 +143,12 @@ sites:
       guest:
         id: 300
         purpose: Guest network, no privileges, port isolation
-        cidr: 172.23.0.0/24
+        # The sheet said /24; the Mikrotik has 172.23.254.1/16 on
+        # vlan-300-guest (checked 2026-11-22).
+        cidr: 172.23.0.0/16
+        router: 172.23.254.1
+        # From the Mikrotik's /ip pool (pool-guest), 2026-11-22.
+        dhcp: { start: 172.23.250.2, end: 172.23.252.254 }
     clusters:
       mini:
         slot: 3 # nodes .31, LoadBalancer pool .32
