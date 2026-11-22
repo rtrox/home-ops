@@ -8,8 +8,7 @@
 # `address` and `dns_name`. `subnet` is optional. Validated in CI by
 # `task inventory:check`.
 #
-# The SSH user is rtrox (inventory/group_vars/all.yaml); the Pis' original user
-# comes from Doppler through group_vars/pis.yaml. See ansible/README.md.
+# The SSH user is rtrox everywhere (inventory/group_vars/all.yaml).
 #
 # `unmanaged` holds hosts that need DNS (and DHCP leases, firewall rules) but
 # don't run Ansible plays. The plays that target `all` exclude it.
@@ -55,8 +54,7 @@ all:
             # outside the guest subnet (172.31.0.0/24). Pick an address inside
             # 172.31.0.0/24 and add {vlan: guest, address: ...} here.
 
-    # TEMPORARY: the Raspberry Pis, which still use their original SSH user
-    # (group_vars/pis.yaml) until the admin-user role adds rtrox.
+    # The Raspberry Pis (the common play in site.yaml and upgrade.yaml).
     pis:
       children:
         dns:
@@ -65,7 +63,8 @@ all:
     # Hosts that are down: they stay in the inventory (their addresses and
     # names stay reserved) but every play skips them. avahi's Pi is broken
     # until the move back to the house (about May 2027) and will likely be
-    # rebuilt; the node-exporter scrape config skips it too.
+    # rebuilt; the node-exporter scrape config skips it too. It never got the
+    # rtrox user, so bootstrap it with -e ansible_user=<its old user> once.
     offline:
       children:
         avahi:

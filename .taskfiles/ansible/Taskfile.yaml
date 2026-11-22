@@ -4,9 +4,9 @@ version: "3"
 
 vars:
   ANSIBLE_DIR: "{{.ROOT_DIR}}/ansible"
-  # The Pis' SSH user comes from Doppler as an environment variable
-  # (inventory/group_vars/pis.yaml reads it with lookup('env', ...)); every
-  # other host uses rtrox from group_vars/all.yaml.
+  # Plays run under doppler run, so roles can read secrets with
+  # lookup('env', ...) (the design's path off Ansible Vault). The SSH user is
+  # rtrox everywhere (inventory/group_vars/all.yaml).
   DOPPLER_RUN: doppler run -p hosts-at-home -c prd --
   # --forks 1 applies to one host at a time, so a group target like `dns` never
   # restarts Docker (and drops DNS) on both name servers at once.
@@ -20,8 +20,8 @@ tasks:
   _doppler-preconditions:
     internal: true
     preconditions:
-      - sh: doppler run -p hosts-at-home -c prd -- sh -c 'test -n "$ANSIBLE_SSH_USER"'
-        msg: "ANSIBLE_SSH_USER (the Pis' user) is missing from Doppler hosts-at-home/prd (or doppler isn't logged in); see ansible/README.md"
+      - sh: test -n "$(doppler configure get token --plain)"
+        msg: "doppler isn't logged in (run: doppler login)"
 
   # site.yaml and upgrade.yaml also need ansible on PATH and the vault password.
   _preconditions:

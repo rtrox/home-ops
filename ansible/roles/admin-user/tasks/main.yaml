@@ -1,6 +1,8 @@
 ---
-# Adds the admin user alongside whatever user Ansible connects as today, so a
-# host can switch its ansible_user to it. Never touches the connecting user.
+# Makes sure the admin user exists with passwordless sudo and its GitHub keys.
+# On a new host, bootstrap once as its original user (-e ansible_user=<user>);
+# afterwards Ansible connects as the admin user itself, and every task here is
+# idempotent for it.
 - name: Fetch the admin user's SSH keys from GitHub
   uri:
     url: "https://github.com/{{ admin_user_github }}.keys"
@@ -38,14 +40,32 @@
     mode: "0700"
   when: not admin_user_pending
 
-- name: Admin user's authorized_keys (GitHub keys)
+# The keys live in the same marked block secure-ssh maintains for the
+# connecting user (now this user), so a key revoked on GitHub drops out of the
+# file. A file with no managed block (missing, or #2176's unmarked seed) is
+# rewritten as that block once; after that only secure-ssh edits it.
+- name: Read the admin user's authorized_keys
+  slurp:
+    path: "/home/{{ admin_user }}/.ssh/authorized_keys"
+  register: admin_user_authorized_keys
+  failed_when: false
+  check_mode: false # read-only
+  when: not admin_user_pending
+
+- name: Admin user's authorized_keys as a managed GitHub keys block
   copy:
     dest: "/home/{{ admin_user }}/.ssh/authorized_keys"
-    content: "{{ admin_user_keys.content | trim }}\n"
+    content: |
+      # BEGIN ANSIBLE MANAGED GITHUB SSH KEYS
+      {{ admin_user_keys.content | trim }}
+      # END ANSIBLE MANAGED GITHUB SSH KEYS
     owner: "{{ admin_user }}"
     group: "{{ admin_user }}"
     mode: "0600"
-  when: not admin_user_pending
+  when:
+    - not admin_user_pending
+    - admin_user_authorized_keys.content is not defined
+      or 'ANSIBLE MANAGED GITHUB SSH KEYS' not in (admin_user_authorized_keys.content | b64decode)
 
 # Passwordless sudo, since the account has no password. visudo checks the file
 # before it's installed, so a bad file can't break sudo.
