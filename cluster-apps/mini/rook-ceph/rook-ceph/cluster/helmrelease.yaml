@@ -6,6 +6,11 @@ metadata:
   name: rook-ceph-cluster
 spec:
   interval: 30m
+  # Helm waits for the CephCluster to be Ready, and a Ceph image change makes
+  # Rook roll every mon, mgr and OSD (about 8 minutes here). The 5 minute
+  # default times out mid-roll, which marks the release failed and, with a
+  # single retry, stalls it along with everything that dependsOn it.
+  timeout: 20m
   chartRef:
     kind: OCIRepository
     name: rook-ceph-cluster
