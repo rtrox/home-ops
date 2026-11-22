@@ -544,6 +544,15 @@ mise install
 4. **Flate test**: Dry-run all Kustomizations and HelmReleases
 5. **Flate diff**: Generate PR diffs for review
 
+**Merge gate**: the "Protect main" ruleset requires a pull request, signed
+commits, and two status checks from GitHub Actions:
+`flate-mini / Flate successful` and `simple-checks / Lint successful`. Both are
+aggregate jobs that always report (they pass when their parts are skipped), so
+they cannot hang a PR. Branches need not be up to date with main. The ruleset
+has no bypass actors, so a red check blocks everyone: fix it or re-run it. When
+renaming or splitting those aggregate jobs, update the ruleset in the same
+change or every merge will block on a check name that no longer exists.
+
 ### Local Validation
 
 **Quick validation** (recommended for iterative development):
