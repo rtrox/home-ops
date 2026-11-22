@@ -1,0 +1,64 @@
+---
+# TEMPORARY: restore test of the CNPG off-site copy. Delete (revert the PR) once the restore check passes.
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/kustomize.toolkit.fluxcd.io/kustomization_v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: &app cnpg-restore-test-secret
+  namespace: &namespace database
+spec:
+  targetNamespace: *namespace
+  commonMetadata:
+    labels:
+      app.kubernetes.io/name: *app
+  dependsOn:
+    - name: external-secrets-store-doppler
+      namespace: external-secrets
+  interval: 1h
+  path: ./cluster-apps/mini/database/cnpg-restore-test/app
+  prune: true
+  retryInterval: 2m
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  timeout: 5m
+  wait: true
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/kustomize.toolkit.fluxcd.io/kustomization_v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: &app cnpg-restore-test
+  namespace: &namespace database
+spec:
+  targetNamespace: *namespace
+  commonMetadata:
+    labels:
+      app.kubernetes.io/name: *app
+  dependsOn:
+    - name: cnpg-restore-test-secret
+      namespace: database
+    - name: cloudnative-pg
+      namespace: database
+    # Provides the ObjectStore CRD (barmancloud.cnpg.io).
+    - name: cloudnative-pg-barman-plugin
+      namespace: database
+    - name: rook-ceph-cluster
+      namespace: rook-ceph
+    - name: external-secrets-store-doppler
+      namespace: external-secrets
+  interval: 1h
+  path: ./cluster-apps/mini/database/cnpg-restore-test/cluster
+  prune: true
+  retryInterval: 2m
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  timeout: 5m
+  wait: false
+  postBuild:
+    substituteFrom:
+      - kind: Secret
+        name: cnpg-restore-test-secret
