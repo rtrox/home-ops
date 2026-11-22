@@ -64,6 +64,10 @@ globals {
 
   # Doppler config -> the tf-at-home/prd secret holding its write token.
   # (Renamed with the Doppler projects after phase 4.)
+  #
+  # NOTE for CI (var.doppler_config = "ci"): a stack with doppler_writes needs
+  # these same key names in tf-at-home/ci, holding READ-ONLY tokens, or its
+  # plan can't configure the aliased providers. The proxmox stack has none.
   doppler_write_tokens = {
     "hosts-at-home/prd" = "DOPPLER_TRUENAS_WRITE_TOKEN"
     "k8s-at-home/min"   = "DOPPLER_MINI_WRITE_TOKEN"
@@ -78,9 +82,17 @@ generate_hcl "_providers.tf" {
     # Reads provider credentials (token: DOPPLER_TOKEN in the environment).
     provider "doppler" {}
 
+    # Which config the Doppler reads use. "prd" on the laptop; CI sets
+    # TF_VAR_doppler_config=ci, a separate root config in each project holding
+    # only what a plan needs, read with tokens scoped to it.
+    variable "doppler_config" {
+      type    = string
+      default = "prd"
+    }
+
     data "doppler_secrets" "terraform" {
       project = "tf-at-home"
-      config  = "prd"
+      config  = var.doppler_config
     }
 
     # One alias per Doppler config the stack writes to, e.g. hosts-at-home/prd
@@ -103,12 +115,40 @@ generate_hcl "_providers.tf" {
     }
 
     # Proxmox's API token is written to hosts-at-home by the Ansible proxmox role.
+    #
+    # The hosts-at-home read goes through its own provider alias, "hosts", so it
+    # can use a different token from the tf-at-home read above. CI's service
+    # tokens each read one Doppler config only. var.doppler_hosts_token is
+    # unset on the laptop (null), and the provider then falls back to
+    # DOPPLER_TOKEN, the CLI token that reads both projects. In CI it's set
+    # (TF_VAR_doppler_hosts_token) to the hosts-at-home/ci read token, while
+    # DOPPLER_TOKEN is the tf-at-home/ci one.
+    tm_dynamic "variable" {
+      for_each = tm_contains(global.providers, "proxmox") ? [1] : []
+      labels   = ["doppler_hosts_token"]
+      attributes = {
+        type      = tm_hcl_expression("string")
+        default   = tm_hcl_expression("null")
+        sensitive = true
+      }
+    }
+
+    tm_dynamic "provider" {
+      for_each = tm_contains(global.providers, "proxmox") ? [1] : []
+      labels   = ["doppler"]
+      attributes = {
+        alias         = "hosts"
+        doppler_token = tm_hcl_expression("var.doppler_hosts_token")
+      }
+    }
+
     tm_dynamic "data" {
       for_each = tm_contains(global.providers, "proxmox") ? [1] : []
       labels   = ["doppler_secrets", "hosts"]
       attributes = {
-        project = "hosts-at-home"
-        config  = "prd"
+        provider = tm_hcl_expression("doppler.hosts")
+        project  = "hosts-at-home"
+        config   = tm_hcl_expression("var.doppler_config")
       }
     }
 

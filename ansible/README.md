@@ -90,6 +90,7 @@ Apply one DNS server at a time. Restarting Docker (any `daemon.json` change does
 2. **`dns`**: `valkey`, `blocky`, `alloy`, `keepalived`, `tailscaled`. Loads `blocky_secrets.yaml`, `keepalived_secrets.yaml` and `valkey_secrets.yaml`.
 3. **`dns_apartment`** (dns-a1): `admin-user`, `secure-ssh`, `geerlingguy.docker`, `node-exporter`, `valkey`, `blocky`, then `qemu-guest-agent` and a few packages. Loads `valkey_secrets.yaml`.
 4. **`avahi`**: `vlans`, `avahi`.
+5. **`runners`** (runner.rtrox.io): `admin-user`, `secure-ssh`, `geerlingguy.docker`, `github-runner`, plus `qemu-guest-agent`. The role needs `GITHUB_RUNNER_APP`, `CI_DOPPLER_TF_READ` and `CI_DOPPLER_HOSTS_READ` from `hosts-at-home/prd` (the `task ansible:*` wrapper provides them).
 
 ## Roles
 
@@ -109,6 +110,7 @@ Apply one DNS server at a time. Restarting Docker (any `daemon.json` change does
 | `tailscaled`     | yes            | Tailscale daemon container (pinned by digest; Renovate updates it)                                 |
 | `vlans`          | yes            | 802.1q VLAN interfaces via NetworkManager                                                          |
 | `avahi`          | yes            | Avahi mDNS reflector container (masks the host's own avahi-daemon)                                 |
+| `github-runner`  | yes (`runners`) | Ephemeral just-in-time GitHub Actions runner for home-ops. A systemd service loops: mint a JIT config through the `rtrox-home-ops-runner` GitHub App, `docker run --rm` the pinned official runner image for exactly one job, repeat. The App key (`/etc/github-runner/app.json`) stays on the host; only the read-only Doppler CI tokens (`job.env`) enter job containers. Both files are root-only 0600. Jobs run on their own Docker network (`github-runner-jobs`), firewalled in `DOCKER-USER`: DNS, pve.rtrox.io:8006 and HTTPS to the internet only, the rest of the private ranges rejected. Each job container is capped at 3h, and the loop backs off (up to 10 min) on GitHub failures |
 
 Role variables and their defaults live in each role's `defaults/main.yaml`.
 

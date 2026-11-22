@@ -1,0 +1,24 @@
+[Unit]
+Description=Ephemeral GitHub Actions runner loop (one container per job)
+After=docker.service github-runner-firewall.service network-online.target
+Requires=docker.service github-runner-firewall.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+Environment=RUNNER_REPO={{ github_runner_repo }}
+Environment=RUNNER_IMAGE={{ github_runner_image }}
+Environment=RUNNER_LABELS={{ github_runner_labels | to_json | quote }}
+Environment=RUNNER_NETWORK={{ github_runner_network }}
+Environment=RUNNER_MEMORY={{ github_runner_memory }}
+Environment=RUNNER_CPUS={{ github_runner_cpus }}
+Environment=RUNNER_PIDS_LIMIT={{ github_runner_pids_limit }}
+Environment=RUNNER_MAX_RUNTIME={{ github_runner_max_runtime_seconds }}
+ExecStart=/usr/local/sbin/github-runner-loop
+# The script stops the running job container on SIGTERM.
+TimeoutStopSec=90
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

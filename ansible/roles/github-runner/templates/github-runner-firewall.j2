@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+# Managed by Ansible (roles/github-runner). Creates the job network and limits
+# what containers on it can reach, in Docker's DOCKER-USER chain (which Docker
+# never rewrites). Idempotent; run at boot and after Docker restarts.
+#
+# Job containers may: talk to each other, resolve DNS through this host's
+# resolvers, reach the hosts listed below, and open HTTPS to the internet.
+# Everything else in the private ranges (the LAN, the other VLANs, the cluster)
+# is rejected, as is any other port to the internet.
+set -euo pipefail
+
+NET={{ github_runner_network }}
+BRIDGE={{ github_runner_bridge }}
+CHAIN=GITHUB-RUNNER
+
+if ! docker network inspect "$NET" >/dev/null 2>&1; then
+  docker network create --driver bridge --subnet {{ github_runner_subnet }} \
+    -o com.docker.network.bridge.name="$BRIDGE" "$NET" >/dev/null
+fi
+
+ipt() { iptables -w 10 "$@"; }
+
+ipt -N "$CHAIN" 2>/dev/null || true
+ipt -F "$CHAIN"
+
+ipt -A "$CHAIN" -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+ipt -A "$CHAIN" -o "$BRIDGE" -j ACCEPT
+
+# DNS: the resolvers Docker hands to containers (systemd-resolved's upstreams).
+for ns in $(awk '$1 == "nameserver" && $2 ~ /^[0-9.]+$/ {print $2}' /run/systemd/resolve/resolv.conf); do
+  ipt -A "$CHAIN" -d "$ns" -p udp --dport 53 -j ACCEPT
+  ipt -A "$CHAIN" -d "$ns" -p tcp --dport 53 -j ACCEPT
+done
+
+# The LAN hosts a plan needs.
+{% for rule in github_runner_allowed_lan %}
+ipt -A "$CHAIN" -d {{ rule.address }} -p tcp --dport {{ rule.port }} -j ACCEPT  # {{ rule.name }}
+{% endfor %}
+
+# The rest of the private and link-local ranges.
+for net in 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 169.254.0.0/16 100.64.0.0/10; do
+  ipt -A "$CHAIN" -d "$net" -j REJECT
+done
+
+# The internet: HTTPS only (GitHub, R2, Doppler, Cloudflare, registries).
+ipt -A "$CHAIN" -p tcp --dport 443 -j ACCEPT
+ipt -A "$CHAIN" -j REJECT
+
+# Hook the chain into DOCKER-USER for traffic coming from the job bridge.
+ipt -D DOCKER-USER -i "$BRIDGE" -j "$CHAIN" 2>/dev/null || true
+ipt -I DOCKER-USER 1 -i "$BRIDGE" -j "$CHAIN"
+
+# Jobs can't reach this host itself (sshd, LLMNR, ...): only replies to traffic
+# the host started. Docker's embedded DNS lives inside the container, and the
+# resolvers are reached by forwarding, so nothing else is needed on INPUT.
+ipt -N "$CHAIN-IN" 2>/dev/null || true
+ipt -F "$CHAIN-IN"
+ipt -A "$CHAIN-IN" -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+ipt -A "$CHAIN-IN" -j REJECT
+ipt -D INPUT -i "$BRIDGE" -j "$CHAIN-IN" 2>/dev/null || true
+ipt -I INPUT 1 -i "$BRIDGE" -j "$CHAIN-IN"
+
+# IPv6 backstop: the VM has global and ULA addresses. Docker's IPv6 is off, but
+# nothing from the job bridge may be forwarded or reach the host over v6.
+ip6t() { ip6tables -w 10 "$@"; }
+ip6t -C FORWARD -i "$BRIDGE" -j DROP 2>/dev/null || ip6t -I FORWARD 1 -i "$BRIDGE" -j DROP
+ip6t -C INPUT -i "$BRIDGE" -j DROP 2>/dev/null || ip6t -I INPUT 1 -i "$BRIDGE" -j DROP

@@ -85,6 +85,13 @@ all:
     # The plays that target `all:!unmanaged` would match it, but every task in
     # .taskfiles/ansible passes --limit, so nothing runs against it until named.
     vms:
+      children:
+        dns_apartment:
+        runners:
+
+    # The self-hosted GitHub Actions runner (the `runners` play in site.yaml).
+    # terraform/stacks/proxmox finds it through its `vms` parent.
+    runners:
       hosts:
         runner.rtrox.io:
           ansible_host: 172.21.1.30
@@ -94,8 +101,6 @@ all:
           address: 172.21.1.30
           dns_name: runner.rtrox.io
           purpose: CI runner (Proxmox VM, never manages its own VM)
-      children:
-        dns_apartment:
 
     # The apartment's resolvers (the `dns_apartment` play in site.yaml): Blocky
     # and Valkey, no keepalived. dns-a2 is Blocky in mini, not a host here.
