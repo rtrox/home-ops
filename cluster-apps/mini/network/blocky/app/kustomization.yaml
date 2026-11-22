@@ -5,6 +5,7 @@ kind: Kustomization
 resources:
   - ./externalsecret.yaml
   - ./helmrelease.yaml
+  - ./ocirepository.yaml
 components:
   # ConfigMap blocky-shared: the shared Blocky config, one copy for every resolver.
   - ../../../../components/blocky
