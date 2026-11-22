@@ -10,7 +10,6 @@ area/kubernetes:
 cluster/base:
   - changed-files:
       - any-glob-to-any-file: "cluster-apps/base/**/*"
-      - any-glob-to-any-file: "cluster-cd/base/*"
       - any-glob-to-any-file: "clusters/base/*"
 cluster/mini:
   - changed-files:

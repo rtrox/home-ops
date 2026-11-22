@@ -1,8 +1,0 @@
-apiVersion: source.toolkit.fluxcd.io/v1
-kind: HelmRepository
-metadata:
-  name: factorio-server-charts
-  namespace: flux-system
-spec:
-  interval: 1h
-  url: https://sqljames.github.io/factorio-server-charts

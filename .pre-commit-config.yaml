@@ -33,7 +33,6 @@ repos:
           - yaml
         exclude: |
           (?x)^(
-            cluster-cd/.*|
             \.archive/.*
           )$
   - repo: https://github.com/adrienverge/yamllint
