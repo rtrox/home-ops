@@ -53,7 +53,7 @@ This repository implements a GitOps-managed Kubernetes infrastructure using Flux
 
 **Critical Configuration:**
 
-- **Kubernetes**: v1.36.4 on Talos v1.13.9
+- **Kubernetes**: v1.36.4 on Talos v1.14.5 (source of truth: `kubernetesVersion`/`talosVersion` in `clusters/mini/talos/topf.yaml`; tuppr performs the upgrades)
 - **Pod CIDR**: 10.244.0.0/16
 - **Service CIDR**: 10.96.0.0/12
 - **IP Range**: 172.21.31.1-3
@@ -69,7 +69,7 @@ This repository implements a GitOps-managed Kubernetes infrastructure using Flux
 - `ceph-block` - Default for persistent data (Rook-Ceph, 3x replication, all 3 nodes' 4TB storage NVMes via `useAllDevices: true`)
 - `openebs-hostpath` - Local cache/temp storage (Volsync operations)
 - NFS mounts: `nas.rtrox.io:/mnt/rusty/media/*`
-- `cephClusterSpec.security.cephx` is pinned to the `aes` key type (not the v1.20 default `aes256k`), since Talos v1.13.9 ships kernel 6.18, below the 7.0+ aes256k requires
+- `cephClusterSpec.security.cephx` is pinned to the `aes` key type (not the v1.20 default `aes256k`), since Talos v1.14.5 still ships kernel 6.18, below the 7.0+ aes256k requires
 - Rook-Ceph chart/image versions are never auto-merged by Renovate (see `.github/renovate/autoMerge.json5`) -- check the Rook/Ceph support matrix before merging one, same rule for every cluster
 
 **Key Capabilities:**
