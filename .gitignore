@@ -21,6 +21,10 @@
 ## terraform plan output
 *tfplan*
 
+## Override files: only ever temporary (e.g. a state move's backend override)
+override.tf
+*_override.tf
+
 # Other files
 kubeconfig
 
