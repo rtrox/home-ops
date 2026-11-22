@@ -1,0 +1,15 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/kustomization
+# Generates the ConfigMap "blocky-shared" from the shared Blocky config. A
+# component, because Flux's kustomize build only reads files at or below a
+# Kustomization's own path: the app references this directory instead of the file.
+# The same file is installed by Ansible (ansible/roles/blocky) on dns-a1 and the
+# house Pis, so every resolver renders from one copy.
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+configMapGenerator:
+  - name: blocky-shared
+    files:
+      - 00-shared.yaml
+    options:
+      disableNameSuffixHash: true

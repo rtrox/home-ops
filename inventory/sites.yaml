@@ -178,6 +178,8 @@ sites:
             { address: 172.19.32.2, moves_to: 172.30.32.2 }
           loki-lan: # cluster-apps/base/loki/app/service-lan.yaml; read by ansible/roles/alloy
             { address: 172.19.32.200, moves_to: 172.30.32.200 }
+          dns-a2: # cluster-apps/mini/network/blocky/app/helmrelease.yaml
+            { address: 172.19.32.53, moves_to: 172.30.32.53 }
 
   # Free blocks, recorded so nothing else claims them.
   second-property:

@@ -1,0 +1,116 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
+# dns-a2: the apartment's second resolver. Same shared config as dns-a1 and the
+# house Pis; Valkey on dns-a1 keeps cache and blocking state in sync.
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: blocky
+spec:
+  interval: 30m
+  chartRef:
+    kind: OCIRepository
+    name: blocky
+  values:
+    controllers:
+      blocky:
+        replicas: 1
+        strategy: RollingUpdate
+        annotations:
+          reloader.stakater.com/auto: "true"
+        pod:
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 2000
+            runAsGroup: 2000
+        containers:
+          app:
+            image:
+              # Same image and digest as ansible/roles/blocky/defaults/main.yaml.
+              repository: docker.io/spx01/blocky
+              tag: v0.37.0@sha256:d9b6344d7c8f3fe577a47bc97b523faa116f7ea8a8901bfaf800a4dbdce64c96
+            args:
+              - --config
+              - /etc/blocky
+            probes:
+              liveness: &probes
+                enabled: true
+                custom: true
+                spec:
+                  tcpSocket:
+                    port: &httpPort 4000
+                  periodSeconds: 10
+                  timeoutSeconds: 1
+                  failureThreshold: 3
+              readiness: *probes
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  tcpSocket:
+                    port: *httpPort
+                  periodSeconds: 5
+                  failureThreshold: 60 # first start downloads the blocklists
+            resources:
+              requests:
+                cpu: 50m
+                memory: 256Mi
+              limits:
+                memory: 1Gi
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities:
+                drop:
+                  - ALL
+
+    persistence:
+      shared:
+        type: configMap
+        name: blocky-shared
+        globalMounts:
+          - path: /etc/blocky/00-shared.yaml
+            subPath: 00-shared.yaml
+            readOnly: true
+      host:
+        type: secret
+        name: blocky-host
+        globalMounts:
+          - path: /etc/blocky/10-host.yaml
+            subPath: 10-host.yaml
+            readOnly: true
+
+    service:
+      app:
+        type: LoadBalancer
+        # Local: Blocky sees real client IPs (client groups, query log).
+        externalTrafficPolicy: Local
+        annotations:
+          # Reserved in inventory/sites.yaml (loadbalancer_pools.mini.reserved.dns-a2).
+          # A hard-coded copy: change it there and here together (phase 8 move checklist).
+          lbipam.cilium.io/ips: 172.19.32.53
+        ports:
+          dns-udp:
+            port: 53
+            targetPort: 5353
+            protocol: UDP
+          dns-tcp:
+            port: 53
+            targetPort: 5353
+            protocol: TCP
+          # The Blocky HTTP API (/api/blocking/..., /metrics), so
+          # curl http://<ip>/api/blocking/disable works on the LAN.
+          http:
+            port: 80
+            targetPort: *httpPort
+            protocol: TCP
+
+    serviceMonitor:
+      app:
+        serviceName: blocky
+        endpoints:
+          - port: http
+            scheme: http
+            path: /metrics
+            interval: 1m
+            scrapeTimeout: 30s

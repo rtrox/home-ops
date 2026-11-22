@@ -3,7 +3,7 @@
 #
 # The shared Blocky config: upstreams, bootstrap resolvers, blocklists,
 # allowlists, client groups and caching. One source for every resolver (ns1,
-# ns2, dns-a1 now; dns-a2 in mini later), so none of them drifts.
+# ns2, dns-a1 now; dns-a2 in mini), so none of them drifts.
 #
 # Blocky loads a directory of YAML files and merges them (--config <dir>, since
 # v0.37; https://0xerr0r.github.io/blocky/v0.37.0/configuration/ "Multiple

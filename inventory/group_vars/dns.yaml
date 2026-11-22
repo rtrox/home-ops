@@ -1,5 +1,5 @@
 ---
-# The house Pis (ns1, ns2). The shared Blocky upstreams (dns/blocky/00-shared.yaml)
+# The house Pis (ns1, ns2). The shared Blocky upstreams (cluster-apps/components/blocky/00-shared.yaml)
 # apply unless this is uncommented, which keeps the house's previous upstreams.
 # blocky_legacy_upstreams: true
 
