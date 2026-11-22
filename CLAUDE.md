@@ -29,7 +29,12 @@ This repository implements a GitOps-managed Kubernetes infrastructure using Flux
 
 Terraform is moving from the private `terraform-record` repo into this repo, reorganized by consumer, with internal DNS, Garage storage and a Proxmox-hosted CI runner. The design lives in two docs the repo owner keeps outside the repo: **Home infrastructure: target architecture** and **Home infrastructure: migration plan** (nine phases, 0 to 8, each with tasks and exit checks).
 
-**Current phase:** 0 (safety net). Nothing in the new layout exists yet.
+**Current phase:** 1 (foundations and spikes). Phase 0 is done.
+
+**`terraform/`** holds the new stacks (`terraform/stacks/<name>/`, each with a `stack.tm.hcl`), orchestrated by the open-source Terramate CLI.
+- **Generated files:** `terraform/terramate.tm.hcl` generates each stack's `_backend.tf`: the S3 backend on the R2 bucket `tofu-state`, keyed by stack path, with `use_lockfile` and enforced state encryption. Never edit a generated file (they start with `// TERRAMATE: GENERATED`); change `terramate.tm.hcl` and run `task tf:generate`. A pre-commit hook and the `terraform-check` CI job fail on stale generated files.
+- **Credentials:** `task tf:init|plan|apply STACK=<name>` reads the R2 credentials and `TOFU_STATE_PASSPHRASE` from Doppler `tf-at-home/prd` into the environment. Those tasks use the read-write R2 token, so they're the owner's to run; agents may run `tofu validate` with `init -backend=false`.
+- **Versions:** provider versions live in each stack's own `versions.tf`, so Renovate's terraform manager can bump them and their committed lock files.
 
 **Lead sessions start with the migration plan doc's Handoff tab**: current state, decisions made, facts already gathered. Read and update it with the Claude Docs tools, from any machine. It replaces the local `.claude/migration/HANDOFF.md` earlier sessions used.
 

@@ -1,0 +1,71 @@
+---
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+version: "3"
+
+# OpenTofu stacks under terraform/stacks/, orchestrated by Terramate. State
+# lives in the R2 bucket tofu-state (see terraform/terramate.tm.hcl). The R2
+# credentials and the state passphrase come from Doppler tf-at-home/prd, read
+# per run into the environment and never written to disk.
+vars:
+  TERRAFORM_DIR: "{{.ROOT_DIR}}/terraform"
+  STACKS_DIR: "{{.TERRAFORM_DIR}}/stacks"
+  DOPPLER_GET: doppler secrets get -p tf-at-home -c prd --plain
+
+tasks:
+  # Runs `tofu <CMD>` in one stack with the state credentials in its
+  # environment. Kept internal so the Doppler reads only happen when a stack
+  # command actually runs (not on `task --list`).
+  _tofu:
+    internal: true
+    requires:
+      vars: [STACK, CMD]
+    dir: "{{.STACKS_DIR}}/{{.STACK}}"
+    preconditions:
+      - sh: test -f stack.tm.hcl
+        msg: "{{.STACK}} is not a stack (no terraform/stacks/{{.STACK}}/stack.tm.hcl)"
+      - sh: which jq doppler
+        msg: "jq and doppler must be on PATH"
+    env:
+      AWS_ACCESS_KEY_ID:
+        sh: "{{.DOPPLER_GET}} R2_STATE_READWRITE | jq -er .access_key_id"
+      AWS_SECRET_ACCESS_KEY:
+        sh: "{{.DOPPLER_GET}} R2_STATE_READWRITE | jq -er .secret_access_key"
+      AWS_ENDPOINT_URL_S3:
+        sh: "{{.DOPPLER_GET}} R2_STATE_READWRITE | jq -er .endpoint"
+      TF_VAR_state_passphrase:
+        sh: "{{.DOPPLER_GET}} TOFU_STATE_PASSPHRASE"
+    cmd: mise exec -- tofu {{.CMD}} {{.CLI_ARGS}}
+
+  generate:
+    desc: Regenerate Terramate's generated files (_backend.tf, ...) in every stack
+    dir: "{{.TERRAFORM_DIR}}"
+    cmd: mise exec -- terramate generate
+
+  list:
+    desc: List the stacks, in run order
+    dir: "{{.TERRAFORM_DIR}}"
+    cmd: mise exec -- terramate list --run-order
+
+  init:
+    desc: Initialise a stack (STACK=proxmox; extra args after --, e.g. -- -upgrade)
+    requires:
+      vars: [STACK]
+    cmds:
+      - task: _tofu
+        vars: { STACK: "{{.STACK}}", CMD: init }
+
+  plan:
+    desc: Plan a stack (STACK=proxmox)
+    requires:
+      vars: [STACK]
+    cmds:
+      - task: _tofu
+        vars: { STACK: "{{.STACK}}", CMD: plan }
+
+  apply:
+    desc: Apply a stack (STACK=proxmox). The owner's step; agents are denied it.
+    requires:
+      vars: [STACK]
+    cmds:
+      - task: _tofu
+        vars: { STACK: "{{.STACK}}", CMD: apply }

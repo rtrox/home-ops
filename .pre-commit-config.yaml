@@ -46,8 +46,37 @@ repos:
     rev: v2.1.1
     hooks:
       - id: forbid-secrets
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
   - repo: local
     hooks:
+      # OpenTofu stacks and modules (terraform/). These run through mise, so
+      # the CI pre-commit job skips them; the terraform-check job runs the same
+      # commands with mise installed.
+      - id: tofu-fmt
+        name: tofu fmt
+        language: system
+        entry: mise exec -- tofu fmt -check -diff
+        files: ^terraform/.*\.(tf|tfvars)$
+      - id: tflint
+        name: tflint
+        language: system
+        entry: >-
+          sh -c 'cd terraform && mise exec -- tflint --init >/dev/null &&
+          mise exec -- tflint --recursive --config "$PWD/.tflint.hcl"'
+        files: ^terraform/.*\.tf$
+        pass_filenames: false
+      - id: terramate-generate
+        name: terramate generated files are up to date
+        language: system
+        # --detailed-exit-code: 0 up to date, 2 regenerated (so fail), 1 error.
+        entry: >-
+          sh -c 'cd terraform && mise exec -- terramate generate --detailed-exit-code >/dev/null ||
+          { echo "Generated files were stale and are now regenerated; review and stage them."; exit 1; }'
+        files: ^terraform/
+        pass_filenames: false
       # Ansible secrets files must stay vault-encrypted. --negate fails any
       # matching file that does NOT contain the vault header.
       - id: ansible-vault-encrypted

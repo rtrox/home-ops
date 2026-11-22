@@ -73,7 +73,13 @@
       "Bash(gh pr merge:*)",
       "Bash(gh workflow run:*)",
       "Bash(gh secret set:*)",
-      "Bash(gh secret delete:*)"
+      "Bash(gh secret delete:*)",
+      "Bash(task tf:apply:*)",
+      "Bash(mise exec -- tofu apply:*)",
+      "Bash(mise exec -- tofu destroy:*)",
+      "Bash(env -u TF_VAR_doppler_token tofu apply:*)",
+      "Bash(terramate run:*tofu apply*)",
+      "Bash(terramate run:*tofu destroy*)"
     ]
   }
 }
