@@ -122,6 +122,7 @@ These model and effort levels are deliberate; the lead may set them explicitly w
 - Hardware facts: [docs/HARDWARE.md](docs/HARDWARE.md) and `.archive/bitty/clusters/talos/talconfig.yaml` (old talhelper format)
 - **Do not deploy applications to Bitty** - deploy to Mini
 - `flux`/`talos`/`k8s-bootstrap` tasks stay generic on `CLUSTER_NAME`, so a new Bitty built under `clusters/bitty/` works without rewriting them
+- **Before a new Bitty's first volsync backup**, remove the `bitty/` lifecycle rule on the shared B2 volsync bucket `k8s-rtrox-io-volsync-store` (terraform-record `backblaze/b2_volsync_bucket.tf`). That rule expires the old Bitty's orphaned repositories by hiding every file a day after upload, so it would silently delete the new cluster's backups too. The same applies to `chongus/` for any cluster named Chongus
 
 ## Repository Structure
 
