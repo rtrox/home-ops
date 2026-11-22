@@ -6,7 +6,8 @@
 
 Run with `task inventory:check`. Checks the JSON Schemas in schema/, then the
 sheet's own rules: each address inside its VLAN's CIDR and its subnet, no
-duplicate addresses or names, every host has a site and a vlan that exist.
+duplicate addresses or names (reserved LoadBalancer addresses and moves_to
+destinations included), every site block inside the supernet, every host has a site and a vlan that exist.
 Exits non-zero on any error. Warnings (e.g. a router outside its VLAN) don't fail.
 """
 
@@ -22,6 +23,9 @@ from jsonschema import Draft202012Validator
 
 HERE = Path(__file__).resolve().parent
 errors: list[str] = []
+# (address, owner, moves_to address or None) for every reserved LoadBalancer address,
+# filled by check_sites and claimed alongside the hosts' addresses.
+reserved_claims: list[tuple[ip.IPv4Address, str, ip.IPv4Address | None]] = []
 warnings: list[str] = []
 
 
@@ -65,14 +69,17 @@ def overlapping(items: list[tuple[str, ip.IPv4Network]], what: str) -> None:
                 err(f"{what}: {na} ({a}) overlaps {nb} ({b})")
 
 
-def check_sites(sites: dict) -> dict:
+def check_sites(sites: dict, supernet_cidr: str) -> dict:
     """Returns {site: {vlan: (network, {subnet: network})}} for the host checks."""
     parsed: dict = {}
     blocks = []
+    supernet = net(supernet_cidr, "supernet")
     for sname, site in sites.items():
         block = net(site["block"], f"sites.{sname}.block")
         if block:
             blocks.append((sname, block))
+            if supernet and not block.subnet_of(supernet):
+                err(f"sites.{sname}.block: {block} is outside the supernet {supernet}")
         he = site.get("ipv6", {}).get("he_prefix")
         he_net = net(he, f"sites.{sname}.ipv6.he_prefix") if he else None
         parsed[sname] = {}
@@ -130,6 +137,22 @@ def check_sites(sites: dict) -> dict:
             m = net(pool["moves_to"], f"{where}.moves_to") if "moves_to" in pool else None
             if m and p and m.overlaps(p):
                 err(f"{where}: moves_to {m} overlaps the current pool {p}")
+            for rname, r in pool.get("reserved", {}).items():
+                rl = f"{where}.reserved.{rname}"
+                ra = addr(r["address"], f"{rl}.address")
+                if ra and p and ra not in p:
+                    err(f"{rl}: {ra} is outside the pool {p}")
+                rm = None
+                if "moves_to" in r:
+                    rm = addr(r["moves_to"], f"{rl}.moves_to")
+                    if rm and not m:
+                        err(f"{rl}: moves_to is set but the pool has no moves_to")
+                    elif rm and m and rm not in m:
+                        err(f"{rl}: moves_to {rm} is outside the pool's moves_to {m}")
+                    elif rm and ra and int(rm) - int(m.network_address) != int(ra) - int(p.network_address):
+                        err(f"{rl}: moves_to {rm} does not keep the host number of {ra}")
+                if ra:
+                    reserved_claims.append((ra, f"{sname}/{pname}/{rname}", rm))
     overlapping(blocks, "site blocks")
     overlapping(parsed.pop("_pods", []), "cluster pod CIDRs")
     return parsed
@@ -153,6 +176,7 @@ def flatten_hosts(doc: dict) -> dict:
 def check_hosts(hosts: dict, parsed: dict) -> None:
     seen_addr: dict[ip.IPv4Address, str] = {}
     seen_dns: dict[str, str] = {}
+    moves: list[tuple[ip.IPv4Address, str]] = []
 
     def where_is(site, vlan, label):
         if site not in parsed:
@@ -208,9 +232,23 @@ def check_hosts(hosts: dict, parsed: dict) -> None:
             a = addr(m["address"], ml)
             if a and x and a not in x[0]:
                 err(f"{ml}: {a} is outside VLAN {m['vlan']} ({x[0]})")
-            # Not claimed: the destination address is free until the move.
-            if a and a in seen_addr:
-                err(f"{ml}: {a} is already used by {seen_addr[a]}")
+            if a:
+                moves.append((a, hname))
+
+    # Reserved LoadBalancer addresses share the address space with the hosts.
+    for ra, owner, rm in reserved_claims:
+        claim(ra, owner)
+        if rm:
+            moves.append((rm, owner))
+    # Destination addresses aren't claimed (they're free until the move), but
+    # they must not collide with each other or with any current address.
+    seen_moves: dict[ip.IPv4Address, str] = {}
+    for a, owner in moves:
+        if a in seen_moves:
+            err(f"duplicate moves_to address {a}: {seen_moves[a]} and {owner}")
+        seen_moves[a] = owner
+        if a in seen_addr:
+            err(f"{owner}.moves_to: {a} is already used by {seen_addr[a]}")
 
 
 def main() -> int:
@@ -218,7 +256,7 @@ def main() -> int:
     ok = validate_schema(sites_doc, "sites.schema.json", "sites.yaml")
     ok = validate_schema(hosts_doc, "hosts.schema.json", "hosts.yaml") and ok
     if ok:
-        parsed = check_sites(sites_doc["sites"])
+        parsed = check_sites(sites_doc["sites"], sites_doc["supernet"])
         check_hosts(flatten_hosts(hosts_doc), parsed)
     for w in warnings:
         print(f"warning: {w}")

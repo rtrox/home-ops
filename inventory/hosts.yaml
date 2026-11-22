@@ -123,6 +123,7 @@ all:
           address: 172.21.31.1
           dns_name: node01.mini.rtrox.io
           purpose: Kubernetes (mini)
+          moves_to: { site: house, vlan: trusted, address: 172.30.31.1 }
         node02.mini.rtrox.io:
           site: apartment
           vlan: trusted
@@ -130,6 +131,7 @@ all:
           address: 172.21.31.2
           dns_name: node02.mini.rtrox.io
           purpose: Kubernetes (mini)
+          moves_to: { site: house, vlan: trusted, address: 172.30.31.2 }
         node03.mini.rtrox.io:
           site: apartment
           vlan: trusted
@@ -137,6 +139,7 @@ all:
           address: 172.21.31.3
           dns_name: node03.mini.rtrox.io
           purpose: Kubernetes (mini)
+          moves_to: { site: house, vlan: trusted, address: 172.30.31.3 }
 
         # --- House: management VLAN ---
         # TODO confirm: iLO of the primary NAS, which currently sits in the

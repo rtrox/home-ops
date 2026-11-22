@@ -3,3 +3,8 @@
 # (terraform/stacks/proxmox reads this file). It's the owner's public handle.
 # SSH is key-only everywhere (no password or keyboard-interactive).
 ansible_user: rtrox
+
+# Loki's push endpoint (the cluster's loki-lan Service), read from the inventory so
+# the address lives in one place. ansible/roles/alloy builds its URL from this;
+# override alloy_loki_push_url to point elsewhere.
+loki_lan_address: "{{ (lookup('file', inventory_dir + '/sites.yaml') | from_yaml).sites.apartment.loadbalancer_pools.mini.reserved['loki-lan'].address }}"

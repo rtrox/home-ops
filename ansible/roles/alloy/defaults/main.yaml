@@ -6,8 +6,10 @@
 # renovate: datasource=docker
 alloy_image: "grafana/alloy:v1.22.0@sha256:9acc2529bc1edb7f5b2bd801dd8334ebc80c158e3a9e5526ecd7c9a273d43189"
 # The cluster's loki-lan Service (cluster-apps/base/loki/app/service-lan.yaml),
-# which only accepts connections from the DNS hosts.
-alloy_loki_push_url: http://172.19.32.200:3100/loki/api/v1/push
+# which only accepts connections from the DNS hosts. The address comes from the
+# inventory (loki_lan_address in inventory/group_vars/all.yaml); override this
+# variable to point somewhere else.
+alloy_loki_push_url: "http://{{ loki_lan_address }}:3100/loki/api/v1/push"
 # On (re)start, ship at most this much journal history.
 alloy_journal_max_age: 12h
 # If Loki is unreachable: retry each batch with exponential backoff between
