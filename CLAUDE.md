@@ -29,12 +29,13 @@ This repository implements a GitOps-managed Kubernetes infrastructure using Flux
 
 Terraform is moving from the private `terraform-record` repo into this repo, reorganized by consumer, with internal DNS, Garage storage and a Proxmox-hosted CI runner. The design lives in two docs the repo owner keeps outside the repo: **Home infrastructure: target architecture** and **Home infrastructure: migration plan** (nine phases, 0 to 8, each with tasks and exit checks).
 
-**Current phase:** 1 (foundations and spikes). Phase 0 is done.
+**Current phase:** 2 (Terraform stack moves, from terraform-record into `terraform/stacks/`). Phases 0 and 1 are done. Phase 1 built the R2 backend, the Terramate skeleton, the inventory, the `proxmox` stack, the CI runner with read-only PR plans, and apartment DNS (dns-a1 on Proxmox, dns-a2 in mini). Its Knot spike passed, so the internal zone's primary is Knot, not BIND.
 
 **`terraform/`** holds the new stacks (`terraform/stacks/<name>/`, each with a `stack.tm.hcl`), orchestrated by the open-source Terramate CLI.
 - **Generated files:** `terraform/terramate.tm.hcl` generates each stack's `_backend.tf`: the S3 backend on the R2 bucket `tofu-state`, keyed by stack path, with `use_lockfile` and enforced state encryption. Never edit a generated file (they start with `// TERRAMATE: GENERATED`); change `terramate.tm.hcl` and run `task tf:generate`. A pre-commit hook and the `terraform-check` CI job fail on stale generated files.
 - **Credentials:** `task tf:init|plan|apply STACK=<name>` reads the R2 credentials and `TOFU_STATE_PASSPHRASE` from Doppler `tf-at-home/prd` into the environment. Those tasks use the read-write R2 token, so they're the owner's to run; agents may run `tofu validate` with `init -backend=false`.
-- **Versions:** provider versions will live in each stack's own `versions.tf` (none yet; the first comes with the proxmox stack's provider), so Renovate's terraform manager can bump them and their committed lock files. Terramate generates the repeated provider *configuration*, not the version pins.
+- **CI plans:** `.github/workflows/terraform-plan.yaml` plans changed stacks on the self-hosted runner with read-only credentials (Doppler `ci` configs, `-lock=false`) and posts only resource headers and counts. A stack lists addresses CI can't read in `ci-plan-exclude.txt` (proxmox: the ACME plugin, which needs `Sys.Modify`); plan those from the laptop.
+- **Versions:** provider versions live in each stack's own `versions.tf`, so Renovate's terraform manager can bump them and their committed lock files. Terramate generates the repeated provider *configuration*, not the version pins.
 
 **Lead sessions start with the migration plan doc's Handoff tab**: current state, decisions made, facts already gathered. Read and update it with the Claude Docs tools, from any machine. It replaces the local `.claude/migration/HANDOFF.md` earlier sessions used.
 
