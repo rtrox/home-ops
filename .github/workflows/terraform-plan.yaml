@@ -59,10 +59,13 @@ jobs:
           fail() { echo "::error::could not read the CI credentials from Doppler"; exit 1; }
           # get EXPR: print a jq field of the JSON on stdin, or fail without output.
           get() { jq -er "$1" 2>/dev/null; }
-          set_env() {
+          # set_secret_env masks the value in every later log line; set_env is
+          # for non-secrets (masking "ci" or "1" would blank them all over the log).
+          set_secret_env() {
             echo "::add-mask::$2"
             printf '%s=%s\n' "$1" "$2" >> "$GITHUB_ENV"
           }
+          set_env() { printf '%s=%s\n' "$1" "$2" >> "$GITHUB_ENV"; }
 
           echo "::add-mask::$CI_DOPPLER_TF_READ"
           echo "::add-mask::$CI_DOPPLER_HOSTS_READ"
@@ -80,15 +83,15 @@ jobs:
           endpoint=$(get '.endpoint' <<<"$r2") || fail
           unset secrets r2
 
-          set_env AWS_ACCESS_KEY_ID "$access_key"
-          set_env AWS_SECRET_ACCESS_KEY "$secret_key"
-          set_env AWS_ENDPOINT_URL_S3 "$endpoint"
-          set_env TF_VAR_state_passphrase "$passphrase"
+          set_secret_env AWS_ACCESS_KEY_ID "$access_key"
+          set_secret_env AWS_SECRET_ACCESS_KEY "$secret_key"
+          set_secret_env AWS_ENDPOINT_URL_S3 "$endpoint"
+          set_secret_env TF_VAR_state_passphrase "$passphrase"
           # The generated providers read tf-at-home through DOPPLER_TOKEN and
           # hosts-at-home through var.doppler_hosts_token, both from the config
           # named by var.doppler_config.
-          set_env DOPPLER_TOKEN "$CI_DOPPLER_TF_READ"
-          set_env TF_VAR_doppler_hosts_token "$CI_DOPPLER_HOSTS_READ"
+          set_secret_env DOPPLER_TOKEN "$CI_DOPPLER_TF_READ"
+          set_secret_env TF_VAR_doppler_hosts_token "$CI_DOPPLER_HOSTS_READ"
           set_env TF_VAR_doppler_config ci
           # Terramate's update check phones home; not from this runner.
           set_env TM_DISABLE_CHECKPOINT 1
@@ -143,7 +146,18 @@ jobs:
             if ! tofu init -input=false -lockfile=readonly -no-color >"$out/init.log" 2>&1; then fail_step "$stack" "tofu init"; cd "$root/terraform"; echo "::endgroup::"; continue; fi
             if ! tofu validate -no-color; then fail_step "$stack" "tofu validate"; cd "$root/terraform"; echo "::endgroup::"; continue; fi
             if ! tflint --config "$root/terraform/.tflint.hcl"; then fail_step "$stack" "tflint"; cd "$root/terraform"; echo "::endgroup::"; continue; fi
-            if ! tofu plan -lock=false -no-color -input=false >"$out/plan.log" 2>&1; then fail_step "$stack" "tofu plan"; cd "$root/terraform"; echo "::endgroup::"; continue; fi
+            # A stack can list resource addresses CI must not plan (one per
+            # line, # comments) in ci-plan-exclude.txt, e.g. objects the
+            # read-only CI credentials can't read. Their dependents are skipped
+            # too; the summary says so.
+            excludes=()
+            if [ -f ci-plan-exclude.txt ]; then
+              while IFS= read -r addr; do
+                addr=${addr%%#*}; addr=$(echo "$addr" | xargs)
+                [ -n "$addr" ] && excludes+=("-exclude=$addr")
+              done < ci-plan-exclude.txt
+            fi
+            if ! tofu plan -lock=false -no-color -input=false "${excludes[@]}" >"$out/plan.log" 2>&1; then fail_step "$stack" "tofu plan"; cd "$root/terraform"; echo "::endgroup::"; continue; fi
 
             # Keep only "# <type.name> will be <action>" headers and the
             # Plan:/No changes lines. for_each keys and indexes become [...]
@@ -158,6 +172,10 @@ jobs:
                 printf '```\n%s\n```\n\n' "$headers"
               fi
               printf '%s\n' "${totals:-Plan finished, no summary line found.}"
+              if [ ${#excludes[@]} -gt 0 ]; then
+                printf '\nNot planned in CI (ci-plan-exclude.txt, and anything depending on them): %s. Plan these from the laptop.\n' \
+                  "$(printf '`%s` ' "${excludes[@]#-exclude=}")"
+              fi
             } >> "$summary"
             rm -f "$out/plan.log" "$out/init.log"
             echo "::endgroup::"
