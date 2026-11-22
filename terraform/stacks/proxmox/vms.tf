@@ -71,7 +71,7 @@ data "http" "github_keys" {
 # Debian 13 "trixie" genericcloud, pinned to a dated build (not "latest").
 # Checksum from
 # https://cloud.debian.org/images/cloud/trixie/20261116-2664/SHA512SUMS
-resource "proxmox_virtual_environment_download_file" "debian13" {
+resource "proxmox_download_file" "debian13" {
   node_name = local.pve_node
   # `local` is a dir datastore with the `import` content type enabled.
   datastore_id       = "local"
@@ -107,12 +107,18 @@ resource "proxmox_virtual_environment_vm" "debian13_template" {
 
   agent {
     enabled = true
+    # The cloud image ships without qemu-guest-agent (Ansible installs it), so
+    # don't wait for it to report an IP on create or refresh. Once installed,
+    # the agent works without a Terraform change.
+    wait_for_ip {
+      disabled = true
+    }
   }
 
   disk {
     datastore_id = "local-lvm"
     interface    = "scsi0"
-    import_from  = proxmox_virtual_environment_download_file.debian13.id
+    import_from  = proxmox_download_file.debian13.id
     iothread     = true
     discard      = "on"
   }
@@ -177,9 +183,12 @@ resource "proxmox_virtual_environment_vm" "vm" {
 
   agent {
     enabled = true
-    # The image ships without qemu-guest-agent (Ansible installs it later), so
-    # don't wait long for it on first boot.
-    timeout = "1m"
+    # The cloud image ships without qemu-guest-agent (Ansible installs it), so
+    # don't wait for it to report an IP on create or refresh. Once installed,
+    # the agent works without a Terraform change.
+    wait_for_ip {
+      disabled = true
+    }
   }
 
   disk {
