@@ -305,28 +305,77 @@
           },
           "expr": "topk(15, sum by (question_name) (count_over_time({stream=\"dns-query\", host=~\"$host\"} | json | client_names=~\"$client\" [$__range])))",
           "refId": "A",
-          "legendFormat": "{{question_name}}",
           "queryType": "instant"
         }
       ],
       "options": {
         "orientation": "horizontal",
-        "displayMode": "basic",
+        "displayMode": "gradient",
         "showUnfilled": true,
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
           ],
-          "values": false
-        }
+          "values": true,
+          "fields": "/^Value$/"
+        },
+        "namePlacement": "left",
+        "minVizHeight": 12
       },
       "fieldConfig": {
         "defaults": {
           "unit": "short",
-          "min": 0
+          "min": 0,
+          "color": {
+            "mode": "continuous-BlPu"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
         },
         "overrides": []
-      }
+      },
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "mode": "columns",
+            "keepLabels": [
+              "question_name"
+            ]
+          }
+        },
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "Value",
+                "desc": true
+              }
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            }
+          }
+        }
+      ]
     },
     {
       "id": 7,
@@ -350,28 +399,78 @@
           },
           "expr": "topk(15, sum by (question_name) (count_over_time({stream=\"dns-query\", host=~\"$host\"} | json | client_names=~\"$client\" | response_type=\"BLOCKED\" [$__range])))",
           "refId": "A",
-          "legendFormat": "{{question_name}}",
           "queryType": "instant"
         }
       ],
       "options": {
         "orientation": "horizontal",
-        "displayMode": "basic",
+        "displayMode": "gradient",
         "showUnfilled": true,
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
           ],
-          "values": false
-        }
+          "values": true,
+          "fields": "/^Value$/"
+        },
+        "namePlacement": "left",
+        "minVizHeight": 12
       },
       "fieldConfig": {
         "defaults": {
           "unit": "short",
-          "min": 0
+          "min": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "red"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
         },
         "overrides": []
-      }
+      },
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "mode": "columns",
+            "keepLabels": [
+              "question_name"
+            ]
+          }
+        },
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "Value",
+                "desc": true
+              }
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            }
+          }
+        }
+      ]
     },
     {
       "id": 8,
@@ -395,28 +494,77 @@
           },
           "expr": "topk(15, sum by (client_names) (count_over_time({stream=\"dns-query\", host=~\"$host\"} | json | client_names=~\"$client\" [$__range])))",
           "refId": "A",
-          "legendFormat": "{{client_names}}",
           "queryType": "instant"
         }
       ],
       "options": {
         "orientation": "horizontal",
-        "displayMode": "basic",
+        "displayMode": "gradient",
         "showUnfilled": true,
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
           ],
-          "values": false
-        }
+          "values": true,
+          "fields": "/^Value$/"
+        },
+        "namePlacement": "left",
+        "minVizHeight": 12
       },
       "fieldConfig": {
         "defaults": {
           "unit": "short",
-          "min": 0
+          "min": 0,
+          "color": {
+            "mode": "continuous-BlPu"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
         },
         "overrides": []
-      }
+      },
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "mode": "columns",
+            "keepLabels": [
+              "client_names"
+            ]
+          }
+        },
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "Value",
+                "desc": true
+              }
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            }
+          }
+        }
+      ]
     },
     {
       "id": 9,
