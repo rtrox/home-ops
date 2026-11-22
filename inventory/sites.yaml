@@ -9,6 +9,11 @@
 # third octet means the same thing at every site (Trusted .1 servers, .x1 cluster
 # nodes, .x2 cluster LoadBalancer pool, .99 network services; Management .x1
 # cluster KVMs/DRACs, .99 network gear; IoT .10-.15 device classes).
+# The private supernet every site block lies inside (check.py enforces it).
+# Talos `validSubnets` (clusters/mini/talos/control-plane/01-node.yaml) and
+# Tailscale's TS_ROUTES use this range; update them if it ever changes.
+supernet: 172.16.0.0/12
+
 sites:
   house:
     name: House
@@ -163,6 +168,16 @@ sites:
         # The sheet had 172.21.32.0/24; the cluster never used it. At the move
         # the pool adopts the scheme (Trusted .32) rather than being renumbered here.
         moves_to: 172.30.32.0/24
+        # Addresses manifests pin today. 172.19.32.3-.7 are auto-assigned by
+        # LBIPAM (lowest free) and deliberately not recorded here. At the move
+        # each keeps its host number inside the new pool.
+        reserved:
+          envoy-internal: # cluster-apps/mini/network/envoy-gateway/config/internal.yaml
+            { address: 172.19.32.1, moves_to: 172.30.32.1 }
+          envoy-external: # cluster-apps/mini/network/envoy-gateway/config/external.yaml
+            { address: 172.19.32.2, moves_to: 172.30.32.2 }
+          loki-lan: # cluster-apps/base/loki/app/service-lan.yaml; read by ansible/roles/alloy
+            { address: 172.19.32.200, moves_to: 172.30.32.200 }
 
   # Free blocks, recorded so nothing else claims them.
   second-property:

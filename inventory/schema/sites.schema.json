@@ -3,9 +3,10 @@
   "$id": "sites.schema.json",
   "title": "inventory/sites.yaml",
   "type": "object",
-  "required": ["sites"],
+  "required": ["supernet", "sites"],
   "additionalProperties": false,
   "properties": {
+    "supernet": { "$ref": "#/$defs/cidr4" },
     "sites": {
       "type": "object",
       "minProperties": 1,
@@ -70,7 +71,20 @@
             "additionalProperties": false,
             "properties": {
               "cidr": { "$ref": "#/$defs/cidr4" },
-              "moves_to": { "$ref": "#/$defs/cidr4" }
+              "moves_to": { "$ref": "#/$defs/cidr4" },
+              "reserved": {
+                "type": "object",
+                "propertyNames": { "$ref": "#/$defs/key" },
+                "additionalProperties": {
+                  "type": "object",
+                  "required": ["address"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "address": { "$ref": "#/$defs/ipv4" },
+                    "moves_to": { "$ref": "#/$defs/ipv4" }
+                  }
+                }
+              }
             }
           }
         }
