@@ -131,13 +131,13 @@ Before writing any code, provide a summary like:
 1. Create files following Chongus structure
 2. Use extracted images/probes/volumes exactly
 3. Adapt NFS/secrets/gateway to Chongus
-4. Run flux-local test for validation
+4. Run flate test for validation (`task flux:test`)
 5. Fix any issues (PodSecurity, paths, etc.)
 ```
 
 ## Validation After Implementation
 
-- [ ] `flux-local test` passes
+- [ ] `flate test` passes (`task flux:test`)
 - [ ] All images verified (not assumed from chart org)
 - [ ] NFS paths point to `nas.rtrox.io`
 - [ ] Secrets reference Doppler

@@ -4,8 +4,13 @@ version: "3"
 
 vars:
   FLUX_PATH: "{{.CLUSTER_DIR}}/flux/cluster"
-  FLUX_DIFF_OUTPUT: "{{.ROOT_DIR}}/flux-diff.patch"
-  WORKTREE_DIR: "{{.ROOT_DIR}}/.flux-worktree"
+
+env:
+  # flate defaults to the newest Kubernetes; match the cluster so chart
+  # capability checks behave as they do in production. Keep this in step with
+  # kubernetes in clusters/mini/talos/topf.yaml and FLATE_KUBE_VERSION in
+  # .github/workflows/flate-mini.yaml.
+  FLATE_KUBE_VERSION: "1.36.4"
 
 tasks:
   default-requires:
@@ -17,134 +22,85 @@ tasks:
           enum: [bitty, mini]
 
   test:
-    desc: Validate all Flux resources with flux-local
+    desc: Validate all Flux resources with flate (renders every HelmRelease)
     requires: *default-requires
     preconditions:
-      - mise exec -- which flux-local
+      - mise exec -- which flate
       - test -d "{{.FLUX_PATH}}"
     cmds:
-      - mise exec -- flux-local test
-        --enable-helm
-        --all-namespaces
-        --path "{{.FLUX_PATH}}"
-        -v
+      # --base= (empty) tests the whole tree rather than only what differs from
+      # the default branch.
+      - mise exec -- flate test --base= --path "{{.FLUX_PATH}}"
 
   test-quick:
-    desc: Validate Flux structure without fetching Helm charts (avoids GHCR rate limits)
+    desc: Validate only the Flux Kustomizations, without rendering Helm charts (avoids registry rate limits)
     requires: *default-requires
     preconditions:
-      - mise exec -- which flux-local
+      - mise exec -- which flate
       - test -d "{{.FLUX_PATH}}"
     cmds:
-      - mise exec -- flux-local test
-        --all-namespaces
-        --path "{{.FLUX_PATH}}"
-        -v
+      - mise exec -- flate test ks --base= --path "{{.FLUX_PATH}}"
 
   build:
-    desc: Build Flux resources (Kustomizations or HelmReleases)
+    desc: Build Flux resources (Kustomizations or HelmReleases) [RESOURCE_TYPE=ks|hr, RESOURCE_NAME=optional]
     requires: *default-requires
     vars:
       RESOURCE_TYPE: '{{.RESOURCE_TYPE | default "ks"}}'
       RESOURCE_NAME: '{{.RESOURCE_NAME | default ""}}'
     preconditions:
-      - mise exec -- which flux-local
+      - mise exec -- which flate
       - test -d "{{.FLUX_PATH}}"
       - sh: test "{{.RESOURCE_TYPE}}" = "ks" -o "{{.RESOURCE_TYPE}}" = "hr"
         msg: "RESOURCE_TYPE must be 'ks' or 'hr'"
     cmds:
-      - mise exec -- flux-local build {{.RESOURCE_TYPE}}
+      - mise exec -- flate build {{.RESOURCE_TYPE}}
         {{if .RESOURCE_NAME}}{{.RESOURCE_NAME}}{{end}}
+        --base=
         --path "{{.FLUX_PATH}}"
-        --all-namespaces
 
   list:
-    desc: List Flux resources (Kustomizations or HelmReleases)
+    desc: List Flux resources (Kustomizations or HelmReleases) [RESOURCE_TYPE=ks|hr]
     requires: *default-requires
     vars:
       RESOURCE_TYPE: '{{.RESOURCE_TYPE | default "ks"}}'
     preconditions:
-      - mise exec -- which flux-local
+      - mise exec -- which flate
       - test -d "{{.FLUX_PATH}}"
       - sh: test "{{.RESOURCE_TYPE}}" = "ks" -o "{{.RESOURCE_TYPE}}" = "hr"
         msg: "RESOURCE_TYPE must be 'ks' or 'hr'"
     cmds:
-      - mise exec -- flux-local get {{.RESOURCE_TYPE}}
+      - mise exec -- flate get {{.RESOURCE_TYPE}}
+        --base=
         --path "{{.FLUX_PATH}}"
-        --all-namespaces
-        -o wide
 
   diff:
-    desc: Compare Flux resources against main branch
+    desc: Compare rendered Flux resources against a Git revision [RESOURCE_TYPE=all|ks|hr|images, BASE_BRANCH=main]
     requires: *default-requires
     vars:
-      RESOURCE_TYPE: '{{.RESOURCE_TYPE | default "hr"}}'
+      RESOURCE_TYPE: '{{.RESOURCE_TYPE | default "all"}}'
       BASE_BRANCH: '{{.BASE_BRANCH | default "main"}}'
     preconditions:
-      - mise exec -- which flux-local
+      - mise exec -- which flate
       - which git
       - test -d "{{.FLUX_PATH}}"
-      - sh: test "{{.RESOURCE_TYPE}}" = "ks" -o "{{.RESOURCE_TYPE}}" = "hr"
-        msg: "RESOURCE_TYPE must be 'ks' or 'hr'"
+      - sh: test "{{.RESOURCE_TYPE}}" = "all" -o "{{.RESOURCE_TYPE}}" = "ks" -o "{{.RESOURCE_TYPE}}" = "hr" -o "{{.RESOURCE_TYPE}}" = "images"
+        msg: "RESOURCE_TYPE must be 'all', 'ks', 'hr' or 'images'"
       - sh: git rev-parse --verify "{{.BASE_BRANCH}}" >/dev/null 2>&1
         msg: "Base branch '{{.BASE_BRANCH}}' does not exist"
     cmds:
-      - task: _setup-worktree
-        vars:
-          BASE_BRANCH: "{{.BASE_BRANCH}}"
-      - defer:
-          task: _cleanup-worktree
-      - mise exec -- flux-local diff {{.RESOURCE_TYPE}}
-        --unified 6
+      # flate compares against a Git revision directly, so no temporary worktree
+      # is needed. It exits non-zero only on errors, not when there are changes.
+      - mise exec -- flate diff {{.RESOURCE_TYPE}}
         --path "{{.FLUX_PATH}}"
-        --path-orig "{{.WORKTREE_DIR}}/{{.FLUX_PATH}}"
-        --strip-attrs "helm.sh/chart,checksum/config,app.kubernetes.io/version,chart"
-        --limit-bytes 10000
-        --all-namespaces
-        --output-file "{{.FLUX_DIFF_OUTPUT}}"
-      - cmd: |
-          if [ -s "{{.FLUX_DIFF_OUTPUT}}" ]; then
-            echo "=== Flux {{.RESOURCE_TYPE}} Diff ==="
-            cat "{{.FLUX_DIFF_OUTPUT}}"
-          else
-            echo "No differences found"
-          fi
+        --base "{{.BASE_BRANCH}}"
 
   diff-all:
-    desc: Compare both Kustomizations and HelmReleases against main branch
+    desc: Compare all rendered Flux resources against a Git revision (alias for diff)
     requires: *default-requires
     vars:
       BASE_BRANCH: '{{.BASE_BRANCH | default "main"}}'
     cmds:
       - task: diff
         vars:
-          RESOURCE_TYPE: "ks"
+          RESOURCE_TYPE: "all"
           BASE_BRANCH: "{{.BASE_BRANCH}}"
-      - task: diff
-        vars:
-          RESOURCE_TYPE: "hr"
-          BASE_BRANCH: "{{.BASE_BRANCH}}"
-
-  _setup-worktree:
-    internal: true
-    requires:
-      vars:
-        - BASE_BRANCH
-    preconditions:
-      - which git
-      - sh: git rev-parse --verify "{{.BASE_BRANCH}}" >/dev/null 2>&1
-        msg: "Base branch '{{.BASE_BRANCH}}' does not exist"
-    cmds:
-      - task: _cleanup-worktree
-      - mkdir -p "{{.WORKTREE_DIR}}"
-      - git worktree add "{{.WORKTREE_DIR}}" "{{.BASE_BRANCH}}"
-
-  _cleanup-worktree:
-    internal: true
-    silent: true
-    cmds:
-      - cmd: |
-          if [ -d "{{.WORKTREE_DIR}}" ]; then
-            git worktree remove "{{.WORKTREE_DIR}}" --force 2>/dev/null || true
-            rm -rf "{{.WORKTREE_DIR}}"
-          fi

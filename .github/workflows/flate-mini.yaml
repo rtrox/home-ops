@@ -1,19 +1,20 @@
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
 name: Flate
 
-# Trial of flate (https://github.com/home-operations/flate), the maintained
-# replacement for flux-local. Runs next to flux-local-mini.yaml so the two can
-# be compared on real PRs. Informational: both jobs set continue-on-error, so
-# a flate failure is visible in the job but does not turn the PR red or gate
-# merging. Once flate has proven itself, flux-local-mini.yaml is replaced by
-# this file and the jobs become the required checks.
+# Validate and diff the Mini cluster's Flux resources with flate
+# (https://github.com/home-operations/flate), the maintained successor to the
+# deprecated flux-local. The "Flate successful" job aggregates the rest and is
+# the single check to require on main.
 
 on:
   workflow_call:
 
 concurrency:
-  # See the note in flux-local-mini.yaml: github.workflow inside a
-  # workflow_call resolves to the caller's name, so use a unique literal key.
+  # NOTE: github.workflow resolves to the CALLING workflow's name inside a
+  # workflow_call, not this file's own `name:` -- any other reusable workflow
+  # called from on-pr.yaml that used github.workflow would land in the same
+  # concurrency group and they'd cancel each other out. Hardcode a unique key
+  # instead.
   group: flate-mini-${{ github.event.number || github.ref }}
   cancel-in-progress: true
 
@@ -23,7 +24,8 @@ permissions:
 
 env:
   # Match the cluster's Kubernetes version (flate defaults to the newest). Bump
-  # this together with kubernetes/kubernetes in clusters/mini/talos/topf.yaml.
+  # this together with kubernetes in clusters/mini/talos/topf.yaml and
+  # FLATE_KUBE_VERSION in .taskfiles/flux/Taskfile.yaml.
   FLATE_KUBE_VERSION: "1.36.4"
   FLUX_PATH: clusters/mini/flux/cluster
 
@@ -49,7 +51,6 @@ jobs:
     if: ${{ needs.filter-changes.outputs.changed-files != '[]' }}
     name: Flate Test
     runs-on: ubuntu-latest
-    continue-on-error: true
     needs:
       - filter-changes
     steps:
@@ -63,8 +64,7 @@ jobs:
         with:
           cache: true
 
-      # --base= (empty) tests the whole tree, the same scope as flux-local test,
-      # instead of only what the PR changes.
+      # --base= (empty) tests the whole tree instead of only what the PR changes.
       - name: Run flate test
         run: flate test --base= --path "${FLUX_PATH}"
 
@@ -72,7 +72,6 @@ jobs:
     if: ${{ needs.filter-changes.outputs.changed-files != '[]' && github.event_name == 'pull_request' }}
     name: Flate Diff
     runs-on: ubuntu-latest
-    continue-on-error: true
     needs:
       - filter-changes
     permissions:
@@ -106,9 +105,10 @@ jobs:
               echo "## Flate diff"
               cat diff.md
           } >> "${GITHUB_STEP_SUMMARY}"
-          # Same guard as flux-local-mini.yaml: a large body blows the
-          # argument/environment size limit of the comment action, so only
-          # post a comment below a conservative size.
+          # A large diff.md blows the OS argument/environment size limit when
+          # the PR-comment action spawns its node process, so skip posting a
+          # comment entirely above a conservative size and rely on the
+          # (untruncated) job summary above instead.
           if [ "$(wc -c < diff.md)" -gt 20000 ]; then
               echo "diff too large for a PR comment ($(wc -c < diff.md) bytes) -- see the job summary for the full output" >> "${GITHUB_STEP_SUMMARY}"
           elif [ -s diff.md ]; then
@@ -134,7 +134,20 @@ jobs:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
           header: ${{ github.event.pull_request.number }}/kubernetes/mini/flate
           message: |
-            **Flate diff** (trial, informational)
+            **Flate diff**
             ```diff
             ${{ steps.diff.outputs.diff }}
             ```
+
+  flate-success:
+    needs:
+      - filter-changes
+      - test
+      - diff
+    if: ${{ !cancelled() }}
+    name: Flate successful
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check job status
+        if: ${{ contains(needs.*.result, 'failure') }}
+        run: exit 1
