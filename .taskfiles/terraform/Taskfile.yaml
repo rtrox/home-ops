@@ -23,8 +23,14 @@ tasks:
     preconditions:
       - sh: test -f stack.tm.hcl
         msg: "{{.STACK}} is not a stack (no terraform/stacks/{{.STACK}}/stack.tm.hcl)"
+      # *_override.tf is git-ignored (MIGRATION.md uses one temporarily), so a
+      # forgotten one would silently change every later run.
+      - sh: test -z "$(ls *_override.tf 2>/dev/null)" || test "{{.ALLOW_OVERRIDE}}" = true
+        msg: "{{.STACK}} has an *_override.tf file; remove it (or pass ALLOW_OVERRIDE=true during a migration)"
       - sh: which jq doppler
         msg: "jq and doppler must be on PATH"
+      - sh: test -n "$(doppler configure get token --plain)"
+        msg: "doppler isn't logged in (run: doppler login)"
     env:
       AWS_ACCESS_KEY_ID:
         sh: "{{.DOPPLER_GET}} R2_STATE_READWRITE | jq -er .access_key_id"
@@ -34,6 +40,12 @@ tasks:
         sh: "{{.DOPPLER_GET}} R2_STATE_READWRITE | jq -er .endpoint"
       TF_VAR_state_passphrase:
         sh: "{{.DOPPLER_GET}} TOFU_STATE_PASSPHRASE"
+      # The generated provider "doppler" {} reads DOPPLER_TOKEN. On the laptop
+      # that's the owner's CLI token, used in-process only (nothing is uploaded
+      # anywhere, unlike Terraform Cloud's remote runs). CI gets a read-only
+      # service token instead.
+      DOPPLER_TOKEN:
+        sh: doppler configure get token --plain
     cmd: mise exec -- tofu {{.CMD}} {{.CLI_ARGS}}
 
   generate:
@@ -52,7 +64,7 @@ tasks:
       vars: [STACK]
     cmds:
       - task: _tofu
-        vars: { STACK: "{{.STACK}}", CMD: init }
+        vars: { STACK: "{{.STACK}}", CMD: init, ALLOW_OVERRIDE: "{{.ALLOW_OVERRIDE}}" }
 
   plan:
     desc: Plan a stack (STACK=proxmox)

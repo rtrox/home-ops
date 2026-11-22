@@ -53,3 +53,72 @@ generate_hcl "_backend.tf" {
     }
   }
 }
+
+# Providers. Each stack lists what it needs in its stack.tm.hcl globals
+# (providers, doppler_writes); these are the defaults and lookup tables.
+# Versions are NOT generated: each stack pins them in its own versions.tf, so
+# Renovate's terraform manager can bump them and their lock files.
+globals {
+  providers      = []
+  doppler_writes = []
+
+  # Doppler config -> the tf-at-home/prd secret holding its write token.
+  # (Renamed with the Doppler projects after phase 4.)
+  doppler_write_tokens = {
+    "hosts-at-home/prd" = "DOPPLER_TRUENAS_WRITE_TOKEN"
+    "k8s-at-home/min"   = "DOPPLER_MINI_WRITE_TOKEN"
+    "tf-at-home/prd"    = "DOPPLER_TF_WRITE_TOKEN"
+  }
+
+  proxmox_endpoint = "https://pve.rtrox.io:8006/"
+}
+
+generate_hcl "_providers.tf" {
+  content {
+    # Reads provider credentials (token: DOPPLER_TOKEN in the environment).
+    provider "doppler" {}
+
+    data "doppler_secrets" "terraform" {
+      project = "tf-at-home"
+      config  = "prd"
+    }
+
+    # One alias per Doppler config the stack writes to, e.g. hosts-at-home/prd
+    # becomes provider = doppler.hosts_at_home_prd.
+    tm_dynamic "provider" {
+      for_each = global.doppler_writes
+      labels   = ["doppler"]
+      attributes = {
+        alias         = tm_replace(tm_replace(provider.value, "-", "_"), "/", "_")
+        doppler_token = tm_hcl_expression("data.doppler_secrets.terraform.map.${global.doppler_write_tokens[provider.value]}")
+      }
+    }
+
+    tm_dynamic "provider" {
+      for_each = tm_contains(global.providers, "cloudflare") ? [1] : []
+      labels   = ["cloudflare"]
+      attributes = {
+        api_token = tm_hcl_expression("data.doppler_secrets.terraform.map.CLOUDFLARE_TERRAFORM_TOKEN")
+      }
+    }
+
+    # Proxmox's API token is written to hosts-at-home by the Ansible proxmox role.
+    tm_dynamic "data" {
+      for_each = tm_contains(global.providers, "proxmox") ? [1] : []
+      labels   = ["doppler_secrets", "hosts"]
+      attributes = {
+        project = "hosts-at-home"
+        config  = "prd"
+      }
+    }
+
+    tm_dynamic "provider" {
+      for_each = tm_contains(global.providers, "proxmox") ? [1] : []
+      labels   = ["proxmox"]
+      attributes = {
+        endpoint  = global.proxmox_endpoint
+        api_token = tm_hcl_expression("data.doppler_secrets.hosts.map.PVE_TERRAFORM_API_TOKEN")
+      }
+    }
+  }
+}
