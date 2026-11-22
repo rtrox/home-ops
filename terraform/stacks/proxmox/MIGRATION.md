@@ -294,7 +294,7 @@ task tf:plan STACK=proxmox        # must be "No changes."
 
 Do this before about Jan 20, when Proxmox's renewal would otherwise fail. To
 prove DNS-01 works now rather than in January, run this on the PVE host:
-`pvenode acme cert renew --force 1`. The next plan then shows a refresh-only
+`pvenode acme cert renew --force 1`, **as root** (as another user it fails with the misleading "transport endpoint is not connected"). Done on 2026-11-22: the renewed certificate validated through the new token. The next plan then shows a refresh-only
 note on the certificate and no changes.
 
 ### If an apply goes wrong
