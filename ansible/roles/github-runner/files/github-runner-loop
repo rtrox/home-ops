@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+# Runs one GitHub Actions job per container, forever (managed by Ansible,
+# roles/github-runner).
+#
+# Each round: sign an App JWT, trade it for a short-lived installation token,
+# ask GitHub for a just-in-time runner config (single use, the runner
+# deregisters itself after one job), then `docker run --rm` the runner image
+# with it. Nothing but the image cache survives a job. The App key and the
+# installation token never enter the container; only the config for that one
+# runner and the read-only CI tokens in job.env do.
+set -euo pipefail
+
+APP_FILE=/etc/github-runner/app.json   # {app_id, installation_id, private_key}
+JOB_ENV=/etc/github-runner/job.env     # CI_DOPPLER_* read-only tokens
+API=https://api.github.com
+
+container=""
+
+stop_container() {
+  if [[ -n "$container" ]]; then
+    docker stop --time 30 "$container" >/dev/null 2>&1 || true
+  fi
+}
+trap 'stop_container; exit 0' TERM INT
+
+b64url() { openssl base64 -A | tr '+/' '-_' | tr -d '='; }
+
+# gh_api METHOD PATH BEARER [JSON_BODY]. The token goes to curl on stdin, not argv.
+gh_api() {
+  local method=$1 path=$2 bearer=$3 body=${4:-}
+  local args=(-fsS --max-time 30 -X "$method" -K -
+    -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28")
+  [[ -n "$body" ]] && args+=(-H "Content-Type: application/json" --data "$body")
+  printf 'header = "Authorization: Bearer %s"\n' "$bearer" | curl "${args[@]}" "$API$path"
+}
+
+app_jwt() {
+  local now header payload sig
+  now=$(date +%s)
+  header=$(printf '{"alg":"RS256","typ":"JWT"}' | b64url)
+  payload=$(jq -cn --arg iss "$(jq -r .app_id "$APP_FILE")" --argjson now "$now" \
+    '{iat: ($now - 60), exp: ($now + 540), iss: $iss}' | b64url)
+  sig=$(printf '%s.%s' "$header" "$payload" \
+    | openssl dgst -sha256 -sign <(jq -r .private_key "$APP_FILE") | b64url)
+  printf '%s.%s.%s' "$header" "$payload" "$sig"
+}
+
+# Prints the base64 JIT config for a fresh runner.
+mint_jitconfig() {
+  local jwt token name repo_name
+  repo_name=${RUNNER_REPO#*/}
+  jwt=$(app_jwt)
+  token=$(gh_api POST "/app/installations/$(jq -r .installation_id "$APP_FILE")/access_tokens" "$jwt" \
+    "$(jq -cn --arg r "$repo_name" '{repositories: [$r], permissions: {administration: "write"}}')" \
+    | jq -er .token)
+  name="runner-$(hostname -s)-$(date +%s)-$RANDOM"
+  gh_api POST "/repos/$RUNNER_REPO/actions/runners/generate-jitconfig" "$token" \
+    "$(jq -cn --arg n "$name" --argjson l "$RUNNER_LABELS" \
+      '{name: $n, runner_group_id: 1, labels: $l, work_folder: "_work"}')" \
+    | jq -er .encoded_jit_config
+}
+
+while true; do
+  if ! ACTIONS_RUNNER_INPUT_JITCONFIG=$(mint_jitconfig); then
+    echo "could not get a just-in-time runner config; retrying in 30s" >&2
+    sleep 30
+    continue
+  fi
+  export ACTIONS_RUNNER_INPUT_JITCONFIG
+
+  container="github-runner-$(date +%s)-$RANDOM"
+  started=$(date +%s)
+  # No Docker socket, no host mounts, no extra privileges.
+  docker run --rm --init --name "$container" --pull missing \
+    --memory "$RUNNER_MEMORY" --cpus "$RUNNER_CPUS" --pids-limit "$RUNNER_PIDS_LIMIT" \
+    --cap-drop ALL --security-opt no-new-privileges \
+    --env-file "$JOB_ENV" -e ACTIONS_RUNNER_INPUT_JITCONFIG \
+    "$RUNNER_IMAGE" ./run.sh &
+  wait $! || echo "runner container exited with an error" >&2
+  container=""
+  unset ACTIONS_RUNNER_INPUT_JITCONFIG
+
+  # A container that dies at once (bad image, no network) mustn't spin.
+  if (( $(date +%s) - started < 10 )); then
+    sleep 20
+  fi
+done

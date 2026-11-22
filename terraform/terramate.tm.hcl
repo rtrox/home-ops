@@ -103,12 +103,40 @@ generate_hcl "_providers.tf" {
     }
 
     # Proxmox's API token is written to hosts-at-home by the Ansible proxmox role.
+    #
+    # The hosts-at-home read goes through its own provider alias, "hosts", so it
+    # can use a different token from the tf-at-home read above. CI's service
+    # tokens each read one Doppler config only. var.doppler_hosts_token is
+    # unset on the laptop (null), and the provider then falls back to
+    # DOPPLER_TOKEN, the CLI token that reads both configs. In CI it's set
+    # (TF_VAR_doppler_hosts_token) to the hosts-at-home read token, while
+    # DOPPLER_TOKEN is the tf-at-home one.
+    tm_dynamic "variable" {
+      for_each = tm_contains(global.providers, "proxmox") ? [1] : []
+      labels   = ["doppler_hosts_token"]
+      attributes = {
+        type      = tm_hcl_expression("string")
+        default   = tm_hcl_expression("null")
+        sensitive = true
+      }
+    }
+
+    tm_dynamic "provider" {
+      for_each = tm_contains(global.providers, "proxmox") ? [1] : []
+      labels   = ["doppler"]
+      attributes = {
+        alias         = "hosts"
+        doppler_token = tm_hcl_expression("var.doppler_hosts_token")
+      }
+    }
+
     tm_dynamic "data" {
       for_each = tm_contains(global.providers, "proxmox") ? [1] : []
       labels   = ["doppler_secrets", "hosts"]
       attributes = {
-        project = "hosts-at-home"
-        config  = "prd"
+        provider = tm_hcl_expression("doppler.hosts")
+        project  = "hosts-at-home"
+        config   = "prd"
       }
     }
 

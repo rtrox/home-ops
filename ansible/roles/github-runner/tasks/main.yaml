@@ -1,0 +1,94 @@
+---
+# The ephemeral just-in-time GitHub Actions runner. See files/github-runner-loop
+# for how a job gets its container. The credentials come from the environment
+# (the plays run under `doppler run -p hosts-at-home -c prd --`) and are written
+# to root-only files; none of these tasks may log them.
+- name: Check the credentials are in the environment
+  ansible.builtin.assert:
+    that:
+      - (lookup('env', 'GITHUB_RUNNER_APP') | from_json).app_id is defined
+      - (lookup('env', 'GITHUB_RUNNER_APP') | from_json).installation_id is defined
+      - (lookup('env', 'GITHUB_RUNNER_APP') | from_json).private_key is defined
+      - lookup('env', 'CI_DOPPLER_TF_READ') | length > 0
+      - lookup('env', 'CI_DOPPLER_HOSTS_READ') | length > 0
+    quiet: true
+    fail_msg: >-
+      GITHUB_RUNNER_APP, CI_DOPPLER_TF_READ or CI_DOPPLER_HOSTS_READ is missing
+      or malformed in hosts-at-home/prd (run via task ansible:*)
+  no_log: true
+  check_mode: false
+
+- name: Install what the runner loop needs
+  ansible.builtin.apt:
+    name:
+      - curl
+      - jq
+      - openssl
+    state: present
+    update_cache: true
+
+- name: Ensure Docker service is enabled and running
+  ansible.builtin.systemd:
+    name: docker
+    enabled: true
+    state: started
+
+- name: Create the runner config directory (root only)
+  ansible.builtin.file:
+    path: /etc/github-runner
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+
+- name: Write the GitHub App credentials (root only)
+  ansible.builtin.copy:
+    content: "{{ lookup('env', 'GITHUB_RUNNER_APP') }}"
+    dest: /etc/github-runner/app.json
+    owner: root
+    group: root
+    mode: "0600"
+  no_log: true
+  notify: restart github-runner service
+
+# docker --env-file format. These two are read-only Doppler service tokens, and
+# the only secrets that enter a job container.
+- name: Write the read-only CI Doppler tokens (root only)
+  ansible.builtin.copy:
+    content: |
+      CI_DOPPLER_TF_READ={{ lookup('env', 'CI_DOPPLER_TF_READ') }}
+      CI_DOPPLER_HOSTS_READ={{ lookup('env', 'CI_DOPPLER_HOSTS_READ') }}
+    dest: /etc/github-runner/job.env
+    owner: root
+    group: root
+    mode: "0600"
+  no_log: true
+  notify: restart github-runner service
+
+- name: Install the runner loop
+  ansible.builtin.copy:
+    src: github-runner-loop
+    dest: /usr/local/sbin/github-runner-loop
+    owner: root
+    group: root
+    mode: "0750"
+  notify: restart github-runner service
+
+- name: Create the systemd service for the runner loop
+  ansible.builtin.template:
+    src: github-runner.service.j2
+    dest: /etc/systemd/system/github-runner.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify: restart github-runner service
+
+- name: Enable and start the runner service
+  ansible.builtin.systemd:
+    name: github-runner
+    enabled: true
+    state: started
+    daemon_reload: true
+  # On a first deploy, --check doesn't write the unit file, so there's no unit
+  # to find yet.
+  ignore_errors: "{{ ansible_check_mode }}"

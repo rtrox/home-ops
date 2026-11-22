@@ -1,0 +1,154 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+name: terraform-plan
+
+# Plan only: the apply comes later. Runs on the self-hosted runner (a Proxmox
+# VM, see ansible/roles/github-runner), one fresh container per job.
+#
+# home-ops is public, and the logs of a public repo are public too. So the
+# commands that read state or live APIs (init, plan) write to files that are
+# never printed, and the PR comment holds only the resource headers and counts.
+on:
+  pull_request:
+    paths:
+      - "terraform/**"
+      - "inventory/**"
+      - ".github/workflows/terraform-plan.yaml"
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: terraform-plan-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  plan:
+    name: Plan changed stacks
+    # Only same-repo PRs reach the runner (forks never do).
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+    runs-on: [self-hosted, home-ops, tofu]
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install tools
+        uses: jdx/mise-action@924e7c586e33d7d4bae9c14e26c5d22e2beb6e78 # v5.3.0
+        with:
+          cache: false
+          install_args: aqua:opentofu/opentofu aqua:terramate-io/terramate aqua:terraform-linters/tflint aqua:jqlang/jq
+
+      # Read-only Doppler service tokens, in the container's environment. Each
+      # reads one config: CI_DOPPLER_TF_READ -> tf-at-home/prd,
+      # CI_DOPPLER_HOSTS_READ -> hosts-at-home/prd. The state's R2 token is the
+      # read-only one. Values go to later steps through GITHUB_ENV, masked.
+      - name: Read credentials
+        run: |
+          set -euo pipefail
+          secrets=$(curl -fsS --max-time 30 -K - \
+            "https://api.doppler.com/v3/configs/config/secrets/download?format=json" \
+            <<<"header = \"Authorization: Bearer ${CI_DOPPLER_TF_READ}\"")
+          r2=$(jq -er '.R2_STATE_READONLY | fromjson' <<<"$secrets")
+          set_env() {
+            echo "::add-mask::$2"
+            printf '%s=%s\n' "$1" "$2" >> "$GITHUB_ENV"
+          }
+          set_env AWS_ACCESS_KEY_ID "$(jq -er .access_key_id <<<"$r2")"
+          set_env AWS_SECRET_ACCESS_KEY "$(jq -er .secret_access_key <<<"$r2")"
+          set_env AWS_ENDPOINT_URL_S3 "$(jq -er .endpoint <<<"$r2")"
+          set_env TF_VAR_state_passphrase "$(jq -er .TOFU_STATE_PASSPHRASE <<<"$secrets")"
+          # The generated providers read tf-at-home through DOPPLER_TOKEN and
+          # hosts-at-home through var.doppler_hosts_token.
+          set_env DOPPLER_TOKEN "$CI_DOPPLER_TF_READ"
+          set_env TF_VAR_doppler_hosts_token "$CI_DOPPLER_HOSTS_READ"
+
+      - name: Plan changed stacks
+        id: plan
+        env:
+          BASE_REF: origin/${{ github.base_ref }}
+          GITHUB_TOKEN: ${{ github.token }} # tflint --init downloads its plugin from GitHub
+        run: |
+          set -uo pipefail
+          root=$PWD
+          out=$RUNNER_TEMP/plan
+          mkdir -p "$out"
+          summary=$RUNNER_TEMP/summary.md
+          failed=false
+
+          cd terraform
+          stacks=$(terramate list --changed --git-change-base "$BASE_REF")
+          echo "Changed stacks:"
+          echo "${stacks:-none}"
+
+          {
+            echo "### Terraform plan"
+            echo
+            echo "Commit \`${GITHUB_SHA::7}\`. Resource headers and counts only; full plans are not posted."
+          } > "$summary"
+
+          if [ -z "$stacks" ]; then
+            echo >> "$summary"
+            echo "No stacks changed." >> "$summary"
+            echo "failed=$failed" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          tflint --init >/dev/null 2>&1 || { echo "tflint --init failed"; }
+
+          # fail_step STACK STEP: record the failure, never the output.
+          fail_step() {
+            failed=true
+            printf '\n#### `%s`\n\nPlan failed at step: **%s**. See the job log (the plan itself is not printed).\n' "$1" "$2" >> "$summary"
+          }
+
+          for stack in $stacks; do
+            echo "::group::$stack"
+            dir=$root/terraform/$stack
+            cd "$dir"
+
+            # fmt, validate and tflint read only files, so their output is safe to print.
+            if ! tofu fmt -check -diff; then fail_step "$stack" "tofu fmt -check"; cd "$root/terraform"; echo "::endgroup::"; continue; fi
+            # init and plan read state and live APIs: output to files only.
+            if ! tofu init -input=false -no-color >"$out/init.log" 2>&1; then fail_step "$stack" "tofu init"; cd "$root/terraform"; echo "::endgroup::"; continue; fi
+            if ! tofu validate -no-color; then fail_step "$stack" "tofu validate"; cd "$root/terraform"; echo "::endgroup::"; continue; fi
+            if ! tflint --config "$root/terraform/.tflint.hcl"; then fail_step "$stack" "tflint"; cd "$root/terraform"; echo "::endgroup::"; continue; fi
+            if ! tofu plan -lock=false -no-color -input=false >"$out/plan.log" 2>&1; then fail_step "$stack" "tofu plan"; cd "$root/terraform"; echo "::endgroup::"; continue; fi
+
+            # Keep only the "# <address> will be <action>" headers and the
+            # Plan:/No changes lines; everything else is dropped.
+            {
+              printf '\n#### `%s`\n\n' "$stack"
+              headers=$(grep -E '^  # [^ ]+ (will be|must be) ' "$out/plan.log" || true)
+              totals=$(grep -E '^(Plan: |No changes\.)' "$out/plan.log" || true)
+              if [ -n "$headers" ]; then
+                printf '```\n%s\n```\n\n' "$headers"
+              fi
+              printf '%s\n' "${totals:-Plan finished, no summary line found.}"
+            } >> "$summary"
+            rm -f "$out/plan.log" "$out/init.log"
+            echo "::endgroup::"
+            cd "$root/terraform"
+          done
+
+          echo "failed=$failed" >> "$GITHUB_OUTPUT"
+
+      - name: Post the plan summary
+        if: ${{ always() && steps.plan.outcome != 'skipped' }}
+        uses: marocchino/sticky-pull-request-comment@5770ad5eb8f42dd2c4f34da00c94c5381e49af88 # v3.0.5
+        with:
+          GITHUB_TOKEN: ${{ github.token }}
+          header: terraform-plan
+          path: ${{ runner.temp }}/summary.md
+        # A crash before the summary exists posts nothing.
+        continue-on-error: true
+
+      - name: Fail if a plan failed
+        if: ${{ steps.plan.outputs.failed == 'true' }}
+        run: |
+          echo "At least one stack failed; see the summary comment for the step."
+          exit 1

@@ -96,6 +96,14 @@ all:
           purpose: CI runner (Proxmox VM, never manages its own VM)
       children:
         dns_apartment:
+        runners:
+
+    # The self-hosted GitHub Actions runner (the `runners` play in site.yaml).
+    # The host is defined under `vms` (terraform/stacks/proxmox reads it there);
+    # this group only selects it for its play.
+    runners:
+      hosts:
+        runner.rtrox.io:
 
     # The apartment's resolvers (the `dns_apartment` play in site.yaml): Blocky
     # and Valkey, no keepalived. dns-a2 is Blocky in mini, not a host here.

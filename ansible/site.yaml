@@ -165,6 +165,48 @@
           - vim
         state: present
 
+# The self-hosted CI runner, a Proxmox VM (Debian 13). It holds credentials to
+# everything the PR plans read, so it gets no other workloads, and it never
+# manages its own VM.
+- name: Configure the CI runner
+  hosts: runners:!offline
+  become: true
+
+  # TODO: auto-upgrade is left out for now. Add it once a reboot between jobs
+  # is acceptable (the service restarts on boot, so a reboot only costs the
+  # job in flight).
+  roles:
+    - role: admin-user
+    - role: secure-ssh
+      vars:
+        ssh_get_public_keys_from_github: true
+        ssh_github_username: "rtrox"
+    - role: geerlingguy.docker
+      vars:
+        docker_users:
+          - "{{ ansible_user }}"
+        docker_daemon_options:
+          log-driver: journald
+          log-opts:
+            tag: !unsafe "{{.Name}}"
+    - role: github-runner
+
+  tasks:
+    - name: Install qemu-guest-agent (Proxmox reads the VM's IPs and shuts it down cleanly through it)
+      apt:
+        name: qemu-guest-agent
+        state: present
+        update_cache: true
+
+    # Debian's unit is static (udev starts it when the VM's virtio port shows
+    # up), so it's started, not enabled.
+    - name: Start qemu-guest-agent
+      systemd:
+        name: qemu-guest-agent
+        state: started
+      # The package's unit may not exist yet in --check on a first run.
+      ignore_errors: "{{ ansible_check_mode }}"
+
 - name: Configure  Avahi Hosts
   hosts: avahi:!offline
   become: true

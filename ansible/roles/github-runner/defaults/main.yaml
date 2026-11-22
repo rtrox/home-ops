@@ -1,0 +1,19 @@
+---
+# The official runner image, pinned by digest; Renovate bumps tag and digest together (.github/renovate/ansibleImages.json5).
+# renovate: datasource=docker
+github_runner_image: "ghcr.io/actions/actions-runner:2.338.2@sha256:6d0b2d80d80f143f77dcb676e50920100bbb547e39e883454d57f45ab8c31300"
+
+# The only repository the runner serves (the GitHub App is installed on it only).
+github_runner_repo: rtrox/home-ops
+# Labels the job's runs-on must list (see .github/workflows/terraform-plan.yaml).
+github_runner_labels:
+  - self-hosted
+  - linux
+  - x64
+  - home-ops
+  - tofu
+
+# Per-job container limits. The VM has 4 cores and 8 GiB.
+github_runner_memory: 6g
+github_runner_cpus: "3"
+github_runner_pids_limit: 2048
