@@ -10,7 +10,15 @@ locals {
   inventory_hosts = yamldecode(file("${path.module}/../../../inventory/hosts.yaml"))
   inventory_sites = yamldecode(file("${path.module}/../../../inventory/sites.yaml"))
 
-  inventory_vm_hosts = local.inventory_hosts.all.children.vms.hosts
+  # The VMs are the vms group's own hosts plus those of every group listed
+  # under vms.children (e.g. dns_apartment, runners), which Ansible defines as
+  # top-level groups. One level of children is enough today.
+  inventory_groups = local.inventory_hosts.all.children
+  inventory_vm_hosts = merge(
+    coalesce(try(local.inventory_groups.vms.hosts, null), {}),
+    [for child in keys(coalesce(try(local.inventory_groups.vms.children, null), {})) :
+    coalesce(try(local.inventory_groups[child].hosts, null), {})]...
+  )
 
   pve_node  = "pve"
   vm_bridge = "vmbr0"
