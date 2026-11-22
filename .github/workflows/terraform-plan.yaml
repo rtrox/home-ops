@@ -37,35 +37,62 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      # uv is here because .mise.toml's [env] section creates a Python venv
+      # with it (_.python.venv); without uv that setting has nothing to run.
       - name: Install tools
         uses: jdx/mise-action@924e7c586e33d7d4bae9c14e26c5d22e2beb6e78 # v5.3.0
         with:
           cache: false
-          install_args: aqua:opentofu/opentofu aqua:terramate-io/terramate aqua:terraform-linters/tflint aqua:jqlang/jq
+          install_args: aqua:astral-sh/uv aqua:opentofu/opentofu aqua:terramate-io/terramate aqua:terraform-linters/tflint aqua:jqlang/jq
 
       # Read-only Doppler service tokens, in the container's environment. Each
-      # reads one config: CI_DOPPLER_TF_READ -> tf-at-home/prd,
-      # CI_DOPPLER_HOSTS_READ -> hosts-at-home/prd. The state's R2 token is the
-      # read-only one. Values go to later steps through GITHUB_ENV, masked.
+      # is scoped to the `ci` config of one project: CI_DOPPLER_TF_READ ->
+      # tf-at-home/ci (R2_STATE_READONLY, TOFU_STATE_PASSPHRASE, a read-only
+      # Cloudflare token), CI_DOPPLER_HOSTS_READ -> hosts-at-home/ci (a
+      # PVEAuditor token). Neither can see `prd`. Values go to later steps
+      # through GITHUB_ENV. Nothing here may print a value: jq's errors are
+      # discarded (they can quote the input), every value is masked as soon as
+      # it's assigned, and every failure is a generic message.
       - name: Read credentials
         run: |
           set -euo pipefail
-          secrets=$(curl -fsS --max-time 30 -K - \
-            "https://api.doppler.com/v3/configs/config/secrets/download?format=json" \
-            <<<"header = \"Authorization: Bearer ${CI_DOPPLER_TF_READ}\"")
-          r2=$(jq -er '.R2_STATE_READONLY | fromjson' <<<"$secrets")
+          fail() { echo "::error::could not read the CI credentials from Doppler"; exit 1; }
+          # get EXPR: print a jq field of the JSON on stdin, or fail without output.
+          get() { jq -er "$1" 2>/dev/null; }
           set_env() {
             echo "::add-mask::$2"
             printf '%s=%s\n' "$1" "$2" >> "$GITHUB_ENV"
           }
-          set_env AWS_ACCESS_KEY_ID "$(jq -er .access_key_id <<<"$r2")"
-          set_env AWS_SECRET_ACCESS_KEY "$(jq -er .secret_access_key <<<"$r2")"
-          set_env AWS_ENDPOINT_URL_S3 "$(jq -er .endpoint <<<"$r2")"
-          set_env TF_VAR_state_passphrase "$(jq -er .TOFU_STATE_PASSPHRASE <<<"$secrets")"
+
+          echo "::add-mask::$CI_DOPPLER_TF_READ"
+          echo "::add-mask::$CI_DOPPLER_HOSTS_READ"
+
+          secrets=$(curl -fsS --max-time 30 -K - \
+            "https://api.doppler.com/v3/configs/config/secrets/download?format=json" \
+            <<<"header = \"Authorization: Bearer ${CI_DOPPLER_TF_READ}\"" 2>/dev/null) || fail
+          r2=$(get '.R2_STATE_READONLY' <<<"$secrets") || fail
+          echo "::add-mask::$r2"
+          passphrase=$(get '.TOFU_STATE_PASSPHRASE' <<<"$secrets") || fail
+          echo "::add-mask::$passphrase"
+          access_key=$(get '.access_key_id' <<<"$r2") || fail
+          echo "::add-mask::$access_key"
+          secret_key=$(get '.secret_access_key' <<<"$r2") || fail
+          echo "::add-mask::$secret_key"
+          endpoint=$(get '.endpoint' <<<"$r2") || fail
+          unset secrets r2
+
+          set_env AWS_ACCESS_KEY_ID "$access_key"
+          set_env AWS_SECRET_ACCESS_KEY "$secret_key"
+          set_env AWS_ENDPOINT_URL_S3 "$endpoint"
+          set_env TF_VAR_state_passphrase "$passphrase"
           # The generated providers read tf-at-home through DOPPLER_TOKEN and
-          # hosts-at-home through var.doppler_hosts_token.
+          # hosts-at-home through var.doppler_hosts_token, both from the config
+          # named by var.doppler_config.
           set_env DOPPLER_TOKEN "$CI_DOPPLER_TF_READ"
           set_env TF_VAR_doppler_hosts_token "$CI_DOPPLER_HOSTS_READ"
+          set_env TF_VAR_doppler_config ci
+          # Terramate's update check phones home; not from this runner.
+          set_env TM_DISABLE_CHECKPOINT 1
 
       - name: Plan changed stacks
         id: plan
@@ -114,17 +141,20 @@ jobs:
             # fmt, validate and tflint read only files, so their output is safe to print.
             if ! tofu fmt -check -diff; then fail_step "$stack" "tofu fmt -check"; cd "$root/terraform"; echo "::endgroup::"; continue; fi
             # init and plan read state and live APIs: output to files only.
-            if ! tofu init -input=false -no-color >"$out/init.log" 2>&1; then fail_step "$stack" "tofu init"; cd "$root/terraform"; echo "::endgroup::"; continue; fi
+            if ! tofu init -input=false -lockfile=readonly -no-color >"$out/init.log" 2>&1; then fail_step "$stack" "tofu init"; cd "$root/terraform"; echo "::endgroup::"; continue; fi
             if ! tofu validate -no-color; then fail_step "$stack" "tofu validate"; cd "$root/terraform"; echo "::endgroup::"; continue; fi
             if ! tflint --config "$root/terraform/.tflint.hcl"; then fail_step "$stack" "tflint"; cd "$root/terraform"; echo "::endgroup::"; continue; fi
             if ! tofu plan -lock=false -no-color -input=false >"$out/plan.log" 2>&1; then fail_step "$stack" "tofu plan"; cd "$root/terraform"; echo "::endgroup::"; continue; fi
 
-            # Keep only the "# <address> will be <action>" headers and the
-            # Plan:/No changes lines; everything else is dropped.
+            # Keep only "# <type.name> will be <action>" headers and the
+            # Plan:/No changes lines. for_each keys and indexes become [...]
+            # first, so no key value reaches the public comment; everything
+            # else in the plan is dropped.
             {
               printf '\n#### `%s`\n\n' "$stack"
-              headers=$(grep -E '^  # [^ ]+ (will be|must be) ' "$out/plan.log" || true)
-              totals=$(grep -E '^(Plan: |No changes\.)' "$out/plan.log" || true)
+              headers=$(sed -E 's/\[[^]]*\]/[…]/g' "$out/plan.log" \
+                | grep -oE '^  # [^ ]+ (will be|must be) (created|updated in-place|destroyed|replaced|read during apply)' || true)
+              totals=$(grep -oE '^(Plan: [0-9]+ to add, [0-9]+ to change, [0-9]+ to destroy\.|No changes\.)' "$out/plan.log" || true)
               if [ -n "$headers" ]; then
                 printf '```\n%s\n```\n\n' "$headers"
               fi

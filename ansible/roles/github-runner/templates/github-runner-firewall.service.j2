@@ -1,0 +1,15 @@
+[Unit]
+Description=Job network and firewall rules for the GitHub Actions runner containers
+After=docker.service network-online.target systemd-resolved.service
+Requires=docker.service
+# A Docker restart reruns this, so the rules are never missing.
+PartOf=docker.service
+Before=github-runner.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=true
+ExecStart=/usr/local/sbin/github-runner-firewall
+
+[Install]
+WantedBy=multi-user.target

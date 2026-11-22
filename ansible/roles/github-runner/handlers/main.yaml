@@ -6,3 +6,10 @@
     daemon_reload: true
   # Under --check on a first deploy there's no unit yet.
   ignore_errors: "{{ ansible_check_mode }}"
+
+- name: restart github-runner-firewall service
+  ansible.builtin.systemd:
+    name: github-runner-firewall
+    state: restarted
+    daemon_reload: true
+  ignore_errors: "{{ ansible_check_mode }}"

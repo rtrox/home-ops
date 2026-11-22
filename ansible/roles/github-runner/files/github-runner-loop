@@ -4,17 +4,21 @@
 #
 # Each round: sign an App JWT, trade it for a short-lived installation token,
 # ask GitHub for a just-in-time runner config (single use, the runner
-# deregisters itself after one job), then `docker run --rm` the runner image
-# with it. Nothing but the image cache survives a job. The App key and the
-# installation token never enter the container; only the config for that one
-# runner and the read-only CI tokens in job.env do.
+# deregisters itself after one job), revoke the token, then `docker run --rm`
+# the runner image with the config on the job network. Nothing but the image
+# cache survives a job. The App key and the installation tokens never enter the
+# container; only the config for that one runner and the read-only CI tokens in
+# job.env do. Nothing here prints a credential: failures log a generic line.
 set -euo pipefail
 
 APP_FILE=/etc/github-runner/app.json   # {app_id, installation_id, private_key}
 JOB_ENV=/etc/github-runner/job.env     # CI_DOPPLER_* read-only tokens
 API=https://api.github.com
+BACKOFF_START=15
+BACKOFF_MAX=600
 
 container=""
+runner_id=""
 
 stop_container() {
   if [[ -n "$container" ]]; then
@@ -31,7 +35,7 @@ gh_api() {
   local args=(-fsS --max-time 30 -X "$method" -K -
     -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28")
   [[ -n "$body" ]] && args+=(-H "Content-Type: application/json" --data "$body")
-  printf 'header = "Authorization: Bearer %s"\n' "$bearer" | curl "${args[@]}" "$API$path"
+  printf 'header = "Authorization: Bearer %s"\n' "$bearer" | curl "${args[@]}" "$API$path" 2>/dev/null
 }
 
 app_jwt() {
@@ -45,43 +49,79 @@ app_jwt() {
   printf '%s.%s.%s' "$header" "$payload" "$sig"
 }
 
-# Prints the base64 JIT config for a fresh runner.
-mint_jitconfig() {
-  local jwt token name repo_name
-  repo_name=${RUNNER_REPO#*/}
-  jwt=$(app_jwt)
-  token=$(gh_api POST "/app/installations/$(jq -r .installation_id "$APP_FILE")/access_tokens" "$jwt" \
-    "$(jq -cn --arg r "$repo_name" '{repositories: [$r], permissions: {administration: "write"}}')" \
-    | jq -er .token)
-  name="runner-$(hostname -s)-$(date +%s)-$RANDOM"
-  gh_api POST "/repos/$RUNNER_REPO/actions/runners/generate-jitconfig" "$token" \
-    "$(jq -cn --arg n "$name" --argjson l "$RUNNER_LABELS" \
-      '{name: $n, runner_group_id: 1, labels: $l, work_folder: "_work"}')" \
-    | jq -er .encoded_jit_config
+# Prints an installation token scoped to the one repository.
+mint_token() {
+  gh_api POST "/app/installations/$(jq -r .installation_id "$APP_FILE")/access_tokens" "$(app_jwt)" \
+    "$(jq -cn --arg r "${RUNNER_REPO#*/}" '{repositories: [$r], permissions: {administration: "write"}}')" \
+    | jq -er .token
 }
 
+revoke_token() { gh_api DELETE /installation/token "$1" >/dev/null || true; }
+
+# Sets JIT_CONFIG and runner_id for a fresh runner. Not run in a subshell.
+mint_jitconfig() {
+  local token resp name
+  token=$(mint_token) || return 1
+  name="runner-$(hostname -s)-$(date +%s)-$RANDOM"
+  resp=$(gh_api POST "/repos/$RUNNER_REPO/actions/runners/generate-jitconfig" "$token" \
+    "$(jq -cn --arg n "$name" --argjson l "$RUNNER_LABELS" \
+      '{name: $n, runner_group_id: 1, labels: $l, work_folder: "_work"}')") || { revoke_token "$token"; return 1; }
+  revoke_token "$token"
+  runner_id=$(jq -er .runner.id <<<"$resp") || return 1
+  JIT_CONFIG=$(jq -er .encoded_jit_config <<<"$resp") || return 1
+}
+
+# A runner that did its job has already removed itself; one that never got a
+# job (the container died, the watchdog fired) is still registered. Delete it
+# by id; a 404 just means it's gone.
+delete_runner() {
+  local token
+  [[ -n "$runner_id" ]] || return 0
+  if token=$(mint_token); then
+    gh_api DELETE "/repos/$RUNNER_REPO/actions/runners/$runner_id" "$token" >/dev/null || true
+    revoke_token "$token"
+  fi
+  runner_id=""
+}
+
+backoff=$BACKOFF_START
 while true; do
-  if ! ACTIONS_RUNNER_INPUT_JITCONFIG=$(mint_jitconfig); then
-    echo "could not get a just-in-time runner config; retrying in 30s" >&2
-    sleep 30
+  if ! mint_jitconfig; then
+    echo "could not get a just-in-time runner config; retrying in ${backoff}s" >&2
+    delete_runner
+    sleep "$backoff"
+    backoff=$(( backoff * 2 > BACKOFF_MAX ? BACKOFF_MAX : backoff * 2 ))
     continue
   fi
+  ACTIONS_RUNNER_INPUT_JITCONFIG=$JIT_CONFIG
   export ACTIONS_RUNNER_INPUT_JITCONFIG
+  unset JIT_CONFIG
 
   container="github-runner-$(date +%s)-$RANDOM"
   started=$(date +%s)
-  # No Docker socket, no host mounts, no extra privileges.
-  docker run --rm --init --name "$container" --pull missing \
+  # No Docker socket, no host mounts, no extra privileges. The job network's
+  # firewall rules (github-runner-firewall) limit where the job can connect.
+  # `timeout` caps the job's wall-clock time: it sends TERM (which the docker
+  # client passes on to the container), then KILL; the rm below removes
+  # whatever is left.
+  timeout --kill-after=60s "${RUNNER_MAX_RUNTIME}s" \
+    docker run --rm --init --name "$container" --pull missing \
+    --network "$RUNNER_NETWORK" \
     --memory "$RUNNER_MEMORY" --cpus "$RUNNER_CPUS" --pids-limit "$RUNNER_PIDS_LIMIT" \
     --cap-drop ALL --security-opt no-new-privileges \
     --env-file "$JOB_ENV" -e ACTIONS_RUNNER_INPUT_JITCONFIG \
     "$RUNNER_IMAGE" ./run.sh &
-  wait $! || echo "runner container exited with an error" >&2
+  wait $! || echo "runner container exited with an error or hit the time limit" >&2
+  docker rm -f "$container" >/dev/null 2>&1 || true
   container=""
   unset ACTIONS_RUNNER_INPUT_JITCONFIG
+  delete_runner
 
-  # A container that dies at once (bad image, no network) mustn't spin.
+  # A container that dies at once (bad image, no network) mustn't spin: back off.
   if (( $(date +%s) - started < 10 )); then
-    sleep 20
+    sleep "$backoff"
+    backoff=$(( backoff * 2 > BACKOFF_MAX ? BACKOFF_MAX : backoff * 2 ))
+  else
+    backoff=$BACKOFF_START
   fi
 done

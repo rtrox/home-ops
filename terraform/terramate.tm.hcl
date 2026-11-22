@@ -78,9 +78,17 @@ generate_hcl "_providers.tf" {
     # Reads provider credentials (token: DOPPLER_TOKEN in the environment).
     provider "doppler" {}
 
+    # Which config the Doppler reads use. "prd" on the laptop; CI sets
+    # TF_VAR_doppler_config=ci, a separate root config in each project holding
+    # only what a plan needs, read with tokens scoped to it.
+    variable "doppler_config" {
+      type    = string
+      default = "prd"
+    }
+
     data "doppler_secrets" "terraform" {
       project = "tf-at-home"
-      config  = "prd"
+      config  = var.doppler_config
     }
 
     # One alias per Doppler config the stack writes to, e.g. hosts-at-home/prd
@@ -108,9 +116,9 @@ generate_hcl "_providers.tf" {
     # can use a different token from the tf-at-home read above. CI's service
     # tokens each read one Doppler config only. var.doppler_hosts_token is
     # unset on the laptop (null), and the provider then falls back to
-    # DOPPLER_TOKEN, the CLI token that reads both configs. In CI it's set
-    # (TF_VAR_doppler_hosts_token) to the hosts-at-home read token, while
-    # DOPPLER_TOKEN is the tf-at-home one.
+    # DOPPLER_TOKEN, the CLI token that reads both projects. In CI it's set
+    # (TF_VAR_doppler_hosts_token) to the hosts-at-home/ci read token, while
+    # DOPPLER_TOKEN is the tf-at-home/ci one.
     tm_dynamic "variable" {
       for_each = tm_contains(global.providers, "proxmox") ? [1] : []
       labels   = ["doppler_hosts_token"]
@@ -136,7 +144,7 @@ generate_hcl "_providers.tf" {
       attributes = {
         provider = tm_hcl_expression("doppler.hosts")
         project  = "hosts-at-home"
-        config   = "prd"
+        config   = tm_hcl_expression("var.doppler_config")
       }
     }
 

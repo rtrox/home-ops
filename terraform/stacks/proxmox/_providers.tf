@@ -2,8 +2,12 @@
 
 provider "doppler" {
 }
+variable "doppler_config" {
+  default = "prd"
+  type    = string
+}
 data "doppler_secrets" "terraform" {
-  config  = "prd"
+  config  = var.doppler_config
   project = "tf-at-home"
 }
 provider "cloudflare" {
@@ -19,7 +23,7 @@ provider "doppler" {
   doppler_token = var.doppler_hosts_token
 }
 data "doppler_secrets" "hosts" {
-  config   = "prd"
+  config   = var.doppler_config
   project  = "hosts-at-home"
   provider = doppler.hosts
 }

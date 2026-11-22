@@ -12,16 +12,18 @@
       - lookup('env', 'CI_DOPPLER_TF_READ') | length > 0
       - lookup('env', 'CI_DOPPLER_HOSTS_READ') | length > 0
     quiet: true
+    # No no_log here: fail_msg is the only output, and it holds no value. (The
+    # conditions only call lookup(); their values are never rendered.)
     fail_msg: >-
       GITHUB_RUNNER_APP, CI_DOPPLER_TF_READ or CI_DOPPLER_HOSTS_READ is missing
       or malformed in hosts-at-home/prd (run via task ansible:*)
-  no_log: true
   check_mode: false
 
 - name: Install what the runner loop needs
   ansible.builtin.apt:
     name:
       - curl
+      - iptables
       - jq
       - openssl
     state: present
@@ -64,6 +66,32 @@
     mode: "0600"
   no_log: true
   notify: restart github-runner service
+
+- name: Install the job network and firewall script
+  ansible.builtin.template:
+    src: github-runner-firewall.j2
+    dest: /usr/local/sbin/github-runner-firewall
+    owner: root
+    group: root
+    mode: "0750"
+  notify: restart github-runner-firewall service
+
+- name: Create the systemd service for the job firewall
+  ansible.builtin.template:
+    src: github-runner-firewall.service.j2
+    dest: /etc/systemd/system/github-runner-firewall.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify: restart github-runner-firewall service
+
+- name: Enable and start the job firewall service
+  ansible.builtin.systemd:
+    name: github-runner-firewall
+    enabled: true
+    state: started
+    daemon_reload: true
+  ignore_errors: "{{ ansible_check_mode }}"
 
 - name: Install the runner loop
   ansible.builtin.copy:

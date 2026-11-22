@@ -17,3 +17,16 @@ github_runner_labels:
 github_runner_memory: 6g
 github_runner_cpus: "3"
 github_runner_pids_limit: 2048
+# Wall-clock cap per job container (the workflow's own timeout is shorter).
+github_runner_max_runtime_seconds: 10800
+
+# The job network. Its firewall rules (templates/github-runner-firewall.j2)
+# let jobs reach DNS, the LAN hosts below, and HTTPS on the internet only.
+github_runner_network: github-runner-jobs
+github_runner_bridge: ghrunner0
+github_runner_subnet: 10.254.254.0/24
+# LAN hosts a plan needs. pve.rtrox.io's API: the proxmox stack plans through it.
+github_runner_allowed_lan:
+  - name: pve.rtrox.io API
+    address: "{{ hostvars[groups['proxmox'][0]].address }}"
+    port: 8006
