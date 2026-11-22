@@ -43,8 +43,23 @@ spec:
             args:
               - |
                 set -u
-                ping() { wget -q -O /dev/null -T 15 -t 3 "$HC_PING_URL$1" || true; }
+                # Pings are silent: wget echoes the URL (a secret) on errors.
+                ping() { wget -q -O /dev/null -T 10 -t 3 "$HC_PING_URL$1" >/dev/null 2>&1 || true; }
                 die() { echo "FAILED: $1" >&2; ping /fail; exit 1; }
+                # Input validation: print only the variable name, never a
+                # value, and exit without pinging.
+                bad() { echo "FAILED: invalid input $1" >&2; exit 1; }
+                case "${HC_PING_URL:-}" in https://hc-ping.com/*) ;; *) bad HC_PING_URL ;; esac
+                for v in SRC_BUCKET DST_BUCKET; do
+                  eval "val=\${$v:-}"
+                  case "$val" in ""|*[!a-z0-9-]*) bad "$v" ;; esac
+                done
+                for v in RCLONE_CONFIG_MINIO_ENDPOINT RCLONE_CONFIG_MINIO_ACCESS_KEY_ID \
+                  RCLONE_CONFIG_MINIO_SECRET_ACCESS_KEY RCLONE_CONFIG_OFFSITE_ACCOUNT \
+                  RCLONE_CONFIG_OFFSITE_KEY; do
+                  eval "val=\${$v:-}"
+                  case "$val" in ""|"{"*|"http://{"*) bad "$v" ;; esac
+                done
                 count() {
                   out=$(rclone size --json --fast-list "$1") || return 1
                   echo "$out" | sed -n 's/.*"count":\([0-9]*\).*/\1/p'
