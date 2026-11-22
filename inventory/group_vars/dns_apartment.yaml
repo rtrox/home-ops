@@ -8,3 +8,4 @@
 blocky_redis_address: "{{ ansible_host }}:{{ valkey_port | default(6379) }}"
 # Reverse lookups of client names go to the apartment's router (Mikrotik).
 blocky_upstream: 172.21.254.1
+blocky_dhclient_supersede: false # static netplan addressing, no dhclient

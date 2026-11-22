@@ -7,6 +7,17 @@ ports:
   http: 80
   https: 443
 
+{% if blocky_legacy_upstreams | bool %}
+# Site override: this site keeps its pre-shared upstreams (lists replace the shared ones).
+upstreams:
+  groups:
+    default:
+      - tcp-tls:1.1.1.1:853
+      - tcp-tls:1.0.0.1:853
+      - https://cloudflare-dns.com/dns-query
+bootstrapDns: []
+
+{% endif %}
 clientLookup:
   upstream: {{ blocky_upstream }}
   singleNameOrder:

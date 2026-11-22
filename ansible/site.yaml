@@ -136,6 +136,9 @@
     - role: node-exporter
     - role: valkey
     - role: blocky
+    # TODO: auto-upgrade is left out: it reboots at a fixed hour and dns-a1 is
+    # the apartment's only resolver until dns-a2 exists. Add it then (with the
+    # dns-peer-check) so the two never upgrade together.
 
   tasks:
     - name: Install qemu-guest-agent (Proxmox reads the VM's IPs and shuts it down cleanly through it)
