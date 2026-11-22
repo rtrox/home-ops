@@ -1,7 +1,7 @@
 ---
 # Per-host Blocky settings, rendered by roles/blocky to /etc/blocky/10-host.yaml.
 # Everything shared by all resolvers (upstreams, blocking, caching) lives in
-# dns/blocky/00-shared.yaml; Blocky merges the two files (--config /etc/blocky).
+# cluster-apps/components/blocky/00-shared.yaml; Blocky merges the two files (--config /etc/blocky).
 ports:
   dns: 53
   http: 80
