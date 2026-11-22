@@ -1,2 +1,0 @@
-# Local-only: SSH users (treated as secret). See ansible/README.md.
-group_vars/

@@ -1,0 +1,5 @@
+---
+# The Proxmox admin account (also its SSH user) comes from Doppler
+# (hosts-at-home/prd, PROXMOX_ADMIN_USER) through `doppler run`.
+ansible_user: "{{ lookup('env', 'PROXMOX_ADMIN_USER') or undef(hint='PROXMOX_ADMIN_USER is empty: run via task ansible:proxmox-..., which wraps doppler run (see ansible/README.md)') }}"
+proxmox_admin_user: "{{ ansible_user }}"

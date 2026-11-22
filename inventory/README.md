@@ -13,6 +13,6 @@ task inventory:check
 
 CI runs the same check on every PR that touches `inventory/`. Warnings (a router outside its VLAN, which is a known TODO) don't fail it.
 
-`group_vars/` is gitignored and holds the SSH user, which is treated as secret (see [ansible/README.md](../ansible/README.md)).
+`group_vars/` is committed. It reads the SSH user and the Proxmox admin account from the environment, which `task ansible:*` fills from Doppler `hosts-at-home/prd` (see [ansible/README.md](../ansible/README.md)).
 
 `TODO` comments mark values the sheet got wrong or didn't have; they are open questions, not decisions.
