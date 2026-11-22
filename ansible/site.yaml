@@ -1,6 +1,6 @@
 ---
 - name: Common configuration for all hosts
-  hosts: all
+  hosts: all:!unmanaged
   become: true
 
   pre_tasks:

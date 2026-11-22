@@ -195,7 +195,7 @@ This will:
 
 ## Ansible Tasks
 
-Tasks for the Ansible-managed single-board computers (see [ansible/README.md](../ansible/README.md)). They need the local-only `ansible/inventory.yaml` and `ansible/.ansible-vault-pass`, and always run with `--forks 1` so group targets are applied one host at a time.
+Tasks for the Ansible-managed single-board computers (see [ansible/README.md](../ansible/README.md)). They run under `doppler run -p hosts-at-home -c prd --` (for `ANSIBLE_SSH_USER` and `PROXMOX_ADMIN_USER`) and need the local-only `ansible/.ansible-vault-pass`, and always run with `--forks 1` so group targets are applied one host at a time.
 
 ### `ansible:syntax`
 

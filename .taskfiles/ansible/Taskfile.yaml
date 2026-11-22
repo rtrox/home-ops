@@ -4,22 +4,32 @@ version: "3"
 
 vars:
   ANSIBLE_DIR: "{{.ROOT_DIR}}/ansible"
+  # The SSH and Proxmox admin usernames come from Doppler as environment
+  # variables (inventory/group_vars reads them with lookup('env', ...)).
+  DOPPLER_RUN: doppler run -p hosts-at-home -c prd --
   # --forks 1 applies to one host at a time, so a group target like `dns` never
   # restarts Docker (and drops DNS) on both name servers at once.
   ANSIBLE_ARGS: >-
-    -i inventory.yaml
+    -i ../inventory/hosts.yaml
     --vault-password-file .ansible-vault-pass
     --forks 1
 
 tasks:
+  # The usernames, needed by every play (the Proxmox playbook included).
+  _doppler-preconditions:
+    internal: true
+    preconditions:
+      - sh: doppler run -p hosts-at-home -c prd -- sh -c 'test -n "$ANSIBLE_SSH_USER" && test -n "$PROXMOX_ADMIN_USER"'
+        msg: "ANSIBLE_SSH_USER or PROXMOX_ADMIN_USER is missing from Doppler hosts-at-home/prd (or doppler isn't logged in); see ansible/README.md"
+
+  # site.yaml and upgrade.yaml also need ansible on PATH and the vault password.
   _preconditions:
     internal: true
     dir: "{{.ANSIBLE_DIR}}"
+    deps: [_doppler-preconditions]
     preconditions:
       - sh: which ansible-playbook
         msg: "ansible-playbook not found on PATH"
-      - sh: test -f inventory.yaml
-        msg: "ansible/inventory.yaml is missing (local-only, see ansible/README.md)"
       - sh: test -f .ansible-vault-pass
         msg: "ansible/.ansible-vault-pass is missing (local-only, see ansible/README.md)"
 
@@ -28,8 +38,8 @@ tasks:
     dir: "{{.ANSIBLE_DIR}}"
     deps: [_preconditions]
     cmds:
-      - ansible-playbook {{.ANSIBLE_ARGS}} site.yaml --syntax-check
-      - ansible-playbook {{.ANSIBLE_ARGS}} upgrade.yaml --syntax-check
+      - "{{.DOPPLER_RUN}} ansible-playbook {{.ANSIBLE_ARGS}} site.yaml --syntax-check"
+      - "{{.DOPPLER_RUN}} ansible-playbook {{.ANSIBLE_ARGS}} upgrade.yaml --syntax-check"
 
   check:
     desc: Dry-run the playbook against a host or group, showing diffs (HOST=ns2.rtrox.io)
@@ -37,7 +47,7 @@ tasks:
     deps: [_preconditions]
     requires:
       vars: [HOST]
-    cmd: ansible-playbook {{.ANSIBLE_ARGS}} site.yaml --limit {{.HOST}} --check --diff {{.CLI_ARGS}}
+    cmd: "{{.DOPPLER_RUN}} ansible-playbook {{.ANSIBLE_ARGS}} site.yaml --limit {{.HOST}} --check --diff {{.CLI_ARGS}}"
 
   apply:
     desc: Apply the playbook to a host or group (HOST=ns2.rtrox.io)
@@ -45,7 +55,7 @@ tasks:
     deps: [_preconditions]
     requires:
       vars: [HOST]
-    cmd: ansible-playbook {{.ANSIBLE_ARGS}} site.yaml --limit {{.HOST}} {{.CLI_ARGS}}
+    cmd: "{{.DOPPLER_RUN}} ansible-playbook {{.ANSIBLE_ARGS}} site.yaml --limit {{.HOST}} {{.CLI_ARGS}}"
 
   upgrade:
     desc: Upgrade OS packages and reboot, one host at a time (HOST=ns2.rtrox.io; add -- --check for a dry run)
@@ -53,14 +63,16 @@ tasks:
     deps: [_preconditions]
     requires:
       vars: [HOST]
-    cmd: ansible-playbook {{.ANSIBLE_ARGS}} upgrade.yaml --limit {{.HOST}} {{.CLI_ARGS}}
+    cmd: "{{.DOPPLER_RUN}} ansible-playbook {{.ANSIBLE_ARGS}} upgrade.yaml --limit {{.HOST}} {{.CLI_ARGS}}"
 
   proxmox-check:
     desc: Dry-run the Proxmox playbook, showing diffs (extra args after --, e.g. -e proxmox_ssh_harden=true)
     dir: "{{.ANSIBLE_DIR}}"
-    cmd: mise exec -- ansible-playbook -i inventory.yaml proxmox.yaml --check --diff {{.CLI_ARGS}}
+    deps: [_doppler-preconditions]
+    cmd: "{{.DOPPLER_RUN}} mise exec -- ansible-playbook -i ../inventory/hosts.yaml proxmox.yaml --check --diff {{.CLI_ARGS}}"
 
   proxmox-apply:
     desc: Apply the Proxmox playbook (extra args after --, e.g. -e proxmox_ssh_harden=true)
     dir: "{{.ANSIBLE_DIR}}"
-    cmd: mise exec -- ansible-playbook -i inventory.yaml proxmox.yaml {{.CLI_ARGS}}
+    deps: [_doppler-preconditions]
+    cmd: "{{.DOPPLER_RUN}} mise exec -- ansible-playbook -i ../inventory/hosts.yaml proxmox.yaml {{.CLI_ARGS}}"

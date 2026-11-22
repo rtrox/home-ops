@@ -13,33 +13,13 @@ Configuration for the non-Kubernetes machines: the Raspberry Pi / Orange Pi boxe
 
 ## Setup
 
-Two files are **local only** (gitignored) and must exist before running anything:
+The hosts live in the committed [`inventory/hosts.yaml`](../inventory/hosts.yaml) (see [inventory/README.md](../inventory/README.md)); `ansible.cfg` points at it. Hosts in its `unmanaged` group need DNS but run no plays, and the plays exclude them. Before running anything you need:
 
-- **`inventory.yaml`**: the hosts above, plus the SSH user. The username is treated as secret: it lives only here, never in committed files.
+- **Two Doppler secrets** in `hosts-at-home/prd`: `ANSIBLE_SSH_USER` (the SSH user on the Pis) and `PROXMOX_ADMIN_USER` (the Proxmox admin account, also its SSH user). The committed `inventory/group_vars/` files read them with `lookup('env', ...)`, and the `task ansible:*` tasks run under `doppler run -p hosts-at-home -c prd --`, so a fresh clone needs only a Doppler login. Running `ansible-playbook` directly, outside `task`, fails with a hint before connecting. Set them once:
 
-  ```yaml
-  all:
-    vars:
-      ansible_user: <ssh-user>
-
-  dns:
-    hosts:
-      ns1.rtrox.io:
-        ansible_host: 172.30.99.1
-        keepalived_state: MASTER
-      ns2.rtrox.io:
-        ansible_host: 172.30.99.2
-        keepalived_state: BACKUP
-
-  avahi:
-    hosts:
-      avahi.rtrox.io:
-        ansible_host: 172.30.99.3
-        vlan_interfaces:
-          - interface: "eth0"
-            vlan_id: 200
-          - interface: "eth0"
-            vlan_id: 300
+  ```sh
+  read 'U?SSH user: '; print -rn -- "$U" | doppler secrets set ANSIBLE_SSH_USER -p hosts-at-home -c prd --silent
+  read 'U?Proxmox admin user: '; print -rn -- "$U" | doppler secrets set PROXMOX_ADMIN_USER -p hosts-at-home -c prd --silent; unset U
   ```
 
 - **`.ansible-vault-pass`**: the Ansible Vault password, mode `600`.
@@ -56,19 +36,8 @@ SSH access is by key only (`secure-ssh` disables password auth), and the `ansibl
 ## Proxmox
 
 `pve.rtrox.io` has its own playbook, `proxmox.yaml`, with the `proxmox` role. It is kept out of
-`site.yaml` so it never needs the vault password. The inventory group sets its SSH user and the
-admin account name (both local-only):
-
-```yaml
-proxmox:
-  vars:
-    ansible_user: <admin-user>
-  hosts:
-    pve.rtrox.io:
-      ansible_host: 172.21.1.21
-      proxmox_admin_user: <admin-user>
-      proxmox_ssh_github_username: rtrox
-```
+`site.yaml` so it never needs the vault password. The group vars set its SSH user and the
+admin account name, both from Doppler `PROXMOX_ADMIN_USER` (see Setup).
 
 ```sh
 task ansible:proxmox-check -- -e proxmox_ssh_harden=true   # dry run

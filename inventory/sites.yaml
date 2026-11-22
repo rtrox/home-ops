@@ -1,0 +1,166 @@
+---
+# yaml-language-server: $schema=./schema/sites.schema.json
+#
+# Sites, VLANs, subnets and firewall rules. Replaces the "Home Network VLANs &
+# Addresses" spreadsheet (VLANs and Firewall Rules tabs). Hosts live in hosts.yaml.
+# Validated in CI by `task inventory:check` (see inventory/README.md).
+#
+# Scheme: each site is a /14, each VLAN a /16 inside it (guest: a /24), and the
+# third octet means the same thing at every site (Trusted .1 servers, .x1 cluster
+# nodes, .x2 cluster LoadBalancer pool, .99 network services; Management .x1
+# cluster KVMs/DRACs, .99 network gear; IoT .10-.15 device classes).
+sites:
+  house:
+    name: House
+    status: permanent
+    block: 172.28.0.0/14
+    ipv6:
+      # Hurricane Electric tunnel prefix. Each VLAN gets a /64 out of it.
+      he_prefix: 2001:470:e899::/48
+      # TODO confirm: the Route48 /48 is on the sheet's Tunnel Brokers tab,
+      # which was deliberately not exported. Add it here once confirmed.
+    vlans:
+      management:
+        id: 10
+        purpose: Management network for DRACs, IPMIs, KVMs, network gear
+        cidr: 172.28.0.0/16
+        # TODO confirm: the sheet has 172.19.0.254, which is outside this VLAN.
+        # Probably 172.28.0.254; confirm on the router.
+        router: 172.19.0.254
+        dhcp: { start: 172.28.0.20, end: 172.28.0.200 }
+        ipv6: 2001:470:e899:10::/64
+        subnets:
+          network-gear:
+            {
+              cidr: 172.28.99.0/24,
+              purpose: "Switches, access points, controller",
+            }
+      trusted:
+        id: 100
+        purpose: Trusted network, only controlled devices
+        cidr: 172.30.0.0/16
+        router: 172.30.0.254
+        dhcp: { start: 172.30.100.1, end: 172.30.250.253 }
+        # TODO: the sheet gives no IPv6 prefix for Trusted (the other house
+        # VLANs have one). Add it once chosen.
+        subnets:
+          servers:
+            {
+              cidr: 172.30.1.0/24,
+              purpose: "NAS, backup NAS, Proxmox and its VMs",
+            }
+          network-services: { cidr: 172.30.99.0/24, purpose: "DNS, DHCP, VPNs" }
+      iot:
+        id: 200
+        purpose: IoT devices, limited privileges
+        cidr: 172.29.0.0/16
+        router: 172.29.0.254
+        dhcp: { start: 172.29.100.1, end: 172.29.250.253 }
+        ipv6: 2001:470:e899:200::/64
+        subnets:
+          home-automation:
+            {
+              cidr: 172.29.10.0/23,
+              purpose: "Sensors, thermostats, locks, lights",
+            }
+          printers-scanners:
+            { cidr: 172.29.12.0/24, purpose: 2D printers and scanners }
+          streaming: { cidr: 172.29.13.0/24, purpose: "Rokus, FireTVs, etc" }
+          printers-3d: { cidr: 172.29.14.0/24, purpose: 3D printers }
+          cameras: { cidr: 172.29.15.0/24, purpose: Cameras }
+      guest:
+        id: 300
+        purpose: Guest network, no privileges, port isolation
+        cidr: 172.31.0.0/24
+        router: 172.31.0.254
+        dhcp: { start: 172.31.0.10, end: 172.31.0.200 }
+        ipv6: 2001:470:e899:300::/64
+    # Rules per VLAN, evaluated in order. `to` names a subnet, service or
+    # "internet"; `all-other-subnets` is the catch-all deny.
+    firewall:
+      guest:
+        - { action: allow, to: streaming }
+        - { action: allow, to: dns }
+        - { action: deny, to: all-other-subnets }
+        - { action: allow, to: internet }
+      management:
+        - { action: allow, match: related-established }
+        - { action: deny, to: all-other-subnets }
+      iot:
+        - { action: allow, match: related-established }
+        - { action: allow, to: mdns }
+        - { action: allow, to: dns }
+        - { action: allow, to: nas }
+        - { action: allow, to: ingresses }
+        - { action: deny, to: all-other-subnets }
+
+  apartment:
+    name: Apartment
+    status: temporary # retired after the move to the house
+    block: 172.20.0.0/14
+    vlans:
+      management:
+        id: 11
+        purpose: Management network for DRACs, IPMIs, KVMs, network gear
+        cidr: 172.20.0.0/16
+        subnets:
+          network-gear: { cidr: 172.20.99.0/24, purpose: "Switches, etc" }
+          mini-kvms:
+            { cidr: 172.20.31.0/24, purpose: Management IPs for JetKVMs }
+          nas-kvms: { cidr: 172.20.11.0/24, purpose: NAS KVMs }
+      trusted:
+        id: 100
+        purpose: Trusted network, only controlled devices
+        cidr: 172.21.0.0/16
+        subnets:
+          # The sheet had the NAS under 172.21.11.0/24, which is cluster slot 1.
+          # Servers go under .1, as at the house.
+          servers: { cidr: 172.21.1.0/24, purpose: "NAS, Proxmox and its VMs" }
+          network-services: { cidr: 172.21.99.0/24, purpose: "DNS, DHCP, VPNs" }
+          mini-nodes: { cidr: 172.21.31.0/24, purpose: Mini cluster nodes }
+      iot:
+        id: 200
+        purpose: IoT devices, limited privileges
+        cidr: 172.22.0.0/16
+        subnets:
+          home-automation:
+            {
+              cidr: 172.22.10.0/23,
+              purpose: "Sensors, thermostats, locks, lights",
+            }
+          printers-scanners:
+            { cidr: 172.22.12.0/24, purpose: 2D printers and scanners }
+          streaming: { cidr: 172.22.13.0/24, purpose: "Rokus, FireTVs, etc" }
+          printers-3d: { cidr: 172.22.14.0/24, purpose: 3D printers }
+          cameras: { cidr: 172.22.15.0/24, purpose: Cameras }
+      guest:
+        id: 300
+        purpose: Guest network, no privileges, port isolation
+        cidr: 172.23.0.0/24
+    clusters:
+      mini:
+        slot: 3 # nodes .31, LoadBalancer pool .32
+        pod_cidr: 10.244.0.0/16
+        service_cidr: 10.96.0.0/12
+        # Next clusters take pod ranges 10.245.0.0/16, 10.246.0.0/16, 10.247.0.0/16.
+    # LoadBalancer pools sit outside the VLAN tree on purpose: mini's live pool
+    # is not inside the apartment's Trusted VLAN.
+    loadbalancer_pools:
+      mini:
+        cidr: 172.19.32.0/24 # live pool in Cilium LBIPAM
+        # The sheet had 172.21.32.0/24; the cluster never used it. At the move
+        # the pool adopts the scheme (Trusted .32) rather than being renumbered here.
+        moves_to: 172.30.32.0/24
+
+  # Free blocks, recorded so nothing else claims them.
+  second-property:
+    name: Future second property
+    status: free
+    block: 172.24.0.0/14
+
+  travel:
+    name: Travel router, ZeroTier transit
+    status: free
+    block: 172.16.0.0/14
+    # Free, but holds Docker's default bridge (172.17.0.0/16) and mini's current
+    # LoadBalancer pool (172.19.32.0/24).

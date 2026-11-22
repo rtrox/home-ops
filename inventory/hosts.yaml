@@ -1,0 +1,316 @@
+---
+# yaml-language-server: $schema=./schema/hosts.schema.json
+#
+# Hosts, in Ansible's YAML inventory format. Replaces the "Reserved IPs" tab of
+# the VLAN spreadsheet and the old local-only ansible/inventory.yaml.
+#
+# Every host carries `site` and `vlan` (keys into sites.yaml) and, where known,
+# `address` and `dns_name`. `subnet` is optional. Validated in CI by
+# `task inventory:check`.
+#
+# The SSH user is NOT here (it is treated as secret). inventory/group_vars/ reads
+# it from Doppler through `doppler run`; see ansible/README.md.
+#
+# `unmanaged` holds hosts that need DNS (and DHCP leases, firewall rules) but
+# don't run Ansible plays. The plays that target `all` exclude it.
+all:
+  children:
+    dns:
+      hosts:
+        ns1.rtrox.io:
+          ansible_host: 172.30.99.1
+          keepalived_state: MASTER
+          site: house # reached over ZeroTier
+          vlan: trusted
+          subnet: network-services
+          address: 172.30.99.1
+          dns_name: ns1.rtrox.io
+        ns2.rtrox.io:
+          ansible_host: 172.30.99.2
+          keepalived_state: BACKUP
+          site: house # reached over ZeroTier
+          vlan: trusted
+          subnet: network-services
+          address: 172.30.99.2
+          dns_name: ns2.rtrox.io
+
+    avahi:
+      hosts:
+        avahi.rtrox.io:
+          ansible_host: 172.30.99.3
+          vlan_interfaces:
+            - interface: "eth0"
+              vlan_id: 200
+            - interface: "eth0"
+              vlan_id: 300
+          site: house
+          vlan: trusted
+          subnet: network-services
+          address: 172.30.99.3
+          dns_name: avahi.rtrox.io
+          # Also on the IoT and Guest VLANs (mDNS reflector).
+          extra_addresses:
+            - { vlan: iot, address: 172.29.99.3 }
+            # TODO: the sheet has 172.31.99.3 for the guest VLAN, which is
+            # outside the guest subnet (172.31.0.0/24). Pick an address inside
+            # 172.31.0.0/24 and add {vlan: guest, address: ...} here.
+
+    proxmox:
+      hosts:
+        pve.rtrox.io:
+          ansible_host: 172.21.1.21
+          proxmox_ssh_github_username: rtrox
+          site: apartment
+          vlan: trusted
+          subnet: servers
+          address: 172.21.1.21
+          dns_name: pve.rtrox.io
+
+    unmanaged:
+      hosts:
+        # --- Apartment: servers and the mini cluster ---
+        nas.rtrox.io:
+          site: apartment
+          vlan: trusted
+          subnet: servers
+          address: 172.21.1.12
+          dns_name: nas.rtrox.io
+          purpose: Primary NAS (HL15)
+          # At the move the NAS goes back to the house: 172.30.1.12 (Trusted,
+          # servers). The sheet's TrueNAS 1 row has that address.
+          moves_to: { site: house, vlan: trusted, address: 172.30.1.12 }
+        node01.mini.rtrox.io:
+          site: apartment
+          vlan: trusted
+          subnet: mini-nodes
+          address: 172.21.31.1
+          dns_name: node01.mini.rtrox.io
+          purpose: Kubernetes (mini)
+        node02.mini.rtrox.io:
+          site: apartment
+          vlan: trusted
+          subnet: mini-nodes
+          address: 172.21.31.2
+          dns_name: node02.mini.rtrox.io
+          purpose: Kubernetes (mini)
+        node03.mini.rtrox.io:
+          site: apartment
+          vlan: trusted
+          subnet: mini-nodes
+          address: 172.21.31.3
+          dns_name: node03.mini.rtrox.io
+          purpose: Kubernetes (mini)
+
+        # --- House: management VLAN ---
+        # TODO confirm: iLO of the primary NAS, which currently sits in the
+        # apartment. Kept at the sheet's house address.
+        nas-mgmt:
+          site: house
+          vlan: management
+          address: 172.28.1.12
+          purpose: iLO (primary NAS)
+        u6-pro-closet:
+          site: house
+          vlan: management
+          subnet: network-gear
+          address: 172.28.99.245
+          purpose: Access point (network closet)
+        u6-pro-office-2: # sheet row 39
+          site: house
+          vlan: management
+          subnet: network-gear
+          address: 172.28.99.246
+          purpose: Access point
+        unifi-poe-80w-office-2: # sheet row 40
+          site: house
+          vlan: management
+          subnet: network-gear
+          address: 172.28.99.247
+          purpose: Switch
+        unifi-poe-180w-office-1: # sheet row 41
+          site: house
+          vlan: management
+          subnet: network-gear
+          address: 172.28.99.248
+          purpose: Switch
+        unifi-poe-48-port:
+          site: house
+          vlan: management
+          subnet: network-gear
+          address: 172.28.99.249
+          purpose: Switch, main network
+        mikrotik-10g-copper-home:
+          site: house
+          vlan: management
+          subnet: network-gear
+          address: 172.28.99.250
+          purpose: 10G RJ45 for main network
+        # TODO confirm: the next two belong to the decommissioned Chongus rack.
+        # Kept because they are network gear, not cluster nodes; drop if retired.
+        mikrotik-chongus-mgmt:
+          site: house
+          vlan: management
+          subnet: network-gear
+          address: 172.28.99.251
+          purpose: Switch (formerly Chongus rack DRACs)
+        mikrotik-chongus-10g:
+          site: house
+          vlan: management
+          subnet: network-gear
+          address: 172.28.99.252
+          purpose: Switch (formerly Chongus access net)
+        unifi.rtrox.io:
+          site: house
+          vlan: management
+          subnet: network-gear
+          address: 172.28.99.253
+          dns_name: unifi.rtrox.io
+          purpose: Unifi controller (Cloud Key)
+
+        # --- House: trusted VLAN ---
+        backup.rtrox.io:
+          site: house
+          vlan: trusted
+          subnet: servers
+          address: 172.30.1.13
+          dns_name: backup.rtrox.io
+          purpose: Backup NAS
+        dns-vip:
+          site: house
+          vlan: trusted
+          subnet: network-services
+          address: 172.30.99.10
+          purpose: Virtual IP for DNS (keepalived)
+
+        # --- House: IoT VLAN ---
+        ulanzi-clock:
+          site: house
+          vlan: iot
+          address: 172.29.0.1
+          purpose: Clock
+        awair-element-bedroom:
+          site: house
+          vlan: iot
+          subnet: home-automation
+          address: 172.29.10.1
+          purpose: Air quality sensor
+        awair-element-kitchen:
+          site: house
+          vlan: iot
+          subnet: home-automation
+          address: 172.29.10.2
+          purpose: Air quality sensor
+        awair-element-office-1: # sheet row 9
+          site: house
+          vlan: iot
+          subnet: home-automation
+          address: 172.29.10.3
+          purpose: Air quality sensor
+        awair-element-office-2: # sheet row 10
+          site: house
+          vlan: iot
+          subnet: home-automation
+          address: 172.29.10.4
+          purpose: Air quality sensor
+        awair-element-basement:
+          site: house
+          vlan: iot
+          subnet: home-automation
+          address: 172.29.10.5
+          purpose: Air quality sensor
+        ecobee-thermostat:
+          site: house
+          vlan: iot
+          subnet: home-automation
+          address: 172.29.10.8
+          purpose: Thermostat
+        lg-smart-fridge:
+          site: house
+          vlan: iot
+          subnet: home-automation
+          address: 172.29.10.9
+          purpose: Refrigerator
+        roomba-upstairs:
+          site: house
+          vlan: iot
+          subnet: home-automation
+          address: 172.29.10.10
+          purpose: Robot vacuum
+        roomba-downstairs:
+          site: house
+          vlan: iot
+          subnet: home-automation
+          address: 172.29.10.11
+          purpose: Robot vacuum
+        wyze-outdoor-plug-1:
+          site: house
+          vlan: iot
+          subnet: home-automation
+          address: 172.29.10.12
+          purpose: Outdoor plug
+        wyze-outdoor-plug-2:
+          site: house
+          vlan: iot
+          subnet: home-automation
+          address: 172.29.10.13
+          purpose: Outdoor plug
+        brother-ads1700w:
+          site: house
+          vlan: iot
+          subnet: printers-scanners
+          address: 172.29.12.1
+          purpose: Scanner
+        cups-printer:
+          site: house
+          vlan: iot
+          subnet: printers-scanners
+          address: 172.29.12.2
+          purpose: 2D printer
+        roku-ultra-office-1: # sheet row 18
+          site: house
+          vlan: iot
+          subnet: streaming
+          address: 172.29.13.1
+          purpose: Streaming
+        streaming-stick-4k-gym:
+          site: house
+          vlan: iot
+          subnet: streaming
+          address: 172.29.13.2
+          purpose: Streaming
+        octopi-prusa:
+          site: house
+          vlan: iot
+          subnet: printers-3d
+          address: 172.29.14.1
+          purpose: 3D printer
+        bambulabs-x1c:
+          site: house
+          vlan: iot
+          subnet: printers-3d
+          address: 172.29.14.2
+          purpose: 3D printer
+        doorbell-back:
+          site: house
+          vlan: iot
+          subnet: cameras
+          address: 172.29.15.1
+          purpose: Camera
+        doorbell-front:
+          site: house
+          vlan: iot
+          subnet: cameras
+          address: 172.29.15.2
+          purpose: Camera
+        camera-carport:
+          site: house
+          vlan: iot
+          subnet: cameras
+          address: 172.29.15.3
+          purpose: Camera
+        camera-indoor-1: # sheet row 27
+          site: house
+          vlan: iot
+          subnet: cameras
+          address: 172.29.15.4
+          purpose: Camera
