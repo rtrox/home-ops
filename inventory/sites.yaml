@@ -143,11 +143,12 @@ sites:
       guest:
         id: 300
         purpose: Guest network, no privileges, port isolation
-        cidr: 172.23.0.0/24
-        # TODO: the Mikrotik's pool-guest is 172.23.250.2-172.23.252.254, which
-        # is outside this /24 (from the sheet), so the router's guest network
-        # is probably a /16. Confirm with /ip address print, fix cidr, then add
-        # dhcp: { start: 172.23.250.2, end: 172.23.252.254 }.
+        # The sheet said /24; the Mikrotik has 172.23.254.1/16 on
+        # vlan-300-guest (checked 2026-11-22).
+        cidr: 172.23.0.0/16
+        router: 172.23.254.1
+        # From the Mikrotik's /ip pool (pool-guest), 2026-11-22.
+        dhcp: { start: 172.23.250.2, end: 172.23.252.254 }
     clusters:
       mini:
         slot: 3 # nodes .31, LoadBalancer pool .32
