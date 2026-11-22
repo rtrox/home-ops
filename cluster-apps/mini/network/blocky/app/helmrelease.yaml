@@ -14,11 +14,25 @@ spec:
   values:
     controllers:
       blocky:
-        replicas: 1
+        # Two replicas on different nodes behind the LoadBalancer IP
+        # (externalTrafficPolicy Cluster): a pod or node failure is invisible to
+        # clients, like the house Pis' VIP. dns-a2 is the apartment's first
+        # DHCP resolver for that reason; dns-a1 is second.
+        replicas: 2
         strategy: RollingUpdate
+        rollingUpdate:
+          unavailable: 0
+          surge: 1
         annotations:
           reloader.stakater.com/auto: "true"
         pod:
+          topologySpreadConstraints:
+            - maxSkew: 1
+              topologyKey: kubernetes.io/hostname
+              whenUnsatisfiable: DoNotSchedule
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: blocky
           securityContext:
             runAsNonRoot: true
             runAsUser: 2000
@@ -42,7 +56,16 @@ spec:
                   periodSeconds: 10
                   timeoutSeconds: 1
                   failureThreshold: 3
-              readiness: *probes
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  # Ready means DNS answers, not only the API.
+                  tcpSocket:
+                    port: 5353
+                  periodSeconds: 5
+                  timeoutSeconds: 1
+                  failureThreshold: 2
               startup:
                 enabled: true
                 custom: true
