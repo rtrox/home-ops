@@ -1,4 +1,30 @@
 ---
+# NetworkManager (Raspberry Pi OS) rewrites /etc/resolv.conf on every boot and
+# DHCP renewal, pointing the host at the DHCP-provided resolver: the VIP, i.e.
+# Blocky itself. NetworkManager has its own DHCP client and ignores
+# dhclient.conf, so the dhclient step below doesn't stop it. dns=none leaves
+# resolv.conf to us.
+- name: System Resolvers - Check whether NetworkManager is running
+  command: systemctl is-active NetworkManager
+  register: blocky_networkmanager
+  changed_when: false
+  failed_when: false
+  check_mode: false # read-only
+  when: blocky_set_system_resolvers
+
+- name: System Resolvers - Stop NetworkManager from managing /etc/resolv.conf
+  copy:
+    dest: /etc/NetworkManager/conf.d/90-ansible-dns-none.conf
+    content: |
+      # Managed by Ansible (roles/blocky). /etc/resolv.conf is managed by Ansible.
+      [main]
+      dns=none
+    mode: "0644"
+  when:
+    - blocky_set_system_resolvers
+    - blocky_networkmanager.stdout == "active"
+  notify: reload NetworkManager config
+
 - name: System Resolvers - Write Resolvers to /etc/resolv.conf
   template:
     src: resolv.conf.j2
