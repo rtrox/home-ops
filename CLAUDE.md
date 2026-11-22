@@ -493,6 +493,7 @@ See [full guide](docs/REFERENCE_IMPLEMENTATIONS.md) for detailed workflow and co
 - **Retention**: 14 days (`retentionPolicy` on the ObjectStore, not the Cluster)
 - **Compression**: bzip2 for data and WAL
 - **Schedule**: Daily (@daily) + immediate on creation
+- **Off-site copy**: nightly rclone sync (`database/cnpg-offsite`, 02:00 UTC) of the MinIO bucket to B2 `k8s-mini-rtrox-io-cnpg-offsite` (Object Lock 45d, no delete key), monitored by a healthchecks.io cron check; pause the job before phase 4's Garage cutover
 
 ## Network Architecture
 
