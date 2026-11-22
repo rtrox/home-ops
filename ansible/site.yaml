@@ -1,7 +1,8 @@
 ---
-- name: Common configuration for all hosts
-  # vms (runner, dns-a1) get their roles in later items; keep them out until then.
-  hosts: all:!unmanaged:!vms
+- name: Common configuration for the Raspberry Pis
+  # Pi-oriented roles (Armbian, Raspberry Pi, raspi-monitor, Docker). Proxmox
+  # has its own playbook; the VMs get theirs in later migration items.
+  hosts: pis:!offline
   become: true
 
   pre_tasks:
@@ -11,6 +12,7 @@
           - "{{ ansible_user }}"
 
   roles:
+    - role: admin-user
     - role: journald
     - role: armbian
     - role: raspberry-pi
@@ -102,7 +104,7 @@
             name: tailscaled
 
 - name: Configure  Avahi Hosts
-  hosts: avahi
+  hosts: avahi:!offline
   become: true
 
   tasks:

@@ -62,6 +62,14 @@ all:
         dns:
         avahi:
 
+    # Hosts that are down: they stay in the inventory (their addresses and
+    # names stay reserved) but every play skips them. avahi's Pi is broken
+    # until the move back to the house (about May 2027) and will likely be
+    # rebuilt; the node-exporter scrape config skips it too.
+    offline:
+      children:
+        avahi:
+
     proxmox:
       hosts:
         pve.rtrox.io:
