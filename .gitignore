@@ -29,8 +29,10 @@ inventory.yml
 inventory.yaml
 inventory.ini
 
-# Claude Code local files
-.claude/
+# Claude Code local files (shared agents and settings are tracked)
+.claude/*
+!.claude/agents/
+!.claude/settings.json
 
 # Node modules (prettier)
 node_modules/
