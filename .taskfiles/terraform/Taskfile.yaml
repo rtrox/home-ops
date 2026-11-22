@@ -46,7 +46,7 @@ tasks:
       # service token instead.
       DOPPLER_TOKEN:
         sh: doppler configure get token --plain
-    cmd: mise exec -- tofu {{.CMD}} {{.CLI_ARGS}}
+    cmd: mise exec -- tofu {{.CMD}} {{if ne .NO_CLI_ARGS "true"}}{{.CLI_ARGS}}{{end}}
 
   generate:
     desc: Regenerate Terramate's generated files (_backend.tf, ...) in every stack
@@ -71,6 +71,10 @@ tasks:
     requires:
       vars: [STACK]
     cmds:
+      # Pick up provider or lock-file changes first. -input=false: never prompts
+      # (a backend migration needs an explicit `task tf:init -- -migrate-state`).
+      - task: _tofu
+        vars: { STACK: "{{.STACK}}", CMD: init -input=false, NO_CLI_ARGS: "true" }
       - task: _tofu
         vars: { STACK: "{{.STACK}}", CMD: plan }
 
@@ -79,5 +83,9 @@ tasks:
     requires:
       vars: [STACK]
     cmds:
+      # Pick up provider or lock-file changes first. -input=false: never prompts
+      # (a backend migration needs an explicit `task tf:init -- -migrate-state`).
+      - task: _tofu
+        vars: { STACK: "{{.STACK}}", CMD: init -input=false, NO_CLI_ARGS: "true" }
       - task: _tofu
         vars: { STACK: "{{.STACK}}", CMD: apply }
