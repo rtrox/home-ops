@@ -99,10 +99,14 @@ jobs:
         id: plan
         run: |
           set -uo pipefail
+          umask 077
           root=$PWD
           source "$root/.github/scripts/tf-ci.sh"
           out=$RUNNER_TEMP/plan
           mkdir -p "$out"
+          # The saved plan and its JSON never outlive the step, whatever path
+          # leaves the loop.
+          trap 'rm -rf "$out"' EXIT
           summary=$GITHUB_STEP_SUMMARY
           failed=false
           matrix='[]'
@@ -113,6 +117,13 @@ jobs:
           # code 2) reach the matrix. --run-order gives the apply order.
           cd terraform
           tf_list stacks --tags ci-apply --no-tags laptop-only || exit 1
+          # The `gated` tag no longer exists (gating comes from the plan). A
+          # stack still carrying it was written for the old rule: fail loudly.
+          tf_list legacy --tags gated || exit 1
+          if [ ${#legacy[@]} -gt 0 ]; then
+            echo "::error::stack(s) still carry the removed 'gated' tag (gating is now decided from the plan): ${legacy[*]}. Remove the tag."
+            exit 1
+          fi
           echo "Stacks to plan:"
           printf '%s\n' "${stacks[@]:-none}"
 
@@ -145,7 +156,7 @@ jobs:
             rm -f "$out/tfplan" "$out/plan.json"
             tofu plan -lock=false -no-color -input=false -detailed-exitcode -out="$out/tfplan" >"$out/plan.log" 2>&1
             rc=$?
-            if [ $rc -eq 1 ]; then fail_step "$stack" "tofu plan"; echo "::endgroup::"; continue; fi
+            case $rc in 0|2) ;; *) fail_step "$stack" "tofu plan"; echo "::endgroup::"; continue ;; esac
             EXCLUDES=()
             tf_summary_block "$stack" "$out/plan.log" >> "$summary"
             if [ $rc -eq 2 ]; then
@@ -216,6 +227,7 @@ jobs:
           GATED: ${{ matrix.gated }}
         run: |
           set -uo pipefail
+          umask 077
           root=$PWD
           source "$root/.github/scripts/tf-ci.sh"
           out=$RUNNER_TEMP/apply
@@ -238,7 +250,7 @@ jobs:
           # (encrypted, like state) stays on this runner and is never uploaded.
           tofu plan -no-color -input=false -detailed-exitcode -out="$out/tfplan" >"$out/plan.log" 2>&1
           rc=$?
-          if [ $rc -eq 1 ]; then stop "tofu plan failed (output is not printed)"; fi
+          case $rc in 0|2) ;; *) stop "tofu plan failed (output is not printed)" ;; esac
           if [ $rc -eq 0 ]; then
             printf '\nNo changes any more; nothing to apply.\n' >> "$summary"
             exit 0

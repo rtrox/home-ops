@@ -125,6 +125,19 @@ gate "no format_version" gated '{"resource_changes":[]}'
 gate "resource_changes wrong type" gated '{"format_version":"1.2","resource_changes":"x"}'
 gate "text shows a destroy the JSON missed" gated "$(rc_json '["create"]')" "Plan: 1 to add, 0 to change, 1 to destroy."
 gate "text shows a forget the JSON missed" gated "$(rc_json '["create"]')" "Plan: 1 to add, 0 to change, 0 to destroy, 1 to forget."
+gate "missing change" gated '{"format_version":"1.2","resource_changes":[{"address":"a.b"}]}'
+gate "missing actions" gated '{"format_version":"1.2","resource_changes":[{"change":{}}]}'
+gate "actions not an array" gated '{"format_version":"1.2","resource_changes":[{"change":{"actions":"delete"}}]}'
+gate "empty actions" gated "$(rc_json '[]')"
+gate "unknown action" gated "$(rc_json '["obliterate"]')"
+gate "differently-cased action" gated "$(rc_json '["Delete"]')"
+gate "mixed read and delete" gated "$(rc_json '["read","delete"]')"
+gate "deposed delete" gated '{"format_version":"1.2","resource_changes":[{"address":"a.b","deposed":"abc","change":{"actions":["delete"]}}]}'
+gate "multiple totals lines" gated "$(rc_json '["create"]')" "$(printf 'Plan: 1 to add, 0 to change, 0 to destroy.\nPlan: 0 to add, 0 to change, 0 to destroy.')"
+gate "unparsable totals line" gated "$(rc_json '["create"]')" "Plan: lots to add."
+gate "nonexistent JSON file" gated ""
+rm -f "$tmp/gate.json"
+if tf_plan_gate "$tmp/none.json" "$tmp/gate.log" >/dev/null; then check "gate: nonexistent file path" ok; else check "gate: nonexistent file path" no; fi
 rc_json '["delete","create"]' >"$tmp/gate.json"
 printf 'Plan: 1 to add, 0 to change, 1 to destroy.\n' >"$tmp/gate.log"
 reason=$(tf_plan_gate "$tmp/gate.json" "$tmp/gate.log")

@@ -5,7 +5,8 @@ stack {
 
   # No tags yet: this stack is applied from the laptop until its move from
   # terraform-record passes the zero-diff gate (MIGRATION.md). A follow-up PR
-  # then tags it ["ci-apply", "gated"]. Never tag it ci-apply in the PR that
+  # then tags it ["ci-apply"] (a plan with a destroy, replace or forget then waits
+  # for approval on its own). Never tag it ci-apply in the PR that
   # adds the imports: merging would apply them.
 }
 

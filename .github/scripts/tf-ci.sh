@@ -172,10 +172,17 @@ tf_summary_hash() {
 # totals show a destroy or forget the JSON missed, is gated.
 tf_plan_gate() {
   local json=$1 log=$2 counts del forget totals tdel tforget
+  # Allowlist: every change must carry an actions array made only of known
+  # actions; anything else (missing change or actions, unknown or
+  # differently-cased action) is an error, hence gated.
   counts=$(jq -r 'if (type == "object") and (.format_version | type) == "string"
       and ((.resource_changes // []) | type) == "array"
     then (.resource_changes // []) as $rc
-      | "\([$rc[] | select(.change.actions | index("delete"))] | length) \([$rc[] | select(.change.actions | index("forget"))] | length)"
+      | if all($rc[]; (.change | type) == "object" and (.change.actions | type) == "array"
+          and (.change.actions | length) > 0
+          and all(.change.actions[]; IN("no-op", "create", "read", "update", "delete", "forget")))
+        then "\([$rc[] | select(.change.actions | index("delete"))] | length) \([$rc[] | select(.change.actions | index("forget"))] | length)"
+        else error end
     else error end' "$json" 2>/dev/null) || counts=""
   if ! [[ $counts =~ ^[0-9]+\ [0-9]+$ ]]; then
     echo "could not read the plan to check it for destroys, replaces and forgets"
@@ -183,6 +190,13 @@ tf_plan_gate() {
   fi
   read -r del forget <<<"$counts"
   totals=$(tf_summary_totals "$log")
+  # Exactly one well-formed Plan: line, or none (no changes, outputs only).
+  # More than one, or one we cannot parse, is gated.
+  if [ "$(grep -c '^Plan: ' <<<"$totals" || true)" -gt 1 ] \
+    || { grep -q '^Plan: ' <<<"$totals" && ! grep -qE '^Plan: [0-9]+ to [a-z]+(, [0-9]+ to [a-z]+)*\.$' <<<"$totals"; }; then
+    echo "could not read the plan totals to check them for destroys and forgets"
+    return 0
+  fi
   tdel=$(grep -oE '[0-9]+ to destroy' <<<"$totals" | grep -oE '^[0-9]+' || true)
   tforget=$(grep -oE '[0-9]+ to forget' <<<"$totals" | grep -oE '^[0-9]+' || true)
   if [ "${tdel:-0}" -gt "$del" ]; then del=$tdel; fi
