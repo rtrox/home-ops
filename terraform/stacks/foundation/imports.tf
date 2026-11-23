@@ -1,0 +1,90 @@
+# Migration phase 2 (P2-1): what this stack adopts, as it existed on
+# 2026-11-22. The Doppler structure was made by hand; the bucket and the
+# doppler_secrets come from terraform-record's cloudflare stack, which forgets
+# them (removed, destroy = false) before this stack is applied. See
+# MIGRATION.md. Delete this file in the cleanup PR once the zero-diff gate
+# passes.
+#
+# Imports by value don't apply here: every object below is read back in full.
+# The Cloudflare tokens are rotated instead (new ones in this stack), since
+# their value exists only in the create response.
+locals {
+  imported_projects = ["chezmoi-secrets", "hosts-at-home", "k8s-at-home", "tf-at-home"]
+  imported_environments = [
+    "chezmoi-secrets/dot",
+    "chezmoi-secrets/dsk",
+    "hosts-at-home/prd",
+    "hosts-at-home/ci",
+    "k8s-at-home/min",
+    "tf-at-home/prd",
+    "tf-at-home/ci",
+  ]
+  imported_configs = [
+    "chezmoi-secrets/dot",
+    "chezmoi-secrets/dot_desktop",
+    "chezmoi-secrets/dot_laptop",
+    "chezmoi-secrets/dot_wrk",
+    "chezmoi-secrets/dsk",
+    "hosts-at-home/prd",
+    "hosts-at-home/ci",
+    "k8s-at-home/min",
+    "tf-at-home/prd",
+    "tf-at-home/ci",
+  ]
+  # The hand-made secrets holding the hand-made write tokens. Imported, then
+  # updated to the new tokens, so the stacks that read them by name pick the
+  # new tokens up unchanged.
+  imported_write_tokens = [
+    "hosts-at-home/prd",
+    "k8s-at-home/min",
+    "tf-at-home/prd",
+    "tf-at-home/ci",
+  ]
+}
+
+import {
+  to = cloudflare_r2_bucket.tofu_state
+  id = "${local.account_id}/tofu-state/default"
+}
+
+import {
+  for_each = toset(local.imported_projects)
+  to       = doppler_project.this[each.key]
+  id       = each.key
+}
+
+import {
+  for_each = toset(local.imported_environments)
+  to       = doppler_environment.this[each.key]
+  id       = replace(each.key, "/", ".")
+}
+
+import {
+  for_each = toset(local.imported_configs)
+  to       = doppler_config.this[each.key]
+  id       = "${local.doppler_configs[each.key].project}.${local.doppler_configs[each.key].environment}.${local.doppler_configs[each.key].name}"
+}
+
+import {
+  for_each = toset(local.imported_write_tokens)
+  to       = doppler_secret.write_token[each.key]
+  id       = "tf-at-home.prd.${local.doppler_write_tokens[each.key]}"
+}
+
+# From terraform-record cloudflare (r2_state.tf, ci_readonly.tf), with the
+# same addresses.
+import {
+  for_each = local.r2_state_tokens
+  to       = doppler_secret.r2_state[each.key]
+  id       = "tf-at-home.prd.R2_STATE_${upper(each.key)}"
+}
+
+import {
+  to = doppler_secret.ci_cloudflare_token
+  id = "tf-at-home.ci.CLOUDFLARE_TERRAFORM_TOKEN"
+}
+
+import {
+  to = doppler_secret.ci_r2_state_readonly
+  id = "tf-at-home.ci.R2_STATE_READONLY"
+}

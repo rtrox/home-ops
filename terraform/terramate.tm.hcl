@@ -84,16 +84,26 @@ globals {
   # needs them in its `ci` (and `ci-apply`) config.
   secret_vars = {}
 
+  # Only the foundation stack sets this: it gets _doppler_write_tokens.tf.
+  manages_doppler_write_tokens = false
+
   # Doppler config -> the tf-at-home secret holding its write token. (Renamed
   # with the Doppler projects after phase 4.)
+  #
+  # The foundation stack creates one read/write service token per entry and
+  # writes it to that secret (in tf-at-home/prd), so a config Terraform writes
+  # to is one line here. terraform-record's stacks read the same secret names
+  # until they move.
   #
   # NOTE for CI: a stack with doppler_writes needs these same key names in
   # tf-at-home/ci (and ci-apply), holding tokens it can use; the proxmox stack
   # has none.
   doppler_write_tokens = {
-    "hosts-at-home/prd" = "DOPPLER_TRUENAS_WRITE_TOKEN"
-    "k8s-at-home/min"   = "DOPPLER_MINI_WRITE_TOKEN"
-    "tf-at-home/prd"    = "DOPPLER_TF_WRITE_TOKEN"
+    "hosts-at-home/prd"   = "DOPPLER_TRUENAS_WRITE_TOKEN"
+    "k8s-at-home/min"     = "DOPPLER_MINI_WRITE_TOKEN"
+    "tf-at-home/prd"      = "DOPPLER_TF_WRITE_TOKEN"
+    "tf-at-home/ci"       = "DOPPLER_TF_CI_WRITE_TOKEN"
+    "tf-at-home/ci-apply" = "DOPPLER_TF_CI_APPLY_WRITE_TOKEN"
   }
 
   # Provider -> the standard environment variable carrying its credential, and
@@ -179,6 +189,19 @@ generate_hcl "_providers.tf" {
       attributes = {
         endpoint = global.proxmox_endpoint
       }
+    }
+  }
+}
+
+# The write-token table above, as a local, for the stack that creates the
+# tokens (foundation). One list, so the providers other stacks generate and the
+# tokens foundation creates can't drift apart.
+generate_hcl "_doppler_write_tokens.tf" {
+  condition = global.manages_doppler_write_tokens
+
+  content {
+    locals {
+      doppler_write_tokens = global.doppler_write_tokens
     }
   }
 }
