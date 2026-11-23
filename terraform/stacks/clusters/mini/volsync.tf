@@ -39,31 +39,10 @@ module "volsync_store" {
   }
 }
 
-# The password every restic repository in the bucket is encrypted with. It can
-# never change: a new one makes every existing backup unreadable, and restic
-# can't re-key a repository it can't open. So it can't be replaced
-# (prevent_destroy) or changed (ignore_changes), and it was adopted by value
-# from terraform-record (imports.tf). ignore_changes also hides the import's
-# own difference: an imported random_password records special = true (the
-# provider can't tell from the value), and special forces a replacement.
-resource "random_password" "volsync_restic" {
-  length  = 32
-  special = false
-
-  lifecycle {
-    prevent_destroy = true
-    ignore_changes  = all
-
-    # P2-3 move only (delete with imports.tf): adopted by value, so a plan
-    # without the value would create a new password instead of importing it.
-    precondition {
-      condition     = var.import_restic_password != null
-      error_message = "TF_VAR_import_restic_password is not set. Until the cleanup PR, every plan of this stack must supply it (MIGRATION.md, \"By-value imports\"); without it the plan would make a new restic password, and every existing backup would become unreadable."
-    }
-  }
-}
-
 # Read by every app's ${APP}-volsync-b2 ExternalSecret (components/volsync).
+# The restic password isn't here: it's VOLSYNC_B2_RESTIC_PASSWORD, made by
+# hand in k8s-at-home/min and never in Terraform (migration P2-3), so no
+# apply can change the password every B2 repository is encrypted with.
 resource "doppler_secret" "volsync_bucket" {
   provider = doppler.k8s_at_home_min
 
@@ -75,6 +54,5 @@ resource "doppler_secret" "volsync_bucket" {
     application_key    = module.volsync_store.keys["k8s-mini-rtrox-io-volsync-store"].application_key
     endpoint           = module.volsync_store.bucket.endpoint
     bucket             = module.volsync_store.bucket.name
-    restic_password    = random_password.volsync_restic.result
   })
 }

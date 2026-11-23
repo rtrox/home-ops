@@ -2,120 +2,114 @@
 
 A one-time runbook for the owner. It moves what mini needs from outside the
 cluster out of terraform-record's `cloudflare` and `backblaze` stacks into
-this stack, and the backups of the root of trust into `foundation`
-([foundation's MIGRATION.md](../../foundation/MIGRATION.md), "P2-3"). Delete
-this file, `imports.tf` and the two preconditions marked "P2-3 move only" in
-the cleanup PR (step 9).
+this stack. The backups of the root of trust and mini's controller tokens go
+to `foundation` instead (see its MIGRATION.md, "P2-3"). The cleanup PR (step
+11) deletes this file, `imports.tf` and `p2-3-plan.json`.
 
-Applied from the laptop. The stack has no tags yet; `ci-apply` waits for the
-zero-diff gate and for CI credentials that can plan it ([CI](#ci)).
+The PRs, in merge order:
+
+| PR | What | Merged at |
+| --- | --- | --- |
+| home-ops #2226 | `ci-skip` tag in the three Terraform workflows | step 0 |
+| home-ops #2227 | volsync's B2 restic password from its own Doppler key (a Flux apply) | step 1 |
+| home-ops #2223 | foundation: backups, controller tokens, `CLOUDFLARE_MINI_TOKEN`, `task tf:check-plan` | step 2 |
+| home-ops #2224 | this stack (stacked on #2223; retarget to `main` once #2223 merges) | step 6 |
+| rtrox/terraform-record#66 | forget what moves, except the old credentials and the old tunnel | step 4 |
+| rtrox/terraform-record#67 | delete the old credentials and the old tunnel (rebase onto `main` after #66 merges) | step 10 |
+
+The stack is tagged `ci-skip` (CI doesn't touch it) and is applied from the
+laptop. `ci-apply` comes in a later PR ([CI](#ci)).
 
 ## What moves, and how
 
 | Object | To | Method |
 | --- | --- | --- |
-| `mini.rtrox.io` A records ×3 (`rtrox_io_host["mini_0".."mini_2"]`) | clusters/mini `cloudflare_dns_record.api[<node>]`, addresses from `inventory/hosts.yaml` | import by ID |
-| Tunnel `mini_external_ingress` | `cloudflare_zero_trust_tunnel_cloudflared.mini` (`ignore_changes = [tunnel_secret, config_src]`, `prevent_destroy`) | import (ID found by name) |
-| `random_id.argo_secret_mini` | `random_bytes.tunnel_secret` (same 35 bytes) | import by value |
-| `CLOUDFLARED_CREDENTIALS` | `doppler_secret.cloudflared_credentials` | import, **unchanged** |
-| external-dns and cert-manager tokens | new `k8s-mini-rtrox-io-{external-dns,certmanager}-<date>` (rtrox.io only, 90-day reissue, 180-day expiry) | rotate |
-| `EXTERNALDNS_CLOUDFLARE_TOKEN`, `CERTMANAGER_CLOUDFLARE_TOKEN` | `doppler_secret.external_dns_token`, `.cert_manager_token` | import, updated to the new tokens |
-| Bucket `k8s-rtrox-io-volsync-store` (4 lifecycle rules, unchanged) | `module.volsync_store` | import |
+| `mini.rtrox.io` A ×3 (`rtrox_io_host["mini_0".."mini_2"]`) | `cloudflare_dns_record.api[<node>]`, addresses from `inventory/hosts.yaml` | import by ID |
+| Tunnel `mini_external_ingress` and its `random_id` | none: a **new** tunnel `mini-external-ingress` with a new `random_bytes` secret | new; terraform-record deletes the old one in #67 |
+| `CLOUDFLARED_CREDENTIALS` (same JSON keys) | `doppler_secret.cloudflared_credentials` | import, updated to the new tunnel |
+| Bucket `k8s-rtrox-io-volsync-store` (4 lifecycle rules) | `module.volsync_store` | import, unchanged |
 | Its key `k8s-mini-rtrox-io-volsync-store` | new key, same name and capabilities | rotate |
-| `random_password.volsync_restic_password` | `random_password.volsync_restic` | import by value |
-| `VOLSYNC_BACKBLAZE_BUCKET` | `doppler_secret.volsync_bucket` | import, updated to the new key; **same restic password** |
-| Bucket `k8s-mini-rtrox-io-cnpg-offsite` (Object Lock governance 45 days) | `module.cnpg_offsite_store` | import |
-| Its keys `k8s-mini-rtrox-io-cnpg-offsite` (writer) and `-restore` (read-only, for DR) | new keys, same names and capabilities | rotate |
+| `random_password.volsync_restic_password` | none: copied once into the hand-made `VOLSYNC_B2_RESTIC_PASSWORD` | forgotten, never destroyed |
+| `VOLSYNC_BACKBLAZE_BUCKET` | `doppler_secret.volsync_bucket`, without `restic_password` | import, updated to the new key |
+| Bucket `k8s-mini-rtrox-io-cnpg-offsite` (Object Lock governance 45 days) | `module.cnpg_offsite_store` | import, unchanged |
+| Its keys: the writer and `-restore` (read-only, for DR) | new keys, same names and capabilities | rotate |
 | `CNPG_OFFSITE_BACKBLAZE_BUCKET`, `CNPG_OFFSITE_RESTORE_BACKBLAZE_BUCKET` | `doppler_secret.cnpg_offsite_bucket`, `.cnpg_offsite_restore_bucket` | import, updated to the new keys |
-| R2 copy token `tofu-state-copy`, `TOFU_STATE_R2_SOURCE` | foundation: new `tofu-state-copy-mini-readonly`; secret imported and updated | rotate / import |
-| Bucket `rtrox-tofu-state-history` (Object Lock governance 90 days), its key, `TOFU_STATE_HISTORY_BACKBLAZE_BUCKET` | foundation | import / rotate / import |
-| Bucket `k8s-mini-rtrox-io-secrets-backup` (Object Lock governance 90 days), its key, `SECRETS_BACKUP_BACKBLAZE_BUCKET` | foundation | import / rotate / import |
-| `CLOUDFLARE_MINI_TOKEN` (this stack's provider token) | foundation, `tf-at-home` `prd`, `ci-apply` (and `ci`: the read-only CI token) | create |
+| external-dns and cert-manager tokens, their Doppler secrets | foundation (`mini_cluster_tokens.tf`) | rotate / import |
+| `tofu-state-copy` token, `rtrox-tofu-state-history` and `k8s-mini-rtrox-io-secrets-backup` buckets and keys, their three secrets | foundation (`backups.tf`) | rotate / import |
 
-Counts: clusters/mini imports 14 and creates 7; foundation imports 5 and
-creates 8; terraform-record forgets 9 (cloudflare) and 10 (backblaze), and
-later destroys 3 and 5 old credentials.
+Not moving: MinIO (phase 4 replaces it with Garage), and the TrueNAS bucket
+and tokens. Nothing is imported by value.
 
-Not moving: MinIO (terraform-record `minio`; phase 4 replaces it with
-Garage), the TrueNAS bucket and tokens.
+## Conventions
 
-### By-value imports
+- **Every plan is separate from its apply, with a stop in between.** Plan to
+  a file, check it, read it, and only then apply that same file. Applying a
+  saved plan doesn't ask again.
+- **Machine check.** `task tf:check-plan STACK=<stack> PLAN=<file>
+  EXPECT=<json>` pipes `tofu show -json` of the plan straight into
+  `terraform/scripts/plan-check.jq`. It prints addresses and kinds only. It
+  fails on anything not listed in the stack's `p2-3-plan*.json`: an unexpected
+  change or import, a missing one, any destroy, or a new Doppler value that
+  isn't built from what the apply creates. For this stack it also requires
+  `CLOUDFLARED_CREDENTIALS` to be built from the new tunnel and secret.
+- **Secrets never on screen.** Values only ever move through pipes. Checks
+  compare SHA-256 hashes and print `yes`/`NO`. There are no here-strings: zsh
+  writes those to temp files. `TF_LOG` is unset for every run, because a trace
+  log would hold the secrets:
 
-A `random_*` resource is imported by its value, and these two are secrets: the
-tunnel secret (with the tunnel ID, it runs a connector for the tunnel) and the
-restic password (it opens every volsync backup). So:
+  ```sh
+  tf() { env -u TF_LOG -u TF_LOG_PATH task "$@"; }
+  h() { sha256sum | cut -c1-64; }                                     # hash of stdin
+  dop() { doppler secrets get "$1" -p k8s-at-home -c min --plain | jq -Rsj 'rtrimstr("\n")'; }
+  dopf() { doppler secrets get "$1" -p k8s-at-home -c min --plain | jq -j --arg f "$2" '.[$f]'; }
+  bak() { age -d -i "$AGE_KEY" "$BACKUP_DIR/mini-min-$STAMP.json.age" | jq -j --arg k "$1" --arg f "${2:-}" 'if $f == "" then .[$k] else (.[$k] | fromjson | .[$f]) end'; }
+  k8s() { kubectl get secret -n "$1" "$2" -o json | jq -j --arg f "$3" '.data[$f] | @base64d'; }
+  same() { if [ "$2" = "$3" ]; then echo "$1: yes"; else echo "$1: NO"; fi; }
+  differ() { if [ "$2" != "$3" ]; then echo "$1: yes"; else echo "$1: NO"; fi; }
+  # Every app's B2 volsync Secret, as "namespace secret" (from the ExternalSecrets, which hold no values).
+  vs_list() { kubectl get externalsecret -A -o json | jq -r '.items[] | select(.metadata.name | endswith("-volsync-b2")) | "\(.metadata.namespace) \(.metadata.name)-secret"'; }
+  ```
 
-- **They are never committed and never in `tf-at-home`** (`prd`, `ci` or
-  `ci-apply`). You read them from where they already live,
-  `k8s-at-home/min`, into `TF_VAR_import_*` for this stack's runs during the
-  move only, with the `mini_env` function below.
-- **A plan without them fails.** Each random resource has a precondition
-  ("P2-3 move only") that stops any plan of this stack where its value isn't
-  supplied, so no plan can quietly create a new secret instead of importing
-  the old one. After the move, `prevent_destroy` and `ignore_changes = all`
-  keep both from ever being replaced or changed; the cleanup PR removes the
-  preconditions.
-- **The import prints them**, and tofu can't be told otherwise: an import ID
-  can't be sensitive, so it appears in `Preparing import... [id=...]`,
-  `(imported from "...")` and `Importing... [id=...]`. Run this stack's plans
-  and applies through `redact` until the cleanup PR, and apply the reviewed
-  plan file, never an interactive `apply`. After the import nothing prints
-  either one: `random_bytes` has no `id` (terraform-record's `random_id` had
-  the secret as its id, so every one of its plans printed it, in TFC's run logs
-  too), and `random_password`'s is `none`.
-
-Define these in the shell you run the steps from (`mini_env` reads only the
-two fields, `redact` blanks every `[id=...]` and import source):
-
-```sh
-mini_env() {
-  local c v
-  c=$(doppler secrets get CLOUDFLARED_CREDENTIALS -p k8s-at-home -c min --plain) || return 1
-  TF_VAR_import_tunnel_secret=$(jq -er .TunnelSecret <<<"$c" 2>/dev/null) || { echo "no TunnelSecret" >&2; return 1; }
-  v=$(doppler secrets get VOLSYNC_BACKBLAZE_BUCKET -p k8s-at-home -c min --plain) || return 1
-  TF_VAR_import_restic_password=$(jq -er .restic_password <<<"$v" 2>/dev/null) || { echo "no restic_password" >&2; return 1; }
-  export TF_VAR_import_tunnel_secret TF_VAR_import_restic_password
-}
-redact() { sed -E 's/\[id=[^]]*\]/[id=…]/g; s/^( *# \(imported from ).*$/\1…)/'; }
-```
-
-Use them in a subshell, so the variables are gone when it exits:
-`( set -euo pipefail; mini_env; task tf:plan STACK=clusters/mini -- -no-color 2>&1 | redact )`.
-The variables' validations reject anything that isn't 35 bytes of base64 or
-32 letters and digits, without printing it.
+  Every `NO` below means stop, unless the step says otherwise.
+- Times are Pacific. The CronJobs run in UTC: volsync B2 movers at 4:00 pm,
+  cnpg-offsite at 6:00 pm, tofu-state-copy at 8:00 pm, and doppler-export on
+  Saturdays at 7:00 pm.
 
 ## 0. Preconditions
 
-- **TFC versions.** Both workspaces must run Terraform 1.7 or later (removed
-  blocks). Prints the version and execution mode only:
+- **TFC workspaces.** Both must run Terraform 1.7 or later (removed blocks;
+  #66 also raises `backblaze`'s `required_version` to `>= 1.7.0`), in
+  **remote** execution mode, and must **not** auto-apply from VCS. Otherwise
+  merging #66 or #67 would apply before you've seen its plan:
 
   ```sh
   TFC=$(jq -r '.credentials["app.terraform.io"].token' ~/.terraform.d/credentials.tfrc.json)
   for w in arpa-home-cloudflare arpa-home-backblaze; do
-    curl -fsS -H "Authorization: Bearer $TFC" \
-      "https://app.terraform.io/api/v2/organizations/rtrox/workspaces/$w" \
-      | jq -r --arg w "$w" '.data.attributes | "\($w) terraform-version=\(."terraform-version") execution-mode=\(."execution-mode")"'
+    printf 'header = "Authorization: Bearer %s"\n' "$TFC" \
+      | curl -fsS -K - "https://app.terraform.io/api/v2/organizations/rtrox/workspaces/$w" \
+      | jq -r --arg w "$w" '.data.attributes | "\($w) version=\(."terraform-version") mode=\(."execution-mode") auto-apply=\(."auto-apply") vcs=\(."vcs-repo" != null)"'
   done
   unset TFC
   ```
 
-  `backblaze` still says `required_version = ">= 1.3.0"`; if its workspace is
-  below 1.7, raise it in the workspace settings first.
-- **Baseline: everything plans clean.** `env -u TF_VAR_doppler_token tofu
-  -chdir=cloudflare plan` and `-chdir=backblaze plan` on terraform-record
-  `main`, and `task tf:plan STACK=foundation` here, each `No changes.`
-  Anything else: resolve it first, or it gets mixed up with the move.
-- **CI won't plan this stack** ([CI](#ci)). Decide how before merging the
-  clusters/mini PR, or the nightly `terraform-drift` fails from then on.
-- **Freeze.** From here to step 8: no applies to terraform-record `cloudflare`
-  or `backblaze`, `foundation` or this stack except the ones below, and no
-  changes to `cloudflared`, `external-dns`, `cert-manager`, volsync,
-  `cnpg-offsite`, `doppler-export` or `tofu-state-copy` in the cluster.
-- **Don't use `task volsync:restic-env`** while checking backups: it prints
-  the restic password and keys (`.taskfiles/volsync/Taskfile.yaml`, out of
-  scope here). `task volsync:snapshots` doesn't print them.
+  Expect `version` of 1.7 or later, `mode=remote`, and `auto-apply=false` or
+  `vcs=false`.
+- **Baseline: everything plans clean.** On terraform-record `main`, both
+  `env -u TF_VAR_doppler_token tofu -chdir=cloudflare plan` and the same for
+  `backblaze`. Here, `tf tf:plan STACK=foundation`. Each must say
+  `No changes.` Anything else: resolve it first.
+- **#2226 merged** (the `ci-skip` tag), so CI never plans this stack.
+- **Freeze**, from here to step 10:
+  - no applies to terraform-record `cloudflare` or `backblaze`, `foundation`
+    or this stack except the ones below;
+  - no changes to cloudflared, external-dns, cert-manager, the volsync
+    component, cnpg-offsite, doppler-export or tofu-state-copy;
+  - no Renovate merges in either repo that touch `terraform/**`, those apps or
+    terraform-record. Pause Renovate's automerge for the window.
+- **Don't use `task volsync:restic-env`**: it prints the restic password and
+  keys. `task volsync:snapshots` doesn't.
 - **Back up the secrets that change**, age-encrypted, never printed. This is
-  the rollback until step 8:
+  the rollback until step 10:
 
   ```sh
   BACKUP_DIR="$HOME/tofu-backups"; mkdir -p "$BACKUP_DIR" && chmod 700 "$BACKUP_DIR"
@@ -126,275 +120,346 @@ The variables' validations reject anything that isn't 35 bytes of base64 or
            VOLSYNC_BACKBLAZE_BUCKET, CNPG_OFFSITE_BACKBLAZE_BUCKET, CNPG_OFFSITE_RESTORE_BACKBLAZE_BUCKET,
            TOFU_STATE_R2_SOURCE, TOFU_STATE_HISTORY_BACKBLAZE_BUCKET, SECRETS_BACKUP_BACKBLAZE_BUCKET}' \
     | age --encrypt -i "$AGE_KEY" -o "$BACKUP_DIR/mini-min-$STAMP.json.age"
-  # Check: key names only, and none null.
   age -d -i "$AGE_KEY" "$BACKUP_DIR/mini-min-$STAMP.json.age" | jq -r 'to_entries[] | "\(.key) set=\(.value != null)"'
   ```
 
-  Expect nine names, all `set=true`. Write down `$STAMP`. The checks below
-  compare against this backup with:
+  Expect nine names, all `set=true`. Keep `BACKUP_DIR`, `AGE_KEY` and `STAMP`
+  for the whole run.
 
-  ```sh
-  # unchanged KEY [FIELD]: is KEY (or its JSON FIELD) the same in Doppler as in
-  # the backup? Prints yes/NO only.
-  unchanged() {
-    local f=${2:-}
-    a=$(age -d -i "$AGE_KEY" "$BACKUP_DIR/mini-min-$STAMP.json.age" | jq -j --arg k "$1" --arg f "$f" 'if $f == "" then .[$k] else (.[$k] | fromjson | .[$f]) end' | sha256sum)
-    b=$(doppler secrets get "$1" -p k8s-at-home -c min --plain | jq -Rsj --arg f "$f" 'rtrimstr("\n") | if $f == "" then . else (fromjson | .[$f]) end' | sha256sum)
-    [ "$a" = "$b" ] && echo "$1${f:+.$f} unchanged: yes" || echo "$1${f:+.$f} unchanged: NO"
-  }
-  ```
+## 1. The restic password leaves Terraform
 
-## 1. Foundation: the mini token only
+The password every B2 repository is encrypted with must never change, and no
+mover may ever see it missing. So the cluster switches to a hand-made key
+**before** Terraform stops writing the old field (step 6).
 
-Merge the foundation PR, then create only `CLOUDFLARE_MINI_TOKEN` (this
-stack's plans need it). `-target` leaves the imports alone:
+**1a. Copy it into its own key** (no echo), then check it matches:
+
+```sh
+doppler secrets get VOLSYNC_BACKBLAZE_BUCKET -p k8s-at-home -c min --plain | jq -j .restic_password \
+  | doppler secrets set VOLSYNC_B2_RESTIC_PASSWORD -p k8s-at-home -c min --silent >/dev/null
+same "new key = old field" "$(dop VOLSYNC_B2_RESTIC_PASSWORD | h)" "$(dopf VOLSYNC_BACKBLAZE_BUCKET restic_password | h)"
+```
+
+(`doppler secrets set NAME` reads a piped value from stdin. Check
+`doppler secrets set --help` on your CLI version first.) Leave the key
+`masked`. doppler-export backs it up weekly with the rest of `min`.
+
+**1b. Record every B2 Secret's password, by hash:**
+
+```sh
+vs_list | while read -r ns s; do printf '%s/%s %s\n' "$ns" "$s" "$(k8s "$ns" "$s" RESTIC_PASSWORD | h)"; done \
+  > "$BACKUP_DIR/restic-before-$STAMP.txt"
+wc -l < "$BACKUP_DIR/restic-before-$STAMP.txt"; cut -d' ' -f2 "$BACKUP_DIR/restic-before-$STAMP.txt" | sort -u | wc -l
+same "Secrets use the Doppler password" "$(cut -d' ' -f2 "$BACKUP_DIR/restic-before-$STAMP.txt" | sort -u)" "$(dop VOLSYNC_B2_RESTIC_PASSWORD | h)"
+```
+
+Expect one line per volsync app, exactly one distinct hash, and `yes`.
+
+**1c. Merge #2227** (a Flux apply). Once Flux has reconciled the apps,
+force-sync the ExternalSecrets:
+
+```sh
+vs_list | while read -r ns s; do kubectl annotate externalsecret -n "$ns" "${s%-secret}" force-sync="$(date +%s)" --overwrite >/dev/null; done
+```
+
+**1d. Check.** Every Secret's password must be unchanged, and every
+ExternalSecret Ready:
+
+```sh
+vs_list | while read -r ns s; do
+  same "$ns/$s RESTIC_PASSWORD unchanged" "$(k8s "$ns" "$s" RESTIC_PASSWORD | h)" "$(grep -F "$ns/$s " "$BACKUP_DIR/restic-before-$STAMP.txt" | cut -d' ' -f2)"
+done
+kubectl get externalsecret -A | grep -- '-volsync-b2 ' | grep -vc 'SecretSynced'   # 0
+```
+
+**Stop** on any `NO` or a non-zero count. To back out, revert #2227. That is
+safe only until step 6: the old field is still in Doppler until then.
+
+## 2. Foundation: the mini token alone
+
+Merge #2223. Then plan only the token, check it, stop, and apply:
 
 ```sh
 git switch main && git pull
-task tf:apply STACK=foundation -- -target=doppler_secret.mini_token_prd -target=doppler_secret.mini_token_ci_apply -target=doppler_secret.mini_token_ci
+P="$BACKUP_DIR/foundation-token-$STAMP.tfplan"
+tf tf:plan STACK=foundation -- -no-color -out="$P" -target=doppler_secret.mini_token_prd 2>&1 | grep -E '^  # |^Plan:|^No changes|^(Error|Warning):'
+tf tf:check-plan STACK=foundation PLAN="$P" EXPECT=p2-3-plan-token.json
 ```
 
-Expect `Plan: 0 to import, 5 to add, 0 to change, 0 to destroy.`:
-`time_rotating.mini_token`, `cloudflare_api_token.mini` and the three
-`doppler_secret.mini_token_*`. A targeting warning is expected. A 403 creating
-the token means `CLOUDFLARE_TERRAFORM_TOKEN` can't grant one of its groups;
-a precondition about a permission group means a name in
-`local.mini_token_permissions` (foundation's `mini_token.tf`) doesn't exist.
-
-## 2. Plan both new stacks, before anything is forgotten
-
-Plans change nothing, so check both now, while terraform-record still manages
-everything. Foundation (from `main`, see its MIGRATION.md for the list):
+Expect `Plan: 3 to add, 0 to change, 0 to destroy.` (`time_rotating.mini_token`,
+`cloudflare_api_token.mini`, `doppler_secret.mini_token_prd`), a targeting
+warning, and `PASS: 3 changes`. **Stop and read it.** Then:
 
 ```sh
-task tf:plan STACK=foundation -- -no-color 2>&1 | grep -E '^  # |^Plan:|^No changes|^(Error|Warning):'
-# Plan: 5 to import, 3 to add, 3 to change, 0 to destroy.
+tf tf:apply STACK=foundation -- "$P" && rm -f "$P"
 ```
 
-This stack, from the clusters/mini PR's branch:
+**Never apply foundation untargeted before step 5.** Its imports would adopt
+objects terraform-record still manages.
+
+## 3. Plan both new stacks, before anything is forgotten
+
+Plans change nothing, so check them now, while terraform-record still manages
+everything.
 
 ```sh
-git switch <the clusters/mini PR branch> && git pull
-task tf:init STACK=clusters/mini
-( set -euo pipefail; mini_env
-  task tf:plan STACK=clusters/mini -- -no-color 2>&1 | redact | grep -E '^  # |^Plan:|^No changes|^(Error|Warning):' )
+P="$BACKUP_DIR/foundation-$STAMP.tfplan"
+tf tf:plan STACK=foundation -- -no-color -out="$P" 2>&1 | grep -E '^Plan:|^No changes|^(Error|Warning):'
+tf tf:check-plan STACK=foundation PLAN="$P" EXPECT=p2-3-plan.json; rm -f "$P"
 ```
 
-Expect `Plan: 14 to import, 7 to add, 5 to change, 0 to destroy.`
+Expect `Plan: 7 to import, 5 to add, 5 to change, 0 to destroy.` and `PASS`.
+Foundation's MIGRATION.md lists them.
 
-- **14 imports**: `cloudflare_dns_record.api` ×3 (`node01`..`node03`),
-  `cloudflare_zero_trust_tunnel_cloudflared.mini`, `random_bytes.tunnel_secret`,
-  `random_password.volsync_restic`, `module.volsync_store.b2_bucket.this`,
-  `module.cnpg_offsite_store.b2_bucket.this`, and six `doppler_secret`s. These
-  show `will be imported` and nothing else: the records, tunnel, buckets,
-  randoms and `doppler_secret.cloudflared_credentials`.
-- **7 creates**: `module.external_dns_token` and `module.cert_manager_token`,
-  each a `time_rotating.this` and a `cloudflare_api_token.this`;
-  `module.volsync_store.b2_application_key.this["k8s-mini-rtrox-io-volsync-store"]`,
-  and `module.cnpg_offsite_store.b2_application_key.this` for
-  `k8s-mini-rtrox-io-cnpg-offsite` and `-restore`.
-- **5 updates**, each also imported, `value` only (`(sensitive value)`):
-  `doppler_secret.external_dns_token`, `.cert_manager_token`,
-  `.volsync_bucket`, `.cnpg_offsite_bucket`, `.cnpg_offsite_restore_bucket`.
-  That's the rotation. `volsync_bucket`'s new value keeps the imported restic
-  password; step 5 checks it.
+This stack, from #2224's branch:
 
-### If the plan shows anything else
+```sh
+git switch <#2224's branch> && git pull
+tf tf:init STACK=clusters/mini
+P="$BACKUP_DIR/clusters-mini-$STAMP.tfplan"
+tf tf:plan STACK=clusters/mini -- -no-color -out="$P" 2>&1 | grep -E '^  # |^Plan:|^No changes|^(Error|Warning):'
+tf tf:check-plan STACK=clusters/mini PLAN="$P" EXPECT=p2-3-plan.json; rm -f "$P"
+```
 
-Don't apply. Fix the code and re-plan.
+Expect `Plan: 9 to import, 5 to add, 4 to change, 0 to destroy.` and `PASS:
+14 changes`:
+
+- **9 imports**, each `will be imported` and nothing else:
+  `cloudflare_dns_record.api` ×3 (`node01`..`node03`),
+  `module.volsync_store.b2_bucket.this`, `module.cnpg_offsite_store.b2_bucket.this`;
+  and four `doppler_secret`s, which are also updated (below).
+- **5 creates**: `random_bytes.tunnel_secret`,
+  `cloudflare_zero_trust_tunnel_cloudflared.mini`, and three
+  `b2_application_key.this`: volsync, cnpg-offsite, cnpg-offsite-restore.
+- **4 updates**, `value` only: `doppler_secret.cloudflared_credentials` (to
+  the new tunnel), `.volsync_bucket` (new key, no `restic_password`),
+  `.cnpg_offsite_bucket`, `.cnpg_offsite_restore_bucket`.
+
+### If a plan or check shows anything else
+
+Don't apply. Fix the code and plan again.
 
 | You see | Meaning | Do |
 | --- | --- | --- |
-| `Resource precondition failed` ... `import_tunnel_secret` / `import_restic_password` | `mini_env` didn't run in that subshell | Run the plan as shown |
-| `random_bytes.tunnel_secret` or `random_password.volsync_restic` **will be created** | the import didn't happen | Never apply that. Check `mini_env` and the import blocks |
-| `doppler_secret.cloudflared_credentials` **updated** | the JSON this stack builds differs from what's in Doppler (account, tunnel name or ID, secret, or key order) | Compare the backup's `CLOUDFLARED_CREDENTIALS` field by field with `unchanged CLOUDFLARED_CREDENTIALS <Field>` (step 0's function); fix `tunnel.tf` |
-| a `doppler_secret` update showing `visibility` or `value_type` too | the secret isn't `masked`/`string` | Set that attribute on the resource to the live value; only `value` may change |
-| a bucket updated, only reordering `lifecycle_rules` | B2 returned the rules in another order | Reorder them in the code to match the plan's current order; re-plan |
-| a bucket updated otherwise, or **must be replaced** (`prevent_destroy` error) | the code differs from the bucket (rules, file lock, type) | Match the code to the plan's current values; the bucket's settings must not change in this move |
-| the tunnel updated or replaced | `name` or `account_id` differ | Match `tunnel.tf`; never apply a tunnel replacement |
+| a bucket updated, only reordering `lifecycle_rules` | B2 returned the rules in another order | Reorder them in the code to match the plan's current order |
+| a bucket updated otherwise, or **must be replaced** (`prevent_destroy` error) | the code differs from the bucket | Match the code to the plan's current values. A bucket's settings don't change in this move |
 | a record updated | content, comment, proxied or TTL differ | Match `api_records.tf` or `inventory/hosts.yaml` to the live record |
-| `failed to find exactly one result` (tunnel lookup) | no live tunnel, or two, named `mini_external_ingress` | Check the dashboard; the import needs exactly one |
-| 403 on the tunnel or tokens | `CLOUDFLARE_MINI_TOKEN` lacks a group | Add `Cloudflare Tunnel Read` or `API Tokens Read` to foundation's `mini_token.tf` (Write may not include Read for these); apply foundation again |
+| a `doppler_secret` update showing `visibility` or `value_type` | the secret isn't `masked`/`string` | Set that attribute to the live value; only `value` may change |
+| `A tunnel with this name already exists` | the name is taken | Pick another `name` in `tunnel.tf` |
+| a 403 on the tunnel | `CLOUDFLARE_MINI_TOKEN` can't read tunnels | Add `Cloudflare Tunnel Read` in foundation's `mini_token.tf` and redo step 2 |
+| `FAIL:` from the check | the plan differs from `p2-3-plan.json` | Read the line; never edit the JSON to make a surprise pass |
 | **anything destroyed** | not intended | Stop |
 
-## 3. Forget, in terraform-record (TFC)
+## 4. Forget, in terraform-record (TFC)
 
-Apply rtrox/terraform-record#66 (both workspaces). Remote TFC runs must never get
-your Doppler CLI token, so unset it. On the PR branch first, then merged:
+**4a. Plan #66** on its branch, in each workspace. Remote TFC runs must never
+get your Doppler CLI token, so unset it:
 
 ```sh
-cd ~/terraform-record
+cd ~/terraform-record && git switch p2/mini-removed && git pull
 for s in cloudflare backblaze; do
-  env -u TF_VAR_doppler_token tofu -chdir=$s plan -no-color 2>&1 | grep -E '^  # |^Plan:|^No changes|^(Error|Warning):'
+  env -u TF_VAR_doppler_token -u TF_LOG -u TF_LOG_PATH tofu -chdir=$s plan -no-color 2>&1 \
+    | grep -E '^  # |^Plan:|^No changes|^(Error|Warning):'
 done
 ```
 
-`cloudflare`, 3 moved and 9 forgotten:
+`cloudflare`: 3 records moved to
+`cloudflare_dns_record.rtrox_io_host_moved_to_clusters_mini[...]`, then 7
+forgotten: those 3 records,
+`doppler_secret.argo_tunnel_mini_secret`, `.cf_api_token_mini_external_dns`,
+`.cf_api_token_mini_certmanager` and `.r2_state_copy_mini`.
+`Plan: 0 to add, 0 to change, 0 to destroy, 7 to forget.`
+The tunnel, its `random_id` and the old tokens must **not** appear.
 
-```text
-  # cloudflare_dns_record.rtrox_io_host["mini_0"] has moved to cloudflare_dns_record.rtrox_io_host_moved_to_clusters_mini["mini_0"]
-  ... (mini_1, mini_2)
-  # cloudflare_dns_record.rtrox_io_host_moved_to_clusters_mini["mini_0"] will be removed from the state but will not be destroyed
-  ... (mini_1, mini_2)
-  # cloudflare_zero_trust_tunnel_cloudflared.auto_tunnel_mini ...
-  # doppler_secret.argo_tunnel_mini_secret ...
-  # doppler_secret.cf_api_token_mini_certmanager ...
-  # doppler_secret.cf_api_token_mini_external_dns ...
-  # doppler_secret.r2_state_copy_mini ...
-  # random_id.argo_secret_mini ...
-Plan: 0 to add, 0 to change, 0 to destroy, 9 to forget.
-```
+`backblaze`: 5 keys moved out of their modules to `b2_application_key.old_*`,
+then 10 forgotten: the four `module.bb_bucket_*.b2_bucket.bucket`,
+`random_password.volsync_restic_password` and five `doppler_secret`s.
+`Plan: 0 to add, 0 to change, 0 to destroy, 10 to forget.`
+If a moved key shows any update or replacement, its arguments differ from the
+module's. A replaced key would cut its consumer off.
 
-`backblaze`, 5 moved and 10 forgotten:
+The `Warning: Some objects will no longer be managed` is expected. If the
+workspace's Terraform words the summary differently, what matters is the
+headers and `0 to destroy`. **Stop and read both.**
 
-```text
-  # module.bb_bucket_k8s_rtrox_io_volsync_store.b2_application_key.keys["k8s-mini-rtrox-io-volsync-store"] has moved to b2_application_key.old_volsync_store
-  ... (old_mini_cnpg_offsite, old_mini_cnpg_offsite_restore, old_tofu_state_history, old_mini_secrets_backup)
-  # module.bb_bucket_k8s_rtrox_io_volsync_store.b2_bucket.bucket will be removed from the state but will not be destroyed
-  ... (the cnpg-offsite, tofu-state-history and secrets-backup buckets)
-  # random_password.volsync_restic_password ...
-  # doppler_secret.volsync_key_mini ... (and cnpg_offsite_key_mini, cnpg_offsite_restore_key_mini,
-  #   tofu_state_history_key_mini, secrets_backup_key_mini)
-Plan: 0 to add, 0 to change, 0 to destroy, 10 to forget.
-```
-
-A moved key that shows an update or replacement means its arguments in
-`backblaze/moved_to_home_ops.tf` differ from the old module's: don't apply
-(a replaced key would break its consumer before the new one exists). The
-old tokens and keys must not appear at all except as moves. Then merge and,
-from `main`, apply each and re-plan to `No changes.`:
+**4b. Apply.** Merge #66, then from `main` apply each workspace, type `yes`
+only for the same plan, and plan again:
 
 ```sh
 git switch main && git pull
-for s in cloudflare backblaze; do env -u TF_VAR_doppler_token tofu -chdir=$s apply; done   # the same counts; yes
+env -u TF_VAR_doppler_token -u TF_LOG -u TF_LOG_PATH tofu -chdir=cloudflare apply
+env -u TF_VAR_doppler_token -u TF_LOG -u TF_LOG_PATH tofu -chdir=backblaze apply
 for s in cloudflare backblaze; do env -u TF_VAR_doppler_token tofu -chdir=$s plan -no-color | grep -E '^Plan:|^No changes'; done
 ```
 
-Nothing in Cloudflare, B2 or Doppler changes; only TFC's state.
+Nothing in Cloudflare, B2 or Doppler changes, only TFC's state. Then rebase
+#67 onto `main`.
 
-## 4. Apply foundation
+## 5. Apply foundation
 
 ```sh
 cd ~/home-ops && git switch main && git pull
-task tf:plan STACK=foundation -- -no-color 2>&1 | grep -E '^Plan:|^No changes'   # 5 to import, 3 to add, 3 to change
-task tf:apply STACK=foundation                                                  # review, then yes
+P="$BACKUP_DIR/foundation-$STAMP.tfplan"
+tf tf:plan STACK=foundation -- -no-color -out="$P" 2>&1 | grep -E '^Plan:|^No changes|^(Error|Warning):'
+tf tf:check-plan STACK=foundation PLAN="$P" EXPECT=p2-3-plan.json
 ```
 
-## 5. Merge, then apply this stack
+Expect the same as step 3. **Stop and read it**, then
+`tf tf:apply STACK=foundation -- "$P" && rm -f "$P"`.
 
-Merge the clusters/mini PR, then from `main`. Plan to a file, review the
-redacted plan, and apply that file:
+## 6. Apply this stack
+
+Only with step 1d all `yes`. Merge #2224 (retargeted to `main`), then:
 
 ```sh
 git switch main && git pull
-PLAN="$HOME/tofu-backups/clusters-mini-$STAMP.tfplan"
-( set -euo pipefail; mini_env
-  task tf:plan STACK=clusters/mini -- -no-color -out="$PLAN" 2>&1 | redact )   # 14 to import, 7 to add, 5 to change
-( set -euo pipefail; task tf:apply STACK=clusters/mini -- -no-color "$PLAN" 2>&1 | redact )
-rm -f "$PLAN"
+P="$BACKUP_DIR/clusters-mini-$STAMP.tfplan"
+tf tf:plan STACK=clusters/mini -- -no-color -out="$P" 2>&1 | grep -E '^Plan:|^No changes|^(Error|Warning):'
+tf tf:check-plan STACK=clusters/mini PLAN="$P" EXPECT=p2-3-plan.json
 ```
 
-The plan file is encrypted (state and plan encryption are enforced) but holds
-the two values; it's deleted once applied. Applying a saved plan doesn't ask
-for confirmation: the review is the redacted plan.
-
-Doppler now holds the new tokens and keys. The old ones stay valid until step
-8, so every consumer keeps working whichever value it has.
-
-## 6. Check every consumer
-
-Times are Pacific (the CronJobs run in UTC). ExternalSecrets refresh hourly:
-a cluster Secret has the new value within the hour, or at once with
-`kubectl annotate externalsecret -n <ns> <name> force-sync=$(date +%s) --overwrite`.
+Expect the same as step 3. **Stop and read it.** Applying it starts the tunnel
+cutover (step 7), so be ready to run that straight after:
 
 ```sh
-# k8s_vs_doppler NS SECRET FIELD KEY [JQ]: does the cluster Secret's FIELD equal
-# Doppler's KEY (or JQ of it)? Prints yes/NO only.
-k8s_vs_doppler() {
-  a=$(kubectl get secret -n "$1" "$2" -o json | jq -j --arg f "$3" '.data[$f] | @base64d' | sha256sum)
-  b=$(doppler secrets get "$4" -p k8s-at-home -c min --plain | jq -Rsj --arg q "${5:-}" 'rtrimstr("\n") | if $q == "" then . else (fromjson | getpath($q | split("."))) end' | sha256sum)
-  [ "$a" = "$b" ] && echo "$1/$2 $3 = $4${5:+.$5}: yes" || echo "$1/$2 $3 = $4${5:+.$5}: NO"
-}
-# cf_verify KEY: is the Cloudflare token in KEY active? Prints the status only.
-cf_verify() {
-  local t; t=$(doppler secrets get "$1" -p k8s-at-home -c min --plain)
-  echo "$1: $(curl -fsS -K - https://api.cloudflare.com/client/v4/user/tokens/verify <<<"header = \"Authorization: Bearer $t\"" | jq -r .result.status)"
-}
+tf tf:apply STACK=clusters/mini -- "$P" && rm -f "$P"
 ```
 
-1. **The values that must not change**, against the step 0 backup; all `yes`:
+Doppler now holds the new tunnel, keys and tokens. The old keys, tokens and
+tunnel stay valid until step 10, so a consumer on the old value keeps working,
+except cloudflared, which follows `CLOUDFLARED_CREDENTIALS` (step 7).
 
-   ```sh
-   unchanged CLOUDFLARED_CREDENTIALS
-   unchanged VOLSYNC_BACKBLAZE_BUCKET restic_password
-   ```
+## 7. Tunnel cutover
 
-   A `NO` on either: restore it now ([rollback](#if-an-apply-goes-wrong)).
-2. **external-dns** (Reloader restarts it when its Secret changes):
-   `cf_verify EXTERNALDNS_CLOUDFLARE_TOKEN` says `active`;
-   `k8s_vs_doppler network externaldns-cloudflare-token cloudflare-token EXTERNALDNS_CLOUDFLARE_TOKEN`
-   says `yes`; its pod is younger than the sync; and
+Expect a **public ingress blip of a few minutes**: from cloudflared
+restarting on the new tunnel until `min-ext.rtrox.io`'s CNAME points at it.
+Internal routes aren't affected. Do these at once:
+
+```sh
+kubectl annotate externalsecret -n network cloudflared cloudflared-substitution-secret force-sync="$(date +%s)" --overwrite
+kubectl -n network rollout status deploy/cloudflared --timeout=5m    # Reloader restarts it on the new TUNNEL_TOKEN
+flux reconcile kustomization cloudflared-config -n network && flux reconcile kustomization cloudflared -n network   # DNSEndpoint gets the new target
+```
+
+external-dns then updates the record on its next sync, within a minute or two.
+Check, printing only tunnel IDs and statuses (not secrets):
+
+```sh
+NEW=$(dopf CLOUDFLARED_CREDENTIALS TunnelID); OLD=$(bak CLOUDFLARED_CREDENTIALS TunnelID); ACCT=$(dopf CLOUDFLARED_CREDENTIALS AccountTag)
+echo "new=$NEW old=$OLD"
+same "cloudflared's token is the new tunnel" "$(k8s network cloudflared-secret TUNNEL_TOKEN | base64 -d | jq -j .t)" "$NEW"
+same "DNSEndpoint targets it" "$(kubectl -n network get dnsendpoint cloudflared-tunnel -o jsonpath='{.spec.endpoints[0].targets[0]}')" "$NEW.cfargotunnel.com"
+cf() { doppler secrets get CLOUDFLARE_MINI_TOKEN -p tf-at-home -c prd --plain | jq -Rsj 'rtrimstr("\n") | "header = \"Authorization: Bearer \(.)\"\n"' | curl -fsS -K - "https://api.cloudflare.com/client/v4/$1"; }
+ZONE=$(cf "zones?name=rtrox.io" | jq -r '.result[0].id')
+same "min-ext.rtrox.io CNAME target" "$(cf "zones/$ZONE/dns_records?name=min-ext.rtrox.io&type=CNAME" | jq -r '.result[0].content')" "$NEW.cfargotunnel.com"
+for t in "$NEW" "$OLD"; do cf "accounts/$ACCT/cfd_tunnel/$t" | jq -r '.result | "\(.name) status=\(.status) connections=\(.connections | length)"'; done
+```
+
+Expect `yes` ×3, the new tunnel `healthy` with connections, and the old one
+`inactive` or `down` with none. Then a public route answers. List them with
+`kubectl get httproute -A -o json | jq -r '.items[] | select(any(.spec.parentRefs[]; .name == "envoy-external")) | .spec.hostnames[]'`
+and run `curl -sS -o /dev/null -w '%{http_code}\n' https://<one of them>/`,
+which expects that app's usual status, not a 52x.
+
+If public ingress is still down after 10 minutes: [rollback](#if-something-goes-wrong).
+
+## 8. Check every consumer has the NEW credential
+
+Each consumer's Secret must equal Doppler now, and Doppler must differ from
+the backup. Together that proves the new credential reached it. Force-sync to
+check at once instead of waiting up to an hour:
+
+```sh
+kubectl annotate externalsecret -n network externaldns-cloudflare-token force-sync="$(date +%s)" --overwrite
+kubectl annotate externalsecret -n cert-manager cloudflare-token-secret force-sync="$(date +%s)" --overwrite
+kubectl annotate externalsecret -n database cnpg-offsite force-sync="$(date +%s)" --overwrite
+kubectl annotate externalsecret -n terraform tofu-state-copy force-sync="$(date +%s)" --overwrite
+kubectl annotate externalsecret -n security doppler-export force-sync="$(date +%s)" --overwrite
+vs_list | while read -r ns s; do kubectl annotate externalsecret -n "$ns" "${s%-secret}" force-sync="$(date +%s)" --overwrite >/dev/null; done
+```
+
+```sh
+# new LABEL NS SECRET FIELD KEY [JSONFIELD]: the cluster Secret = Doppler, and Doppler != the backup.
+new() {
+  local d; if [ -n "${6:-}" ]; then d=$(dopf "$5" "$6" | h); else d=$(dop "$5" | h); fi
+  same "$1 = Doppler" "$(k8s "$2" "$3" "$4" | h)" "$d"
+  differ "$1 is new" "$d" "$(bak "$5" ${6:+"$6"} | h)"
+}
+new external-dns network externaldns-cloudflare-token cloudflare-token EXTERNALDNS_CLOUDFLARE_TOKEN
+new cert-manager cert-manager cloudflare-token-secret cloudflare-token CERTMANAGER_CLOUDFLARE_TOKEN
+vs_list | while read -r ns s; do
+  new "$ns/$s key id" "$ns" "$s" AWS_ACCESS_KEY_ID VOLSYNC_BACKBLAZE_BUCKET application_key_id
+  new "$ns/$s key" "$ns" "$s" AWS_SECRET_ACCESS_KEY VOLSYNC_BACKBLAZE_BUCKET application_key
+  same "$ns/$s RESTIC_PASSWORD unchanged" "$(k8s "$ns" "$s" RESTIC_PASSWORD | h)" "$(grep -F "$ns/$s " "$BACKUP_DIR/restic-before-$STAMP.txt" | cut -d' ' -f2)"
+done
+new "cnpg-offsite key id" database cnpg-offsite-secret RCLONE_CONFIG_OFFSITE_ACCOUNT CNPG_OFFSITE_BACKBLAZE_BUCKET application_key_id
+new "cnpg-offsite key" database cnpg-offsite-secret RCLONE_CONFIG_OFFSITE_KEY CNPG_OFFSITE_BACKBLAZE_BUCKET application_key
+new "tofu-state-copy R2 id" terraform tofu-state-copy-secret RCLONE_CONFIG_R2_ACCESS_KEY_ID TOFU_STATE_R2_SOURCE access_key_id
+new "tofu-state-copy R2 key" terraform tofu-state-copy-secret RCLONE_CONFIG_R2_SECRET_ACCESS_KEY TOFU_STATE_R2_SOURCE secret_access_key
+new "tofu-state-copy B2 id" terraform tofu-state-copy-secret RCLONE_CONFIG_HISTORY_ACCOUNT TOFU_STATE_HISTORY_BACKBLAZE_BUCKET application_key_id
+new "tofu-state-copy B2 key" terraform tofu-state-copy-secret RCLONE_CONFIG_HISTORY_KEY TOFU_STATE_HISTORY_BACKBLAZE_BUCKET application_key
+new "doppler-export B2 id" security doppler-export-secret RCLONE_CONFIG_B2_ACCOUNT SECRETS_BACKUP_BACKBLAZE_BUCKET application_key_id
+new "doppler-export B2 key" security doppler-export-secret RCLONE_CONFIG_B2_KEY SECRETS_BACKUP_BACKBLAZE_BUCKET application_key
+```
+
+Every line `yes`. Then each consumer works on it:
+
+1. **external-dns** restarted (Reloader), and
    `kubectl -n network logs deploy/external-dns --since=15m | grep -ciE '403|unauthorized|authentication'`
-   prints `0`.
-3. **cert-manager** (reads the Secret at each DNS-01 challenge, no restart):
-   `cf_verify CERTMANAGER_CLOUDFLARE_TOKEN` says `active`;
-   `k8s_vs_doppler cert-manager cloudflare-token-secret cloudflare-token CERTMANAGER_CLOUDFLARE_TOKEN`
-   says `yes`; `kubectl get certificates -A` all `READY True` and
-   `kubectl get challenges -A` empty. The next renewal is the end-to-end test;
-   to test now, renew one certificate (`cmctl renew -n <ns> <cert>`) and watch
-   its challenge clear.
-4. **cloudflared**: nothing changed (check 1). Its pods are Ready, the tunnel
-   is HEALTHY in the Zero Trust dashboard, and an external hostname answers.
-5. **volsync**, every app's B2 mover:
-   `k8s_vs_doppler <ns> <app>-volsync-b2-secret AWS_ACCESS_KEY_ID VOLSYNC_BACKBLAZE_BUCKET application_key_id`
-   says `yes` for one app (they share the key). `task volsync:snapshots
-   APP=<app> NAMESPACE=<ns> BACKEND=b2` lists snapshots (the new key and the
-   unchanged password open the repository). After the next run (4:00 pm),
-   every B2 source succeeded since the apply:
-
-   ```sh
-   kubectl get replicationsource -A -o json | jq -r '.items[] | select(.metadata.name | endswith("-b2"))
-     | "\(.metadata.namespace)/\(.metadata.name) \(.status.lastSyncTime) \(.status.latestMoverStatus.result)"'
-   ```
-
-6. **cnpg-offsite** (6:00 pm): the run succeeds and its healthchecks.io check
-   gets a success ping. To run it now:
-   `kubectl create job -n database --from=cronjob/cnpg-offsite cnpg-offsite-p2-3`.
-7. **The CNPG restore key** (no reader in the cluster): it lists the bucket.
-   With rclone installed:
-
-   ```sh
-   ( r=$(doppler secrets get CNPG_OFFSITE_RESTORE_BACKBLAZE_BUCKET -p k8s-at-home -c min --plain)
-     export RCLONE_CONFIG_R_TYPE=b2 RCLONE_CONFIG_R_ACCOUNT="$(jq -r .application_key_id <<<"$r")" RCLONE_CONFIG_R_KEY="$(jq -r .application_key <<<"$r")"
-     b=$(jq -r .bucket <<<"$r"); unset r
-     rclone lsf --max-depth 1 "r:$b" >/dev/null && echo "restore key lists: yes" || echo "restore key lists: NO" )
-   ```
-
-8. **tofu-state-copy** (8:00 pm) and **doppler-export** (Saturdays, 7:00 pm):
-   each run succeeds and pings healthchecks.io. To run them now:
+   prints `0`. Step 7's CNAME update already proved it can write.
+2. **cert-manager**: `kubectl get certificates -A` all `READY True`, and
+   `kubectl get challenges -A` empty. To test now, `cmctl renew -n <ns> <cert>`
+   and watch its challenge clear.
+3. **volsync**: `task volsync:snapshots APP=<app> NAMESPACE=<ns> BACKEND=b2`
+   lists snapshots (the new key and the unchanged password open the
+   repository). After the next run (4:00 pm), every B2 source succeeded:
+   `kubectl get replicationsource -A -o json | jq -r '.items[] | select(.metadata.name | endswith("-b2")) | "\(.metadata.namespace)/\(.metadata.name) \(.status.lastSyncTime) \(.status.latestMoverStatus.result)"'`.
+4. **cnpg-offsite**, **tofu-state-copy**, **doppler-export**: a run of each
+   succeeds and pings healthchecks.io. To run them now:
+   `kubectl create job -n database --from=cronjob/cnpg-offsite cnpg-offsite-p2-3`,
    `kubectl create job -n terraform --from=cronjob/tofu-state-copy tofu-state-copy-p2-3`,
    `kubectl create job -n security --from=cronjob/doppler-export doppler-export-p2-3`.
-9. **Both stacks here:** `task tf:plan STACK=foundation` says `No changes.`;
-   this stack too, through `mini_env` and `redact` (step 2's command).
+5. **The CNPG restore key** (nothing in the cluster reads it): it can list
+   the bucket, with rclone installed and nothing printed:
 
-## 7. Wait
+   ```sh
+   ( export RCLONE_CONFIG_R_TYPE=b2
+     RCLONE_CONFIG_R_ACCOUNT=$(dopf CNPG_OFFSITE_RESTORE_BACKBLAZE_BUCKET application_key_id); export RCLONE_CONFIG_R_ACCOUNT
+     RCLONE_CONFIG_R_KEY=$(dopf CNPG_OFFSITE_RESTORE_BACKBLAZE_BUCKET application_key); export RCLONE_CONFIG_R_KEY
+     rclone lsf --max-depth 1 "r:$(dopf CNPG_OFFSITE_RESTORE_BACKBLAZE_BUCKET bucket)" >/dev/null && echo "restore key lists: yes" || echo "restore key lists: NO" )
+   ```
 
-Leave the old credentials for one full nightly cycle (volsync, cnpg-offsite,
-tofu-state-copy) and one doppler-export run (or the manual jobs above), so a
-consumer that reads at a different time also proves it's healthy. Until step
-8 everything is reversible from the step 0 backup.
+## 9. Wait
 
-## 8. Delete the old credentials
+Leave the old credentials and the old tunnel for one full nightly cycle
+(volsync, cnpg-offsite, tofu-state-copy) and one doppler-export run (or the
+manual jobs), so a consumer that reads at a different time proves it's
+healthy too. Until step 10, everything is reversible from the backup.
 
-Apply rtrox/terraform-record#67 (procedure step 4). Plan on its branch,
-then merged, from `main`:
+## 10. Delete the old credentials and the old tunnel
+
+**10a. Right before**, both new stacks must say `No changes.`:
+
+```sh
+cd ~/home-ops && git switch main && git pull
+tf tf:plan STACK=foundation -- -no-color 2>&1 | grep -E '^Plan:|^No changes'
+tf tf:plan STACK=clusters/mini -- -no-color 2>&1 | grep -E '^Plan:|^No changes'
+```
+
+Re-run step 7's tunnel status line: the old tunnel must have no connections
+(Cloudflare refuses to delete a connected tunnel).
+
+**10b. Plan #67** (rebased onto `main`) on its branch, each workspace as in
+step 4a:
 
 ```text
 cloudflare:
+  # cloudflare_api_token.r2_state_copy will be destroyed
+  # cloudflare_zero_trust_tunnel_cloudflared.auto_tunnel_mini will be destroyed
   # module.cf_api_token_mini_certmanager.cloudflare_api_token.token will be destroyed
   # module.cf_api_token_mini_external_dns.cloudflare_api_token.token will be destroyed
-  # cloudflare_api_token.r2_state_copy will be destroyed
-Plan: 0 to add, 0 to change, 3 to destroy.
+  # random_id.argo_secret_mini will be destroyed
+Plan: 0 to add, 0 to change, 5 to destroy.
 backblaze:
   # b2_application_key.old_mini_cnpg_offsite will be destroyed
   # b2_application_key.old_mini_cnpg_offsite_restore will be destroyed
@@ -404,125 +469,94 @@ backblaze:
 Plan: 0 to add, 0 to change, 5 to destroy.
 ```
 
-Anything else: don't apply. Afterwards re-run step 6's checks 2, 3, 5 (the
-`snapshots` task), 7, and the next nightly runs: everything still reads with
-the new credentials.
+Anything else: don't apply. **Stop and read both.** Then merge #67 and apply
+each workspace from `main` as in step 4b. Afterwards, re-run step 8's checks
+1, 3 (`snapshots`) and 5, and watch the next nightly runs.
 
-## 9. Zero-diff gate, cleanup, then CI
+## 11. Zero-diff gate, cleanup, then CI
 
-All four must say `No changes.`:
+All four say `No changes.`: `tf tf:plan` for `foundation` and
+`clusters/mini`, and both terraform-record workspaces. The freeze ends here.
 
-```sh
-task tf:plan STACK=foundation
-( set -euo pipefail; mini_env; task tf:plan STACK=clusters/mini -- -no-color 2>&1 | redact | grep -E '^Plan:|^No changes' )
-for s in cloudflare backblaze; do env -u TF_VAR_doppler_token tofu -chdir="$HOME/terraform-record/$s" plan -no-color | grep -E '^Plan:|^No changes'; done
-```
+1. **Cleanup PR**: delete `imports.tf`, `p2-3-plan.json` and this file, and
+   foundation's P2-3 imports and `p2-3-plan*.json`. Its plans: `No changes.`
+   terraform-record's removed blocks and `doppler.min_write` aliases go in its
+   own cleanup.
+2. **CI** ([below](#ci)), then the PR that swaps `ci-skip` for `ci-apply`.
 
-The freeze ends here. Then:
+Delete the backups (`mini-min-*`, `restic-before-*`) once the gate has held
+for a week.
 
-1. **Cleanup PR**: delete `imports.tf`, this file and the two "P2-3 move
-   only" preconditions here, and foundation's P2-3 imports. Its plan says
-   `No changes.` *without* `mini_env`, which proves the preconditions are
-   gone and nothing wants a new secret. From then on, plans of this stack
-   print neither value. terraform-record's removed blocks, its `random`
-   requirement and `doppler.min_write` aliases go in its own cleanup.
-2. **CI credentials** ([CI](#ci)), then the PR that tags this stack
-   `ci-apply`.
+## If something goes wrong
 
-Delete the step 0 backup once the gate has held for a week.
-
-## If an apply goes wrong
-
-- **Step 1** only created a token nothing reads yet. Nothing to undo.
-- **Step 3 (forget) misbehaves:** forgetting edits only TFC's state; nothing
-  in Cloudflare, B2 or Doppler changed. Don't apply foundation or this stack.
-  Either carry on (steps 4 and 5 adopt everything anyway), or revert the PR
-  and adopt the objects back in terraform-record with `import` blocks (the
-  same IDs as `imports.tf` here; the random_id by value from `TunnelSecret`
-  converted to base64url: `tr '+/' '-_' | tr -d '='`). Either plan must be
-  imports only.
-- **Step 4 or 5 fails partway:** what it imported and created is in state, and
-  the old credentials are still valid, so consumers keep working whichever
-  secrets were updated. Fix the cause and plan and apply again (step 5's way):
-  the plan shows what's left.
-- **A new credential doesn't work** (a check in step 6 fails): put the old
-  value back from the backup, one secret at a time, without printing it. The
-  old credential works until step 8, so this restores the consumer at once:
+- **Step 1**: before step 6, revert #2227 and force-sync; the old field still
+  holds the password. A `NO` in 1d means some Secret's password differs:
+  revert, and don't continue until it's understood.
+- **Step 2** only created a token nothing reads yet. Nothing to undo.
+- **Step 4 (forget) misbehaves**: forgetting edits only TFC's state. Don't
+  apply foundation or this stack. Either carry on (steps 5 and 6 adopt
+  everything), or revert #66 and adopt the objects back in terraform-record
+  with `import` blocks (the same IDs as `imports.tf` here). Either plan must
+  be imports only. The restic password can't be re-imported there by value
+  any more; it lives in `VOLSYNC_B2_RESTIC_PASSWORD` now.
+- **Step 5 or 6 fails partway**: what it did is in state. The old
+  credentials still work, so consumers keep working whichever secrets were
+  updated. Fix the cause, then plan, check and apply again.
+- **Public ingress down after step 7**: go back to the old tunnel, which
+  exists until #67. Restore `CLOUDFLARED_CREDENTIALS` from the backup (no
+  echo), force-sync, and reconcile as in step 7:
 
   ```sh
-  age -d -i "$AGE_KEY" "$BACKUP_DIR/mini-min-$STAMP.json.age" \
-    | jq -r .EXTERNALDNS_CLOUDFLARE_TOKEN \
-    | doppler secrets set EXTERNALDNS_CLOUDFLARE_TOKEN -p k8s-at-home -c min >/dev/null
+  bak CLOUDFLARED_CREDENTIALS | doppler secrets set CLOUDFLARED_CREDENTIALS -p k8s-at-home -c min --silent >/dev/null
   ```
 
-  (`doppler secrets set` reads a piped value from stdin and prints the secret
-  table on success, hence `>/dev/null`.) Force-sync its ExternalSecret. The
-  next plan of the owning stack then shows that secret updating back to the
-  new credential: find why the new one failed before applying again.
-- **`CLOUDFLARED_CREDENTIALS` or the restic password changed** (check 6.1
-  says `NO`): restore the whole secret from the backup the same way, at once,
-  and force-sync `network/cloudflared`, `network/cloudflared-substitution-secret`
-  or the volsync ExternalSecrets. Then stop: the random resource in this
-  state holds the wrong value and `ignore_changes` keeps an apply from
-  correcting it. Fixing it means removing it from state and importing it by
-  value again (a state edit, by hand).
-- **After step 8** the old credentials are gone, so rollback is forward: a
-  broken consumer gets a reissued credential (`-replace` its key or token
-  here, and its Doppler secret follows).
-- **Something destroyed:** nothing here plans a destroy, and the buckets, the
-  tunnel and both random resources have `prevent_destroy`. Stop and look;
-  never edit state by hand.
+  cloudflared reconnects to the old tunnel, and the CNAME follows. This
+  stack's next plan then shows that secret updating back to the new tunnel.
+  Find out why it failed before applying again.
+- **Another new credential doesn't work** (a step 8 check fails): restore
+  that secret the same way, `bak <KEY> | doppler secrets set <KEY> ...`, and
+  force-sync its ExternalSecret. The old credential works until step 10.
+  For `VOLSYNC_BACKBLAZE_BUCKET` the restored JSON includes the old
+  `restic_password` field again, which nothing reads any more.
+- **After step 10** the old credentials and tunnel are gone, so rollback is
+  forward: reissue the broken credential (`-replace` it in the stack that owns
+  it); its Doppler secret follows.
+- **Something destroyed**: nothing here plans a destroy before #67, the
+  checker fails on any, and the buckets, the tunnel and its secret have
+  `prevent_destroy`. Stop and look. Never edit state by hand.
 
 ## CI
 
-This stack is untagged, so CI plans it like any other: `terraform-plan` on
-every PR that changes it, and the nightly `terraform-drift` (3:30 am) from the
-moment it merges. Today both fail at **provider credentials**, and the drift
-run then fails as a whole and alerts healthchecks.io every night:
+`ci-skip` keeps CI off this stack. The PR that swaps it for `ci-apply` needs
+CI to plan it with read-only credentials, and to apply it with
+`tf-at-home/ci-apply`:
 
-| Needed in `tf-at-home/ci` | Today | Gap |
+| For CI | Plan (`ci`) | Apply (`ci-apply`) |
 | --- | --- | --- |
-| `CLOUDFLARE_MINI_TOKEN` | the CI read-only token (foundation's `mini_token.tf`) | it has no Cloudflare Tunnel Read, so the tunnel refresh 403s; add an account-level `Cloudflare Tunnel Read` policy to `ci_readonly` |
-| `BACKBLAZE_APPLICATION_KEY_ID`, `BACKBLAZE_APPLICATION_KEY` | absent | a read-only B2 key: `listBuckets`, `readBuckets`, `listKeys` (refreshing `b2_application_key`), and whatever reading lifecycle and file-lock settings takes (`readBucketRetentions`?), no file reads. Made by hand (a stack can't safely hold the key it reads with), like `terraform-backblaze` |
-| `DOPPLER_MINI_WRITE_TOKEN` | absent | refreshing `doppler_secret` needs a token that can **read `k8s-at-home/min`**, below |
-| `TF_VAR_import_*` | never | until the cleanup PR, any plan without them fails by design: CI can plan this stack only after step 9 |
+| Cloudflare | `CLOUDFLARE_MINI_TOKEN` = the read-only CI token, plus an account-level `Cloudflare Tunnel Read` on `ci_readonly` | `CLOUDFLARE_MINI_TOKEN` = the real token (foundation adds the `doppler_secret` then, not before: every ci-apply job downloads the whole config) |
+| B2 | `BACKBLAZE_APPLICATION_KEY_ID`/`_KEY`: a hand-made read-only key (`listBuckets`, `readBuckets`, `listKeys`, and whatever reading file-lock settings needs), no file reads | a key that can create keys on these two buckets (`writeKeys` is account-wide in B2, so this is effectively the provider key; decide then) |
+| Doppler | a read token on `k8s-at-home/min_tf` (below) | `DOPPLER_MINI_WRITE_TOKEN`, a write token on `min_tf` |
 
-**Doppler is the hard one.** A read token on `k8s-at-home/min` reads every
-secret of every app in mini (database passwords, OAuth secrets, ...), not just
-the eight this stack writes, and it would sit in `tf-at-home/ci`, which every
-PR plan job on the runner reads. Options:
+**Doppler: a Terraform-only config.** A read token on `k8s-at-home/min` would
+read every secret of every app in mini, and every PR plan job reads `ci`.
+Instead, the secrets Terraform writes move to their own config:
 
-1. **A Terraform-only config.** Move the secrets Terraform writes into their
-   own Doppler config (e.g. a `k8s-at-home` environment `tf-min`), and make
-   `min`'s keys Doppler references to it (`${tf-min.KEY}`), so ExternalSecrets
-   read `min` unchanged. CI's token reads `tf-min` only, which holds exactly
-   what this stack's state already holds. Costs one environment (check the
-   free plan's limit) and a careful cutover of eight secrets. Recommended.
-2. **Exclude the Doppler secrets from CI plans** (`ci-plan-exclude.txt`).
-   CI never reads `min`, but its plans are partial and the apply workflow
-   refuses stacks with excludes, so this stack could never be `ci-apply`.
-3. **A read token on `min` in `ci`.** Simplest, and it exposes all of mini's
-   app secrets to CI plan jobs. Not recommended.
+1. foundation creates a `k8s-at-home` environment `min_tf`, an import of its
+   root config, and its write token (`doppler_write_tokens`).
+2. This stack (and foundation's two mini writes) write their keys to `min_tf`
+   instead of `min`.
+3. In `min`, each of those keys becomes a reference, `${min_tf.KEY}`.
+   References are on Doppler's free plan; config inheritance isn't. So
+   ExternalSecrets keep reading `min`, unchanged.
+4. CI's plan token reads `min_tf`, which holds exactly what this stack's
+   state already holds, and no app secret.
 
-Whatever the choice, CI's plan jobs can already decrypt this stack's state
-once it exists (the shared passphrase, the read-only R2 token): it holds the
-tunnel secret, the restic password, both Cloudflare tokens and three B2 keys.
-That's the design for non-laptop-only stacks, but these are higher-value
-than anything another CI-planned stack holds; making this stack
-`laptop-only` instead would need its state re-encrypted.
+The cutover moves each secret: write it to `min_tf`, then set the reference
+in `min`, then check the cluster Secret is unchanged (by hash, as in step 8),
+then forget and re-import at the new address. Each is a separate,
+plan-checked step in that PR.
 
-**Applying from CI (`ci-apply`)** also puts `CLOUDFLARE_MINI_TOKEN`'s real
-value in `ci-apply`. It has API Tokens Write, which can mint a token with any
-permission the owner's user has, so any apply job could reach as far as
-`CLOUDFLARE_TERRAFORM_TOKEN`. Options: keep this stack laptop-applied; or
-move the external-dns and cert-manager tokens to foundation (laptop-only),
-which leaves this stack's token Zone Read, DNS Write and Tunnel Write; or wait
-for phase 3's account-owned tokens, which can be limited to an account but
-still not to a set of permissions.
-
-**Until then, keep CI off this stack.** Before merging the clusters/mini PR,
-add a tag the three workflows skip, e.g. `ci-skip` alongside `laptop-only` in
-each `tf_list` call of `terraform-plan.yaml`, `terraform-drift.yaml` and
-`terraform-apply.yaml` (a workflow change, so the owner merges it). Unlike
-`laptop-only` it keeps the shared passphrase, so dropping it later needs no
-re-encryption.
+CI's plan jobs can decrypt this stack's state once it exists (the shared
+passphrase and the read-only R2 token, as for every non-laptop-only stack).
+After this move it holds the new tunnel secret and three B2 keys. The restic
+password and the controller tokens aren't in it.

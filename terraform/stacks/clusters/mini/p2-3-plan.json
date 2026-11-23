@@ -1,0 +1,34 @@
+{
+  "changes": {
+    "cloudflare_dns_record.api[\"node01.mini.rtrox.io\"]": "import",
+    "cloudflare_dns_record.api[\"node02.mini.rtrox.io\"]": "import",
+    "cloudflare_dns_record.api[\"node03.mini.rtrox.io\"]": "import",
+    "module.volsync_store.b2_bucket.this": "import",
+    "module.cnpg_offsite_store.b2_bucket.this": "import",
+    "doppler_secret.cloudflared_credentials": "import+update",
+    "doppler_secret.volsync_bucket": "import+update",
+    "doppler_secret.cnpg_offsite_bucket": "import+update",
+    "doppler_secret.cnpg_offsite_restore_bucket": "import+update",
+    "random_bytes.tunnel_secret": "create",
+    "cloudflare_zero_trust_tunnel_cloudflared.mini": "create",
+    "module.volsync_store.b2_application_key.this[\"k8s-mini-rtrox-io-volsync-store\"]": "create",
+    "module.cnpg_offsite_store.b2_application_key.this[\"k8s-mini-rtrox-io-cnpg-offsite\"]": "create",
+    "module.cnpg_offsite_store.b2_application_key.this[\"k8s-mini-rtrox-io-cnpg-offsite-restore\"]": "create"
+  },
+  "value_from": {
+    "doppler_secret.cloudflared_credentials": {
+      "attribute": "value",
+      "references": ["cloudflare_zero_trust_tunnel_cloudflared.mini.id", "random_bytes.tunnel_secret.base64"]
+    },
+    "doppler_secret.volsync_bucket": {
+      "attribute": "value",
+      "references": ["module.volsync_store.keys"]
+    }
+  },
+  "value_unknown": {
+    "doppler_secret.cloudflared_credentials": "value",
+    "doppler_secret.volsync_bucket": "value",
+    "doppler_secret.cnpg_offsite_bucket": "value",
+    "doppler_secret.cnpg_offsite_restore_bucket": "value"
+  }
+}

@@ -2,52 +2,41 @@
 # (cluster-apps/mini/network/cloudflared). Locally managed: its ingress rules
 # are in the cloudflared config there, not here.
 #
-# The tunnel secret must never change by accident: a new one cuts every
-# external hostname off until cloudflared restarts with it. So it is a
-# random_bytes that can't be replaced (prevent_destroy) or changed in place
-# (ignore_changes), the tunnel ignores its own copy of the secret, and the
-# tunnel can't be destroyed either (a new tunnel has a new ID, which every
-# external-dns CNAME points at). Rotating it on purpose is a procedure of its
-# own: new secret, then the tunnel, then cloudflared.
+# A new tunnel, not terraform-record's (migration P2-3): its secret is new
+# too, so no secret had to be imported by value. cloudflared picks it up from
+# CLOUDFLARED_CREDENTIALS, and external-dns points min-ext.rtrox.io at it
+# through the tunnel's DNSEndpoint (TUNNEL_ENDPOINT). terraform-record deletes
+# the old tunnel once cloudflared runs on this one.
 #
-# random_bytes rather than terraform-record's random_id: random_id's `id` is
-# the secret itself (base64url) and isn't marked sensitive, so every plan
-# printed it ("Refreshing state... [id=...]"). random_bytes keeps it in
-# `base64`, which is sensitive, and has no id. Imported by value from the same
-# bytes (imports.tf), so nothing changes.
+# Neither the tunnel nor its secret may be destroyed by an apply: a new tunnel
+# has a new ID (min-ext.rtrox.io's CNAME target), and a new secret cuts
+# cloudflared off until it restarts with it.
 resource "random_bytes" "tunnel_secret" {
-  length = 35
+  length = 32
 
   lifecycle {
     prevent_destroy = true
-    ignore_changes  = all
-
-    # P2-3 move only (delete with imports.tf): adopted by value, so a plan
-    # without the value would create a new secret instead of importing it.
-    precondition {
-      condition     = var.import_tunnel_secret != null
-      error_message = "TF_VAR_import_tunnel_secret is not set. Until the cleanup PR, every plan of this stack must supply it (MIGRATION.md, \"By-value imports\"); without it the plan would make a new tunnel secret."
-    }
   }
 }
 
 resource "cloudflare_zero_trust_tunnel_cloudflared" "mini" {
   account_id    = local.account_id
-  name          = "mini_external_ingress"
+  name          = "mini-external-ingress"
+  config_src    = "local"
   tunnel_secret = random_bytes.tunnel_secret.base64
 
   lifecycle {
     prevent_destroy = true
-    # Cloudflare never returns the secret, so the imported tunnel has none in
-    # state; a write would change it. config_src is read back from the API
-    # (local) and never set here: setting it replaces the tunnel.
-    ignore_changes = [tunnel_secret, config_src]
+    # Cloudflare never returns the secret, so the state only has what was
+    # sent. A change here would be a rotation, which is its own procedure.
+    ignore_changes = [tunnel_secret]
   }
 }
 
 # Read by cluster-apps/mini/network/cloudflared: the app's ExternalSecret
-# builds TUNNEL_TOKEN from it, the config's builds TUNNEL_ENDPOINT. Same keys
-# and values as terraform-record wrote, so the import changes nothing.
+# builds TUNNEL_TOKEN from it, the config's builds TUNNEL_ENDPOINT. The same
+# keys as terraform-record wrote; the import takes over the Doppler secret and
+# updates it to this tunnel.
 resource "doppler_secret" "cloudflared_credentials" {
   provider = doppler.k8s_at_home_min
 
