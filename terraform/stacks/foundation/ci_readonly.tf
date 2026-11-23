@@ -13,10 +13,13 @@ locals {
   cloudflare_user_id = var.cloudflare_user_id
 
   # Only what home-ops' stacks plan in CI today (proxmox: zone lookup, DNS
-  # records, API tokens). Add groups when a stack needs them; never an
-  # account-wide R2 read, which would expose every bucket's objects.
+  # records, API tokens; dns: zones, records, the custom WAF rulesets). Add
+  # groups when a stack needs them; never an account-wide R2 read, which would
+  # expose every bucket's objects, and no account-level group: Account Settings
+  # Read also reads the account's members and audit log, so stacks find the
+  # account ID through a zone lookup (Zone Read) instead.
   ci_readonly_permissions = {
-    zone = ["Zone Read", "DNS Read"]
+    zone = ["Zone Read", "DNS Read", "Zone WAF Read"]
     user = ["API Tokens Read"]
   }
 }
