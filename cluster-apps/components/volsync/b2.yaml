@@ -14,7 +14,11 @@ spec:
       engineVersion: v2
       data:
         RESTIC_REPOSITORY: "s3:{{ .endpoint }}/{{ .bucket }}/{{ .cluster_name }}/${APP}"
-        RESTIC_PASSWORD: "{{ .restic_password }}"
+        # Its own Doppler key, made by hand and outside Terraform: it encrypts
+        # every B2 repository and must never change. (It used to be the
+        # restic_password field of VOLSYNC_BACKBLAZE_BUCKET, which Terraform
+        # writes.)
+        RESTIC_PASSWORD: "{{ .b2_restic_password }}"
         AWS_ACCESS_KEY_ID: "{{ .application_key_id }}"
         AWS_SECRET_ACCESS_KEY: "{{ .application_key }}"
   dataFrom:
@@ -24,6 +28,9 @@ spec:
     - secretKey: cluster_name
       remoteRef:
         key: CLUSTER_NAME
+    - secretKey: b2_restic_password
+      remoteRef:
+        key: VOLSYNC_B2_RESTIC_PASSWORD
 ---
 # yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/volsync.backube/replicationsource_v1alpha1.json
 apiVersion: volsync.backube/v1alpha1
