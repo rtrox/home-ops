@@ -484,3 +484,165 @@ unsaved state). So rotate deliberately, logged in as the break-glass key:
    break-glass key, so the old token going away mid-apply doesn't matter.
 5. Restore `prevent_destroy` (`git diff` is empty again), then check every
    consumer as in step 4 above. Re-enable the workflows.
+
+# P2-1b: CI's apply credentials and the GitHub Environments
+
+Run this **after** the P2-1 move above has been applied (step 7's zero-diff
+gate passed): the plan counts below assume `No changes.` beforehand. The PR
+adds `ci_apply.tf` and `environments.tf`, the `github` provider (generated, so
+`_provider_env.json` now also exports `GITHUB_TOKEN`) and the import of the two
+Environments. Still laptop-only; it never runs in CI.
+
+What it makes:
+
+| Object | Method |
+| --- | --- |
+| R2 token `tofu-state-ci-apply-readwrite-<date>` (read/write on the `tofu-state` bucket), reissued every 90 days like the CI read-only token, with an expiry check | create, with `time_rotating.r2_state_ci_apply`; its own token, so it is revoked alone |
+| `tf-at-home/ci-apply` `R2_STATE_READWRITE` (same JSON shape as in `prd`) | create |
+| Service token `ci-apply-read` (read-only, `tf-at-home/ci-apply`) | create |
+| Environments `tofu-apply-gated` (reviewer `rtrox`, `main` only) and `tofu-apply` (no reviewers, `main` only) of `rtrox/home-ops` | import, no change |
+| Their branch policies (`main`) | import, no change |
+| Environment secret `CI_DOPPLER_TF_APPLY` on **both** Environments, holding `ci-apply-read`'s key | create |
+| `tf-at-home/ci-apply` `TOFU_STATE_PASSPHRASE` | **by hand**: a Doppler reference (step 1) |
+
+Not here, on purpose: provider tokens per stack (added to `ci-apply` when a
+stack opts in to `ci-apply`); `hosts-at-home/ci-apply` and
+`DOPPLER_HOSTS_TOKEN` (the apply workflow and `tf-ci.sh` still read it, but
+optionally, and no stack needs it yet, so nothing creates it); and the rest of
+GitHub (phase 7).
+
+## 0. Preconditions
+
+- **The GitHub token.** Create a fine-grained personal access token on the
+  account that owns `home-ops`: repository access **only `home-ops`**;
+  permissions **Environments: read and write** (it covers the Environment
+  secrets too) and **Actions: read** (reading Environments and their branch
+  policies needs it; it only works without while the repo is public), plus the
+  Metadata read GitHub adds itself. Nothing else. If you already made the token
+  with Secrets and Administration, edit it down to this. Give it an expiry (90
+  days or so) and **note the date in Bitwarden**. Put it in Doppler without
+  printing it:
+
+  ```sh
+  doppler secrets set GITHUB_TERRAFORM_TOKEN -p tf-at-home -c prd   # paste at the prompt
+  ```
+
+  Until it exists, `task tf:*` for `foundation` fails reading the provider
+  environment. **An expired token blocks every foundation plan and apply**,
+  including the emergency R2 token rotation and the CI read-only token
+  reissue, so renew it before it expires.
+- P2-1 applied, and `task tf:plan STACK=foundation` says `No changes.`
+
+## 1. The passphrase reference, by hand
+
+Terraform must never hold the shared passphrase, and a `doppler_secret` would:
+the provider stores the resolved value in state (its `computed` attribute). So
+this one secret is made with the CLI, not in code. `ci-apply` gets a reference
+to `prd`'s value, not a copy:
+
+```sh
+doppler secrets set TOFU_STATE_PASSPHRASE '${prd.TOFU_STATE_PASSPHRASE}' -p tf-at-home -c ci-apply >/dev/null
+```
+
+Single quotes, so the shell doesn't expand it. `${prd.X}` is Doppler's syntax
+for another config of the same project (`${project.config.X}` for another
+project). Doppler's docs weren't reachable when this was written, so step 4.3
+checks that it resolves for a service token. Rotating `prd`'s passphrase later
+changes what CI reads with no second edit.
+
+## 2. Plan
+
+```sh
+git switch main && git pull
+task tf:plan STACK=foundation -- -no-color 2>&1 | grep -E '^  # |^Plan:|^No changes|^(Error|Warning):'
+```
+
+Expect exactly:
+
+```text
+Plan: 4 to import, 6 to add, 0 to change, 0 to destroy.
+```
+
+- **4 imports**: `github_repository_environment.this["tofu-apply-gated"]` and
+  `["tofu-apply"]`; `github_repository_environment_deployment_policy.main["tofu-apply-gated"]`
+  and `["tofu-apply"]`. Each shows `will be imported` and nothing else.
+- **6 creates**: `time_rotating.r2_state_ci_apply`, `cloudflare_api_token.r2_state_ci_apply`,
+  `doppler_secret.ci_apply_r2_state`, `doppler_service_token.ci_apply_read`,
+  and `github_actions_environment_secret.ci_doppler_tf_apply["tofu-apply-gated"]`
+  and `["tofu-apply"]`.
+- **0 changes.** (`prevent_self_review` is ignored: the provider doesn't read
+  it back for an Environment without reviewers, upstream #3583.) If an Environment or policy shows an update, don't apply: the
+  code differs from the live Environment. Read it again
+  (`gh api repos/rtrox/home-ops/environments/<env>` and its
+  `/deployment-branch-policies`) and match `environments.tf`. Likely
+  suspects: `wait_timer`, `can_admins_bypass`, `prevent_self_review`,
+  `reviewers`.
+- A 404 or `Cannot import non-existent remote object` on an Environment or
+  policy: the token can't see `home-ops`, or a name or policy ID changed
+  (`imports.tf` holds the policy IDs).
+- 403 reading Environments or secrets: the token lacks a permission from
+  step 0.
+- **Anything destroyed**: stop.
+
+## 3. Apply
+
+```sh
+task tf:apply STACK=foundation    # review, then yes
+```
+
+The Environment secrets are written last, once the service token exists.
+
+## 4. Check
+
+1. **Names only**, never values; each prints `CI_DOPPLER_TF_APPLY`:
+
+   ```sh
+   for e in tofu-apply-gated tofu-apply; do
+     gh api repos/rtrox/home-ops/environments/$e/secrets --jq '.secrets[].name'
+   done
+   ```
+
+2. `task tf:plan STACK=foundation` says `No changes.`
+3. **`ci-apply` reads, and the reference resolves for a service token.** A
+   dispatch of `terraform-apply` with no `ci-apply` stacks passes, but it does
+   **not** read `ci-apply`: the plan job uses the read-only token, and the
+   apply job is skipped when nothing changes. So check from the laptop, with a
+   throwaway read token, printing only key names and yes/no answers:
+
+   ```sh
+   (
+     set -euo pipefail
+     tok=$(doppler configs tokens create tmp-check -p tf-at-home -c ci-apply --max-age 10m --plain)
+     secrets=$(curl -fsS -K - "https://api.doppler.com/v3/configs/config/secrets/download?format=json" \
+       <<<"header = \"Authorization: Bearer $tok\"")
+     jq -r 'keys[]' <<<"$secrets"
+     jq -e '.R2_STATE_READWRITE | fromjson | has("access_key_id") and has("secret_access_key") and has("endpoint")' <<<"$secrets" >/dev/null && echo "R2_STATE_READWRITE shape ok"
+     a=$(jq -j .TOFU_STATE_PASSPHRASE <<<"$secrets" | sha256sum)
+     b=$(doppler secrets get TOFU_STATE_PASSPHRASE -p tf-at-home -c prd --plain | tr -d '\n' | sha256sum)
+     [ "$a" = "$b" ] && echo "passphrase matches prd: yes" || echo "passphrase matches prd: NO"
+   )
+   doppler configs tokens -p tf-at-home -c ci-apply --json | jq -r '.[] | "\(.slug) \(.name) \(.access)"'
+   doppler configs tokens revoke <slug of tmp-check> -p tf-at-home -c ci-apply
+   ```
+
+   Expect the key names `R2_STATE_READWRITE` and `TOFU_STATE_PASSPHRASE`,
+   the shape line, and `passphrase matches prd: yes`. A `NO`, or the literal
+   `${prd.` text where the value should be, means the reference doesn't resolve
+   for service tokens or its syntax is wrong: stop and tell the lead before
+   anything depends on it. The token list shows `ci-apply-read` (read),
+   `tf-stacks-write` (read/write) and `tmp-check`; revoke `tmp-check` by its
+   slug.
+4. **When the first stack opts in** to `ci-apply`, its apply run reads
+   `ci-apply` through `CI_DOPPLER_TF_APPLY` for real; the `Read credentials`
+   step passing is the end-to-end check, passphrase reference included. A
+   failure prints only `could not read the CI credentials from Doppler`.
+
+## If this goes wrong
+
+- A failed apply leaves what it made in state: fix the cause and apply again.
+  Nothing here changes an existing credential, so no existing consumer is
+  affected.
+- To back out: remove `ci_apply.tf`'s resources in a PR; its plan shows the
+  destroys of the token, secret and service token. Never remove the
+  Environments from the code without a `removed` block (`destroy = false`):
+  they're imported, and the plain removal would delete them.

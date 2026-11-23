@@ -10,6 +10,10 @@ terraform {
       source  = "DopplerHQ/doppler"
       version = "1.23.2"
     }
+    github = {
+      source  = "integrations/github"
+      version = "6.13.0"
+    }
     time = {
       source  = "hashicorp/time"
       version = "0.14.2"
