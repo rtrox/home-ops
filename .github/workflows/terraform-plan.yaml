@@ -2,18 +2,23 @@
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
 name: terraform-plan
 
-# Plan only: the apply comes later. Runs on the self-hosted runner (a Proxmox
-# VM, see ansible/roles/github-runner), one fresh container per job.
+# Plan only: terraform-apply.yaml applies on merge. Runs on the self-hosted
+# runner (a Proxmox VM, see ansible/roles/github-runner), one fresh container
+# per job. Shared bash lives in .github/scripts/tf-ci.sh.
 #
 # home-ops is public, and the logs of a public repo are public too. So the
 # commands that read state or live APIs (init, plan) write to files that are
 # never printed, and the PR comment holds only the resource headers and counts.
+#
+# Stacks tagged `laptop-only` (they need the owner's personal Doppler token)
+# are never planned here; the comment lists them with a pointer to the laptop.
 on:
   pull_request:
     paths:
       - "terraform/**"
       - "inventory/**"
       - ".github/workflows/terraform-plan.yaml"
+      - ".github/scripts/tf-ci.sh"
 
 permissions:
   contents: read
@@ -49,52 +54,14 @@ jobs:
       # is scoped to the `ci` config of one project: CI_DOPPLER_TF_READ ->
       # tf-at-home/ci (R2_STATE_READONLY, TOFU_STATE_PASSPHRASE, a read-only
       # Cloudflare token), CI_DOPPLER_HOSTS_READ -> hosts-at-home/ci (a
-      # PVEAuditor token). Neither can see `prd`. Values go to later steps
-      # through GITHUB_ENV. Nothing here may print a value: jq's errors are
-      # discarded (they can quote the input), every value is masked as soon as
-      # it's assigned, and every failure is a generic message.
+      # PVEAuditor token). Neither can see `prd`. tf_read_credentials masks
+      # every value as soon as it is assigned and passes it to later steps
+      # through GITHUB_ENV; nothing prints a value.
       - name: Read credentials
         run: |
           set -euo pipefail
-          fail() { echo "::error::could not read the CI credentials from Doppler"; exit 1; }
-          # get EXPR: print a jq field of the JSON on stdin, or fail without output.
-          get() { jq -er "$1" 2>/dev/null; }
-          # set_secret_env masks the value in every later log line; set_env is
-          # for non-secrets (masking "ci" or "1" would blank them all over the log).
-          set_secret_env() {
-            echo "::add-mask::$2"
-            printf '%s=%s\n' "$1" "$2" >> "$GITHUB_ENV"
-          }
-          set_env() { printf '%s=%s\n' "$1" "$2" >> "$GITHUB_ENV"; }
-
-          echo "::add-mask::$CI_DOPPLER_TF_READ"
-          echo "::add-mask::$CI_DOPPLER_HOSTS_READ"
-
-          secrets=$(curl -fsS --max-time 30 -K - \
-            "https://api.doppler.com/v3/configs/config/secrets/download?format=json" \
-            <<<"header = \"Authorization: Bearer ${CI_DOPPLER_TF_READ}\"" 2>/dev/null) || fail
-          r2=$(get '.R2_STATE_READONLY' <<<"$secrets") || fail
-          passphrase=$(get '.TOFU_STATE_PASSPHRASE' <<<"$secrets") || fail
-          echo "::add-mask::$passphrase"
-          access_key=$(get '.access_key_id' <<<"$r2") || fail
-          echo "::add-mask::$access_key"
-          secret_key=$(get '.secret_access_key' <<<"$r2") || fail
-          echo "::add-mask::$secret_key"
-          endpoint=$(get '.endpoint' <<<"$r2") || fail
-          unset secrets r2
-
-          set_secret_env AWS_ACCESS_KEY_ID "$access_key"
-          set_secret_env AWS_SECRET_ACCESS_KEY "$secret_key"
-          set_secret_env AWS_ENDPOINT_URL_S3 "$endpoint"
-          set_secret_env TF_VAR_state_passphrase "$passphrase"
-          # The generated providers read tf-at-home through DOPPLER_TOKEN and
-          # hosts-at-home through var.doppler_hosts_token, both from the config
-          # named by var.doppler_config.
-          set_secret_env DOPPLER_TOKEN "$CI_DOPPLER_TF_READ"
-          set_secret_env TF_VAR_doppler_hosts_token "$CI_DOPPLER_HOSTS_READ"
-          set_env TF_VAR_doppler_config ci
-          # Terramate's update check phones home; not from this runner.
-          set_env TM_DISABLE_CHECKPOINT 1
+          source .github/scripts/tf-ci.sh
+          tf_read_credentials "$CI_DOPPLER_TF_READ" R2_STATE_READONLY ci "$CI_DOPPLER_HOSTS_READ"
 
       - name: Plan changed stacks
         id: plan
@@ -104,15 +71,21 @@ jobs:
         run: |
           set -uo pipefail
           root=$PWD
+          source "$root/.github/scripts/tf-ci.sh"
           out=$RUNNER_TEMP/plan
           mkdir -p "$out"
           summary=$RUNNER_TEMP/summary.md
           failed=false
 
           cd terraform
-          stacks=$(terramate list --changed --git-change-base "$BASE_REF")
+          # laptop-only stacks need the owner's personal Doppler token, so CI
+          # never plans them; the comment says to do it by hand.
+          tf_list stacks --changed --no-tags laptop-only --git-change-base "$BASE_REF" || exit 1
+          tf_list laptop --changed --tags laptop-only --git-change-base "$BASE_REF" || exit 1
           echo "Changed stacks:"
-          echo "${stacks:-none}"
+          printf "%s\n" "${stacks[@]:-none}"
+          echo "Changed laptop-only stacks:"
+          printf "%s\n" "${laptop[@]:-none}"
 
           {
             echo "### Terraform plan"
@@ -120,9 +93,17 @@ jobs:
             echo "Commit \`${GITHUB_SHA::7}\`. Resource headers and counts only; full plans are not posted."
           } > "$summary"
 
-          if [ -z "$stacks" ]; then
+          laptop_notes() {
+            local s
+            for s in "${laptop[@]}"; do
+              printf '\n`%s` changed: plan and apply it from the laptop (`task tf:plan STACK=%s`).\n' "$s" "${s#stacks/}" >> "$summary"
+            done
+          }
+
+          if [ ${#stacks[@]} -eq 0 ]; then
             echo >> "$summary"
-            echo "No stacks changed." >> "$summary"
+            echo "No CI-planned stacks changed." >> "$summary"
+            laptop_notes
             echo "failed=$failed" >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -135,7 +116,7 @@ jobs:
             printf '\n#### `%s`\n\nPlan failed at step: **%s**. See the job log (the plan itself is not printed).\n' "$1" "$2" >> "$summary"
           }
 
-          for stack in $stacks; do
+          for stack in "${stacks[@]}"; do
             echo "::group::$stack"
             dir=$root/terraform/$stack
             cd "$dir"
@@ -150,40 +131,16 @@ jobs:
             # line, # comments) in ci-plan-exclude.txt, e.g. objects the
             # read-only CI credentials can't read. Their dependents are skipped
             # too; the summary says so.
-            excludes=()
-            if [ -f ci-plan-exclude.txt ]; then
-              while IFS= read -r addr; do
-                addr=${addr%%#*}
-                addr=$(sed -E 's/^[[:space:]]+|[[:space:]]+$//g' <<<"$addr")
-                [ -n "$addr" ] && excludes+=("-exclude=$addr")
-              done < ci-plan-exclude.txt
-            fi
-            if ! tofu plan -lock=false -no-color -input=false "${excludes[@]}" >"$out/plan.log" 2>&1; then fail_step "$stack" "tofu plan"; cd "$root/terraform"; echo "::endgroup::"; continue; fi
+            tf_excludes
+            if ! tofu plan -lock=false -no-color -input=false "${EXCLUDES[@]}" >"$out/plan.log" 2>&1; then fail_step "$stack" "tofu plan"; cd "$root/terraform"; echo "::endgroup::"; continue; fi
 
-            # Keep only "# <type.name> will be <action>" headers and the
-            # Plan:/No changes lines. for_each keys and indexes become [...]
-            # first, so no key value reaches the public comment; everything
-            # else in the plan is dropped.
-            {
-              printf '\n#### `%s`\n\n' "$stack"
-              headers=$(sed -E 's/\[[^]]*\]/[…]/g' "$out/plan.log" \
-                | grep -oE '^  # [^ ]+ (will be|must be) (created|updated in-place|destroyed|replaced|read during apply)' || true)
-              totals=$(grep -oE '^(Plan: [0-9]+ to add, [0-9]+ to change, [0-9]+ to destroy\.|No changes\.)' "$out/plan.log" || true)
-              if [ -n "$headers" ]; then
-                printf '```\n%s\n```\n\n' "$headers"
-              fi
-              printf '%s\n' "${totals:-Plan finished, no summary line found.}"
-              if [ ${#excludes[@]} -gt 0 ]; then
-                printf '\n> [!WARNING]\n> **PARTIAL PLAN: %d address(es) excluded.** Check any change to ci-plan-exclude.txt in this PR.\n' "${#excludes[@]}"
-                printf '\nNot planned in CI (ci-plan-exclude.txt, and anything depending on them): %s. Plan these from the laptop.\n' \
-                  "$(printf '`%s` ' "${excludes[@]#-exclude=}")"
-              fi
-            } >> "$summary"
+            tf_summary_block "$stack" "$out/plan.log" >> "$summary"
             rm -f "$out/plan.log" "$out/init.log"
             echo "::endgroup::"
             cd "$root/terraform"
           done
 
+          laptop_notes
           echo "failed=$failed" >> "$GITHUB_OUTPUT"
 
       - name: Post the plan summary
