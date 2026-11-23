@@ -4,7 +4,7 @@ name: terraform-apply
 
 # Merging to main re-plans and applies, in stack order. Opt-in per stack: only
 # stacks tagged `ci-apply` in their stack.tm.hcl are applied; `laptop-only`
-# stacks never are. Gating is dynamic: a stack applies straight after merge in
+# and `ci-skip` stacks never are. Gating is dynamic: a stack applies straight after merge in
 # the `tofu-apply` Environment (no reviewers), unless its post-merge plan has
 # any destroy, replace or forget, in which case its apply job waits for owner
 # approval in `tofu-apply-gated`. The plan job decides (tf_plan_gate, from
@@ -157,7 +157,7 @@ jobs:
           # retried by the next push. Only stacks whose plan has changes (exit
           # code 2) reach the matrix. --run-order gives the apply order.
           cd terraform
-          tf_list stacks --tags ci-apply --no-tags laptop-only || exit 1
+          tf_list stacks --tags ci-apply --no-tags laptop-only,ci-skip || exit 1
           # The `gated` tag no longer exists (gating comes from the plan). A
           # stack still carrying it was written for the old rule: fail loudly.
           tf_list legacy --tags gated || exit 1
