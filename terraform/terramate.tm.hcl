@@ -1,3 +1,10 @@
+# Stack tags (`tags = [...]` in stack.tm.hcl) the CI workflows honour:
+#   laptop-only  CI never plans, applies or drift-checks it (it needs the
+#                owner's personal Doppler token); PRs just say to use the laptop.
+#   ci-apply     opt-in: terraform-apply.yaml applies it on merge to main.
+#   gated        with ci-apply: the apply waits for approval in the
+#                `tofu-apply-gated` Environment; without it, `tofu-apply`.
+#
 # State: one R2 bucket, one key per stack. The endpoint and credentials are NOT
 # here: they come from Doppler (R2_STATE_READWRITE) as AWS_ENDPOINT_URL_S3,
 # AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY, set by task tf:*.

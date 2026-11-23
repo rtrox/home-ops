@@ -1,0 +1,119 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+name: terraform-drift
+
+# A nightly plan of every stack that isn't tagged `laptop-only`, with the
+# read-only `ci` credentials (the same as terraform-plan) and -lock=false.
+# Any diff, or any stack that fails to plan, fails the job and pings the
+# healthchecks.io check's /fail endpoint; a clean run pings it. A run that
+# never happens (runner down) is caught by the check's own schedule.
+#
+# Doppler tf-at-home/ci must also hold HEALTHCHECKS_TF_DRIFT_PING_URL, the
+# check's ping URL. Stacks with ci-plan-exclude.txt are planned partially, as
+# in PRs, so drift in an excluded resource is not seen here.
+#
+# Like the other workflows, nothing prints a plan: the job summary holds only
+# resource headers and counts. Runs at 11:30 UTC, 03:30 Pacific (PST; 04:30
+# PDT), after the 04:00 UTC state copy and the Sunday doppler export.
+on:
+  schedule:
+    - cron: "30 11 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: terraform-drift
+  cancel-in-progress: false
+
+jobs:
+  drift:
+    name: Plan every stack
+    if: ${{ github.repository == 'rtrox/home-ops' }}
+    runs-on: [self-hosted, home-ops, tofu]
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install tools
+        uses: jdx/mise-action@924e7c586e33d7d4bae9c14e26c5d22e2beb6e78 # v5.3.0
+        with:
+          cache: false
+          install_args: aqua:astral-sh/uv aqua:opentofu/opentofu aqua:terramate-io/terramate aqua:jqlang/jq
+
+      - name: Read credentials
+        run: |
+          set -euo pipefail
+          source .github/scripts/tf-ci.sh
+          tf_read_credentials "$CI_DOPPLER_TF_READ" R2_STATE_READONLY ci "$CI_DOPPLER_HOSTS_READ"
+
+      - name: Plan every stack
+        run: |
+          set -uo pipefail
+          root=$PWD
+          source "$root/.github/scripts/tf-ci.sh"
+          out=$RUNNER_TEMP/plan
+          mkdir -p "$out"
+          summary=$GITHUB_STEP_SUMMARY
+          bad=0
+
+          cd terraform
+          stacks=$(terramate list --no-tags laptop-only)
+          echo "Stacks:"
+          echo "${stacks:-none}"
+          {
+            echo "### Terraform drift"
+            echo
+            echo "Resource headers and counts only; full plans are not printed."
+          } >> "$summary"
+
+          for stack in $stacks; do
+            echo "::group::$stack"
+            cd "$root/terraform/$stack"
+            if ! tofu init -input=false -lockfile=readonly -no-color >"$out/init.log" 2>&1; then
+              printf '\n#### `%s`\n\n**Failed at tofu init.** See the job log (the output is not printed).\n' "$stack" >> "$summary"
+              bad=1; echo "::endgroup::"; continue
+            fi
+            tf_excludes
+            tofu plan -lock=false -no-color -input=false -detailed-exitcode "${EXCLUDES[@]}" >"$out/plan.log" 2>&1
+            rc=$?
+            case $rc in
+              0) printf '\n#### `%s`\n\nNo drift.\n' "$stack" >> "$summary" ;;
+              2) tf_summary_block "$stack" "$out/plan.log" >> "$summary"
+                 printf '\n**DRIFT in `%s`.**\n' "$stack" >> "$summary"
+                 echo "::error::drift in $stack"
+                 bad=1 ;;
+              *) printf '\n#### `%s`\n\n**Failed at tofu plan.** See the job log (the output is not printed).\n' "$stack" >> "$summary"
+                 echo "::error::plan failed in $stack"
+                 bad=1 ;;
+            esac
+            rm -f "$out/plan.log" "$out/init.log"
+            echo "::endgroup::"
+          done
+
+          exit $bad
+
+      # Always ping, so a failure that happens before the plan (credentials,
+      # checkout) is reported too. The ping URL is read again here for that
+      # reason and never printed.
+      - name: Ping healthchecks
+        if: ${{ always() && !cancelled() }}
+        env:
+          JOB_STATUS: ${{ job.status }}
+        run: |
+          set -uo pipefail
+          source .github/scripts/tf-ci.sh
+          url=$(tf_doppler_secrets "$CI_DOPPLER_TF_READ" | tf_get '.HEALTHCHECKS_TF_DRIFT_PING_URL') \
+            || { echo "::error::could not read the healthchecks ping URL from Doppler"; exit 1; }
+          echo "::add-mask::$url"
+          if [ "$JOB_STATUS" = "success" ]; then suffix=""; else suffix="/fail"; fi
+          # The URL goes through curl's config on stdin, not argv.
+          if ! curl -fsS -m 15 --retry 3 -o /dev/null -K - <<<"url = \"${url}${suffix}\"" 2>/dev/null; then
+            echo "::error::healthchecks ping failed"
+            exit 1
+          fi
+          echo "Pinged healthchecks (${suffix:-success})."
