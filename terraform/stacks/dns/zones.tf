@@ -27,7 +27,6 @@ locals {
 
   # Zone -> its own WAF rules, which come before the defaults.
   zones = {
-    "lyb.app"             = { waf_rules = [] }
     "missprissquilts.com" = { waf_rules = [] }
     "rmt.dev"             = { waf_rules = [] }
     "rtrox.co"            = { waf_rules = [] }
