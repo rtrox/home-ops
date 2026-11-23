@@ -2,19 +2,19 @@
 # read through `provider_keys` like the dns stack's (dns_token.tf).
 #
 # What that stack manages: mini.rtrox.io's A records (DNS Write, and Zone Read
-# for the zone lookup), mini's Cloudflare Tunnel (an account-level permission:
-# Cloudflare can't limit a token to one tunnel) and the external-dns and
-# cert-manager tokens (API Tokens Write, user-level).
+# for the zone lookup) and mini's Cloudflare Tunnel (an account-level
+# permission: Cloudflare can't limit a token to one tunnel). No API Tokens
+# permission: the tokens mini's controllers use are made here
+# (mini_cluster_tokens.tf), so this one can't mint others.
 #
-# API Tokens Write lets a token create tokens with any permission the owner's
-# user has, so this token can reach as far as CLOUDFLARE_TERRAFORM_TOKEN. Keep
-# that in mind before clusters/mini is applied from CI (`ci-apply`): its
-# ci-apply copy would hand that reach to every apply job.
+# Only in tf-at-home/prd for now: the stack is ci-skip and applied from the
+# laptop. Its ci-apply copy (and a read-only one in ci) come with the PR that
+# tags it ci-apply. Every ci-apply job downloads that whole config, so a key
+# goes there only once a stack needs it.
 locals {
   mini_token_permissions = {
     zone    = ["Zone Read", "DNS Write"]
     account = ["Cloudflare Tunnel Write"]
-    user    = ["API Tokens Write"]
   }
 }
 
@@ -47,12 +47,6 @@ resource "cloudflare_api_token" "mini" {
       permission_groups = [for name in local.mini_token_permissions.account : { id = local.permission_group_ids[name] }]
       resources         = jsonencode({ "com.cloudflare.api.account.${local.account_id}" = "*" })
     },
-    {
-      effect            = "allow"
-      permission_groups = [for name in local.mini_token_permissions.user : { id = local.permission_group_ids[name] }]
-      # A string, not jsonencode(): a sensitive value can't be a map key.
-      resources = "{\"com.cloudflare.api.user.${local.cloudflare_user_id}\":\"*\"}"
-    },
   ]
 
   lifecycle {
@@ -64,11 +58,6 @@ resource "cloudflare_api_token" "mini" {
     precondition {
       condition     = alltrue([for name in flatten(values(local.mini_token_permissions)) : local.permission_group_ids[name] != null])
       error_message = "A Cloudflare permission group was not found by name; Cloudflare may have renamed it."
-    }
-    precondition {
-      # Never issue a user-scoped policy without a user in it.
-      condition     = can(regex("^[0-9a-f]{32}$", local.cloudflare_user_id))
-      error_message = "tf-at-home/prd CLOUDFLARE_USER_ID is missing or isn't a 32-character hex Cloudflare user ID (MIGRATION.md step 0)."
     }
     precondition {
       condition     = can(regex("^[0-9a-f]{32}$", data.cloudflare_zone.rtrox_io.zone_id))
@@ -84,29 +73,10 @@ check "mini_token_expiry" {
   }
 }
 
-# The clusters/mini stack reads this key (provider_keys in its stack.tm.hcl):
-# the laptop from prd; ci-apply is there for when the stack opts in.
+# The clusters/mini stack reads this key (provider_keys in its stack.tm.hcl).
 resource "doppler_secret" "mini_token_prd" {
   project = "tf-at-home"
   config  = "prd"
   name    = "CLOUDFLARE_MINI_TOKEN"
   value   = cloudflare_api_token.mini.value
-}
-
-resource "doppler_secret" "mini_token_ci_apply" {
-  project = "tf-at-home"
-  config  = doppler_config.this["tf-at-home/ci-apply"].name
-  name    = "CLOUDFLARE_MINI_TOKEN"
-  value   = cloudflare_api_token.mini.value
-}
-
-# CI's plans and drift runs read the same key name from ci, holding the
-# read-only token. It can't plan clusters/mini yet: it has no tunnel
-# permission, and ci has no B2 key or k8s-at-home/min token (see
-# terraform/stacks/clusters/mini/MIGRATION.md, "CI").
-resource "doppler_secret" "mini_token_ci" {
-  project = "tf-at-home"
-  config  = "ci"
-  name    = "CLOUDFLARE_MINI_TOKEN"
-  value   = cloudflare_api_token.ci_readonly.value
 }

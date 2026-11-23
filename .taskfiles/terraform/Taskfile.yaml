@@ -81,7 +81,8 @@ tasks:
         value=$(doppler secrets get -p "$project" -c prd --plain "$key") || { echo "could not read $key from $project/prd" >&2; exit 1; }
         export "$name=$value"
       done
-      mise exec -- tofu {{.CMD}} {{if ne .NO_CLI_ARGS "true"}}{{.CLI_ARGS}}{{end}}
+      {{if .PIPE}}set -o pipefail{{end}}
+      mise exec -- tofu {{.CMD}} {{if ne .NO_CLI_ARGS "true"}}{{.CLI_ARGS}}{{end}}{{if .PIPE}} | {{.PIPE}}{{end}}
 
   generate:
     desc: Regenerate Terramate's generated files (_backend.tf, ...) in every stack
@@ -124,3 +125,26 @@ tasks:
         vars: { STACK: "{{.STACK}}", CMD: init -input=false, NO_CLI_ARGS: "true" }
       - task: _tofu
         vars: { STACK: "{{.STACK}}", CMD: apply }
+
+  check-plan:
+    desc: >-
+      Check a saved plan against the changes expected of it
+      (STACK=clusters/mini PLAN=<plan file> EXPECT=<json, relative to the stack>).
+      Prints addresses and kinds only; fails on anything unexpected.
+    requires:
+      vars: [STACK, PLAN, EXPECT]
+    preconditions:
+      - sh: test -f "{{.PLAN}}"
+        msg: "no plan file at {{.PLAN}}"
+      - sh: test -f "{{.STACKS_DIR}}/{{.STACK}}/{{.EXPECT}}"
+        msg: "no expectation file {{.EXPECT}} in terraform/stacks/{{.STACK}}"
+    cmds:
+      # `tofu show -json` of a plan holds every sensitive value in plain text,
+      # so it only ever goes straight into the checker (terraform/scripts/
+      # plan-check.jq), which prints addresses and kinds.
+      - task: _tofu
+        vars:
+          STACK: "{{.STACK}}"
+          CMD: show -json "{{.PLAN}}"
+          NO_CLI_ARGS: "true"
+          PIPE: jq -r --slurpfile expect "{{.EXPECT}}" -f "{{.TERRAFORM_DIR}}/scripts/plan-check.jq"

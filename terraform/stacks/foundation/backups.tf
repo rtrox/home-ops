@@ -13,8 +13,11 @@
 
 # Read-only source credentials for the nightly copy to B2, its own token so it
 # can be revoked alone. R2 S3 credentials derive from an API token (r2_state.tf).
-# No expiry, like the state bucket's other tokens: an expired one would only
-# show as failed nightly runs.
+# No expiry and no scheduled reissue, like the state bucket's other tokens and
+# mini's controller tokens (mini_cluster_tokens.tf): a reissue or an expiry
+# would leave the CronJob on a dead token until its ExternalSecret refreshes,
+# and nothing here applies on a schedule. It reads only encrypted state.
+# Rotate it by hand (`-replace`), rarely.
 locals {
   r2_state_copy_permissions = ["Workers R2 Storage Bucket Item Read"]
 }

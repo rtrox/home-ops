@@ -647,62 +647,85 @@ The Environment secrets are written last, once the service token exists.
   Environments from the code without a `removed` block (`destroy = false`):
   they're imported, and the plain removal would delete them.
 
-# P2-3: mini's backups and the clusters/mini token
+# P2-3: mini's backups, its controller tokens and the clusters/mini token
 
-Part of the clusters/mini move: the sequence, the backups, the consumer checks
+Part of the clusters/mini move. The sequence, the backups, the consumer checks
 and the rollback are in
-[clusters/mini's MIGRATION.md](../clusters/mini/MIGRATION.md) (added by the
-clusters/mini PR; its steps 1, 2 and 4 run this stack). This section is what this stack's plans must show.
-Assumes `task tf:plan STACK=foundation` says `No changes.` beforehand.
+[clusters/mini's MIGRATION.md](../clusters/mini/MIGRATION.md), added by the
+clusters/mini PR; its steps 2, 3 and 5 run this stack. This section lists what
+this stack's plans must show. It assumes `task tf:plan STACK=foundation` says
+`No changes.` beforehand.
 
-The PR adds `backups.tf`, `mini_token.tf`, the `backblaze` provider (generated:
-`_provider_env.json` now also exports `B2_APPLICATION_KEY_ID` and
-`B2_APPLICATION_KEY` from `tf-at-home/prd`'s `BACKBLAZE_APPLICATION_KEY_ID`
-and `BACKBLAZE_APPLICATION_KEY`, the `terraform-backblaze` key terraform-record
-uses) and the P2-3 imports in `imports.tf`.
+The PR adds:
+- `backups.tf`, `mini_cluster_tokens.tf` and `mini_token.tf`
+- the P2-3 imports in `imports.tf`
+- the `backblaze` provider. It's generated, so `_provider_env.json` now also
+  exports `B2_APPLICATION_KEY_ID` and `B2_APPLICATION_KEY` from `tf-at-home/prd`'s
+  `BACKBLAZE_APPLICATION_KEY_ID` and `BACKBLAZE_APPLICATION_KEY`, the
+  `terraform-backblaze` key that terraform-record uses.
+- `task tf:check-plan` with `terraform/scripts/plan-check.jq`, and this stack's
+  two expectation files, `p2-3-plan-token.json` and `p2-3-plan.json`.
 
 | Object | Method |
 | --- | --- |
-| Cloudflare token `home-ops-clusters-mini-<date>` (Zone Read and DNS Write on rtrox.io, Cloudflare Tunnel Write on the account, API Tokens Write on the owner's user), 90-day reissue, 180-day expiry, with an expiry check | create, with `time_rotating.mini_token` |
-| `tf-at-home` `CLOUDFLARE_MINI_TOKEN` in `prd` and `ci-apply` (the token) and `ci` (the read-only CI token, as for `CLOUDFLARE_DNS_TOKEN`) | create |
-| R2 token `tofu-state-copy-mini-readonly` (Item Read on `tofu-state`) | create; terraform-record's `tofu-state-copy` stays until its step 8 |
+| Cloudflare token `home-ops-clusters-mini-<date>`: Zone Read and DNS Write on rtrox.io, Cloudflare Tunnel Write on the account. 90-day reissue, 180-day expiry, with an expiry check | create, with `time_rotating.mini_token` |
+| `tf-at-home/prd` `CLOUDFLARE_MINI_TOKEN` (`prd` only; `ci-apply` and `ci` come with the ci-apply PR) | create |
+| Cloudflare tokens `k8s-mini-external-dns` and `k8s-mini-cert-manager`: Zone Read and DNS Write on rtrox.io. No expiry, no scheduled reissue | create. terraform-record's old ones stay until its step 4 PR |
+| `k8s-at-home/min` `EXTERNALDNS_CLOUDFLARE_TOKEN`, `CERTMANAGER_CLOUDFLARE_TOKEN` | import, updated to the new tokens |
+| R2 token `tofu-state-copy-mini-readonly` (Item Read on `tofu-state`). No expiry, like the other two (noted in `backups.tf`) | create. terraform-record's `tofu-state-copy` stays until its step 4 PR |
 | `k8s-at-home/min` `TOFU_STATE_R2_SOURCE` | import, updated to the new token |
-| Bucket `rtrox-tofu-state-history` (Object Lock governance 90 days; hidden versions removed after 90) | import, unchanged (`prevent_destroy`) |
-| Its key `k8s-mini-rtrox-io-tofu-state-copy` (list and write, no read or delete) | create; the old one stays until step 8 |
+| Bucket `rtrox-tofu-state-history`: Object Lock governance 90 days, hidden versions removed after 90 | import, unchanged (`prevent_destroy`) |
+| Its key `k8s-mini-rtrox-io-tofu-state-copy`: list and write, no read or delete | create. The old one stays until step 4 |
 | `k8s-at-home/min` `TOFU_STATE_HISTORY_BACKBLAZE_BUCKET` | import, updated to the new key |
-| Bucket `k8s-mini-rtrox-io-secrets-backup` (Object Lock governance 90 days; `doppler/` hidden after 365 days, removed 30 later) | import, unchanged (`prevent_destroy`) |
-| Its key `k8s-mini-rtrox-io-secrets-backup` (list and write, no read) | create; the old one stays until step 8 |
+| Bucket `k8s-mini-rtrox-io-secrets-backup`: Object Lock governance 90 days; `doppler/` hidden after 365 days, removed 30 later | import, unchanged (`prevent_destroy`) |
+| Its key `k8s-mini-rtrox-io-secrets-backup`: list and write, no read | create. The old one stays until step 4 |
 | `k8s-at-home/min` `SECRETS_BACKUP_BACKBLAZE_BUCKET` | import, updated to the new key |
 
 The Doppler writes go through the default provider (your CLI token), like
-every other write here; `k8s-at-home/min` needs no write token in this stack.
+every other write in this stack.
 
-## Step 1: the mini token, alone
+**Never apply this stack untargeted between clusters/mini's steps 2 and 5.**
+Until terraform-record has forgotten them (its step 4), the imports here would
+adopt secrets and buckets that terraform-record still manages. Plans are safe
+at any time.
+
+## The token alone (clusters/mini step 2)
+
+Plan only the token, check the plan, stop, then apply that plan file:
 
 ```text
   # cloudflare_api_token.mini will be created
-  # doppler_secret.mini_token_ci will be created
-  # doppler_secret.mini_token_ci_apply will be created
   # doppler_secret.mini_token_prd will be created
   # time_rotating.mini_token will be created
-Plan: 0 to import, 5 to add, 0 to change, 0 to destroy.
+Plan: 3 to add, 0 to change, 0 to destroy.
 ```
 
-## Steps 2 and 4: everything else
+`task tf:check-plan ... EXPECT=p2-3-plan-token.json` prints `PASS: 3 changes`.
 
-`Plan: 5 to import, 3 to add, 3 to change, 0 to destroy.`
+## Everything else (clusters/mini steps 3 and 5)
 
-- **5 imports**: `module.tofu_state_history.b2_bucket.this` and
-  `module.mini_secrets_backup.b2_bucket.this`, each `will be imported` and
-  nothing else; `doppler_secret.tofu_state_r2_source`,
-  `.tofu_state_history_bucket` and `.mini_secrets_backup_bucket`.
-- **3 creates**: `cloudflare_api_token.r2_state_copy`,
-  `module.tofu_state_history.b2_application_key.this["k8s-mini-rtrox-io-tofu-state-copy"]`
-  and `module.mini_secrets_backup.b2_application_key.this["k8s-mini-rtrox-io-secrets-backup"]`.
-- **3 updates**: the three imported `doppler_secret`s, `value` only.
+```text
+Plan: 7 to import, 5 to add, 5 to change, 0 to destroy.
+```
 
-A bucket that shows an update or a replacement: the code differs from the
-live bucket; match `backups.tf` to the plan's current values (a reordering of
-`lifecycle_rules` alone: reorder them) and re-plan. Never apply a change to
-either bucket's file lock. `Cannot import non-existent remote object` or a
-`b2_bucket` lookup error: a bucket or secret name in `imports.tf` is wrong.
+- **7 imports**:
+  - `module.tofu_state_history.b2_bucket.this` and
+    `module.mini_secrets_backup.b2_bucket.this`. Each shows `will be imported`
+    and nothing else.
+  - five `doppler_secret`s: `tofu_state_r2_source`,
+    `tofu_state_history_bucket`, `mini_secrets_backup_bucket` and
+    `mini_cluster_token["k8s-mini-external-dns"]`, `["k8s-mini-cert-manager"]`.
+- **5 creates**:
+  - `cloudflare_api_token.r2_state_copy`
+  - `cloudflare_api_token.mini_cluster` ×2
+  - `module.tofu_state_history.b2_application_key.this["k8s-mini-rtrox-io-tofu-state-copy"]`
+  - `module.mini_secrets_backup.b2_application_key.this["k8s-mini-rtrox-io-secrets-backup"]`
+- **5 updates**: the five imported secrets, `value` only. Each new value comes
+  from a credential this apply creates, which `p2-3-plan.json` checks.
+
+If a bucket shows an update or a replacement, the code differs from the live
+bucket. Match `backups.tf` to the plan's current values and re-plan. If
+`lifecycle_rules` are only reordered, reorder them in the code to match. Never
+apply a change to either bucket's file lock. `Cannot import non-existent
+remote object`, or an error from the `b2_bucket` lookup, means a bucket or
+secret name in `imports.tf` is wrong.

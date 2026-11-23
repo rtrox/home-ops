@@ -1,0 +1,27 @@
+{
+  "changes": {
+    "module.tofu_state_history.b2_bucket.this": "import",
+    "module.mini_secrets_backup.b2_bucket.this": "import",
+    "doppler_secret.tofu_state_r2_source": "import+update",
+    "doppler_secret.tofu_state_history_bucket": "import+update",
+    "doppler_secret.mini_secrets_backup_bucket": "import+update",
+    "doppler_secret.mini_cluster_token[\"k8s-mini-external-dns\"]": "import+update",
+    "doppler_secret.mini_cluster_token[\"k8s-mini-cert-manager\"]": "import+update",
+    "cloudflare_api_token.r2_state_copy": "create",
+    "module.tofu_state_history.b2_application_key.this[\"k8s-mini-rtrox-io-tofu-state-copy\"]": "create",
+    "module.mini_secrets_backup.b2_application_key.this[\"k8s-mini-rtrox-io-secrets-backup\"]": "create",
+    "cloudflare_api_token.mini_cluster[\"k8s-mini-external-dns\"]": "create",
+    "cloudflare_api_token.mini_cluster[\"k8s-mini-cert-manager\"]": "create"
+  },
+  "value_from": {
+    "doppler_secret.tofu_state_r2_source": { "attribute": "value", "references": ["cloudflare_api_token.r2_state_copy"] },
+    "doppler_secret.mini_cluster_token": { "attribute": "value", "references": ["cloudflare_api_token.mini_cluster"] }
+  },
+  "value_unknown": {
+    "doppler_secret.tofu_state_r2_source": "value",
+    "doppler_secret.tofu_state_history_bucket": "value",
+    "doppler_secret.mini_secrets_backup_bucket": "value",
+    "doppler_secret.mini_cluster_token[\"k8s-mini-external-dns\"]": "value",
+    "doppler_secret.mini_cluster_token[\"k8s-mini-cert-manager\"]": "value"
+  }
+}
