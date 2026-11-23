@@ -35,11 +35,12 @@ name: terraform-apply
 #                             (ci has R2_STATE_READONLY with the same shape)
 #   TOFU_STATE_PASSPHRASE     same name as in tf-at-home/ci
 #   DOPPLER_HOSTS_TOKEN       optional: token for hosts-at-home/ci-apply, for
-#                             stacks using the proxmox provider (it reads
-#                             hosts-at-home with var.doppler_config too)
+#                             stacks using the proxmox provider (its API token
+#                             is read from there)
 #   CLOUDFLARE_TERRAFORM_TOKEN, DOPPLER_*_WRITE_TOKEN, ...
 #                             per-provider tokens, added as stacks opt in; the
-#                             names match globals in terraform/terramate.tm.hcl
+#                             names match _provider_env.json, generated from
+#                             globals in terraform/terramate.tm.hcl
 #
 # Every push plans EVERY ci-apply stack, so a skipped run (GitHub keeps only
 # the newest pending run per concurrency group), a failed plan or a rejected
@@ -89,7 +90,7 @@ jobs:
         run: |
           set -euo pipefail
           source .github/scripts/tf-ci.sh
-          tf_read_credentials "$CI_DOPPLER_TF_READ" R2_STATE_READONLY ci "$CI_DOPPLER_HOSTS_READ"
+          tf_read_credentials "$CI_DOPPLER_TF_READ" R2_STATE_READONLY "$CI_DOPPLER_HOSTS_READ"
 
       - name: Plan changed stacks
         id: plan
@@ -139,6 +140,7 @@ jobs:
               fail_step "$stack" "refused: ci-plan-exclude.txt makes the plan partial, so CI will not apply this stack"
               echo "::endgroup::"; continue
             fi
+            if ! tf_export_provider_env; then fail_step "$stack" "provider credentials"; echo "::endgroup::"; continue; fi
             if ! tofu init -input=false -lockfile=readonly -no-color >"$out/init.log" 2>&1; then fail_step "$stack" "tofu init"; echo "::endgroup::"; continue; fi
             tofu plan -lock=false -no-color -input=false -detailed-exitcode >"$out/plan.log" 2>&1
             rc=$?
@@ -195,7 +197,7 @@ jobs:
         run: |
           set -euo pipefail
           source .github/scripts/tf-ci.sh
-          tf_read_credentials "$CI_DOPPLER_TF_APPLY" R2_STATE_READWRITE ci-apply -DOPPLER_HOSTS_TOKEN
+          tf_read_credentials "$CI_DOPPLER_TF_APPLY" R2_STATE_READWRITE -DOPPLER_HOSTS_TOKEN
 
       - name: Re-plan, compare and apply
         env:
@@ -218,6 +220,7 @@ jobs:
           }
 
           cd "$root/terraform/$STACK"
+          tf_export_provider_env || stop "could not read the provider credentials"
           tofu init -input=false -lockfile=readonly -no-color >"$out/init.log" 2>&1 || stop "tofu init failed (output is not printed)"
 
           # Plan to a local file with the read-write credentials. The plan file

@@ -5,7 +5,11 @@ version: "3"
 # OpenTofu stacks under terraform/stacks/, orchestrated by Terramate. State
 # lives in the R2 bucket tofu-state (see terraform/terramate.tm.hcl). The R2
 # credentials and the state passphrase come from Doppler tf-at-home/prd, read
-# per run into the environment and never written to disk.
+# per run into the environment and never written to disk. So do the provider
+# credentials: each stack's generated _provider_env.json lists the environment
+# variables it needs and the Doppler key each comes from (tf-at-home/prd or
+# hosts-at-home/prd). Providers read them from the environment; no
+# `data "doppler_secrets"` copies a whole config into state.
 vars:
   TERRAFORM_DIR: "{{.ROOT_DIR}}/terraform"
   STACKS_DIR: "{{.TERRAFORM_DIR}}/stacks"
@@ -27,6 +31,8 @@ tasks:
       # forgotten one would silently change every later run.
       - sh: test -z "$(ls *_override.tf 2>/dev/null)" || test "{{.ALLOW_OVERRIDE}}" = true
         msg: "{{.STACK}} has an *_override.tf file; remove it (or pass ALLOW_OVERRIDE=true during a migration)"
+      - sh: test -f _provider_env.json
+        msg: "{{.STACK}} has no _provider_env.json (run: task tf:generate)"
       - sh: which jq doppler
         msg: "jq and doppler must be on PATH"
       - sh: test -n "$(doppler configure get token --plain)"
@@ -40,13 +46,21 @@ tasks:
         sh: "{{.DOPPLER_GET}} R2_STATE_READWRITE | jq -er .endpoint"
       TF_VAR_state_passphrase:
         sh: "{{.DOPPLER_GET}} TOFU_STATE_PASSPHRASE"
-      # The generated provider "doppler" {} reads DOPPLER_TOKEN. On the laptop
-      # that's the owner's CLI token, used in-process only (nothing is uploaded
-      # anywhere, unlike Terraform Cloud's remote runs). CI gets a read-only
-      # service token instead.
+      # The generated provider "doppler" {} (stacks that write secrets) reads
+      # DOPPLER_TOKEN. On the laptop that's the owner's CLI token, used
+      # in-process only (nothing is uploaded anywhere, unlike Terraform Cloud's
+      # remote runs). CI gets a scoped service token instead.
       DOPPLER_TOKEN:
         sh: doppler configure get token --plain
-    cmd: mise exec -- tofu {{.CMD}} {{if ne .NO_CLI_ARGS "true"}}{{.CLI_ARGS}}{{end}}
+    cmd: |
+      # Export this stack's provider credentials (name:project:key rows from
+      # _provider_env.json). Values stay in this process's environment.
+      for row in $(jq -er '.[] | "\(.env):\(.project):\(.key)"' _provider_env.json); do
+        name=${row%%:*}; rest=${row#*:}; project=${rest%%:*}; key=${rest#*:}
+        value=$(doppler secrets get -p "$project" -c prd --plain "$key") || { echo "could not read $key from $project/prd" >&2; exit 1; }
+        export "$name=$value"
+      done
+      mise exec -- tofu {{.CMD}} {{if ne .NO_CLI_ARGS "true"}}{{.CLI_ARGS}}{{end}}
 
   generate:
     desc: Regenerate Terramate's generated files (_backend.tf, ...) in every stack

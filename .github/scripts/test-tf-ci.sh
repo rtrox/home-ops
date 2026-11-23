@@ -63,4 +63,29 @@ if [ "$h1" != "$empty" ]; then check "hash of a real plan is not the empty hash"
 if [ "$h1" != "$(tf_summary_hash "$tmp/d.log")" ]; then check "hash covers headers" ok; else check "hash covers headers" no; fi
 if [ "$h1" != "$(tf_summary_hash "$tmp/e.log")" ]; then check "hash covers totals" ok; else check "hash covers totals" no; fi
 
+# tf_export_provider_env: only the listed keys, per project token, masked.
+tf_doppler_secrets() { # stub: the config each token is scoped to
+  case $1 in
+    tf-tok) echo '{"A_KEY":"aval","OTHER":"nope"}' ;;
+    hosts-tok) echo '{"H_KEY":"hval"}' ;;
+    *) return 1 ;;
+  esac
+}
+mkdir "$tmp/stack"
+printf '[{"env":"A_ENV","project":"tf-at-home","key":"A_KEY"},{"env":"H_ENV","project":"hosts-at-home","key":"H_KEY"}]\n' >"$tmp/stack/_provider_env.json"
+(
+  cd "$tmp/stack" || exit 1
+  export DOPPLER_TOKEN=tf-tok TF_CI_HOSTS_TOKEN=hosts-tok
+  tf_export_provider_env >"$tmp/mask.out"
+  [ "$A_ENV" = aval ] && [ "$H_ENV" = hval ] && [ -z "${OTHER:-}" ] || exit 1
+  grep -q '::add-mask::aval' "$tmp/mask.out" && grep -q '::add-mask::hval' "$tmp/mask.out" || exit 2
+  printf '[]\n' >_provider_env.json
+  tf_export_provider_env >/dev/null
+  [ -z "${A_ENV:-}" ] || exit 3
+  printf '[{"env":"X","project":"tf-at-home","key":"MISSING"}]\n' >_provider_env.json
+  ! tf_export_provider_env >/dev/null || exit 4
+)
+rc=$?
+if [ $rc -eq 0 ]; then check "provider env: exports, masks, unsets, fails closed" ok; else check "provider env (rc=$rc)" no; fi
+
 exit "$fails"

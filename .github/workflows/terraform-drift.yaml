@@ -49,7 +49,7 @@ jobs:
         run: |
           set -euo pipefail
           source .github/scripts/tf-ci.sh
-          tf_read_credentials "$CI_DOPPLER_TF_READ" R2_STATE_READONLY ci "$CI_DOPPLER_HOSTS_READ"
+          tf_read_credentials "$CI_DOPPLER_TF_READ" R2_STATE_READONLY "$CI_DOPPLER_HOSTS_READ"
 
       - name: Plan every stack
         run: |
@@ -79,6 +79,10 @@ jobs:
           for stack in "${stacks[@]}"; do
             echo "::group::$stack"
             cd "$root/terraform/$stack"
+            if ! tf_export_provider_env; then
+              printf '\n#### `%s`\n\n**Failed reading the provider credentials.** See the job log.\n' "$stack" >> "$summary"
+              bad=1; echo "::endgroup::"; continue
+            fi
             if ! tofu init -input=false -lockfile=readonly -no-color >"$out/init.log" 2>&1; then
               printf '\n#### `%s`\n\n**Failed at tofu init.** See the job log (the output is not printed).\n' "$stack" >> "$summary"
               bad=1; echo "::endgroup::"; continue
