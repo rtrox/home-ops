@@ -362,17 +362,15 @@ done
 doppler configs tokens revoke <slug> -p <project> -c <config>
 ```
 
-**"bitty tofu controller":** no config's service tokens had that name on
-2026-11-22 (it may have gone with the deleted `bty` config). If it still
-exists, it's a personal token: check the dashboard's account **Tokens** page
-and revoke it there, after confirming the TFC variable set `doppler-read`
-holds `tfc-remote-runs`, not it.
+**"bitty tofu controller":** this token no longer exists anywhere. The owner
+checked every config's service tokens and the CLI tokens on 2026-11-22; it was
+presumably deleted with the bitty environment, so there is nothing to revoke.
 
 Re-run step 4.4: all four terraform-record stacks still `No changes.` proves
 nothing used the revoked tokens.
 
 **Old Cloudflare tokens, via terraform-record** (procedure step 4): a
-follow-up terraform-record PR deletes `cloudflare_api_token.r2_state`,
+follow-up terraform-record PR (rtrox/terraform-record#63) deletes `cloudflare_api_token.r2_state`,
 `cloudflare_api_token.ci_readonly`, `time_rotating.ci_readonly_token` and the
 now-unused `doppler.tf_write` / `doppler.tf_ci_write` aliases. Its plan is the
 retirement and nothing else:
