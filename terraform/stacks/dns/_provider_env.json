@@ -1,1 +1,1 @@
-[{"env":"CLOUDFLARE_API_TOKEN","key":"CLOUDFLARE_TERRAFORM_TOKEN","project":"tf-at-home"}]
+[{"env":"CLOUDFLARE_API_TOKEN","key":"CLOUDFLARE_DNS_TOKEN","project":"tf-at-home"}]
