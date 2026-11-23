@@ -1,6 +1,8 @@
 # Zone-level records: mail (MX, SPF, DKIM, DMARC) and verification. A host's
 # or cluster's own records (A records, tunnel CNAMEs) live in that host's or
 # cluster's stack instead, and external-dns manages the HTTPRoute records.
+# The exception is host_records.tf: five host records parked here until the
+# network stack exists (phase 6).
 #
 # Every record here is DNS-only (not proxied), with automatic TTL. Names are
 # fully qualified. Keys are "<zone>/<name>"; priority is for MX only.
