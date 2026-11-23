@@ -1,12 +1,20 @@
 stack {
   name        = "dns"
-  description = "Cloudflare zones, their WAF rulesets and zone-level records (mail, verification)"
+  description = "Cloudflare zones, their WAF rulesets, zone-level records (mail, verification) and parked host records"
   id          = "b7d34ba7-742f-4a0a-89e1-84f3eb05385b"
 
   # Applied by CI on merge (terraform-apply.yaml). A plan with a destroy,
   # replace or forget waits for the owner's approval in tofu-apply-gated;
   # anything else applies straight away.
   tags = ["ci-apply"]
+
+  # host_records.tf reads it; an inventory change must re-plan the stack.
+  # Changing the address or dns_name of ns1, ns2, avahi or unifi in
+  # inventory/hosts.yaml updates their public A record on merge, ungated. A
+  # removed or renamed host fails a precondition instead.
+  watch = [
+    "/inventory/hosts.yaml",
+  ]
 }
 
 # What this stack needs generated (see terraform/terramate.tm.hcl).
