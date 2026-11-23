@@ -88,8 +88,9 @@ jobs:
               bad=1; echo "::endgroup::"; continue
             fi
             tf_excludes
-            tofu plan -lock=false -no-color -input=false -detailed-exitcode "${EXCLUDES[@]}" >"$out/plan.log" 2>&1
-            rc=$?
+            # The step shell is `bash -e`: a bare plan exiting 2 (changes) would end the step.
+            rc=0
+            tofu plan -lock=false -no-color -input=false -detailed-exitcode "${EXCLUDES[@]}" >"$out/plan.log" 2>&1 || rc=$?
             case $rc in
               0) if [ ${#EXCLUDES[@]} -gt 0 ]; then
                    printf '\n#### `%s`\n\nNo drift (partial: %d excluded).\n' "$stack" "${#EXCLUDES[@]}" >> "$summary"
