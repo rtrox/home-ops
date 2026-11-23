@@ -80,12 +80,12 @@ jobs:
           cd terraform
           # laptop-only stacks need the owner's personal Doppler token, so CI
           # never plans them; the comment says to do it by hand.
-          stacks=$(terramate list --changed --no-tags laptop-only --git-change-base "$BASE_REF")
-          laptop=$(terramate list --changed --tags laptop-only --git-change-base "$BASE_REF")
+          tf_list stacks --changed --no-tags laptop-only --git-change-base "$BASE_REF" || exit 1
+          tf_list laptop --changed --tags laptop-only --git-change-base "$BASE_REF" || exit 1
           echo "Changed stacks:"
-          echo "${stacks:-none}"
+          printf "%s\n" "${stacks[@]:-none}"
           echo "Changed laptop-only stacks:"
-          echo "${laptop:-none}"
+          printf "%s\n" "${laptop[@]:-none}"
 
           {
             echo "### Terraform plan"
@@ -95,12 +95,12 @@ jobs:
 
           laptop_notes() {
             local s
-            for s in $laptop; do
-              printf '\n`%s` changed: plan and apply it from the laptop (`task tf:plan STACK=%s`).\n' "$s" "$(basename "$s")" >> "$summary"
+            for s in "${laptop[@]}"; do
+              printf '\n`%s` changed: plan and apply it from the laptop (`task tf:plan STACK=%s`).\n' "$s" "${s#stacks/}" >> "$summary"
             done
           }
 
-          if [ -z "$stacks" ]; then
+          if [ ${#stacks[@]} -eq 0 ]; then
             echo >> "$summary"
             echo "No CI-planned stacks changed." >> "$summary"
             laptop_notes
@@ -116,7 +116,7 @@ jobs:
             printf '\n#### `%s`\n\nPlan failed at step: **%s**. See the job log (the plan itself is not printed).\n' "$1" "$2" >> "$summary"
           }
 
-          for stack in $stacks; do
+          for stack in "${stacks[@]}"; do
             echo "::group::$stack"
             dir=$root/terraform/$stack
             cd "$dir"

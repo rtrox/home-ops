@@ -62,16 +62,21 @@ jobs:
           bad=0
 
           cd terraform
-          stacks=$(terramate list --no-tags laptop-only)
+          # A failed list must fail the job, not look like "no stacks".
+          tf_list stacks --no-tags laptop-only || exit 1
+          tf_list laptop --tags laptop-only || exit 1
           echo "Stacks:"
-          echo "${stacks:-none}"
+          printf '%s\n' "${stacks[@]:-none}"
           {
             echo "### Terraform drift"
             echo
             echo "Resource headers and counts only; full plans are not printed."
+            for s in "${laptop[@]}"; do
+              printf '\nSkipped `%s` (laptop-only): check it from the laptop (`task tf:plan STACK=%s`).\n' "$s" "${s#stacks/}"
+            done
           } >> "$summary"
 
-          for stack in $stacks; do
+          for stack in "${stacks[@]}"; do
             echo "::group::$stack"
             cd "$root/terraform/$stack"
             if ! tofu init -input=false -lockfile=readonly -no-color >"$out/init.log" 2>&1; then
@@ -82,8 +87,13 @@ jobs:
             tofu plan -lock=false -no-color -input=false -detailed-exitcode "${EXCLUDES[@]}" >"$out/plan.log" 2>&1
             rc=$?
             case $rc in
-              0) printf '\n#### `%s`\n\nNo drift.\n' "$stack" >> "$summary" ;;
-              2) tf_summary_block "$stack" "$out/plan.log" >> "$summary"
+              0) if [ ${#EXCLUDES[@]} -gt 0 ]; then
+                   printf '\n#### `%s`\n\nNo drift (partial: %d excluded).\n' "$stack" "${#EXCLUDES[@]}" >> "$summary"
+                 else
+                   printf '\n#### `%s`\n\nNo drift.\n' "$stack" >> "$summary"
+                 fi ;;
+              2) if [ -z "$(tf_summary_totals "$out/plan.log")" ]; then echo "::warning::$stack: drift but no summary line"; fi
+                 tf_summary_block "$stack" "$out/plan.log" >> "$summary"
                  printf '\n**DRIFT in `%s`.**\n' "$stack" >> "$summary"
                  echo "::error::drift in $stack"
                  bad=1 ;;

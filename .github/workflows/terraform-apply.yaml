@@ -41,9 +41,11 @@ name: terraform-apply
 #                             per-provider tokens, added as stacks opt in; the
 #                             names match globals in terraform/terramate.tm.hcl
 #
-# Limits: concurrent runs queue, but GitHub keeps only the newest pending run
-# per concurrency group, so two quick merges can skip the first one's stacks.
-# Re-run via workflow_dispatch with `all`, or the nightly drift check flags it.
+# Every push plans EVERY ci-apply stack, so a skipped run (GitHub keeps only
+# the newest pending run per concurrency group), a failed plan or a rejected
+# approval is retried by the next run or a manual workflow_dispatch. Only
+# stacks whose plan has changes are applied. If any plan fails, nothing is
+# applied (fail closed), and a failed list of gated stacks fails the job.
 on:
   push:
     branches: [main]
@@ -53,11 +55,6 @@ on:
       - ".github/workflows/terraform-apply.yaml"
       - ".github/scripts/tf-ci.sh"
   workflow_dispatch:
-    inputs:
-      all:
-        description: Plan and apply every ci-apply stack, not just changed ones
-        type: boolean
-        default: false
 
 permissions:
   contents: read
@@ -96,9 +93,6 @@ jobs:
 
       - name: Plan changed stacks
         id: plan
-        env:
-          BEFORE: ${{ github.event.before }}
-          ALL: ${{ inputs.all }}
         run: |
           set -uo pipefail
           root=$PWD
@@ -109,20 +103,17 @@ jobs:
           failed=false
           matrix='[]'
 
-          # Changed since the push's parent; a new branch or a manual run has
-          # no usable "before", so fall back to HEAD^ (squash merges).
-          base=$BEFORE
-          if [ -z "$base" ] || [[ "$base" =~ ^0+$ ]]; then base=HEAD^; fi
-
+          # Every ci-apply stack is planned on every push, not just the changed
+          # ones: a skipped run, a failed plan or a rejected approval is
+          # retried by the next push. Only stacks whose plan has changes (exit
+          # code 2) reach the matrix. --run-order gives the apply order.
           cd terraform
-          if [ "$ALL" = "true" ]; then
-            stacks=$(terramate list --tags ci-apply --no-tags laptop-only)
-          else
-            stacks=$(terramate list --changed --git-change-base "$base" --tags ci-apply --no-tags laptop-only)
-          fi
-          gated=$(terramate list --tags gated)
-          echo "Stacks to apply:"
-          echo "${stacks:-none}"
+          tf_list stacks --tags ci-apply --no-tags laptop-only || exit 1
+          # Fail closed: if this list fails the whole job fails, so a stack can
+          # never fall back to the ungated Environment by accident.
+          tf_list gated --tags gated || exit 1
+          echo "Stacks to plan:"
+          printf '%s\n' "${stacks[@]:-none}"
 
           {
             echo "### Terraform apply: plan"
@@ -130,8 +121,8 @@ jobs:
             echo "Commit \`${GITHUB_SHA::7}\`. Resource headers and counts only. Approve the apply jobs only if this is what you expect."
           } >> "$summary"
 
-          if [ -z "$stacks" ]; then
-            printf '\nNo ci-apply stacks changed.\n' >> "$summary"
+          if [ ${#stacks[@]} -eq 0 ]; then
+            printf '\nNo ci-apply stacks.\n' >> "$summary"
             echo "matrix=[]" >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -141,7 +132,7 @@ jobs:
             printf '\n#### `%s`\n\nFailed at step: **%s**. See the job log (the plan itself is not printed).\n' "$1" "$2" >> "$summary"
           }
 
-          for stack in $stacks; do
+          for stack in "${stacks[@]}"; do
             echo "::group::$stack"
             cd "$root/terraform/$stack"
             if [ -f ci-plan-exclude.txt ]; then
@@ -155,8 +146,11 @@ jobs:
             EXCLUDES=()
             tf_summary_block "$stack" "$out/plan.log" >> "$summary"
             if [ $rc -eq 2 ]; then
+              # A plan with changes must show a totals line, or the summary
+              # and its hash would be blind to what is being applied.
+              if [ -z "$(tf_summary_totals "$out/plan.log")" ]; then fail_step "$stack" "plan has changes but no summary line; refusing"; echo "::endgroup::"; continue; fi
               is_gated=false
-              if grep -qxF "$stack" <<<"$gated"; then is_gated=true; fi
+              for g in "${gated[@]}"; do if [ "$g" = "$stack" ]; then is_gated=true; fi; done
               matrix=$(jq -c --arg stack "$stack" --argjson gated "$is_gated" --arg hash "$(tf_summary_hash "$out/plan.log")" \
                 '. + [{stack: $stack, gated: $gated, hash: $hash}]' <<<"$matrix")
             fi
@@ -236,6 +230,9 @@ jobs:
             exit 0
           fi
 
+          if [ -z "$(tf_summary_totals "$out/plan.log")" ]; then
+            stop "The plan has changes but no summary line; refusing to apply blind."
+          fi
           if [ "$(tf_summary_hash "$out/plan.log")" != "$EXPECTED_HASH" ]; then
             stop "The plan changed since the plan job showed it. Not applying; re-run the workflow to see the new plan."
           fi

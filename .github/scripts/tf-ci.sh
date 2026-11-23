@@ -97,12 +97,26 @@ tf_excludes() {
 # public place; everything else in the plan is dropped.
 tf_summary_headers() {
   sed -E 's/\[[^]]*\]/[…]/g' "$1" \
-    | grep -oE '^  # [^ ]+ (will be|must be) (created|updated in-place|destroyed|replaced|read during apply)' || true
+    | grep -E '^  # [^ ]+ (will|must|has) ' || true
 }
 
-# tf_summary_totals LOG: the Plan:/No changes line.
+# tf_summary_totals LOG: the Plan: line (any mix of import, add, change,
+# destroy and forget), "No changes." and an outputs-only change.
 tf_summary_totals() {
-  grep -oE '^(Plan: [0-9]+ to add, [0-9]+ to change, [0-9]+ to destroy\.|No changes\.)' "$1" || true
+  grep -oE '^(Plan: .*\.$|No changes\.|Changes to Outputs:)' "$1" || true
+}
+
+# tf_list ARRAY ARGS...: fill ARRAY with `terramate list --run-order ARGS`, one
+# stack path per element, in run order (terramate's default is path order). A
+# failing list is an error, never an empty list. Run from terraform/.
+tf_list() {
+  local -n _tf_out=$1
+  shift
+  local raw
+  raw=$(terramate list --run-order "$@") || { echo "::error::terramate list failed"; return 1; }
+  _tf_out=()
+  if [ -n "$raw" ]; then mapfile -t _tf_out <<<"$raw"; fi
+  return 0
 }
 
 # tf_summary_hash LOG: a hash of the summary lines. The apply workflow compares
