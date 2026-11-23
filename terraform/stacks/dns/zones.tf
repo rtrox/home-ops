@@ -29,6 +29,7 @@ locals {
   zones = {
     "lyb.app"             = { waf_rules = [] }
     "missprissquilts.com" = { waf_rules = [] }
+    "rmt.dev"             = { waf_rules = [] }
     "rtrox.co"            = { waf_rules = [] }
     "rtrox.com"           = { waf_rules = [] }
     "rtrox.dev"           = { waf_rules = [] }

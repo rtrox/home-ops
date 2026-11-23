@@ -8,12 +8,37 @@
 # fully qualified. Keys are "<zone>/<name>"; priority is for MX only.
 locals {
   dns_records = merge(
+    { for k, r in local.records_rmt_dev : "rmt.dev/${k}" => merge(r, { zone = "rmt.dev" }) },
     { for k, r in local.records_rtrox_com : "rtrox.com/${k}" => merge(r, { zone = "rtrox.com" }) },
     { for k, r in local.records_rtrox_dev : "rtrox.dev/${k}" => merge(r, { zone = "rtrox.dev" }) },
     { for k, r in local.records_rtrox_io : "rtrox.io/${k}" => merge(r, { zone = "rtrox.io" }) },
     { for k, r in local.records_troxel_io : "troxel.io/${k}" => merge(r, { zone = "troxel.io" }) },
     { for k, r in local.records_trxl_io : "trxl.io/${k}" => merge(r, { zone = "trxl.io" }) },
   )
+
+  # rmt.dev is unused and sends and receives no mail; same records as
+  # rtrox.com below, for the same reason.
+  records_rmt_dev = {
+    null_mx = {
+      comment  = "Null MX: this domain accepts no mail (RFC 7505)"
+      name     = "rmt.dev"
+      type     = "MX"
+      content  = "."
+      priority = 0
+    }
+    spf_none = {
+      comment = "SPF: no server may send as this domain"
+      name    = "rmt.dev"
+      type    = "TXT"
+      content = "v=spf1 -all"
+    }
+    dmarc_reject = {
+      comment = "DMARC: reject mail failing SPF/DKIM"
+      name    = "_dmarc.rmt.dev"
+      type    = "TXT"
+      content = "v=DMARC1; p=reject"
+    }
+  }
 
   # rtrox.com sends and receives no mail. These records say so, so receivers
   # reject mail spoofing it. To use it for mail, replace all three in one
