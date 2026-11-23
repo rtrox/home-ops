@@ -41,6 +41,9 @@ name: terraform-apply
 #                             per-provider tokens, added as stacks opt in; the
 #                             names match _provider_env.json, generated from
 #                             globals in terraform/terramate.tm.hcl
+#   CLOUDFLARE_<STACK>_TOKEN  per-stack Cloudflare tokens (e.g.
+#                             CLOUDFLARE_DNS_TOKEN), for stacks that set
+#                             provider_keys in their stack.tm.hcl
 #
 # Every push plans EVERY ci-apply stack, so a skipped run (GitHub keeps only
 # the newest pending run per concurrency group), a failed plan or a rejected

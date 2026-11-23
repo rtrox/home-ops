@@ -84,6 +84,18 @@ globals {
   # needs them in its `ci` (and `ci-apply`) config.
   secret_vars = {}
 
+  # Per-stack credential keys: provider name -> the Doppler key to read instead
+  # of that provider's default in provider_env, so a stack gets its own scoped
+  # token rather than the shared one:
+  #   provider_keys = { cloudflare = "CLOUDFLARE_DNS_TOKEN" }
+  # Only `key` is replaced; env and project stay, and a provider with several
+  # provider_env rows gets the same key on each. Every name must be in the
+  # stack's `providers` (asserted below), or it would silently fall back to the
+  # shared key. The key must exist in tf-at-home/prd, tf-at-home/ci (a
+  # read-only token; not needed for laptop-only stacks) and, for a ci-apply
+  # stack, tf-at-home/ci-apply. Foundation creates these tokens.
+  provider_keys = {}
+
   # Only the foundation stack sets this: it gets _doppler_write_tokens.tf.
   manages_doppler_write_tokens = false
 
@@ -129,10 +141,20 @@ globals {
   proxmox_endpoint = "https://pve.rtrox.io:8006/"
 }
 
+assert {
+  assertion = tm_alltrue([for p in tm_keys(global.provider_keys) : tm_contains(global.providers, p)])
+  message   = "provider_keys names a provider that isn't in this stack's providers (typo?); it would be ignored and the shared key used."
+}
+
 # The credential mapping the laptop wrapper and CI read: [{env, project, key}].
 generate_file "_provider_env.json" {
   content = "${tm_jsonencode(tm_concat(
-    tm_flatten([for p in global.providers : global.provider_env[p]]),
+    tm_flatten([for p in global.providers : [
+      for r in global.provider_env[p] : tm_try(
+        { env = r.env, project = r.project, key = global.provider_keys[p] },
+        r,
+      )
+    ]]),
     [for d in global.doppler_writes : {
       env     = "TF_VAR_doppler_write_token_${tm_replace(tm_replace(d, "-", "_"), "/", "_")}"
       project = "tf-at-home"
