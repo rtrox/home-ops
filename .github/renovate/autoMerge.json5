@@ -169,5 +169,21 @@
         ":warning: **Manual Review Required**: Confirm the new Rook/Ceph version is a supported pairing before merging -- check [Rook's maintenance and support matrix](https://rook.io/docs/rook/latest-release/Getting-Started/maintenance-and-support/) and the [Ceph upgrade guide](https://rook.io/docs/rook/latest-release/Upgrade/ceph-upgrade/) for known-bad patch versions (e.g. avoid Ceph v20.2.0 -- data-corruption bug with read affinity enabled, use v20.2.1+).",
       ],
     },
+    {
+      // A merge under these paths runs terraform-apply, which applies every
+      // ci-apply stack right after merge (only a plan with a destroy, replace
+      // or forget waits for approval). So nothing that triggers it merges
+      // without the owner: provider bumps, lock files, and the action pins in
+      // the workflow it runs. Keep the paths in step with terraform-apply.yaml's
+      // `on.push.paths`.
+      description: "Never Automerge anything that triggers terraform-apply",
+      matchFileNames: [
+        "terraform/**",
+        "inventory/**",
+        ".github/workflows/terraform-apply.yaml",
+        ".github/scripts/tf-ci.sh",
+      ],
+      automerge: false,
+    },
   ],
 }
