@@ -38,6 +38,14 @@ resource "github_repository_environment" "this" {
     protected_branches     = false
     custom_branch_policies = true
   }
+
+  lifecycle {
+    # integrations/github 6.13.0 only reads prevent_self_review back when the
+    # Environment has required reviewers (upstream bug, PR #3583), so the
+    # imported tofu-apply shows null -> false. Applying that needs
+    # Administration write, which the PAT doesn't have.
+    ignore_changes = [prevent_self_review]
+  }
 }
 
 resource "github_repository_environment_deployment_policy" "main" {

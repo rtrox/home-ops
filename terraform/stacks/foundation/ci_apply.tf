@@ -20,9 +20,16 @@
 # apply finishes (the laptop's own state access doesn't depend on it), and being
 # able to revoke it is the point. Created before the old one is deleted, so
 # ci-apply never holds a dead key.
+# Reissued every 90 days; each token expires 180 days after issue (like
+# ci_readonly).
+resource "time_rotating" "r2_state_ci_apply" {
+  rotation_days = 90
+}
+
 resource "cloudflare_api_token" "r2_state_ci_apply" {
-  name   = "tofu-state-ci-apply-readwrite"
-  status = "active"
+  name       = "tofu-state-ci-apply-readwrite-${formatdate("YYYY-MM-DD", time_rotating.r2_state_ci_apply.id)}"
+  status     = "active"
+  expires_on = timeadd(time_rotating.r2_state_ci_apply.id, "4320h")
 
   policies = [{
     effect            = "allow"
@@ -31,11 +38,21 @@ resource "cloudflare_api_token" "r2_state_ci_apply" {
   }]
 
   lifecycle {
+    # expires_on and name alone update in place and keep the old secret, so a
+    # new rotation period replaces the token outright, new one first.
+    replace_triggered_by  = [time_rotating.r2_state_ci_apply]
     create_before_destroy = true
     precondition {
       condition     = alltrue([for name in local.r2_state_tokens.readwrite : local.permission_group_ids[name] != null])
       error_message = "An R2 permission group was not found by name; Cloudflare may have renamed it."
     }
+  }
+}
+
+check "r2_state_ci_apply_token_expiry" {
+  assert {
+    condition     = timecmp(plantimestamp(), timeadd(cloudflare_api_token.r2_state_ci_apply.expires_on, "-720h")) < 0
+    error_message = "The CI apply R2 token expires within 30 days (${cloudflare_api_token.r2_state_ci_apply.expires_on}). Apply the foundation stack to reissue it, or CI's applies fail."
   }
 }
 

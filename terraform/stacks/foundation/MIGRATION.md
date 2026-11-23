@@ -499,7 +499,7 @@ What it makes:
 
 | Object | Method |
 | --- | --- |
-| R2 token `tofu-state-ci-apply-readwrite` (read/write on the `tofu-state` bucket) | create; its own token, so it is revoked alone |
+| R2 token `tofu-state-ci-apply-readwrite-<date>` (read/write on the `tofu-state` bucket), reissued every 90 days like the CI read-only token, with an expiry check | create, with `time_rotating.r2_state_ci_apply`; its own token, so it is revoked alone |
 | `tf-at-home/ci-apply` `R2_STATE_READWRITE` (same JSON shape as in `prd`) | create |
 | Service token `ci-apply-read` (read-only, `tf-at-home/ci-apply`) | create |
 | Environments `tofu-apply-gated` (reviewer `rtrox`, `main` only) and `tofu-apply` (no reviewers, `main` only) of `rtrox/home-ops` | import, no change |
@@ -517,16 +517,22 @@ GitHub (phase 7).
 
 - **The GitHub token.** Create a fine-grained personal access token on the
   account that owns `home-ops`: repository access **only `home-ops`**;
-  permissions Environments (read and write), Secrets (read and write) and
-  Administration (read), plus the Metadata read GitHub adds itself. Give it an
-  expiry (90 days or so). Put it in Doppler without printing it:
+  permissions **Environments: read and write** (it covers the Environment
+  secrets too) and **Actions: read** (reading Environments and their branch
+  policies needs it; it only works without while the repo is public), plus the
+  Metadata read GitHub adds itself. Nothing else. If you already made the token
+  with Secrets and Administration, edit it down to this. Give it an expiry (90
+  days or so) and **note the date in Bitwarden**. Put it in Doppler without
+  printing it:
 
   ```sh
   doppler secrets set GITHUB_TERRAFORM_TOKEN -p tf-at-home -c prd   # paste at the prompt
   ```
 
   Until it exists, `task tf:*` for `foundation` fails reading the provider
-  environment.
+  environment. **An expired token blocks every foundation plan and apply**,
+  including the emergency R2 token rotation and the CI read-only token
+  reissue, so renew it before it expires.
 - P2-1 applied, and `task tf:plan STACK=foundation` says `No changes.`
 
 ## 1. The passphrase reference, by hand
@@ -556,17 +562,18 @@ task tf:plan STACK=foundation -- -no-color 2>&1 | grep -E '^  # |^Plan:|^No chan
 Expect exactly:
 
 ```text
-Plan: 4 to import, 5 to add, 0 to change, 0 to destroy.
+Plan: 4 to import, 6 to add, 0 to change, 0 to destroy.
 ```
 
 - **4 imports**: `github_repository_environment.this["tofu-apply-gated"]` and
   `["tofu-apply"]`; `github_repository_environment_deployment_policy.main["tofu-apply-gated"]`
   and `["tofu-apply"]`. Each shows `will be imported` and nothing else.
-- **5 creates**: `cloudflare_api_token.r2_state_ci_apply`,
+- **6 creates**: `time_rotating.r2_state_ci_apply`, `cloudflare_api_token.r2_state_ci_apply`,
   `doppler_secret.ci_apply_r2_state`, `doppler_service_token.ci_apply_read`,
   and `github_actions_environment_secret.ci_doppler_tf_apply["tofu-apply-gated"]`
   and `["tofu-apply"]`.
-- **0 changes.** If an Environment or policy shows an update, don't apply: the
+- **0 changes.** (`prevent_self_review` is ignored: the provider doesn't read
+  it back for an Environment without reviewers, upstream #3583.) If an Environment or policy shows an update, don't apply: the
   code differs from the live Environment. Read it again
   (`gh api repos/rtrox/home-ops/environments/<env>` and its
   `/deployment-branch-policies`) and match `environments.tf`. Likely
@@ -611,7 +618,7 @@ The Environment secrets are written last, once the service token exists.
      secrets=$(curl -fsS -K - "https://api.doppler.com/v3/configs/config/secrets/download?format=json" \
        <<<"header = \"Authorization: Bearer $tok\"")
      jq -r 'keys[]' <<<"$secrets"
-     jq -e '.R2_STATE_READWRITE | fromjson | has("access_key_id","secret_access_key","endpoint")' <<<"$secrets" >/dev/null && echo "R2_STATE_READWRITE shape ok"
+     jq -e '.R2_STATE_READWRITE | fromjson | has("access_key_id") and has("secret_access_key") and has("endpoint")' <<<"$secrets" >/dev/null && echo "R2_STATE_READWRITE shape ok"
      a=$(jq -j .TOFU_STATE_PASSPHRASE <<<"$secrets" | sha256sum)
      b=$(doppler secrets get TOFU_STATE_PASSPHRASE -p tf-at-home -c prd --plain | tr -d '\n' | sha256sum)
      [ "$a" = "$b" ] && echo "passphrase matches prd: yes" || echo "passphrase matches prd: NO"
