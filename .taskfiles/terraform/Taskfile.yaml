@@ -38,8 +38,27 @@ tasks:
         sh: "{{.DOPPLER_GET}} R2_STATE_READWRITE | jq -er .secret_access_key"
       AWS_ENDPOINT_URL_S3:
         sh: "{{.DOPPLER_GET}} R2_STATE_READWRITE | jq -er .endpoint"
+      # Stacks tagged laptop-only (stack.tm.hcl) encrypt their state with their
+      # own passphrase, TOFU_STATE_PASSPHRASE_LAPTOP, which CI never holds: CI's
+      # read-only R2 token reads every key in the bucket, and CI has
+      # TOFU_STATE_PASSPHRASE. The tag is looked up with terramate, and every
+      # failure (terramate, or a missing or empty key) stops the run: a
+      # laptop-only stack never falls back to the shared passphrase.
       TF_VAR_state_passphrase:
-        sh: "{{.DOPPLER_GET}} TOFU_STATE_PASSPHRASE"
+        sh: |
+          set -eu
+          laptop=$(cd "{{.TERRAFORM_DIR}}" && mise exec -- terramate list --tags laptop-only) || {
+            echo "task tf: terramate list --tags laptop-only failed; not choosing a state passphrase" >&2; exit 1; }
+          if printf '%s\n' "$laptop" | grep -qxF "stacks/{{.STACK}}"; then
+            p=$({{.DOPPLER_GET}} TOFU_STATE_PASSPHRASE_LAPTOP 2>/dev/null) || p=""
+            if [ -z "$p" ]; then
+              echo "task tf: {{.STACK}} is laptop-only and needs TOFU_STATE_PASSPHRASE_LAPTOP in tf-at-home/prd (see terraform/stacks/{{.STACK}}/MIGRATION.md step 0). Not falling back to TOFU_STATE_PASSPHRASE." >&2
+              exit 1
+            fi
+          else
+            p=$({{.DOPPLER_GET}} TOFU_STATE_PASSPHRASE)
+          fi
+          printf '%s' "$p"
       # The generated provider "doppler" {} reads DOPPLER_TOKEN. On the laptop
       # that's the owner's CLI token, used in-process only (nothing is uploaded
       # anywhere, unlike Terraform Cloud's remote runs). CI gets a read-only

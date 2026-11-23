@@ -58,6 +58,27 @@ state passphrase, and the read-only service tokens (`doppler-eso`,
   stacks (`backblaze`, `minio`, `pocketid`) only read the write-token secrets;
   don't apply them during step 3, and they're unaffected otherwise, since the
   old tokens stay valid until step 6.
+- **`TOFU_STATE_PASSPHRASE_LAPTOP` in `tf-at-home/prd`.** This stack is
+  `laptop-only`, so `task tf:*` encrypts its state with this passphrase, never
+  the shared `TOFU_STATE_PASSPHRASE`. CI holds the shared one and a read-only
+  R2 token that reads every key in the bucket, so it could download this state
+  but must never decrypt it (the state holds every write token and the R2
+  read-write key). Generate it locally, never printed:
+
+  ```sh
+  openssl rand -base64 32 | tr -d '\n' \
+    | doppler secrets set TOFU_STATE_PASSPHRASE_LAPTOP -p tf-at-home -c prd --silent >/dev/null
+  ```
+
+  Then **save a copy in Bitwarden** (copy it from the Doppler dashboard into
+  a Bitwarden secure note, not through the terminal). **Break-glass:** this
+  passphrase is the only key to foundation's state, and the state copy in B2 is
+  encrypted with it too. Lose it (Doppler gone, no Bitwarden copy) and the state
+  can't be read. The objects themselves survive, but you'd rebuild the stack by
+  importing everything again and rotating every token it created. Never change
+  it in place: a new passphrase needs a migration with the old one configured
+  as a `fallback`. Without the key, `task tf:*` on this stack stops with an
+  error; it never falls back to the shared passphrase.
 - **`CLOUDFLARE_USER_ID` in `tf-at-home/prd`.** The CI token's user-scoped
   policy needs your Cloudflare user ID, which stays out of this public repo
   (and out of state as plain text: the `doppler_secrets` map is sensitive).
@@ -406,8 +427,9 @@ unsaved state). So rotate deliberately, logged in as the break-glass key:
    disable`).
 2. In a fresh shell, put the break-glass R2 key in `AWS_ACCESS_KEY_ID` /
    `AWS_SECRET_ACCESS_KEY` / `AWS_ENDPOINT_URL_S3`, from wherever it's kept
-   outside Doppler, and `TF_VAR_state_passphrase` and `DOPPLER_TOKEN` as
-   `task tf:*` sets them. Run `mise exec -- tofu` in this directory directly:
+   outside Doppler, `TF_VAR_state_passphrase` from
+   `TOFU_STATE_PASSPHRASE_LAPTOP` (this stack's own, not the shared one), and
+   `DOPPLER_TOKEN` as `task tf:*` sets it. Run `mise exec -- tofu` in this directory directly:
    `task` would overwrite `AWS_*` from Doppler.
 3. Temporarily remove `prevent_destroy` from `cloudflare_api_token.r2_state`
    (a local, uncommitted edit). A name change alone updates a token in place
