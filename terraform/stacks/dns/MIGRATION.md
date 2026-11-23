@@ -279,10 +279,11 @@ finds rtrox.io by name). The freeze ends here.
      created by foundation under the key name `CLOUDFLARE_TERRAFORM_TOKEN`.
      That key name is shared by every `ci-apply` stack using the cloudflare
      provider, so it would carry the union of their permissions.
-2. **Tag the stack** `["ci-apply", "gated"]` in a separate PR, once step 5
-   passed and the CI credentials above exist. That PR's merge plans (and, after
-   approval in `tofu-apply-gated`, applies) this stack in CI: it must plan `No
-   changes.`
+2. **Tag the stack** `["ci-apply"]` in a separate PR, once step 5
+   passed and the CI credentials above exist. That PR's merge plans (and
+   applies) this stack in CI: it must plan `No changes.` From then on a plan
+   with any destroy, replace or forget waits for approval in
+   `tofu-apply-gated`; anything else applies straight away.
 3. **Cleanup PRs.** Here: delete `imports.tf`, `import-ids.jq` and this file.
    terraform-record: delete the import block, its IDs and `import-ids.jq` from
    `cloudflare/zone_rtrox_io.tf`, `dns_moved.tf`'s removed blocks,

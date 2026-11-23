@@ -77,6 +77,13 @@ repos:
           { echo "Generated files were stale and are now regenerated; review and stage them."; exit 1; }'
         files: ^terraform/
         pass_filenames: false
+      # Unit tests for the Terraform CI shell helpers (needs only bash and jq).
+      - id: test-tf-ci
+        name: tf-ci.sh unit tests
+        language: system
+        entry: bash .github/scripts/test-tf-ci.sh
+        files: ^\.github/scripts/(tf-ci|test-tf-ci)\.sh$
+        pass_filenames: false
       # Ansible secrets files must stay vault-encrypted. --negate fails any
       # matching file that does NOT contain the vault header.
       - id: ansible-vault-encrypted

@@ -4,9 +4,12 @@ name: terraform-apply
 
 # Merging to main re-plans and applies, in stack order. Opt-in per stack: only
 # stacks tagged `ci-apply` in their stack.tm.hcl are applied; `laptop-only`
-# stacks never are. Stacks also tagged `gated` (foundation, network, dns,
-# clusters/*) wait for approval in the `tofu-apply-gated` Environment, the
-# rest run in `tofu-apply` (no approval). Shared bash: .github/scripts/tf-ci.sh.
+# stacks never are. Gating is dynamic: a stack applies straight after merge in
+# the `tofu-apply` Environment (no reviewers), unless its post-merge plan has
+# any destroy, replace or forget, in which case its apply job waits for owner
+# approval in `tofu-apply-gated`. The plan job decides (tf_plan_gate, from
+# `tofu show -json` of the saved plan, failing closed) and the apply job
+# re-checks its own re-plan. Shared bash: .github/scripts/tf-ci.sh.
 #
 # home-ops is public, so artifacts and logs are readable. Nothing here uploads
 # or prints a plan: init, plan and apply write to files that are never
@@ -49,7 +52,7 @@ name: terraform-apply
 # the newest pending run per concurrency group), a failed plan or a rejected
 # approval is retried by the next run or a manual workflow_dispatch. Only
 # stacks whose plan has changes are applied. If any plan fails, nothing is
-# applied (fail closed), and a failed list of gated stacks fails the job.
+# applied (fail closed).
 on:
   push:
     branches: [main]
@@ -99,10 +102,14 @@ jobs:
         id: plan
         run: |
           set -uo pipefail
+          umask 077
           root=$PWD
           source "$root/.github/scripts/tf-ci.sh"
           out=$RUNNER_TEMP/plan
           mkdir -p "$out"
+          # The saved plan and its JSON never outlive the step, whatever path
+          # leaves the loop.
+          trap 'rm -rf "$out"' EXIT
           summary=$GITHUB_STEP_SUMMARY
           failed=false
           matrix='[]'
@@ -113,9 +120,13 @@ jobs:
           # code 2) reach the matrix. --run-order gives the apply order.
           cd terraform
           tf_list stacks --tags ci-apply --no-tags laptop-only || exit 1
-          # Fail closed: if this list fails the whole job fails, so a stack can
-          # never fall back to the ungated Environment by accident.
-          tf_list gated --tags gated || exit 1
+          # The `gated` tag no longer exists (gating comes from the plan). A
+          # stack still carrying it was written for the old rule: fail loudly.
+          tf_list legacy --tags gated || exit 1
+          if [ ${#legacy[@]} -gt 0 ]; then
+            echo "::error::stack(s) still carry the removed 'gated' tag (gating is now decided from the plan): ${legacy[*]}. Remove the tag."
+            exit 1
+          fi
           echo "Stacks to plan:"
           printf '%s\n' "${stacks[@]:-none}"
 
@@ -145,21 +156,31 @@ jobs:
             fi
             if ! tf_export_provider_env; then fail_step "$stack" "provider credentials"; echo "::endgroup::"; continue; fi
             if ! tofu init -input=false -lockfile=readonly -no-color >"$out/init.log" 2>&1; then fail_step "$stack" "tofu init"; echo "::endgroup::"; continue; fi
-            tofu plan -lock=false -no-color -input=false -detailed-exitcode >"$out/plan.log" 2>&1
+            rm -f "$out/tfplan" "$out/plan.json"
+            tofu plan -lock=false -no-color -input=false -detailed-exitcode -out="$out/tfplan" >"$out/plan.log" 2>&1
             rc=$?
-            if [ $rc -eq 1 ]; then fail_step "$stack" "tofu plan"; echo "::endgroup::"; continue; fi
+            case $rc in 0|2) ;; *) fail_step "$stack" "tofu plan"; echo "::endgroup::"; continue ;; esac
             EXCLUDES=()
             tf_summary_block "$stack" "$out/plan.log" >> "$summary"
             if [ $rc -eq 2 ]; then
               # A plan with changes must show a totals line, or the summary
               # and its hash would be blind to what is being applied.
               if [ -z "$(tf_summary_totals "$out/plan.log")" ]; then fail_step "$stack" "plan has changes but no summary line; refusing"; echo "::endgroup::"; continue; fi
-              is_gated=false
-              for g in "${gated[@]}"; do if [ "$g" = "$stack" ]; then is_gated=true; fi; done
+              # Gate on the plan itself. The JSON goes to a file and is never
+              # printed; a failure to produce it leaves the file empty, which
+              # tf_plan_gate treats as gated (fail closed).
+              tofu show -json -no-color "$out/tfplan" >"$out/plan.json" 2>/dev/null || : >"$out/plan.json"
+              if reason=$(tf_plan_gate "$out/plan.json" "$out/plan.log"); then
+                is_gated=true
+                printf '\n> [!IMPORTANT]\n> **Waiting for approval** in `tofu-apply-gated`: %s.\n' "$reason" >> "$summary"
+              else
+                is_gated=false
+                printf '\nNo destroys, replaces or forgets: applies straight away in `tofu-apply`.\n' >> "$summary"
+              fi
               matrix=$(jq -c --arg stack "$stack" --argjson gated "$is_gated" --arg hash "$(tf_summary_hash "$out/plan.log")" \
                 '. + [{stack: $stack, gated: $gated, hash: $hash}]' <<<"$matrix")
             fi
-            rm -f "$out/plan.log" "$out/init.log"
+            rm -f "$out/plan.log" "$out/init.log" "$out/tfplan" "$out/plan.json"
             echo "::endgroup::"
           done
 
@@ -206,8 +227,10 @@ jobs:
         env:
           STACK: ${{ matrix.stack }}
           EXPECTED_HASH: ${{ matrix.hash }}
+          GATED: ${{ matrix.gated }}
         run: |
           set -uo pipefail
+          umask 077
           root=$PWD
           source "$root/.github/scripts/tf-ci.sh"
           out=$RUNNER_TEMP/apply
@@ -230,7 +253,7 @@ jobs:
           # (encrypted, like state) stays on this runner and is never uploaded.
           tofu plan -no-color -input=false -detailed-exitcode -out="$out/tfplan" >"$out/plan.log" 2>&1
           rc=$?
-          if [ $rc -eq 1 ]; then stop "tofu plan failed (output is not printed)"; fi
+          case $rc in 0|2) ;; *) stop "tofu plan failed (output is not printed)" ;; esac
           if [ $rc -eq 0 ]; then
             printf '\nNo changes any more; nothing to apply.\n' >> "$summary"
             exit 0
@@ -241,6 +264,12 @@ jobs:
           fi
           if [ "$(tf_summary_hash "$out/plan.log")" != "$EXPECTED_HASH" ]; then
             stop "The plan changed since the plan job showed it. Not applying; re-run the workflow to see the new plan."
+          fi
+          # Re-check the gate on this plan: a destroy, replace or forget must
+          # never apply from the ungated Environment, whatever the plan job said.
+          tofu show -json -no-color "$out/tfplan" >"$out/plan.json" 2>/dev/null || : >"$out/plan.json"
+          if reason=$(tf_plan_gate "$out/plan.json" "$out/plan.log") && [ "$GATED" != true ]; then
+            stop "This plan needs approval ($reason) but this job ran without it. Not applying; re-run the workflow."
           fi
           EXCLUDES=()
           tf_summary_block "$STACK" "$out/plan.log" >> "$summary"
