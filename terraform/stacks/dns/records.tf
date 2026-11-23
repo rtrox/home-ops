@@ -101,12 +101,6 @@ locals {
       type    = "TXT"
       content = "did=did:plc:lzu4jx4xi6gh5zdyynbqpdza"
     }
-    bluesky_atproto_asdf2 = {
-      comment = "Bluesky Verification"
-      name    = "_atproto.asdf2.rtrox.io"
-      type    = "TXT"
-      content = "did=did:plc:lzu4jx4xi6gh5zdyynbqpdza"
-    }
     protonmail_verification = {
       comment = "Protonmail Verification"
       name    = "rtrox.io"
