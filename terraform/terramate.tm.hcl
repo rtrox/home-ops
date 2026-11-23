@@ -88,9 +88,12 @@ globals {
   # of that provider's default in provider_env, so a stack gets its own scoped
   # token rather than the shared one:
   #   provider_keys = { cloudflare = "CLOUDFLARE_DNS_TOKEN" }
-  # Only `key` is replaced; env and project stay. The key must exist in
-  # tf-at-home/prd (unless laptop-only), tf-at-home/ci (a read-only token) and,
-  # for a ci-apply stack, tf-at-home/ci-apply. Foundation creates these tokens.
+  # Only `key` is replaced; env and project stay, and a provider with several
+  # provider_env rows gets the same key on each. Every name must be in the
+  # stack's `providers` (asserted below), or it would silently fall back to the
+  # shared key. The key must exist in tf-at-home/prd, tf-at-home/ci (a
+  # read-only token; not needed for laptop-only stacks) and, for a ci-apply
+  # stack, tf-at-home/ci-apply. Foundation creates these tokens.
   provider_keys = {}
 
   # Only the foundation stack sets this: it gets _doppler_write_tokens.tf.
@@ -136,6 +139,11 @@ globals {
   github_owner = "rtrox"
 
   proxmox_endpoint = "https://pve.rtrox.io:8006/"
+}
+
+assert {
+  assertion = tm_alltrue([for p in tm_keys(global.provider_keys) : tm_contains(global.providers, p)])
+  message   = "provider_keys names a provider that isn't in this stack's providers (typo?); it would be ignored and the shared key used."
 }
 
 # The credential mapping the laptop wrapper and CI read: [{env, project, key}].
