@@ -134,6 +134,10 @@ tasks:
     requires:
       vars: [STACK, PLAN, EXPECT]
     preconditions:
+      # tofu runs in the stack's directory, so a relative path would resolve
+      # somewhere else than where it was written.
+      - sh: case "{{.PLAN}}" in /*) exit 0 ;; *) exit 1 ;; esac
+        msg: "PLAN must be an absolute path (got {{.PLAN}})"
       - sh: test -f "{{.PLAN}}"
         msg: "no plan file at {{.PLAN}}"
       - sh: test -f "{{.STACKS_DIR}}/{{.STACK}}/{{.EXPECT}}"
