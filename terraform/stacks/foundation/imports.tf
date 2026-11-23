@@ -116,11 +116,12 @@ import {
   id       = "${local.github_repository}:${each.key}:${each.value}"
 }
 
-# P2-3: mini's backup buckets and their Doppler secrets, from terraform-record's
-# backblaze and cloudflare stacks, which forget them first (removed, destroy =
-# false). The keys and the R2 token are new (backups.tf); the secrets are
-# imported and updated to them. The bucket IDs come from a lookup by name, so
-# these can only adopt a bucket that exists: a missing one fails the plan.
+# P2-3: mini's backup buckets and five Doppler secrets in k8s-at-home/min,
+# from terraform-record's backblaze and cloudflare stacks, which forget them
+# first (removed, destroy = false). The keys and tokens are new (backups.tf,
+# mini_cluster_tokens.tf); the secrets are imported and updated to them. The
+# bucket IDs come from a lookup by name, so these can only adopt a bucket that
+# exists: a missing one fails the plan.
 locals {
   imported_mini_backup_buckets = {
     tofu_state_history  = "rtrox-tofu-state-history"
@@ -156,4 +157,10 @@ import {
 import {
   to = doppler_secret.mini_secrets_backup_bucket
   id = "k8s-at-home.min.SECRETS_BACKUP_BACKBLAZE_BUCKET"
+}
+
+import {
+  for_each = local.mini_cluster_tokens
+  to       = doppler_secret.mini_cluster_token[each.key]
+  id       = "k8s-at-home.min.${each.value}"
 }

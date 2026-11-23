@@ -15,6 +15,7 @@ locals {
       flatten(values(local.ci_readonly_permissions)),
       local.dns_token_permissions,
       flatten(values(local.mini_token_permissions)),
+      local.mini_cluster_token_permissions,
       local.r2_state_copy_permissions,
     )) :
     name => one([for g in data.cloudflare_api_token_permission_groups_list.all.result : g.id if g.name == name])
