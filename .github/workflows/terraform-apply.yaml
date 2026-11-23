@@ -279,7 +279,7 @@ jobs:
           if ! tofu apply -input=false -no-color "$out/tfplan" >"$out/apply.log" 2>&1; then
             stop "tofu apply failed (output is not printed); check the state and re-run"
           fi
-          result=$(grep -oE '^Apply complete! Resources: [0-9]+ added, [0-9]+ changed, [0-9]+ destroyed\.' "$out/apply.log" || echo "Apply finished, no summary line found.")
+          result=$(grep -oE '^Apply complete! Resources: [^.]*\.' "$out/apply.log" || echo "Apply finished, no summary line found.")
           printf '\n%s\n' "$result" >> "$summary"
           echo "$STACK: $result"
 

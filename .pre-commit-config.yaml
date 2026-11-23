@@ -81,8 +81,16 @@ repos:
       - id: test-tf-ci
         name: tf-ci.sh unit tests
         language: system
-        entry: bash .github/scripts/test-tf-ci.sh
+        entry: bash -e .github/scripts/test-tf-ci.sh
         files: ^\.github/scripts/(tf-ci|test-tf-ci)\.sh$
+        pass_filenames: false
+      # Workflow run: steps are bash -e; a bare `rc=$?` after a command that
+      # exits non-zero on purpose (tofu plan -detailed-exitcode) never runs.
+      - id: check-workflow-exitcode
+        name: Workflow steps capture exit codes with || rc=$?
+        language: system
+        entry: bash .github/scripts/check-workflow-exitcode.sh
+        files: ^\.github/(workflows/.*\.ya?ml|scripts/check-workflow-exitcode\.sh)$
         pass_filenames: false
       # Ansible secrets files must stay vault-encrypted. --negate fails any
       # matching file that does NOT contain the vault header.
