@@ -225,3 +225,18 @@ tf_summary_block() {
       "$(printf '`%s` ' "${EXCLUDES[@]#-exclude=}")"
   fi
 }
+
+# tf_comment_line STACK STATUS DETAIL [ENVIRONMENT]: one markdown list line for
+# the terraform-apply PR comment. STATUS is a short word ("waiting", "applying",
+# "applied", "failed", "refused", "no changes"). DETAIL is counts or a generic
+# reason, never plan content; it is flattened to one line. Links the run and,
+# given an ENVIRONMENT, its deployments page. Reads GITHUB_SERVER_URL,
+# GITHUB_REPOSITORY and GITHUB_RUN_ID.
+tf_comment_line() {
+  local stack=$1 status=$2 detail=${3:-} env=${4:-}
+  local base="${GITHUB_SERVER_URL:-https://github.com}/${GITHUB_REPOSITORY:-}"
+  local links="[run](${base}/actions/runs/${GITHUB_RUN_ID:-0})"
+  detail=$(tr '\r\n' '  ' <<<"$detail" | sed -E 's/^ +| +$//g')
+  if [ -n "$env" ]; then links="[deployments](${base}/deployments/${env}), ${links}"; fi
+  printf -- '- `%s`: **%s**%s (%s)\n' "$stack" "$status" "${detail:+ $detail}" "$links"
+}

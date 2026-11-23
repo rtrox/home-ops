@@ -143,4 +143,14 @@ printf 'Plan: 1 to add, 0 to change, 1 to destroy.\n' >"$tmp/gate.log"
 reason=$(tf_plan_gate "$tmp/gate.json" "$tmp/gate.log")
 if [ "$reason" = "plan has 1 to destroy or replace and 0 to forget" ]; then check "gate: reason has counts only" ok; else check "gate: reason has counts only" no; fi
 
+# tf_comment_line: one line per stack, links, no newlines from the detail.
+export GITHUB_SERVER_URL=https://github.com GITHUB_REPOSITORY=o/r GITHUB_RUN_ID=42
+line=$(tf_comment_line dns waiting "plan has 1 to destroy or replace and 0 to forget" tofu-apply-gated)
+want='- `dns`: **waiting** plan has 1 to destroy or replace and 0 to forget ([deployments](https://github.com/o/r/deployments/tofu-apply-gated), [run](https://github.com/o/r/actions/runs/42))'
+if [ "$line" = "$want" ]; then check "comment line: with environment" ok; else check "comment line: with environment" no; fi
+line=$(tf_comment_line dns "no changes")
+if [ "$line" = '- `dns`: **no changes** ([run](https://github.com/o/r/actions/runs/42))' ]; then check "comment line: no detail, no env" ok; else check "comment line: no detail, no env" no; fi
+line=$(tf_comment_line dns failed $'a\nb\n' tofu-apply)
+if [ "$(wc -l <<<"$line")" -eq 1 ] && grep -qF '**failed** a b (' <<<"$line"; then check "comment line: detail flattened" ok; else check "comment line: detail flattened" no; fi
+
 exit "$fails"
