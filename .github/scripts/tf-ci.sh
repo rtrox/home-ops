@@ -29,22 +29,22 @@ tf_doppler_secrets() {
     <<<"header = \"Authorization: Bearer ${1}\"" 2>/dev/null
 }
 
-# tf_read_credentials TF_TOKEN R2_KEY DOPPLER_CONFIG [HOSTS_TOKEN | -KEY]
+# tf_read_credentials TF_TOKEN R2_KEY [HOSTS_TOKEN | -KEY]
 #
-# Reads the tf-at-home config that TF_TOKEN is scoped to and exports the
-# backend and provider credentials to later steps (GITHUB_ENV):
+# Reads the tf-at-home config that TF_TOKEN is scoped to (ci, or ci-apply) and
+# exports the backend credentials to later steps (GITHUB_ENV):
 #   R2_KEY                  JSON secret {access_key_id, secret_access_key,
 #                           endpoint}: R2_STATE_READONLY (ci) or
 #                           R2_STATE_READWRITE (ci-apply)
 #   TOFU_STATE_PASSPHRASE   the state/plan encryption passphrase
-# The generated providers read tf-at-home through DOPPLER_TOKEN and
-# hosts-at-home through var.doppler_hosts_token, both from the config named by
-# var.doppler_config (DOPPLER_CONFIG). The fourth argument is that hosts token
-# itself, or, when it starts with "-", the name of an OPTIONAL key in the
+# Provider credentials are NOT read here: they differ per stack, so each stack
+# loop calls tf_export_provider_env. For that, DOPPLER_TOKEN (TF_TOKEN) and
+# TF_CI_HOSTS_TOKEN are exported. The third argument is the hosts-at-home
+# token itself, or, when it starts with "-", the name of an OPTIONAL key in the
 # tf-at-home config that holds it (ci-apply keeps it there, since an
 # Environment has only the one secret).
 tf_read_credentials() {
-  local tf_token=$1 r2_key=$2 config=$3 hosts=${4:-}
+  local tf_token=$1 r2_key=$2 hosts=${3:-}
   local secrets r2 passphrase access_key secret_key endpoint
   echo "::add-mask::$tf_token"
   if [ -n "$hosts" ] && [ "${hosts#-}" = "$hosts" ]; then
@@ -71,10 +71,48 @@ tf_read_credentials() {
   tf_set_secret_env AWS_ENDPOINT_URL_S3 "$endpoint"
   tf_set_secret_env TF_VAR_state_passphrase "$passphrase"
   tf_set_secret_env DOPPLER_TOKEN "$tf_token"
-  if [ -n "$hosts" ]; then tf_set_secret_env TF_VAR_doppler_hosts_token "$hosts"; fi
-  tf_set_env TF_VAR_doppler_config "$config"
+  if [ -n "$hosts" ]; then tf_set_secret_env TF_CI_HOSTS_TOKEN "$hosts"; fi
   # Terramate's update check phones home; not from this runner.
   tf_set_env TM_DISABLE_CHECKPOINT 1
+}
+
+# tf_export_provider_env: run in a stack's directory. Reads the stack's
+# generated _provider_env.json ([{env, project, key}]) and exports each named
+# variable into THIS shell (not GITHUB_ENV). Each value comes from the config
+# its project's token is scoped to (tf-at-home: DOPPLER_TOKEN, hosts-at-home:
+# TF_CI_HOSTS_TOKEN) and is masked first. Variables set for a previous stack
+# are unset. Only the listed keys reach the environment; nothing is printed,
+# and a failure is a generic message and return 1.
+TF_PROVIDER_ENV_NAMES=()
+tf_export_provider_env() {
+  local n name project key token value rows line
+  local -A cache=()
+  for n in "${TF_PROVIDER_ENV_NAMES[@]}"; do unset "$n"; done
+  TF_PROVIDER_ENV_NAMES=()
+  [ -f _provider_env.json ] || { echo "::error::no _provider_env.json (run terramate generate)"; return 1; }
+  rows=$(jq -r 'if type == "array" and all(.[]; (.env | type) == "string" and (.project | type) == "string" and (.key | type) == "string")
+    then .[] | [.env, .project, .key] | @tsv else error end' _provider_env.json 2>/dev/null) \
+    || { echo "::error::malformed _provider_env.json"; return 1; }
+  while IFS=$'\t' read -r name project key; do
+    [ -n "$name" ] || continue
+    case $project in
+      tf-at-home) token=${DOPPLER_TOKEN:-} ;;
+      hosts-at-home) token=${TF_CI_HOSTS_TOKEN:-} ;;
+      *) echo "::error::unknown Doppler project in _provider_env.json"; return 1 ;;
+    esac
+    [ -n "$token" ] || { echo "::error::no CI token for $project"; return 1; }
+    if [ -z "${cache[$project]:-}" ]; then
+      cache[$project]=$(tf_doppler_secrets "$token") || { echo "::error::could not read $project"; return 1; }
+    fi
+    value=$(jq -er --arg k "$key" '.[$k] | strings' <<<"${cache[$project]}" 2>/dev/null) || { echo "::error::could not read a provider credential from $project"; return 1; }
+    # Mask every line: a multi-line value is otherwise only masked per line.
+    while IFS= read -r line; do
+      if [ -n "$line" ]; then echo "::add-mask::$line"; fi
+    done <<<"$value"
+    export "$name=$value"
+    TF_PROVIDER_ENV_NAMES+=("$name")
+  done <<<"$rows"
+  return 0
 }
 
 # tf_excludes: fill the EXCLUDES array from ci-plan-exclude.txt in the current

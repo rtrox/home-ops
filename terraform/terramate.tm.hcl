@@ -62,26 +62,42 @@ generate_hcl "_backend.tf" {
 }
 
 # Providers. Each stack lists what it needs in its stack.tm.hcl globals
-# (providers, doppler_writes); these are the defaults and lookup tables.
-# Versions are NOT generated: each stack pins them in its own versions.tf, so
-# Renovate's terraform manager can bump them and their lock files.
+# (providers, doppler_writes, secret_vars); these are the defaults and lookup
+# tables. Versions are NOT generated: each stack pins them in its own
+# versions.tf, so Renovate's terraform manager can bump them and their lock
+# files.
+#
+# Credentials never go through a `data "doppler_secrets"` source: a data source
+# is stored in state, which would put a whole Doppler config in every stack's
+# state (and CI's plan job can decrypt state). Instead the wrapper (task
+# tf:*) and CI read just the keys listed in the generated _provider_env.json
+# and export them as environment variables: each provider's standard one, or
+# TF_VAR_<name> for the sensitive variables below.
 globals {
   providers      = []
   doppler_writes = []
 
+  # Extra secrets a stack reads, as sensitive variables. Name -> where it lives:
+  #   secret_vars = { cloudflare_user_id = { project = "tf-at-home", key = "CLOUDFLARE_USER_ID" } }
+  # generates `variable "cloudflare_user_id"` and exports TF_VAR_cloudflare_user_id.
+  # Only the keys named here are read. Unless the stack is laptop-only, CI
+  # needs them in its `ci` (and `ci-apply`) config.
+  secret_vars = {}
+
   # Only the foundation stack sets this: it gets _doppler_write_tokens.tf.
   manages_doppler_write_tokens = false
 
-  # Doppler config -> the tf-at-home/prd secret holding its write token.
-  # (Renamed with the Doppler projects after phase 4.)
+  # Doppler config -> the tf-at-home secret holding its write token. (Renamed
+  # with the Doppler projects after phase 4.)
   #
   # The foundation stack creates one read/write service token per entry and
-  # writes it to that secret, so a config Terraform writes to is one line
-  # here. terraform-record's stacks read the same secret names until they move.
+  # writes it to that secret (in tf-at-home/prd), so a config Terraform writes
+  # to is one line here. terraform-record's stacks read the same secret names
+  # until they move.
   #
-  # NOTE for CI (var.doppler_config = "ci"): a stack with doppler_writes needs
-  # these same key names in tf-at-home/ci, holding READ-ONLY tokens, or its
-  # plan can't configure the aliased providers. The proxmox stack has none.
+  # NOTE for CI: a stack with doppler_writes needs these same key names in
+  # tf-at-home/ci (and ci-apply), holding tokens it can use; the proxmox stack
+  # has none.
   doppler_write_tokens = {
     "hosts-at-home/prd"   = "DOPPLER_TRUENAS_WRITE_TOKEN"
     "k8s-at-home/min"     = "DOPPLER_MINI_WRITE_TOKEN"
@@ -90,90 +106,88 @@ globals {
     "tf-at-home/ci-apply" = "DOPPLER_TF_CI_APPLY_WRITE_TOKEN"
   }
 
+  # Provider -> the standard environment variable carrying its credential, and
+  # the Doppler project/key it is read from (config: prd on the laptop, ci or
+  # ci-apply in CI, selected by the token).
+  provider_env = {
+    cloudflare = [
+      { env = "CLOUDFLARE_API_TOKEN", project = "tf-at-home", key = "CLOUDFLARE_TERRAFORM_TOKEN" },
+    ]
+    # The token is written to hosts-at-home by the Ansible proxmox role.
+    proxmox = [
+      { env = "PROXMOX_VE_API_TOKEN", project = "hosts-at-home", key = "PVE_TERRAFORM_API_TOKEN" },
+    ]
+  }
+
   proxmox_endpoint = "https://pve.rtrox.io:8006/"
+}
+
+# The credential mapping the laptop wrapper and CI read: [{env, project, key}].
+generate_file "_provider_env.json" {
+  content = "${tm_jsonencode(tm_concat(
+    tm_flatten([for p in global.providers : global.provider_env[p]]),
+    [for d in global.doppler_writes : {
+      env     = "TF_VAR_doppler_write_token_${tm_replace(tm_replace(d, "-", "_"), "/", "_")}"
+      project = "tf-at-home"
+      key     = global.doppler_write_tokens[d]
+    }],
+    [for n, v in global.secret_vars : {
+      env     = "TF_VAR_${n}"
+      project = v.project
+      key     = v.key
+    }],
+  ))}\n"
 }
 
 generate_hcl "_providers.tf" {
   content {
-    # Reads provider credentials (token: DOPPLER_TOKEN in the environment).
+    # Reads DOPPLER_TOKEN from the environment (the CLI token on the laptop,
+    # a scoped service token in CI). Only used by stacks that write secrets.
     provider "doppler" {}
 
-    # Which config the Doppler reads use. "prd" on the laptop; CI sets
-    # TF_VAR_doppler_config=ci, a separate root config in each project holding
-    # only what a plan needs, read with tokens scoped to it.
-    variable "doppler_config" {
-      type    = string
-      default = "prd"
-    }
-
-    data "doppler_secrets" "terraform" {
-      project = "tf-at-home"
-      config  = var.doppler_config
-    }
-
     # One alias per Doppler config the stack writes to, e.g. hosts-at-home/prd
-    # becomes provider = doppler.hosts_at_home_prd.
-    tm_dynamic "provider" {
-      for_each = global.doppler_writes
-      labels   = ["doppler"]
-      attributes = {
-        alias         = tm_replace(tm_replace(provider.value, "-", "_"), "/", "_")
-        doppler_token = tm_hcl_expression("data.doppler_secrets.terraform.map.${global.doppler_write_tokens[provider.value]}")
-      }
-    }
-
-    tm_dynamic "provider" {
-      for_each = tm_contains(global.providers, "cloudflare") ? [1] : []
-      labels   = ["cloudflare"]
-      attributes = {
-        api_token = tm_hcl_expression("data.doppler_secrets.terraform.map.CLOUDFLARE_TERRAFORM_TOKEN")
-      }
-    }
-
-    # Proxmox's API token is written to hosts-at-home by the Ansible proxmox role.
-    #
-    # The hosts-at-home read goes through its own provider alias, "hosts", so it
-    # can use a different token from the tf-at-home read above. CI's service
-    # tokens each read one Doppler config only. var.doppler_hosts_token is
-    # unset on the laptop (null), and the provider then falls back to
-    # DOPPLER_TOKEN, the CLI token that reads both projects. In CI it's set
-    # (TF_VAR_doppler_hosts_token) to the hosts-at-home/ci read token, while
-    # DOPPLER_TOKEN is the tf-at-home/ci one.
+    # becomes provider = doppler.hosts_at_home_prd. Its token is a sensitive
+    # variable fed from the environment (see _provider_env.json).
     tm_dynamic "variable" {
-      for_each = tm_contains(global.providers, "proxmox") ? [1] : []
-      labels   = ["doppler_hosts_token"]
+      for_each = global.doppler_writes
+      labels   = ["doppler_write_token_${tm_replace(tm_replace(variable.value, "-", "_"), "/", "_")}"]
       attributes = {
         type      = tm_hcl_expression("string")
-        default   = tm_hcl_expression("null")
         sensitive = true
       }
     }
 
     tm_dynamic "provider" {
-      for_each = tm_contains(global.providers, "proxmox") ? [1] : []
+      for_each = global.doppler_writes
       labels   = ["doppler"]
       attributes = {
-        alias         = "hosts"
-        doppler_token = tm_hcl_expression("var.doppler_hosts_token")
+        alias         = tm_replace(tm_replace(provider.value, "-", "_"), "/", "_")
+        doppler_token = tm_hcl_expression("var.doppler_write_token_${tm_replace(tm_replace(provider.value, "-", "_"), "/", "_")}")
       }
     }
 
-    tm_dynamic "data" {
-      for_each = tm_contains(global.providers, "proxmox") ? [1] : []
-      labels   = ["doppler_secrets", "hosts"]
+    tm_dynamic "variable" {
+      for_each = global.secret_vars
+      labels   = [variable.key]
       attributes = {
-        provider = tm_hcl_expression("doppler.hosts")
-        project  = "hosts-at-home"
-        config   = tm_hcl_expression("var.doppler_config")
+        type      = tm_hcl_expression("string")
+        sensitive = true
       }
     }
 
+    # The cloudflare provider reads CLOUDFLARE_API_TOKEN itself.
+    tm_dynamic "provider" {
+      for_each = tm_contains(global.providers, "cloudflare") ? [1] : []
+      labels   = ["cloudflare"]
+      content {}
+    }
+
+    # The proxmox provider reads PROXMOX_VE_API_TOKEN itself.
     tm_dynamic "provider" {
       for_each = tm_contains(global.providers, "proxmox") ? [1] : []
       labels   = ["proxmox"]
       attributes = {
-        endpoint  = global.proxmox_endpoint
-        api_token = tm_hcl_expression("data.doppler_secrets.hosts.map.PVE_TERRAFORM_API_TOKEN")
+        endpoint = global.proxmox_endpoint
       }
     }
   }

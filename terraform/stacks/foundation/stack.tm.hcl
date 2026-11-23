@@ -17,4 +17,11 @@ stack {
 globals {
   providers                    = ["cloudflare"]
   manages_doppler_write_tokens = true
+
+  # The CI token's user-scoped policy needs the owner's Cloudflare user ID,
+  # kept out of this public repo (MIGRATION.md step 0). Laptop-only: this key
+  # stays out of tf-at-home/ci and ci-apply.
+  secret_vars = {
+    cloudflare_user_id = { project = "tf-at-home", key = "CLOUDFLARE_USER_ID" }
+  }
 }

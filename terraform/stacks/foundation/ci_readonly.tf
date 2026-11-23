@@ -7,9 +7,10 @@ locals {
   # refresh API tokens, e.g. the proxmox stack's ACME token). Kept out of this
   # public repo, and not looked up with data "cloudflare_user", which would put
   # the user's name, email and phone in state unmarked. It comes from the
-  # sensitive Doppler key tf-at-home/prd CLOUDFLARE_USER_ID, set by hand
-  # (MIGRATION.md step 0).
-  cloudflare_user_id = try(data.doppler_secrets.terraform.map.CLOUDFLARE_USER_ID, "")
+  # Doppler key tf-at-home/prd CLOUDFLARE_USER_ID (set by hand, MIGRATION.md
+  # step 0) as the generated sensitive var.cloudflare_user_id (secret_vars in
+  # stack.tm.hcl; task tf:* exports TF_VAR_cloudflare_user_id).
+  cloudflare_user_id = var.cloudflare_user_id
 
   # Only what home-ops' stacks plan in CI today (proxmox: zone lookup, DNS
   # records, API tokens). Add groups when a stack needs them; never an
@@ -72,8 +73,10 @@ check "ci_readonly_token_expiry" {
   }
 }
 
-# Same key names as in prd, so home-ops' generated providers and backend read
-# them unchanged (they take the config name from var.doppler_config).
+# Same key names as in prd, so CI reads them with the same names the laptop
+# does: tf-ci.sh exports each stack's _provider_env.json keys (for
+# cloudflare, CLOUDFLARE_TERRAFORM_TOKEN) and R2_STATE_READONLY from the ci
+# config.
 resource "doppler_secret" "ci_cloudflare_token" {
   project = "tf-at-home"
   config  = "ci"

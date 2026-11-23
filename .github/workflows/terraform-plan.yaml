@@ -61,7 +61,7 @@ jobs:
         run: |
           set -euo pipefail
           source .github/scripts/tf-ci.sh
-          tf_read_credentials "$CI_DOPPLER_TF_READ" R2_STATE_READONLY ci "$CI_DOPPLER_HOSTS_READ"
+          tf_read_credentials "$CI_DOPPLER_TF_READ" R2_STATE_READONLY "$CI_DOPPLER_HOSTS_READ"
 
       - name: Plan changed stacks
         id: plan
@@ -124,6 +124,7 @@ jobs:
             # fmt, validate and tflint read only files, so their output is safe to print.
             if ! tofu fmt -check -diff; then fail_step "$stack" "tofu fmt -check"; cd "$root/terraform"; echo "::endgroup::"; continue; fi
             # init and plan read state and live APIs: output to files only.
+            if ! tf_export_provider_env; then fail_step "$stack" "provider credentials"; cd "$root/terraform"; echo "::endgroup::"; continue; fi
             if ! tofu init -input=false -lockfile=readonly -no-color >"$out/init.log" 2>&1; then fail_step "$stack" "tofu init"; cd "$root/terraform"; echo "::endgroup::"; continue; fi
             if ! tofu validate -no-color; then fail_step "$stack" "tofu validate"; cd "$root/terraform"; echo "::endgroup::"; continue; fi
             if ! tflint --config "$root/terraform/.tflint.hcl"; then fail_step "$stack" "tflint"; cd "$root/terraform"; echo "::endgroup::"; continue; fi

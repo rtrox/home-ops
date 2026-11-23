@@ -58,6 +58,43 @@ state passphrase, and the read-only service tokens (`doppler-eso`,
   stacks (`backblaze`, `minio`, `pocketid`) only read the write-token secrets;
   don't apply them during step 3, and they're unaffected otherwise, since the
   old tokens stay valid until step 6.
+- **proxmox's state has no Doppler data source left, before any new
+  `tf-at-home/prd` key is created.** Before #2201, proxmox read the whole of
+  `tf-at-home/prd` through `data "doppler_secrets"`, which is stored in
+  proxmox's state, and CI can decrypt that state with the shared passphrase.
+  Any key added to `prd` while that data source is still in state lands there
+  on proxmox's next refresh. So, once, since #2201 merged and **before** the
+  two keys below:
+
+  ```sh
+  git switch main && git pull
+  task tf:apply STACK=proxmox        # expect: No changes; answer yes if asked
+  ```
+
+  The apply writes proxmox's state again, without the data sources (they're
+  no longer in its code). Check it: `task` has no `state` command, so this
+  sets the backend environment the way `task tf:*` does, in a subshell, and
+  prints only a count:
+
+  ```sh
+  (
+    set -euo pipefail
+    r2=$(doppler secrets get -p tf-at-home -c prd --plain R2_STATE_READWRITE)
+    AWS_ACCESS_KEY_ID=$(jq -er .access_key_id <<<"$r2")
+    AWS_SECRET_ACCESS_KEY=$(jq -er .secret_access_key <<<"$r2")
+    AWS_ENDPOINT_URL_S3=$(jq -er .endpoint <<<"$r2")
+    TF_VAR_state_passphrase=$(doppler secrets get -p tf-at-home -c prd --plain TOFU_STATE_PASSPHRASE)
+    export AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_ENDPOINT_URL_S3 TF_VAR_state_passphrase
+    unset r2
+    mise exec -- tofu -chdir=terraform/stacks/proxmox state list > /tmp/proxmox-state-list
+    echo "resources=$(wc -l < /tmp/proxmox-state-list) doppler_data_sources=$(grep -c '^data\.doppler_secrets\.' /tmp/proxmox-state-list || true)"
+    rm -f /tmp/proxmox-state-list
+  )
+  ```
+
+  Expect `doppler_data_sources=0` and a nonzero `resources=`. Anything else:
+  stop, and don't create the two keys below. (The
+  addresses alone aren't secret, but the file is removed anyway.)
 - **`TOFU_STATE_PASSPHRASE_LAPTOP` in `tf-at-home/prd`.** This stack is
   `laptop-only`, so `task tf:*` encrypts its state with this passphrase, never
   the shared `TOFU_STATE_PASSPHRASE`. CI holds the shared one and a read-only
@@ -80,8 +117,10 @@ state passphrase, and the read-only service tokens (`doppler-eso`,
   as a `fallback`. Without the key, `task tf:*` on this stack stops with an
   error; it never falls back to the shared passphrase.
 - **`CLOUDFLARE_USER_ID` in `tf-at-home/prd`.** The CI token's user-scoped
-  policy needs your Cloudflare user ID, which stays out of this public repo
-  (and out of state as plain text: the `doppler_secrets` map is sensitive).
+  policy needs your Cloudflare user ID, which stays out of this public repo.
+  `task tf:*` exports it as `TF_VAR_cloudflare_user_id` (the stack's
+  `secret_vars`), a sensitive variable. It's laptop-only, so it stays out of
+  `tf-at-home/ci` and `ci-apply`.
   Copy it from terraform-record's `cloudflare/ci_readonly.tf`, where it's still
   a literal, without printing it:
 
@@ -428,8 +467,10 @@ unsaved state). So rotate deliberately, logged in as the break-glass key:
 2. In a fresh shell, put the break-glass R2 key in `AWS_ACCESS_KEY_ID` /
    `AWS_SECRET_ACCESS_KEY` / `AWS_ENDPOINT_URL_S3`, from wherever it's kept
    outside Doppler, `TF_VAR_state_passphrase` from
-   `TOFU_STATE_PASSPHRASE_LAPTOP` (this stack's own, not the shared one), and
-   `DOPPLER_TOKEN` as `task tf:*` sets it. Run `mise exec -- tofu` in this directory directly:
+   `TOFU_STATE_PASSPHRASE_LAPTOP` (this stack's own, not the shared one),
+   `DOPPLER_TOKEN` as `task tf:*` sets it, and every variable in this stack's
+   `_provider_env.json` (`CLOUDFLARE_API_TOKEN`, `TF_VAR_cloudflare_user_id`)
+   from `tf-at-home/prd`. Run `mise exec -- tofu` in this directory directly:
    `task` would overwrite `AWS_*` from Doppler.
 3. Temporarily remove `prevent_destroy` from `cloudflare_api_token.r2_state`
    (a local, uncommitted edit). A name change alone updates a token in place
