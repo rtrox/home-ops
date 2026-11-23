@@ -52,10 +52,9 @@ Agent definitions live in `.claude/agents/`. The lead (the main session) breaks 
 | `state-mover` | Opus 5.5 | high | Phase 2 stack moves and the phase 0 pocket-id reconcile |
 | `plan-reviewer` | Opus 5.5 | high | Independent review of every high-risk PR: Terraform plans, state or imports, credentials and keys, Doppler writes, anything that can destroy |
 | `plan-reviewer`, low-risk tier | Sonnet 5.5 | medium | Independent review of changes a revert fully undoes: Flux/Kubernetes config, CronJobs, docs |
-| `plan-reviewer` as a second opinion | Fable 5.2 | high | Phase 2 stack moves, the phase 6 firewall import, the phase 8 rebuild runbook |
 | `docs-keeper` | Haiku 5.5 | low | Documentation after a change lands |
 
-These model and effort levels are deliberate; the lead may set them explicitly when delegating. `plan-reviewer`'s file defaults to Opus, so the lead passes Sonnet explicitly for the low-risk tier; when in doubt, use Opus. Escalation: an implementer task that fails validation twice moves to Opus 5.5; an uncertain review on a high-risk change gets the Fable 5.2 second opinion.
+These model and effort levels are deliberate; the lead may set them explicitly when delegating. `plan-reviewer`'s file defaults to Opus, so the lead passes Sonnet explicitly for the low-risk tier; when in doubt, use Opus. Escalation: an implementer task that fails validation twice moves to Opus 5.5; an uncertain review on a high-risk change gets a second, independent Opus 5.5 review.
 
 ### Rules
 

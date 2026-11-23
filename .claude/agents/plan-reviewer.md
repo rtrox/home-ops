@@ -1,6 +1,6 @@
 ---
 name: plan-reviewer
-description: Independent adversarial review of an infrastructure change before it is applied - reads the diff and the saved plan, not the author's reasoning. Use on every PR that changes Terraform, Ansible, Talos or Kubernetes. For the riskiest changes (phase 2 stack moves, the phase 6 router firewall import, the phase 8 rebuild runbook), the lead also runs this agent with model fable as a second opinion.
+description: Independent adversarial review of an infrastructure change before it is applied - reads the diff and the saved plan, not the author's reasoning. Use on every PR that changes Terraform, Ansible, Talos or Kubernetes.
 tools: Read, Grep, Glob, Bash
 model: opus
 effort: high
