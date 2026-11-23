@@ -85,11 +85,14 @@ tf_read_credentials() {
 # and a failure is a generic message and return 1.
 TF_PROVIDER_ENV_NAMES=()
 tf_export_provider_env() {
-  local n name project key token value
+  local n name project key token value rows line
   local -A cache=()
   for n in "${TF_PROVIDER_ENV_NAMES[@]}"; do unset "$n"; done
   TF_PROVIDER_ENV_NAMES=()
   [ -f _provider_env.json ] || { echo "::error::no _provider_env.json (run terramate generate)"; return 1; }
+  rows=$(jq -r 'if type == "array" and all(.[]; (.env | type) == "string" and (.project | type) == "string" and (.key | type) == "string")
+    then .[] | [.env, .project, .key] | @tsv else error end' _provider_env.json 2>/dev/null) \
+    || { echo "::error::malformed _provider_env.json"; return 1; }
   while IFS=$'\t' read -r name project key; do
     [ -n "$name" ] || continue
     case $project in
@@ -101,11 +104,14 @@ tf_export_provider_env() {
     if [ -z "${cache[$project]:-}" ]; then
       cache[$project]=$(tf_doppler_secrets "$token") || { echo "::error::could not read $project"; return 1; }
     fi
-    value=$(tf_get ".[\"$key\"]" <<<"${cache[$project]}") || { echo "::error::could not read a provider credential from $project"; return 1; }
-    echo "::add-mask::$value"
+    value=$(jq -er --arg k "$key" '.[$k] | strings' <<<"${cache[$project]}" 2>/dev/null) || { echo "::error::could not read a provider credential from $project"; return 1; }
+    # Mask every line: a multi-line value is otherwise only masked per line.
+    while IFS= read -r line; do
+      if [ -n "$line" ]; then echo "::add-mask::$line"; fi
+    done <<<"$value"
     export "$name=$value"
     TF_PROVIDER_ENV_NAMES+=("$name")
-  done < <(jq -r '.[] | [.env, .project, .key] | @tsv' _provider_env.json 2>/dev/null)
+  done <<<"$rows"
   return 0
 }
 

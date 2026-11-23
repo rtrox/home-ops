@@ -80,7 +80,8 @@ globals {
   # Extra secrets a stack reads, as sensitive variables. Name -> where it lives:
   #   secret_vars = { cloudflare_user_id = { project = "tf-at-home", key = "CLOUDFLARE_USER_ID" } }
   # generates `variable "cloudflare_user_id"` and exports TF_VAR_cloudflare_user_id.
-  # Only the keys named here are read; CI needs them in its `ci` config.
+  # Only the keys named here are read. Unless the stack is laptop-only, CI
+  # needs them in its `ci` (and `ci-apply`) config.
   secret_vars = {}
 
   # Doppler config -> the tf-at-home secret holding its write token. (Renamed
@@ -142,7 +143,6 @@ generate_hcl "_providers.tf" {
       labels   = ["doppler_write_token_${tm_replace(tm_replace(variable.value, "-", "_"), "/", "_")}"]
       attributes = {
         type      = tm_hcl_expression("string")
-        default   = tm_hcl_expression("null")
         sensitive = true
       }
     }

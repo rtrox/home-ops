@@ -84,6 +84,19 @@ printf '[{"env":"A_ENV","project":"tf-at-home","key":"A_KEY"},{"env":"H_ENV","pr
   [ -z "${A_ENV:-}" ] || exit 3
   printf '[{"env":"X","project":"tf-at-home","key":"MISSING"}]\n' >_provider_env.json
   ! tf_export_provider_env >/dev/null || exit 4
+  # A key with jq metacharacters is looked up literally, not spliced in.
+  printf '[{"env":"Q","project":"tf-at-home","key":"A_KEY\\"] | error"}]\n' >_provider_env.json
+  ! tf_export_provider_env >/dev/null || exit 5
+  # Malformed mapping: fail closed, export nothing.
+  printf 'not json' >_provider_env.json
+  ! tf_export_provider_env >/dev/null || exit 6
+  printf '{"env":"A"}' >_provider_env.json
+  ! tf_export_provider_env >/dev/null || exit 7
+  # Every line of a multi-line value is masked.
+  tf_doppler_secrets() { echo '{"ML":"line1\nline2"}'; }
+  printf '[{"env":"M","project":"tf-at-home","key":"ML"}]\n' >_provider_env.json
+  tf_export_provider_env >"$tmp/mask2.out" || exit 8
+  grep -q '::add-mask::line1' "$tmp/mask2.out" && grep -q '::add-mask::line2' "$tmp/mask2.out" || exit 9
 )
 rc=$?
 if [ $rc -eq 0 ]; then check "provider env: exports, masks, unsets, fails closed" ok; else check "provider env (rc=$rc)" no; fi

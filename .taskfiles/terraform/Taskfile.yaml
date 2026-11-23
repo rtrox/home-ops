@@ -55,7 +55,9 @@ tasks:
     cmd: |
       # Export this stack's provider credentials (name:project:key rows from
       # _provider_env.json). Values stay in this process's environment.
-      for row in $(jq -er '.[] | "\(.env):\(.project):\(.key)"' _provider_env.json); do
+      rows=$(jq -r 'if type == "array" and all(.[]; (.env | type) == "string" and (.project | type) == "string" and (.key | type) == "string")
+        then .[] | "\(.env):\(.project):\(.key)" else error end' _provider_env.json) || { echo "malformed _provider_env.json (run: task tf:generate)" >&2; exit 1; }
+      for row in $rows; do
         name=${row%%:*}; rest=${row#*:}; project=${rest%%:*}; key=${rest#*:}
         value=$(doppler secrets get -p "$project" -c prd --plain "$key") || { echo "could not read $key from $project/prd" >&2; exit 1; }
         export "$name=$value"
