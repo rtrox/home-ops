@@ -58,6 +58,22 @@ state passphrase, and the read-only service tokens (`doppler-eso`,
   stacks (`backblaze`, `minio`, `pocketid`) only read the write-token secrets;
   don't apply them during step 3, and they're unaffected otherwise, since the
   old tokens stay valid until step 6.
+- **`CLOUDFLARE_USER_ID` in `tf-at-home/prd`.** The CI token's user-scoped
+  policy needs your Cloudflare user ID, which stays out of this public repo
+  (and out of state as plain text: the `doppler_secrets` map is sensitive).
+  Copy it from terraform-record's `cloudflare/ci_readonly.tf`, where it's still
+  a literal, without printing it:
+
+  ```sh
+  grep -o 'com\.cloudflare\.api\.user\.[0-9a-f]\{32\}' ~/terraform-record/cloudflare/ci_readonly.tf \
+    | head -1 | cut -d. -f5 | tr -d '\n' \
+    | doppler secrets set CLOUDFLARE_USER_ID -p tf-at-home -c prd >/dev/null
+  # Check the shape only: prints 1.
+  doppler secrets get CLOUDFLARE_USER_ID -p tf-at-home -c prd --plain | grep -cE '^[0-9a-f]{32}$'
+  ```
+
+  (`doppler secrets set` reads a piped value from stdin and prints the secret
+  table on success, hence `>/dev/null`.) Leave it `masked`, not `restricted`.
 - **Back up the secrets that change**, age-encrypted, never printed. This is
   the rollback for step 3:
 
@@ -169,23 +185,52 @@ Don't apply. A plan with imports changes nothing, so the fix is in code.
 | You see | Meaning | Do |
 | --- | --- | --- |
 | `cloudflare_r2_bucket.tofu_state` **must be replaced** or updated | an attribute differs from the bucket (`prevent_destroy` blocks a replace anyway) | Match `r2_state.tf` to the plan's current value (`location`, `storage_class`, `jurisdiction`); re-plan |
-| a project, environment or config **updated** (`description`, `name`) | the Doppler value changed since 2026-11-22 | Match `doppler.tf` to the live value; re-plan |
+| a project, environment or config **updated** (`description`, `name`, or an environment's `personal_configs`) | the Doppler setting differs from the code (all 7 environments had personal configs off on 2026-11-22; the provider defaults it to `false`) | Match `doppler.tf` to the live value (for `personal_configs`, add `personal_configs = true` to that environment); re-plan |
 | a `doppler_secret` update showing `visibility` or `value_type` too | the hand-made secret isn't `masked`/`string` | Set `visibility`/`value_type` on that resource to the live value; re-plan. Only `value` may change |
+| an error **reading** an imported `doppler_secret` | the secret is `restricted`: provider 1.23.2 can't read a restricted secret's value with a personal token, so the import fails | In the dashboard, set that secret's visibility to `masked` (the value is unchanged), then re-plan. Don't add `visibility = "restricted"` in code: the next refresh would fail the same way |
 | `Cannot import non-existent remote object` | a project, config or secret name changed or is missing | Check it with `doppler configs` / `doppler secrets names`; fix `imports.tf` |
-| 403 on `data.cloudflare_user.owner` | `CLOUDFLARE_TERRAFORM_TOKEN` can't read the user | Add **User Details Read** to that token's user policy in the dashboard, then re-plan |
+| precondition `CLOUDFLARE_USER_ID is missing` | step 0's secret isn't set, or isn't a 32-character hex ID | Redo that step; re-plan |
 | 403 creating a Cloudflare token | the Terraform token lost API Tokens Write | The same token terraform-record uses: check it hasn't changed |
-| error creating `doppler_environment.this["tf-at-home/ci-apply"]` | Doppler refused the slug or the environment count | Stop and report; it changes the `ci-apply` design |
+| `cloudflare_api_token.r2_state` **must be replaced** (`prevent_destroy` error) | a change that forces a new token | Not part of this move: fix the code. Rotating these is its own procedure (below) |
 | **anything destroyed** | not intended | Stop |
+
+A slug or environment-count problem with `tf-at-home/ci-apply` only shows at
+apply time, not in the plan; step 3 applies that part first, on its own.
 
 ## 3. Merge, then apply
 
-Merge the home-ops PR once step 2 matches, then apply from `main`:
+Merge the home-ops PR once step 2 matches, then apply from `main`, in two
+parts.
+
+**3a. The new `ci-apply` environment and config, alone.** Doppler may reject
+the hyphenated slug `ci-apply` or a third `tf-at-home` environment (free plan),
+and the plan can't tell. Only the apply finds out, so it goes first, before
+any credential changes. Targeting all of `doppler_config.this` avoids quoting
+an index through `task`; the other configs, their environments and projects
+come along as no-change imports:
 
 ```sh
 git switch main && git pull
-task tf:plan STACK=foundation     # the same 30 / 12 / 8 / 0
+task tf:apply STACK=foundation -- -target=doppler_config.this
+```
+
+Expect `Plan: 21 to import, 2 to add, 0 to change, 0 to destroy.` The two adds
+are `doppler_environment.this["tf-at-home/ci-apply"]` and
+`doppler_config.this["tf-at-home/ci-apply"]`. The targeting warning is expected.
+If the environment create fails, **stop and report**: nothing but imports has
+happened (state only), and the `ci-apply` name is used by
+`.github/workflows/terraform-apply.yaml`, so a different name is a design
+change.
+
+**3b. Everything else:**
+
+```sh
+task tf:plan STACK=foundation     # 9 to import, 10 to add, 8 to change, 0 to destroy
 task tf:apply STACK=foundation    # review, then yes
 ```
+
+The 9 imports are the bucket and the 8 `doppler_secret`s; the 10 adds are
+step 2's creates minus the two from 3a.
 
 The apply runs on the R2 credentials `task` read at its start (the old
 read-write token), and those stay valid, so updating `R2_STATE_READWRITE`
@@ -200,27 +245,34 @@ mid-apply doesn't cut the stack off from its own state.
 2. **CI plans (new read-only R2 token and new CI Cloudflare token in
    `tf-at-home/ci`):** re-run the latest `terraform-plan` run of a PR that
    planned `stacks/proxmox` only: `gh run list --workflow terraform-plan.yaml`,
-   then `gh run rerun <id>`. The proxmox plan must succeed. (A run that
-   includes `stacks/foundation` fails until CI skips `laptop-only` stacks;
-   that's expected.)
-3. **terraform-record stacks (new write tokens, same secret names):** plan each
-   and expect `No changes.`:
+   then `gh run rerun <id>`. The proxmox plan must succeed. (CI never plans
+   `stacks/foundation`: it skips `laptop-only` stacks, and a PR touching one
+   only says to plan it from the laptop.)
+3. **Nightly `terraform-drift` (reads `tf-at-home/ci` too):** start it now
+   with `gh workflow run terraform-drift.yaml`, and check that the run passes
+   and its healthchecks.io check got a success ping. The next scheduled run
+   (11:30 UTC) must pass too.
+4. **terraform-record stacks (new write tokens, same secret names):** plan each
+   and expect `No changes.` `backblaze` and `cloudflare` run remotely in TFC
+   (no CLI token). `pocketid` (TFC local execution) and `minio` (S3 backend on
+   B2, no TFC) run locally and need `var.doppler_token`; without it they'd
+   prompt, invisibly behind the `grep`. `minio` also needs the B2 state key in
+   `AWS_*` (terraform-record's README):
 
    ```sh
    cd ~/terraform-record
-   for s in backblaze cloudflare minio; do env -u TF_VAR_doppler_token tofu -chdir=$s plan -no-color 2>&1 | grep -E '^Plan:|^No changes|^Error'; done
-   TF_VAR_doppler_token=$(doppler configure get token --plain) tofu -chdir=pocketid plan -no-color 2>&1 | grep -E '^Plan:|^No changes|^Error'
+   for s in backblaze cloudflare; do env -u TF_VAR_doppler_token tofu -chdir=$s plan -input=false -no-color 2>&1 | grep -E '^Plan:|^No changes|^Error'; done
+   for s in pocketid minio; do TF_VAR_doppler_token=$(doppler configure get token --plain) tofu -chdir=$s plan -input=false -no-color 2>&1 | grep -E '^Plan:|^No changes|^Error'; done
    ```
 
-   (`minio` also needs the B2 state key in `AWS_*`; see terraform-record's
-   README.)
-4. **`tofu-state-copy`:** unaffected. Its token (`tofu-state-copy`) and its
+5. **`tofu-state-copy`:** unaffected. Its token (`tofu-state-copy`) and its
    secret (`TOFU_STATE_R2_SOURCE`) didn't change. Confirm the next nightly run
    pinged healthchecks.io.
 
 ## 5. Wait
 
-Leave the old credentials for at least one nightly cycle and one CI run, so a
+Leave the old credentials for at least one nightly cycle (a scheduled
+`terraform-drift` run, the `tofu-state-copy` run) and one CI PR plan, so a
 consumer that reads at a different time also shows it's healthy. Until step
 6, everything is reversible from the step 0 backup.
 
@@ -252,7 +304,7 @@ exists, it's a personal token: check the dashboard's account **Tokens** page
 and revoke it there, after confirming the TFC variable set `doppler-read`
 holds `tfc-remote-runs`, not it.
 
-Re-run step 4.3: all four terraform-record stacks still `No changes.` proves
+Re-run step 4.4: all four terraform-record stacks still `No changes.` proves
 nothing used the revoked tokens.
 
 **Old Cloudflare tokens, via terraform-record** (procedure step 4): a
@@ -269,7 +321,8 @@ retirement and nothing else:
 Plan: 0 to add, 0 to change, 4 to destroy.
 ```
 
-Apply it in TFC (`env -u TF_VAR_doppler_token`), then re-run step 4.1 and 4.2.
+Apply it in TFC (`env -u TF_VAR_doppler_token`), then re-run steps 4.1 to
+4.3.
 
 ## 7. Zero-diff gate
 
@@ -315,11 +368,54 @@ Delete the step 0 backups once the gate has held for a week.
   secret table on success, hence `>/dev/null`. Check `doppler secrets set
   --help` on your CLI version first.)
 
+  **`R2_STATE_READONLY` lives in two configs**, `prd` and its copy in `ci`
+  (which CI and `terraform-drift` read). Restore both, or they disagree:
+
+  ```sh
+  for c in prd ci; do
+    age -d -i "$AGE_KEY" "$BACKUP_DIR/foundation-$c-$STAMP.json.age" \
+      | jq -r .R2_STATE_READONLY \
+      | doppler secrets set R2_STATE_READONLY -p tf-at-home -c "$c" >/dev/null
+  done
+  ```
+
+  The CI Cloudflare token is `ci`'s `CLOUDFLARE_TERRAFORM_TOKEN` (from
+  `foundation-ci-*`). Never restore `prd`'s `CLOUDFLARE_TERRAFORM_TOKEN`: it
+  isn't in the backup, and this stack doesn't manage it.
+
   The old tokens work until step 6, so this restores the consumer at once.
   The next plan of this stack then shows that secret updating back to the new
   token: find why the new one failed before applying it again. If even the
   laptop's R2 access is gone, the break-glass R2 token (outside Doppler) gets
   you back into the state.
 - **Something destroyed:** nothing here plans a destroy, and the bucket,
-  projects, environments and configs all have `prevent_destroy`. Stop and
-  look; never edit state by hand.
+  projects, environments, configs and R2 tokens all have `prevent_destroy`.
+  Stop and look; never edit state by hand.
+
+## Rotating the R2 tokens later
+
+Not part of this move; kept here until a permanent runbook exists.
+`cloudflare_api_token.r2_state` has `prevent_destroy`: every stack's backend,
+this one's included, logs in with these tokens, and a replacement in an
+ordinary apply would delete the read-write token while that apply still needs
+it to write state and release the lock (a 403, a stale lock, and possibly
+unsaved state). So rotate deliberately, logged in as the break-glass key:
+
+1. Freeze every stack (no plans or applies, CI included: pause the
+   `terraform-apply` and `terraform-drift` workflows with `gh workflow
+   disable`).
+2. In a fresh shell, put the break-glass R2 key in `AWS_ACCESS_KEY_ID` /
+   `AWS_SECRET_ACCESS_KEY` / `AWS_ENDPOINT_URL_S3`, from wherever it's kept
+   outside Doppler, and `TF_VAR_state_passphrase` and `DOPPLER_TOKEN` as
+   `task tf:*` sets them. Run `mise exec -- tofu` in this directory directly:
+   `task` would overwrite `AWS_*` from Doppler.
+3. Temporarily remove `prevent_destroy` from `cloudflare_api_token.r2_state`
+   (a local, uncommitted edit). A name change alone updates a token in place
+   and keeps its secret, so force the replacement instead.
+4. `tofu plan '-replace=cloudflare_api_token.r2_state["readwrite"]'` (and/or
+   `["readonly"]`): expect that token replaced (create before destroy) and its
+   `R2_STATE_*` updated (for `readonly`, `ci`'s copy too), nothing else. Apply
+   with the same `-replace`. The state write and lock release use the
+   break-glass key, so the old token going away mid-apply doesn't matter.
+5. Restore `prevent_destroy` (`git diff` is empty again), then check every
+   consumer as in step 4 above. Re-enable the workflows.

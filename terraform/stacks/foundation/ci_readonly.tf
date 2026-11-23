@@ -2,15 +2,14 @@
 # They live in their own Doppler root config, tf-at-home/ci, which CI's service
 # token reads; tf-at-home/prd (write tokens, R2 read-write, the stacks'
 # Cloudflare token) is out of its reach.
-# The owner's Cloudflare user (the provider token's owner), looked up rather
-# than committed to this public repo. Needs "User Details Read" on the
-# token's user policy.
-data "cloudflare_user" "owner" {}
-
 locals {
-  # For the user-scoped "API Tokens Read" (plans refresh API tokens, e.g. the
-  # proxmox stack's ACME token).
-  cloudflare_user_resource = "com.cloudflare.api.user.${data.cloudflare_user.owner.id}"
+  # The owner's Cloudflare user ID, for the user-scoped "API Tokens Read" (plans
+  # refresh API tokens, e.g. the proxmox stack's ACME token). Kept out of this
+  # public repo, and not looked up with data "cloudflare_user", which would put
+  # the user's name, email and phone in state unmarked. It comes from the
+  # sensitive Doppler key tf-at-home/prd CLOUDFLARE_USER_ID, set by hand
+  # (MIGRATION.md step 0).
+  cloudflare_user_id = try(data.doppler_secrets.terraform.map.CLOUDFLARE_USER_ID, "")
 
   # Only what home-ops' stacks plan in CI today (proxmox: zone lookup, DNS
   # records, API tokens). Add groups when a stack needs them; never an
@@ -43,7 +42,8 @@ resource "cloudflare_api_token" "ci_readonly" {
     {
       effect            = "allow"
       permission_groups = [for name in local.ci_readonly_permissions.user : { id = local.permission_group_ids[name] }]
-      resources         = jsonencode({ (local.cloudflare_user_resource) = "*" })
+      # A string, not jsonencode(): a sensitive value can't be a map key.
+      resources = "{\"com.cloudflare.api.user.${local.cloudflare_user_id}\":\"*\"}"
     },
   ]
 
@@ -59,8 +59,8 @@ resource "cloudflare_api_token" "ci_readonly" {
     }
     precondition {
       # Never issue a user-scoped policy without a user in it.
-      condition     = data.cloudflare_user.owner.id != null && data.cloudflare_user.owner.id != ""
-      error_message = "The Cloudflare user lookup returned no ID."
+      condition     = can(regex("^[0-9a-f]{32}$", local.cloudflare_user_id))
+      error_message = "tf-at-home/prd CLOUDFLARE_USER_ID is missing or isn't a 32-character hex Cloudflare user ID (MIGRATION.md step 0)."
     }
   }
 }

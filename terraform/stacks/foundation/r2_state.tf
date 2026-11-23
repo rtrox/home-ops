@@ -54,8 +54,13 @@ resource "cloudflare_api_token" "r2_state" {
   }]
 
   lifecycle {
-    # A changed policy updates in place, but a replacement (if it ever comes)
-    # must have the new token in Doppler before the old one is deleted.
+    # Every stack's backend, this one's included, logs in with these tokens
+    # (task tf:* reads R2_STATE_READWRITE once, at the start of a run). A
+    # replacement would delete the token mid-apply, and the state write and
+    # lock release would then get a 403. So a plan that replaces or destroys
+    # one fails here; rotate deliberately instead, logged in with the
+    # break-glass key (MIGRATION.md, "Rotating the R2 tokens later").
+    prevent_destroy       = true
     create_before_destroy = true
     precondition {
       condition     = alltrue([for name in each.value : local.permission_group_ids[name] != null])
