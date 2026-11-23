@@ -43,7 +43,9 @@ resource "github_repository_environment" "this" {
     # integrations/github 6.13.0 only reads prevent_self_review back when the
     # Environment has required reviewers (upstream bug, PR #3583), so the
     # imported tofu-apply shows null -> false. Applying that needs
-    # Administration write, which the PAT doesn't have.
+    # Administration write, which the PAT doesn't have. It also hides drift of
+    # this setting on tofu-apply-gated.
+    # TODO: drop this once integrations/github ships the fix for #3583.
     ignore_changes = [prevent_self_review]
   }
 }
