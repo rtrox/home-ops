@@ -101,4 +101,33 @@ printf '[{"env":"A_ENV","project":"tf-at-home","key":"A_KEY"},{"env":"H_ENV","pr
 rc=$?
 if [ $rc -eq 0 ]; then check "provider env: exports, masks, unsets, fails closed" ok; else check "provider env (rc=$rc)" no; fi
 
+# tf_plan_gate: destroys, replaces and forgets need approval; the rest do not.
+# Fixtures are minimal `tofu show -json` documents.
+gate() { # NAME EXPECT(gated|ungated) JSON [TEXT-TOTALS]
+  printf '%s' "$3" >"$tmp/gate.json"
+  printf '%s\n' "${4:-Plan: 1 to add, 0 to change, 0 to destroy.}" >"$tmp/gate.log"
+  local got=ungated reason
+  reason=$(tf_plan_gate "$tmp/gate.json" "$tmp/gate.log") && got=gated
+  if [ "$got" = "$2" ] && { [ "$got" = ungated ] || [ -n "$reason" ]; }; then check "gate: $1" ok; else check "gate: $1 (got $got)" no; fi
+}
+rc_json() { printf '{"format_version":"1.2","resource_changes":[{"address":"a.b","change":{"actions":%s}}]}' "$1"; }
+gate "add only" ungated "$(rc_json '["create"]')"
+gate "update" ungated "$(rc_json '["update"]')" "Plan: 0 to add, 1 to change, 0 to destroy."
+gate "no-op and read" ungated "$(rc_json '["no-op"]')"
+gate "empty plan" ungated '{"format_version":"1.2"}' "Changes to Outputs:"
+gate "delete" gated "$(rc_json '["delete"]')"
+gate "replace (delete then create)" gated "$(rc_json '["delete","create"]')"
+gate "replace (create then delete)" gated "$(rc_json '["create","delete"]')"
+gate "forget" gated "$(rc_json '["forget"]')"
+gate "unparsable" gated 'not json'
+gate "empty file" gated ''
+gate "no format_version" gated '{"resource_changes":[]}'
+gate "resource_changes wrong type" gated '{"format_version":"1.2","resource_changes":"x"}'
+gate "text shows a destroy the JSON missed" gated "$(rc_json '["create"]')" "Plan: 1 to add, 0 to change, 1 to destroy."
+gate "text shows a forget the JSON missed" gated "$(rc_json '["create"]')" "Plan: 1 to add, 0 to change, 0 to destroy, 1 to forget."
+rc_json '["delete","create"]' >"$tmp/gate.json"
+printf 'Plan: 1 to add, 0 to change, 1 to destroy.\n' >"$tmp/gate.log"
+reason=$(tf_plan_gate "$tmp/gate.json" "$tmp/gate.log")
+if [ "$reason" = "plan has 1 to destroy or replace and 0 to forget" ]; then check "gate: reason has counts only" ok; else check "gate: reason has counts only" no; fi
+
 exit "$fails"

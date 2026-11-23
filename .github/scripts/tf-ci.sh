@@ -163,6 +163,37 @@ tf_summary_hash() {
   { tf_summary_headers "$1"; tf_summary_totals "$1"; } | sha256sum | cut -d' ' -f1
 }
 
+# tf_plan_gate JSON LOG: decide whether a stack's apply needs approval. JSON is
+# `tofu show -json` of the saved plan, LOG the text plan. Prints a short
+# reason (counts only, never values) and returns 0 when the apply is GATED, 1
+# when it may run straight away. Gated means the plan destroys, replaces
+# (create-then-destroy and destroy-then-create both carry "delete") or forgets
+# anything. Fail closed: a missing or unparsable JSON, or a text plan whose
+# totals show a destroy or forget the JSON missed, is gated.
+tf_plan_gate() {
+  local json=$1 log=$2 counts del forget totals tdel tforget
+  counts=$(jq -r 'if (type == "object") and (.format_version | type) == "string"
+      and ((.resource_changes // []) | type) == "array"
+    then (.resource_changes // []) as $rc
+      | "\([$rc[] | select(.change.actions | index("delete"))] | length) \([$rc[] | select(.change.actions | index("forget"))] | length)"
+    else error end' "$json" 2>/dev/null) || counts=""
+  if ! [[ $counts =~ ^[0-9]+\ [0-9]+$ ]]; then
+    echo "could not read the plan to check it for destroys, replaces and forgets"
+    return 0
+  fi
+  read -r del forget <<<"$counts"
+  totals=$(tf_summary_totals "$log")
+  tdel=$(grep -oE '[0-9]+ to destroy' <<<"$totals" | grep -oE '^[0-9]+' || true)
+  tforget=$(grep -oE '[0-9]+ to forget' <<<"$totals" | grep -oE '^[0-9]+' || true)
+  if [ "${tdel:-0}" -gt "$del" ]; then del=$tdel; fi
+  if [ "${tforget:-0}" -gt "$forget" ]; then forget=$tforget; fi
+  if [ "$del" -gt 0 ] || [ "$forget" -gt 0 ]; then
+    echo "plan has $del to destroy or replace and $forget to forget"
+    return 0
+  fi
+  return 1
+}
+
 # tf_summary_block STACK LOG: the markdown for one stack (EXCLUDES must be set
 # by tf_excludes for the same stack).
 tf_summary_block() {
