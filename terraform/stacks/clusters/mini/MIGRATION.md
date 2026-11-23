@@ -219,7 +219,7 @@ Don't apply. Fix the code and re-plan.
 
 ## 3. Forget, in terraform-record (TFC)
 
-Apply the terraform-record PR (both workspaces). Remote TFC runs must never get
+Apply rtrox/terraform-record#66 (both workspaces). Remote TFC runs must never get
 your Doppler CLI token, so unset it. On the PR branch first, then merged:
 
 ```sh
@@ -386,7 +386,7 @@ consumer that reads at a different time also proves it's healthy. Until step
 
 ## 8. Delete the old credentials
 
-Apply the second terraform-record PR (procedure step 4). Plan on its branch,
+Apply rtrox/terraform-record#67 (procedure step 4). Plan on its branch,
 then merged, from `main`:
 
 ```text
