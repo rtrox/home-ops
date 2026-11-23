@@ -94,8 +94,10 @@ resource "doppler_environment" "this" {
   }
 }
 
-# A root config (name == environment) is created with its environment; the
-# provider then only looks it up.
+# Root configs (name == environment): Doppler creates one with every
+# environment, so every root config here is imported (imports.tf), never
+# created. The provider's create would try to set inheritance, which the free
+# plan refuses.
 resource "doppler_config" "this" {
   for_each = local.doppler_configs
 
