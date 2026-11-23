@@ -2,8 +2,9 @@
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
 name: terraform-drift
 
-# A nightly plan of every stack that isn't tagged `laptop-only`, with the
-# read-only `ci` credentials (the same as terraform-plan) and -lock=false.
+# A nightly plan of every stack that isn't tagged `laptop-only` or `ci-skip`,
+# with the read-only `ci` credentials (the same as terraform-plan) and
+# -lock=false.
 # Any diff, or any stack that fails to plan, fails the job and pings the
 # healthchecks.io check's /fail endpoint; a clean run pings it. A run that
 # never happens (runner down) is caught by the check's own schedule.
@@ -63,8 +64,8 @@ jobs:
 
           cd terraform
           # A failed list must fail the job, not look like "no stacks".
-          tf_list stacks --no-tags laptop-only || exit 1
-          tf_list laptop --tags laptop-only || exit 1
+          tf_list stacks --no-tags laptop-only,ci-skip || exit 1
+          tf_list laptop --tags laptop-only,ci-skip || exit 1
           echo "Stacks:"
           printf '%s\n' "${stacks[@]:-none}"
           {
@@ -72,7 +73,7 @@ jobs:
             echo
             echo "Resource headers and counts only; full plans are not printed."
             for s in "${laptop[@]}"; do
-              printf '\nSkipped `%s` (laptop-only): check it from the laptop (`task tf:plan STACK=%s`).\n' "$s" "${s#stacks/}"
+              printf '\nSkipped `%s` (laptop-only or ci-skip): check it from the laptop (`task tf:plan STACK=%s`).\n' "$s" "${s#stacks/}"
             done
           } >> "$summary"
 
