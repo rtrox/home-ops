@@ -41,10 +41,14 @@ name: terraform-apply
 # whole comment from the plan lines plus the outcomes, so no line is lost, and
 # a stack with no artifact reads "did not run". Only headers, counts and
 # result lines are posted, never plan content. Comment steps are
-# continue-on-error, and apply's `if` uses always() so a failed announce never
-# blocks an apply; `announce` only supplies the environment `url` (the PR, so
-# the deployment's "View deployment" opens it; the run URL when there is
-# none). workflow_dispatch and pushes with no merged PR post nothing.
+# continue-on-error. `apply` needs `announce` only for the environment `url`
+# (the PR, so the deployment's "View deployment" opens it; the run URL when
+# there is none). It deliberately has no status function in its `if` (no
+# always()), so a cancelled run stops it. Every announce step is
+# continue-on-error, so announce only fails if the hosted runner itself
+# fails; then apply is skipped (fail closed) and the next push or dispatch
+# retries. If the owner cancels the run, `report` does not run and the
+# comment keeps its last text. workflow_dispatch and pushes with no merged PR post nothing.
 #
 # Credentials. The read-only plan job uses the same tokens as terraform-plan
 # (CI_DOPPLER_TF_READ / CI_DOPPLER_HOSTS_READ, in the runner's environment).
@@ -232,7 +236,7 @@ jobs:
   announce:
     name: Announce on the PR
     needs: plan
-    if: ${{ always() && needs.plan.result != 'skipped' }}
+    if: ${{ !cancelled() && needs.plan.result != 'skipped' }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -300,9 +304,9 @@ jobs:
   apply:
     name: Apply ${{ matrix.stack }}
     needs: [plan, announce]
-    # always() so a failed or skipped announce never blocks an apply; the plan
-    # must still have succeeded.
-    if: ${{ always() && needs.plan.result == 'success' && needs.plan.outputs.matrix != '' && needs.plan.outputs.matrix != '[]' }}
+    # No status function on purpose: the implicit success() means a cancel
+    # stops it, and a failed announce skips it (fail closed).
+    if: ${{ needs.plan.outputs.matrix != '' && needs.plan.outputs.matrix != '[]' }}
     # One job per stack, in stack order. Gated stacks wait for approval.
     # `url` makes the deployment's "View deployment" go to the merged PR (the
     # run when announce found none or failed).
@@ -376,7 +380,7 @@ jobs:
           case $rc in 0|2) ;; *) stop "tofu plan failed (output is not printed)" ;; esac
           if [ $rc -eq 0 ]; then
             printf '\nNo changes any more; nothing to apply.\n' >> "$summary"
-            outcome "no changes" "any more; nothing applied"
+            outcome "no changes" "any more; nothing applied" || true
             exit 0
           fi
 
@@ -401,7 +405,7 @@ jobs:
           result=$(grep -oE '^Apply complete! Resources: [^.]*\.' "$out/apply.log" || echo "Apply finished, no summary line found.")
           printf '\n%s\n' "$result" >> "$summary"
           echo "$STACK: $result"
-          outcome applied "$result"
+          outcome applied "$result" || true
 
       - name: Write the outcome line
         id: outcome
@@ -415,10 +419,13 @@ jobs:
         run: |
           set -uo pipefail
           source .github/scripts/tf-ci.sh
-          if [ ! -s "$RUNNER_TEMP/outcome.md" ]; then
-            tf_comment_line "$STACK" failed "(did not finish; details in the run)" "$ENVNAME" >"$RUNNER_TEMP/outcome.md" || true
+          name=outcome-${STACK//\//-}
+          if [ -s "$RUNNER_TEMP/outcome.md" ]; then
+            mv "$RUNNER_TEMP/outcome.md" "$RUNNER_TEMP/$name.md" || true
+          else
+            tf_comment_line "$STACK" failed "(did not finish; details in the run)" "$ENVNAME" >"$RUNNER_TEMP/$name.md" || true
           fi
-          echo "name=outcome-${STACK//\//-}" >> "$GITHUB_OUTPUT"
+          echo "name=$name" >> "$GITHUB_OUTPUT"
         continue-on-error: true
 
       - name: Upload the outcome line
@@ -426,18 +433,18 @@ jobs:
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ${{ steps.outcome.outputs.name }}
-          path: ${{ runner.temp }}/outcome.md
+          path: ${{ runner.temp }}/${{ steps.outcome.outputs.name }}.md
           retention-days: 3
         continue-on-error: true
 
       - name: Remove the plan file
         if: ${{ always() }}
-        run: rm -rf "$RUNNER_TEMP/apply" "$RUNNER_TEMP/outcome.md"
+        run: rm -rf "$RUNNER_TEMP/apply" "$RUNNER_TEMP"/outcome*.md
 
   report:
     name: Report on the PR
     needs: [plan, announce, apply]
-    if: ${{ always() && needs.announce.outputs.pr_number != '' }}
+    if: ${{ !cancelled() && needs.announce.outputs.pr_number != '' }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -453,6 +460,7 @@ jobs:
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           pattern: outcome-*
+          merge-multiple: true
           path: ${{ runner.temp }}/outcomes
         continue-on-error: true
 
@@ -479,7 +487,7 @@ jobs:
             # run" (rejected, cancelled or skipped).
             while IFS=$'\t' read -r stack gated; do
               [ -n "$stack" ] || continue
-              f=$RUNNER_TEMP/outcomes/outcome-${stack//\//-}/outcome.md
+              f=$RUNNER_TEMP/outcomes/outcome-${stack//\//-}.md
               if [ -s "$f" ]; then
                 results+="$(head -n 1 "$f")"$'\n'
               else
@@ -490,7 +498,12 @@ jobs:
             done < <(jq -r '.[]? | [.stack, (.gated | tostring)] | @tsv' <<<"${MATRIX:-[]}" 2>/dev/null)
             if [ -n "$results" ]; then printf '\n**Results**\n\n%s' "$results"; fi
           } >"$body"
-          echo "post=true" >> "$GITHUB_OUTPUT"
+          # Same check as announce: nothing to say with no ci-apply stacks.
+          if [ "$PLAN_OUTCOME" = success ] && [ "$PLAN_RESULT" = success ] && [ -z "$PLAN_LINES" ]; then
+            echo "::notice::no ci-apply stacks; not commenting"
+          else
+            echo "post=true" >> "$GITHUB_OUTPUT"
+          fi
         continue-on-error: true
 
       - name: Update the comment
