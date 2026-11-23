@@ -43,17 +43,19 @@ resource "cloudflare_dns_record" "inventory_host" {
   ttl     = 1
 
   lifecycle {
+    # A missing host fails both: its address and dns_name don't evaluate.
     precondition {
-      condition     = contains(keys(local.inventory_all_hosts), each.key)
-      error_message = "${each.key} is not a host in inventory/hosts.yaml, so its A record has no address. Add it back, or remove it from local.inventory_host_records."
-    }
-    precondition {
-      condition     = can(regex("^\\d{1,3}(\\.\\d{1,3}){3}$", local.inventory_all_hosts[each.key].address))
-      error_message = "${each.key} has no IPv4 address in inventory/hosts.yaml."
+      # A valid IPv4 address: cidrhost parses it, and IPv6 (which it also
+      # parses) is excluded.
+      condition = (
+        can(cidrhost("${local.inventory_all_hosts[each.key].address}/32", 0)) &&
+        !strcontains(try(local.inventory_all_hosts[each.key].address, ":"), ":")
+      )
+      error_message = "${each.key} is missing from inventory/hosts.yaml, or has no valid IPv4 address there. Fix the inventory, or remove the host from local.inventory_host_records."
     }
     precondition {
       condition     = can(regex("^[a-z0-9-]+(\\.[a-z0-9-]+)*\\.rtrox\\.io$", local.inventory_all_hosts[each.key].dns_name))
-      error_message = "${each.key} has no dns_name in the rtrox.io zone in inventory/hosts.yaml."
+      error_message = "${each.key} is missing from inventory/hosts.yaml, or has no dns_name in the rtrox.io zone there."
     }
   }
 }

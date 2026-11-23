@@ -9,6 +9,9 @@ stack {
   tags = ["ci-apply"]
 
   # host_records.tf reads it; an inventory change must re-plan the stack.
+  # Changing the address or dns_name of ns1, ns2, avahi or unifi in
+  # inventory/hosts.yaml updates their public A record on merge, ungated. A
+  # removed or renamed host fails a precondition instead.
   watch = [
     "/inventory/hosts.yaml",
   ]
