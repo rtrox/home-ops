@@ -157,8 +157,9 @@ jobs:
             if ! tf_export_provider_env; then fail_step "$stack" "provider credentials"; echo "::endgroup::"; continue; fi
             if ! tofu init -input=false -lockfile=readonly -no-color >"$out/init.log" 2>&1; then fail_step "$stack" "tofu init"; echo "::endgroup::"; continue; fi
             rm -f "$out/tfplan" "$out/plan.json"
-            tofu plan -lock=false -no-color -input=false -detailed-exitcode -out="$out/tfplan" >"$out/plan.log" 2>&1
-            rc=$?
+            # The step shell is `bash -e`: a bare plan exiting 2 (changes) would end the step.
+            rc=0
+            tofu plan -lock=false -no-color -input=false -detailed-exitcode -out="$out/tfplan" >"$out/plan.log" 2>&1 || rc=$?
             case $rc in 0|2) ;; *) fail_step "$stack" "tofu plan"; echo "::endgroup::"; continue ;; esac
             EXCLUDES=()
             tf_summary_block "$stack" "$out/plan.log" >> "$summary"
@@ -251,8 +252,9 @@ jobs:
 
           # Plan to a local file with the read-write credentials. The plan file
           # (encrypted, like state) stays on this runner and is never uploaded.
-          tofu plan -no-color -input=false -detailed-exitcode -out="$out/tfplan" >"$out/plan.log" 2>&1
-          rc=$?
+          # The step shell is `bash -e`: a bare plan exiting 2 (changes) would end the step.
+          rc=0
+          tofu plan -no-color -input=false -detailed-exitcode -out="$out/tfplan" >"$out/plan.log" 2>&1 || rc=$?
           case $rc in 0|2) ;; *) stop "tofu plan failed (output is not printed)" ;; esac
           if [ $rc -eq 0 ]; then
             printf '\nNo changes any more; nothing to apply.\n' >> "$summary"
