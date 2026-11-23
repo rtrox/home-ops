@@ -113,11 +113,18 @@ globals {
     cloudflare = [
       { env = "CLOUDFLARE_API_TOKEN", project = "tf-at-home", key = "CLOUDFLARE_TERRAFORM_TOKEN" },
     ]
+    # A fine-grained PAT limited to home-ops (foundation only; laptop-only).
+    github = [
+      { env = "GITHUB_TOKEN", project = "tf-at-home", key = "GITHUB_TERRAFORM_TOKEN" },
+    ]
     # The token is written to hosts-at-home by the Ansible proxmox role.
     proxmox = [
       { env = "PROXMOX_VE_API_TOKEN", project = "hosts-at-home", key = "PVE_TERRAFORM_API_TOKEN" },
     ]
   }
+
+  # The GitHub account that owns the repositories the github provider manages.
+  github_owner = "rtrox"
 
   proxmox_endpoint = "https://pve.rtrox.io:8006/"
 }
@@ -180,6 +187,15 @@ generate_hcl "_providers.tf" {
       for_each = tm_contains(global.providers, "cloudflare") ? [1] : []
       labels   = ["cloudflare"]
       content {}
+    }
+
+    # The github provider reads GITHUB_TOKEN itself.
+    tm_dynamic "provider" {
+      for_each = tm_contains(global.providers, "github") ? [1] : []
+      labels   = ["github"]
+      attributes = {
+        owner = global.github_owner
+      }
     }
 
     # The proxmox provider reads PROXMOX_VE_API_TOKEN itself.

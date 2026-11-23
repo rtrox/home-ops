@@ -93,3 +93,25 @@ import {
   to = doppler_secret.ci_r2_state_readonly
   id = "tf-at-home.ci.R2_STATE_READONLY"
 }
+
+# P2-1b: the two home-ops GitHub Environments as made by hand (read with the
+# API on 2026-11-22), and each one's single branch policy (`main`). The values
+# are the policies' API IDs.
+locals {
+  imported_github_environment_policies = {
+    "tofu-apply-gated" = 67820985
+    "tofu-apply"       = 67821039
+  }
+}
+
+import {
+  for_each = local.github_environments
+  to       = github_repository_environment.this[each.key]
+  id       = "${local.github_repository}:${each.key}"
+}
+
+import {
+  for_each = local.imported_github_environment_policies
+  to       = github_repository_environment_deployment_policy.main[each.key]
+  id       = "${local.github_repository}:${each.key}:${each.value}"
+}

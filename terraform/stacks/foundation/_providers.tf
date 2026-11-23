@@ -8,3 +8,6 @@ variable "cloudflare_user_id" {
 }
 provider "cloudflare" {
 }
+provider "github" {
+  owner = "rtrox"
+}

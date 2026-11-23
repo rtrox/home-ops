@@ -38,8 +38,8 @@ locals {
       environments = {
         prd = { name = "Production" }
         ci  = { name = "Continuous Integration" }
-        # CI's read-write apply credentials (a separate task decides what goes
-        # in it). Its own root config, so the ci and prd tokens can't read it.
+        # CI's apply credentials (ci_apply.tf). Its own root config, so the ci
+        # and prd tokens can't read it.
         ci-apply = { name = "CI Apply" }
       }
     }
