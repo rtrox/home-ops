@@ -122,7 +122,7 @@ tf_excludes() {
   EXCLUDES=()
   [ -f ci-plan-exclude.txt ] || return 0
   local addr
-  while IFS= read -r addr; do
+  while IFS= read -r addr || [ -n "$addr" ]; do
     addr=${addr%%#*}
     addr=$(sed -E 's/^[[:space:]]+|[[:space:]]+$//g' <<<"$addr")
     if [ -n "$addr" ]; then EXCLUDES+=("-exclude=$addr"); fi

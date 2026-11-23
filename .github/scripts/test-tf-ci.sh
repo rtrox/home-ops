@@ -153,4 +153,10 @@ if [ "$line" = '- `dns`: **no changes** ([run](https://github.com/o/r/actions/ru
 line=$(tf_comment_line dns failed $'a\nb\n' tofu-apply)
 if [ "$(wc -l <<<"$line")" -eq 1 ] && grep -qF '**failed** a b (' <<<"$line"; then check "comment line: detail flattened" ok; else check "comment line: detail flattened" no; fi
 
+# tf_excludes: the last address counts even without a trailing newline.
+mkdir "$tmp/excl"
+printf '# comment\n\nfirst.addr\n  second.addr # trailing\nlast.addr' >"$tmp/excl/ci-plan-exclude.txt"
+res=$(cd "$tmp/excl" && tf_excludes && printf '%s,' "${EXCLUDES[@]}")
+if [ "$res" = "-exclude=first.addr,-exclude=second.addr,-exclude=last.addr," ]; then check "excludes: no trailing newline keeps last address" ok; else check "excludes: no trailing newline keeps last address" no; fi
+
 exit "$fails"
