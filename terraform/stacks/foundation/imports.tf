@@ -30,6 +30,11 @@ locals {
     "k8s-at-home/min",
     "tf-at-home/prd",
     "tf-at-home/ci",
+    # Created by this stack's doppler_environment, but Doppler makes an
+    # environment's root config itself, and the provider's create call is
+    # refused on the free plan ("no access to config inheritance"). So the
+    # root config is imported, like the others.
+    "tf-at-home/ci-apply",
   ]
   # The hand-made secrets holding the hand-made write tokens. Imported, then
   # updated to the new tokens, so the stacks that read them by name pick the

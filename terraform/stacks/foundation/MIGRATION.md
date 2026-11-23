@@ -20,7 +20,8 @@ create service tokens on the free plan. It never runs in CI.
 | CI token `ci-plan-readonly-<date>` | rotate: new `home-ops-ci-plan-readonly-<date>` here, same 90-day rotation and expiry check; the old one stays until step 6 |
 | `tf-at-home/ci` `CLOUDFLARE_TERRAFORM_TOKEN`, `R2_STATE_READONLY` | import, pointed at the new tokens |
 | Doppler projects (4), environments (7), configs (10) | import (all hand-made); `prevent_destroy` on every one |
-| Environment and root config `tf-at-home/ci-apply` | create (empty; a later task fills it) |
+| Environment `tf-at-home/ci-apply` | create (empty; a later task fills it) |
+| Root config `tf-at-home/ci-apply` | import: Doppler creates it with the environment, and the provider's create is refused on the free plan (#2202) |
 | Write tokens: one `tf-stacks-write` service token per config Terraform writes to (`hosts-at-home/prd`, `k8s-at-home/min`, `tf-at-home/prd`, `tf-at-home/ci`, `tf-at-home/ci-apply`) | create |
 | `tf-at-home/prd` `DOPPLER_TRUENAS_WRITE_TOKEN`, `DOPPLER_MINI_WRITE_TOKEN`, `DOPPLER_TF_WRITE_TOKEN`, `DOPPLER_TF_CI_WRITE_TOKEN` | import, pointed at the new write tokens. terraform-record's stacks read these names, so they pick the new tokens up unchanged |
 | `tf-at-home/prd` `DOPPLER_TF_CI_APPLY_WRITE_TOKEN` | create |
@@ -216,19 +217,19 @@ The header lines show resource addresses and for_each keys only (project and
 config names, never values). Expect:
 
 ```text
-Plan: 30 to import, 12 to add, 8 to change, 0 to destroy.
+Plan: 31 to import, 11 to add, 8 to change, 0 to destroy.
 ```
 
-- **30 imports**: `cloudflare_r2_bucket.tofu_state`; `doppler_project.this`
-  ×4; `doppler_environment.this` ×7; `doppler_config.this` ×10; and 8
+- **31 imports**: `cloudflare_r2_bucket.tofu_state`; `doppler_project.this`
+  ×4; `doppler_environment.this` ×7; `doppler_config.this` ×11 (including
+  `tf-at-home/ci-apply`, which Doppler creates with its environment); and 8
   `doppler_secret`s (below). The bucket, projects, environments and configs
   are imported **with no change**: each shows `will be imported` and nothing
   else.
-- **12 creates**: `cloudflare_api_token.r2_state["readonly"]` and
+- **11 creates**: `cloudflare_api_token.r2_state["readonly"]` and
   `["readwrite"]`, `cloudflare_api_token.ci_readonly`,
   `time_rotating.ci_readonly_token`,
-  `doppler_environment.this["tf-at-home/ci-apply"]`,
-  `doppler_config.this["tf-at-home/ci-apply"]`, `doppler_service_token.write`
+  `doppler_environment.this["tf-at-home/ci-apply"]`, `doppler_service_token.write`
   ×5 (one per config above), and
   `doppler_secret.write_token["tf-at-home/ci-apply"]`.
 - **8 updates**, each also imported: `doppler_secret.r2_state["readonly"]`,
@@ -274,9 +275,12 @@ git switch main && git pull
 task tf:apply STACK=foundation -- -target=doppler_config.this
 ```
 
-Expect `Plan: 21 to import, 2 to add, 0 to change, 0 to destroy.` The two adds
-are `doppler_environment.this["tf-at-home/ci-apply"]` and
-`doppler_config.this["tf-at-home/ci-apply"]`. The targeting warning is expected.
+Expect `Plan: 22 to import, 1 to add, 0 to change, 0 to destroy.` The one add
+is `doppler_environment.this["tf-at-home/ci-apply"]`; its root config, which
+Doppler creates with it, is one of the 22 imports. (On Nov 22 the first run
+created the environment and then failed creating the config, before #2202; its
+re-run is `1 to import, 0 to add`. Before re-running, check
+`doppler_config.this["tf-at-home/ci-apply"]` isn't in the state.) The targeting warning is expected.
 If the environment create fails, **stop and report**: nothing but imports has
 happened (state only), and the `ci-apply` name is used by
 `.github/workflows/terraform-apply.yaml`, so a different name is a design
