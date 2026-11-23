@@ -29,6 +29,27 @@ name: terraform-apply
 # A stack with ci-plan-exclude.txt is not applied (the plan would be partial);
 # the plan job fails for it. Plan and apply such a stack from the laptop.
 #
+# PR comment. All commenting runs on GitHub-hosted runners (ubuntu-latest),
+# never on the self-hosted ones that hold credentials, so those jobs have no
+# `pull-requests: write`. The plan job only emits the per-stack lines (counts
+# only: waiting for approval in `tofu-apply-gated` with the gate reason,
+# applying now in `tofu-apply`, no changes) and a plan outcome. `announce`
+# finds the merged PR and posts them as one sticky comment (header
+# `terraform-apply`, separate from terraform-plan's), in parallel with the
+# applies. Each apply job uploads its one outcome line (the `Apply complete!`
+# counts, or failed / refused) as a tiny artifact; `report` then rebuilds the
+# whole comment from the plan lines plus the outcomes, so no line is lost, and
+# a stack with no artifact reads "did not run". Only headers, counts and
+# result lines are posted, never plan content. Comment steps are
+# continue-on-error. `apply` needs `announce` only for the environment `url`
+# (the PR, so the deployment's "View deployment" opens it; the run URL when
+# there is none). It deliberately has no status function in its `if` (no
+# always()), so a cancelled run stops it. Every announce step is
+# continue-on-error, so announce only fails if the hosted runner itself
+# fails; then apply is skipped (fail closed) and the next push or dispatch
+# retries. If the owner cancels the run, `report` does not run and the
+# comment keeps its last text. workflow_dispatch and pushes with no merged PR post nothing.
+#
 # Credentials. The read-only plan job uses the same tokens as terraform-plan
 # (CI_DOPPLER_TF_READ / CI_DOPPLER_HOSTS_READ, in the runner's environment).
 # The apply jobs read the Doppler config tf-at-home/ci-apply with a service
@@ -79,6 +100,8 @@ jobs:
     timeout-minutes: 30
     outputs:
       matrix: ${{ steps.plan.outputs.matrix }}
+      plan_outcome: ${{ steps.plan.outputs.plan_outcome }}
+      lines: ${{ steps.plan.outputs.lines }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -109,8 +132,23 @@ jobs:
           mkdir -p "$out"
           # The saved plan and its JSON never outlive the step, whatever path
           # leaves the loop.
-          trap 'rm -rf "$out"' EXIT
           summary=$GITHUB_STEP_SUMMARY
+          lines=$RUNNER_TEMP/apply-lines.md
+          : >"$lines"
+          # On every exit: drop the plan files, then emit the public-safe
+          # outputs (the comment lines, counts only, and the outcome).
+          emit_outputs() {
+            local st=$?
+            rm -rf "$out"
+            {
+              if [ "$st" -eq 0 ]; then echo "plan_outcome=success"; else echo "plan_outcome=failed"; fi
+              echo "lines<<TF_LINES_EOF"
+              if [ -f "$lines" ]; then cat "$lines"; fi
+              echo "TF_LINES_EOF"
+            } >> "$GITHUB_OUTPUT"
+            rm -f "$lines"
+          }
+          trap emit_outputs EXIT
           failed=false
           matrix='[]'
 
@@ -144,6 +182,7 @@ jobs:
 
           fail_step() {
             failed=true
+            tf_comment_line "$1" "plan failed" "nothing is applied; see the run" >> "$lines"
             printf '\n#### `%s`\n\nFailed at step: **%s**. See the job log (the plan itself is not printed).\n' "$1" "$2" >> "$summary"
           }
 
@@ -163,6 +202,7 @@ jobs:
             case $rc in 0|2) ;; *) fail_step "$stack" "tofu plan"; echo "::endgroup::"; continue ;; esac
             EXCLUDES=()
             tf_summary_block "$stack" "$out/plan.log" >> "$summary"
+            if [ $rc -eq 0 ]; then tf_comment_line "$stack" "no changes" >> "$lines"; fi
             if [ $rc -eq 2 ]; then
               # A plan with changes must show a totals line, or the summary
               # and its hash would be blind to what is being applied.
@@ -173,9 +213,11 @@ jobs:
               tofu show -json -no-color "$out/tfplan" >"$out/plan.json" 2>/dev/null || : >"$out/plan.json"
               if reason=$(tf_plan_gate "$out/plan.json" "$out/plan.log"); then
                 is_gated=true
+                tf_comment_line "$stack" "waiting for approval" "in tofu-apply-gated: $reason" tofu-apply-gated >> "$lines"
                 printf '\n> [!IMPORTANT]\n> **Waiting for approval** in `tofu-apply-gated`: %s.\n' "$reason" >> "$summary"
               else
                 is_gated=false
+                tf_comment_line "$stack" "applying now" "in tofu-apply (no destroys, replaces or forgets)" tofu-apply >> "$lines"
                 printf '\nNo destroys, replaces or forgets: applies straight away in `tofu-apply`.\n' >> "$summary"
               fi
               matrix=$(jq -c --arg stack "$stack" --argjson gated "$is_gated" --arg hash "$(tf_summary_hash "$out/plan.log")" \
@@ -191,12 +233,86 @@ jobs:
             exit 1
           fi
 
+  announce:
+    name: Announce on the PR
+    needs: plan
+    if: ${{ !cancelled() && needs.plan.result != 'skipped' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: write
+    outputs:
+      pr_number: ${{ steps.pr.outputs.pr_number }}
+      pr_url: ${{ steps.pr.outputs.pr_url }}
+    steps:
+      - name: Find the merged PR
+        id: pr
+        if: ${{ github.event_name == 'push' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        # The first merged PR whose merge commit is this one.
+        run: |
+          set -uo pipefail
+          row=$(gh api "repos/$REPO/commits/$SHA/pulls" \
+            | jq -r --arg sha "$SHA" '[.[] | select(.merged_at != null and .merge_commit_sha == $sha)] | first | select(. != null) | "\(.number) \(.html_url)"') || row=""
+          if [[ $row =~ ^([0-9]+)\ (https://[^[:space:]]+)$ ]]; then
+            echo "pr_number=${BASH_REMATCH[1]}" >> "$GITHUB_OUTPUT"
+            echo "pr_url=${BASH_REMATCH[2]}" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::no merged PR found for this commit; not commenting"
+          fi
+        continue-on-error: true
+
+      - name: Build the comment
+        id: comment
+        if: ${{ steps.pr.outputs.pr_number != '' }}
+        env:
+          PLAN_OUTCOME: ${{ needs.plan.outputs.plan_outcome }}
+          PLAN_RESULT: ${{ needs.plan.result }}
+          PLAN_LINES: ${{ needs.plan.outputs.lines }}
+        run: |
+          set -uo pipefail
+          body=$RUNNER_TEMP/announce.md
+          {
+            printf '### Terraform apply\n\nCommit `%s`. Counts and results only; the plan is not printed.\n\n' "${GITHUB_SHA::7}"
+            if [ "$PLAN_OUTCOME" != success ] || [ "$PLAN_RESULT" != success ]; then
+              printf '**Nothing was applied**: at least one stack failed to plan.\n\n'
+            fi
+            printf '%s\n' "$PLAN_LINES"
+          } >"$body"
+          # Nothing to say when the plan succeeded and there are no stacks.
+          if [ "$PLAN_OUTCOME" = success ] && [ "$PLAN_RESULT" = success ] && [ -z "$PLAN_LINES" ]; then
+            echo "::notice::no ci-apply stacks; not commenting"
+          else
+            echo "post=true" >> "$GITHUB_OUTPUT"
+          fi
+        continue-on-error: true
+
+      - name: Post the comment
+        if: ${{ steps.comment.outputs.post == 'true' }}
+        uses: marocchino/sticky-pull-request-comment@5770ad5eb8f42dd2c4f34da00c94c5381e49af88 # v3.0.5
+        with:
+          GITHUB_TOKEN: ${{ github.token }}
+          header: terraform-apply
+          number: ${{ steps.pr.outputs.pr_number }}
+          path: ${{ runner.temp }}/announce.md
+        continue-on-error: true
+
   apply:
     name: Apply ${{ matrix.stack }}
-    needs: plan
+    needs: [plan, announce]
+    # No status function on purpose: the implicit success() means a cancel
+    # stops it, and a failed announce skips it (fail closed).
     if: ${{ needs.plan.outputs.matrix != '' && needs.plan.outputs.matrix != '[]' }}
     # One job per stack, in stack order. Gated stacks wait for approval.
-    environment: ${{ matrix.gated && 'tofu-apply-gated' || 'tofu-apply' }}
+    # `url` makes the deployment's "View deployment" go to the merged PR (the
+    # run when announce found none or failed).
+    environment:
+      name: ${{ matrix.gated && 'tofu-apply-gated' || 'tofu-apply' }}
+      url: ${{ needs.announce.outputs.pr_url || format('{0}/{1}/actions/runs/{2}', github.server_url, github.repository, github.run_id) }}
     runs-on: [self-hosted, home-ops, tofu]
     timeout-minutes: 60
     strategy:
@@ -229,6 +345,7 @@ jobs:
           STACK: ${{ matrix.stack }}
           EXPECTED_HASH: ${{ matrix.hash }}
           GATED: ${{ matrix.gated }}
+          ENVNAME: ${{ matrix.gated && 'tofu-apply-gated' || 'tofu-apply' }}
         run: |
           set -uo pipefail
           umask 077
@@ -239,10 +356,15 @@ jobs:
           summary=$GITHUB_STEP_SUMMARY
           printf '### Terraform apply: `%s`\n' "$STACK" >> "$summary"
 
-          # stop MESSAGE: write the reason (never output) and fail.
+          # outcome STATUS DETAIL: the PR comment line, posted by a later step.
+          outcome() { tf_comment_line "$STACK" "$1" "${2:-}" "$ENVNAME" >"$RUNNER_TEMP/outcome.md"; }
+
+          # stop MESSAGE [STATUS]: write the reason (never output) and fail.
+          # STATUS is "failed" (default) or "refused" (hash or gate mismatch).
           stop() {
             printf '\n**%s**\n' "$1" >> "$summary"
             echo "::error::$STACK: $1"
+            outcome "${2:-failed}" "(details in the run)"
             exit 1
           }
 
@@ -258,6 +380,7 @@ jobs:
           case $rc in 0|2) ;; *) stop "tofu plan failed (output is not printed)" ;; esac
           if [ $rc -eq 0 ]; then
             printf '\nNo changes any more; nothing to apply.\n' >> "$summary"
+            outcome "no changes" "any more; nothing applied" || true
             exit 0
           fi
 
@@ -265,13 +388,13 @@ jobs:
             stop "The plan has changes but no summary line; refusing to apply blind."
           fi
           if [ "$(tf_summary_hash "$out/plan.log")" != "$EXPECTED_HASH" ]; then
-            stop "The plan changed since the plan job showed it. Not applying; re-run the workflow to see the new plan."
+            stop "The plan changed since the plan job showed it. Not applying; re-run the workflow to see the new plan." refused
           fi
           # Re-check the gate on this plan: a destroy, replace or forget must
           # never apply from the ungated Environment, whatever the plan job said.
           tofu show -json -no-color "$out/tfplan" >"$out/plan.json" 2>/dev/null || : >"$out/plan.json"
           if reason=$(tf_plan_gate "$out/plan.json" "$out/plan.log") && [ "$GATED" != true ]; then
-            stop "This plan needs approval ($reason) but this job ran without it. Not applying; re-run the workflow."
+            stop "This plan needs approval ($reason) but this job ran without it. Not applying; re-run the workflow." refused
           fi
           EXCLUDES=()
           tf_summary_block "$STACK" "$out/plan.log" >> "$summary"
@@ -282,7 +405,113 @@ jobs:
           result=$(grep -oE '^Apply complete! Resources: [^.]*\.' "$out/apply.log" || echo "Apply finished, no summary line found.")
           printf '\n%s\n' "$result" >> "$summary"
           echo "$STACK: $result"
+          outcome applied "$result" || true
+
+      - name: Write the outcome line
+        id: outcome
+        if: ${{ always() }}
+        env:
+          STACK: ${{ matrix.stack }}
+          ENVNAME: ${{ matrix.gated && 'tofu-apply-gated' || 'tofu-apply' }}
+        # No outcome file means the job stopped before deciding (credentials,
+        # cancelled, timed out). The file is the same public line the report
+        # job shows, nothing else.
+        run: |
+          set -uo pipefail
+          source .github/scripts/tf-ci.sh
+          name=outcome-${STACK//\//-}
+          if [ -s "$RUNNER_TEMP/outcome.md" ]; then
+            mv "$RUNNER_TEMP/outcome.md" "$RUNNER_TEMP/$name.md" || true
+          else
+            tf_comment_line "$STACK" failed "(did not finish; details in the run)" "$ENVNAME" >"$RUNNER_TEMP/$name.md" || true
+          fi
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+        continue-on-error: true
+
+      - name: Upload the outcome line
+        if: ${{ always() && steps.outcome.outputs.name != '' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ${{ steps.outcome.outputs.name }}
+          path: ${{ runner.temp }}/${{ steps.outcome.outputs.name }}.md
+          retention-days: 3
+        continue-on-error: true
 
       - name: Remove the plan file
         if: ${{ always() }}
-        run: rm -rf "$RUNNER_TEMP/apply"
+        run: rm -rf "$RUNNER_TEMP/apply" "$RUNNER_TEMP"/outcome*.md
+
+  report:
+    name: Report on the PR
+    needs: [plan, announce, apply]
+    if: ${{ !cancelled() && needs.announce.outputs.pr_number != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Download the outcome lines
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: outcome-*
+          merge-multiple: true
+          path: ${{ runner.temp }}/outcomes
+        continue-on-error: true
+
+      - name: Build the comment
+        id: comment
+        env:
+          PLAN_OUTCOME: ${{ needs.plan.outputs.plan_outcome }}
+          PLAN_RESULT: ${{ needs.plan.result }}
+          PLAN_LINES: ${{ needs.plan.outputs.lines }}
+          MATRIX: ${{ needs.plan.outputs.matrix }}
+          APPLY_RESULT: ${{ needs.apply.result }}
+        run: |
+          set -uo pipefail
+          source .github/scripts/tf-ci.sh
+          body=$RUNNER_TEMP/report.md
+          {
+            printf '### Terraform apply\n\nCommit `%s`. Counts and results only; the plan is not printed.\n\n' "${GITHUB_SHA::7}"
+            if [ "$PLAN_OUTCOME" != success ] || [ "$PLAN_RESULT" != success ]; then
+              printf '**Nothing was applied**: at least one stack failed to plan.\n\n'
+            fi
+            printf '%s\n' "$PLAN_LINES"
+            results=""
+            # One outcome per matrix stack: its artifact line, else "did not
+            # run" (rejected, cancelled or skipped).
+            while IFS=$'\t' read -r stack gated; do
+              [ -n "$stack" ] || continue
+              f=$RUNNER_TEMP/outcomes/outcome-${stack//\//-}.md
+              if [ -s "$f" ]; then
+                results+="$(head -n 1 "$f")"$'\n'
+              else
+                env=tofu-apply
+                if [ "$gated" = true ]; then env=tofu-apply-gated; fi
+                results+="$(tf_comment_line "$stack" "did not run" "(apply job: ${APPLY_RESULT:-unknown}; not approved, cancelled or skipped)" "$env")"$'\n'
+              fi
+            done < <(jq -r '.[]? | [.stack, (.gated | tostring)] | @tsv' <<<"${MATRIX:-[]}" 2>/dev/null)
+            if [ -n "$results" ]; then printf '\n**Results**\n\n%s' "$results"; fi
+          } >"$body"
+          # Same check as announce: nothing to say with no ci-apply stacks.
+          if [ "$PLAN_OUTCOME" = success ] && [ "$PLAN_RESULT" = success ] && [ -z "$PLAN_LINES" ]; then
+            echo "::notice::no ci-apply stacks; not commenting"
+          else
+            echo "post=true" >> "$GITHUB_OUTPUT"
+          fi
+        continue-on-error: true
+
+      - name: Update the comment
+        if: ${{ steps.comment.outputs.post == 'true' }}
+        uses: marocchino/sticky-pull-request-comment@5770ad5eb8f42dd2c4f34da00c94c5381e49af88 # v3.0.5
+        with:
+          GITHUB_TOKEN: ${{ github.token }}
+          header: terraform-apply
+          number: ${{ needs.announce.outputs.pr_number }}
+          path: ${{ runner.temp }}/report.md
+        continue-on-error: true
