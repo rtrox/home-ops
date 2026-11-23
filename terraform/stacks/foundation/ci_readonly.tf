@@ -13,11 +13,13 @@ locals {
   cloudflare_user_id = var.cloudflare_user_id
 
   # Only what home-ops' stacks plan in CI today (proxmox: zone lookup, DNS
-  # records, API tokens). Add groups when a stack needs them; never an
+  # records, API tokens; dns: zones, records, the custom WAF rulesets, and the
+  # account lookup by name). Add groups when a stack needs them; never an
   # account-wide R2 read, which would expose every bucket's objects.
   ci_readonly_permissions = {
-    zone = ["Zone Read", "DNS Read"]
-    user = ["API Tokens Read"]
+    zone    = ["Zone Read", "DNS Read", "Zone WAF Read"]
+    account = ["Account Settings Read"]
+    user    = ["API Tokens Read"]
   }
 }
 
@@ -38,6 +40,15 @@ resource "cloudflare_api_token" "ci_readonly" {
       permission_groups = [for name in local.ci_readonly_permissions.zone : { id = local.permission_group_ids[name] }]
       resources = jsonencode({
         "com.cloudflare.api.account.${local.account_id}" = { "com.cloudflare.api.account.zone.*" = "*" }
+      })
+    },
+    {
+      # data "cloudflare_accounts" (dns, foundation) lists only accounts the
+      # token has an account-level permission on.
+      effect            = "allow"
+      permission_groups = [for name in local.ci_readonly_permissions.account : { id = local.permission_group_ids[name] }]
+      resources = jsonencode({
+        "com.cloudflare.api.account.${local.account_id}" = "*"
       })
     },
     {
