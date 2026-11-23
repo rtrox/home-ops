@@ -66,6 +66,12 @@ jobs:
           # A failed list must fail the job, not look like "no stacks".
           tf_list stacks --no-tags laptop-only,ci-skip || exit 1
           tf_list laptop --tags laptop-only,ci-skip || exit 1
+          # ci-skip is meant to be temporary (a stack mid-move): say so loudly
+          # every night, so a forgotten tag can't hide drift for good.
+          tf_list skipped --tags ci-skip || exit 1
+          for s in "${skipped[@]}"; do
+            echo "::warning::$s is tagged ci-skip, so it isn't drift-checked. Drop the tag once its move is done."
+          done
           echo "Stacks:"
           printf '%s\n' "${stacks[@]:-none}"
           {
