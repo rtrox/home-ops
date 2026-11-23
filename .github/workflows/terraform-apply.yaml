@@ -1,0 +1,251 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+name: terraform-apply
+
+# Merging to main re-plans and applies, in stack order. Opt-in per stack: only
+# stacks tagged `ci-apply` in their stack.tm.hcl are applied; `laptop-only`
+# stacks never are. Stacks also tagged `gated` (foundation, network, dns,
+# clusters/*) wait for approval in the `tofu-apply-gated` Environment, the
+# rest run in `tofu-apply` (no approval). Shared bash: .github/scripts/tf-ci.sh.
+#
+# home-ops is public, so artifacts and logs are readable. Nothing here uploads
+# or prints a plan: init, plan and apply write to files that are never
+# printed, and the job summary holds only resource headers and counts.
+#
+# Approve what you saw:
+#   1. `plan` (no Environment, read-only credentials) plans each changed
+#      ci-apply stack and shows the headers and counts in its job summary. That
+#      summary is what the approver reviews. It outputs a hash of each stack's
+#      summary lines.
+#   2. `apply` runs one matrix job per stack, strictly in stack order
+#      (max-parallel 1, fail-fast). Each job waits on its Environment, then
+#      re-plans to a local file with the read-write credentials, recomputes the
+#      hash, and refuses to apply if it differs from step 1's. Otherwise it
+#      applies that saved plan file and prints only success or failure and the
+#      counts. The plan file never leaves the runner.
+# A stack with ci-plan-exclude.txt is not applied (the plan would be partial);
+# the plan job fails for it. Plan and apply such a stack from the laptop.
+#
+# Credentials. The read-only plan job uses the same tokens as terraform-plan
+# (CI_DOPPLER_TF_READ / CI_DOPPLER_HOSTS_READ, in the runner's environment).
+# The apply jobs read the Doppler config tf-at-home/ci-apply with a service
+# token stored as the Environment secret CI_DOPPLER_TF_APPLY on BOTH
+# Environments (never a repo secret). Keys expected there:
+#   R2_STATE_READWRITE        JSON {access_key_id, secret_access_key, endpoint}
+#                             (ci has R2_STATE_READONLY with the same shape)
+#   TOFU_STATE_PASSPHRASE     same name as in tf-at-home/ci
+#   DOPPLER_HOSTS_TOKEN       optional: token for hosts-at-home/ci-apply, for
+#                             stacks using the proxmox provider (it reads
+#                             hosts-at-home with var.doppler_config too)
+#   CLOUDFLARE_TERRAFORM_TOKEN, DOPPLER_*_WRITE_TOKEN, ...
+#                             per-provider tokens, added as stacks opt in; the
+#                             names match globals in terraform/terramate.tm.hcl
+#
+# Every push plans EVERY ci-apply stack, so a skipped run (GitHub keeps only
+# the newest pending run per concurrency group), a failed plan or a rejected
+# approval is retried by the next run or a manual workflow_dispatch. Only
+# stacks whose plan has changes are applied. If any plan fails, nothing is
+# applied (fail closed), and a failed list of gated stacks fails the job.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "terraform/**"
+      - "inventory/**"
+      - ".github/workflows/terraform-apply.yaml"
+      - ".github/scripts/tf-ci.sh"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Applies never overlap, and a running apply is never cancelled.
+concurrency:
+  group: terraform-apply
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    name: Plan changed ci-apply stacks
+    if: ${{ github.repository == 'rtrox/home-ops' }}
+    runs-on: [self-hosted, home-ops, tofu]
+    timeout-minutes: 30
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install tools
+        uses: jdx/mise-action@924e7c586e33d7d4bae9c14e26c5d22e2beb6e78 # v5.3.0
+        with:
+          cache: false
+          install_args: aqua:astral-sh/uv aqua:opentofu/opentofu aqua:terramate-io/terramate aqua:jqlang/jq
+
+      - name: Read credentials
+        run: |
+          set -euo pipefail
+          source .github/scripts/tf-ci.sh
+          tf_read_credentials "$CI_DOPPLER_TF_READ" R2_STATE_READONLY ci "$CI_DOPPLER_HOSTS_READ"
+
+      - name: Plan changed stacks
+        id: plan
+        run: |
+          set -uo pipefail
+          root=$PWD
+          source "$root/.github/scripts/tf-ci.sh"
+          out=$RUNNER_TEMP/plan
+          mkdir -p "$out"
+          summary=$GITHUB_STEP_SUMMARY
+          failed=false
+          matrix='[]'
+
+          # Every ci-apply stack is planned on every push, not just the changed
+          # ones: a skipped run, a failed plan or a rejected approval is
+          # retried by the next push. Only stacks whose plan has changes (exit
+          # code 2) reach the matrix. --run-order gives the apply order.
+          cd terraform
+          tf_list stacks --tags ci-apply --no-tags laptop-only || exit 1
+          # Fail closed: if this list fails the whole job fails, so a stack can
+          # never fall back to the ungated Environment by accident.
+          tf_list gated --tags gated || exit 1
+          echo "Stacks to plan:"
+          printf '%s\n' "${stacks[@]:-none}"
+
+          {
+            echo "### Terraform apply: plan"
+            echo
+            echo "Commit \`${GITHUB_SHA::7}\`. Resource headers and counts only. Approve the apply jobs only if this is what you expect."
+          } >> "$summary"
+
+          if [ ${#stacks[@]} -eq 0 ]; then
+            printf '\nNo ci-apply stacks.\n' >> "$summary"
+            echo "matrix=[]" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          fail_step() {
+            failed=true
+            printf '\n#### `%s`\n\nFailed at step: **%s**. See the job log (the plan itself is not printed).\n' "$1" "$2" >> "$summary"
+          }
+
+          for stack in "${stacks[@]}"; do
+            echo "::group::$stack"
+            cd "$root/terraform/$stack"
+            if [ -f ci-plan-exclude.txt ]; then
+              fail_step "$stack" "refused: ci-plan-exclude.txt makes the plan partial, so CI will not apply this stack"
+              echo "::endgroup::"; continue
+            fi
+            if ! tofu init -input=false -lockfile=readonly -no-color >"$out/init.log" 2>&1; then fail_step "$stack" "tofu init"; echo "::endgroup::"; continue; fi
+            tofu plan -lock=false -no-color -input=false -detailed-exitcode >"$out/plan.log" 2>&1
+            rc=$?
+            if [ $rc -eq 1 ]; then fail_step "$stack" "tofu plan"; echo "::endgroup::"; continue; fi
+            EXCLUDES=()
+            tf_summary_block "$stack" "$out/plan.log" >> "$summary"
+            if [ $rc -eq 2 ]; then
+              # A plan with changes must show a totals line, or the summary
+              # and its hash would be blind to what is being applied.
+              if [ -z "$(tf_summary_totals "$out/plan.log")" ]; then fail_step "$stack" "plan has changes but no summary line; refusing"; echo "::endgroup::"; continue; fi
+              is_gated=false
+              for g in "${gated[@]}"; do if [ "$g" = "$stack" ]; then is_gated=true; fi; done
+              matrix=$(jq -c --arg stack "$stack" --argjson gated "$is_gated" --arg hash "$(tf_summary_hash "$out/plan.log")" \
+                '. + [{stack: $stack, gated: $gated, hash: $hash}]' <<<"$matrix")
+            fi
+            rm -f "$out/plan.log" "$out/init.log"
+            echo "::endgroup::"
+          done
+
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+          if [ "$failed" = true ]; then
+            echo "At least one stack failed to plan; nothing will be applied."
+            exit 1
+          fi
+
+  apply:
+    name: Apply ${{ matrix.stack }}
+    needs: plan
+    if: ${{ needs.plan.outputs.matrix != '' && needs.plan.outputs.matrix != '[]' }}
+    # One job per stack, in stack order. Gated stacks wait for approval.
+    environment: ${{ matrix.gated && 'tofu-apply-gated' || 'tofu-apply' }}
+    runs-on: [self-hosted, home-ops, tofu]
+    timeout-minutes: 60
+    strategy:
+      max-parallel: 1
+      fail-fast: true
+      matrix:
+        include: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install tools
+        uses: jdx/mise-action@924e7c586e33d7d4bae9c14e26c5d22e2beb6e78 # v5.3.0
+        with:
+          cache: false
+          install_args: aqua:astral-sh/uv aqua:opentofu/opentofu aqua:terramate-io/terramate aqua:jqlang/jq
+
+      - name: Read credentials
+        env:
+          CI_DOPPLER_TF_APPLY: ${{ secrets.CI_DOPPLER_TF_APPLY }}
+        run: |
+          set -euo pipefail
+          source .github/scripts/tf-ci.sh
+          tf_read_credentials "$CI_DOPPLER_TF_APPLY" R2_STATE_READWRITE ci-apply -DOPPLER_HOSTS_TOKEN
+
+      - name: Re-plan, compare and apply
+        env:
+          STACK: ${{ matrix.stack }}
+          EXPECTED_HASH: ${{ matrix.hash }}
+        run: |
+          set -uo pipefail
+          root=$PWD
+          source "$root/.github/scripts/tf-ci.sh"
+          out=$RUNNER_TEMP/apply
+          mkdir -p "$out"
+          summary=$GITHUB_STEP_SUMMARY
+          printf '### Terraform apply: `%s`\n' "$STACK" >> "$summary"
+
+          # stop MESSAGE: write the reason (never output) and fail.
+          stop() {
+            printf '\n**%s**\n' "$1" >> "$summary"
+            echo "::error::$STACK: $1"
+            exit 1
+          }
+
+          cd "$root/terraform/$STACK"
+          tofu init -input=false -lockfile=readonly -no-color >"$out/init.log" 2>&1 || stop "tofu init failed (output is not printed)"
+
+          # Plan to a local file with the read-write credentials. The plan file
+          # (encrypted, like state) stays on this runner and is never uploaded.
+          tofu plan -no-color -input=false -detailed-exitcode -out="$out/tfplan" >"$out/plan.log" 2>&1
+          rc=$?
+          if [ $rc -eq 1 ]; then stop "tofu plan failed (output is not printed)"; fi
+          if [ $rc -eq 0 ]; then
+            printf '\nNo changes any more; nothing to apply.\n' >> "$summary"
+            exit 0
+          fi
+
+          if [ -z "$(tf_summary_totals "$out/plan.log")" ]; then
+            stop "The plan has changes but no summary line; refusing to apply blind."
+          fi
+          if [ "$(tf_summary_hash "$out/plan.log")" != "$EXPECTED_HASH" ]; then
+            stop "The plan changed since the plan job showed it. Not applying; re-run the workflow to see the new plan."
+          fi
+          EXCLUDES=()
+          tf_summary_block "$STACK" "$out/plan.log" >> "$summary"
+
+          if ! tofu apply -input=false -no-color "$out/tfplan" >"$out/apply.log" 2>&1; then
+            stop "tofu apply failed (output is not printed); check the state and re-run"
+          fi
+          result=$(grep -oE '^Apply complete! Resources: [0-9]+ added, [0-9]+ changed, [0-9]+ destroyed\.' "$out/apply.log" || echo "Apply finished, no summary line found.")
+          printf '\n%s\n' "$result" >> "$summary"
+          echo "$STACK: $result"
+
+      - name: Remove the plan file
+        if: ${{ always() }}
+        run: rm -rf "$RUNNER_TEMP/apply"
