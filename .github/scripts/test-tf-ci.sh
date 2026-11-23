@@ -143,4 +143,10 @@ printf 'Plan: 1 to add, 0 to change, 1 to destroy.\n' >"$tmp/gate.log"
 reason=$(tf_plan_gate "$tmp/gate.json" "$tmp/gate.log")
 if [ "$reason" = "plan has 1 to destroy or replace and 0 to forget" ]; then check "gate: reason has counts only" ok; else check "gate: reason has counts only" no; fi
 
+# tf_excludes: the last address counts even without a trailing newline.
+mkdir "$tmp/excl"
+printf '# comment\n\nfirst.addr\n  second.addr # trailing\nlast.addr' >"$tmp/excl/ci-plan-exclude.txt"
+res=$(cd "$tmp/excl" && tf_excludes && printf '%s,' "${EXCLUDES[@]}")
+if [ "$res" = "-exclude=first.addr,-exclude=second.addr,-exclude=last.addr," ]; then check "excludes: no trailing newline keeps last address" ok; else check "excludes: no trailing newline keeps last address" no; fi
+
 exit "$fails"
