@@ -1,6 +1,6 @@
 stack {
   name        = "foundation"
-  description = "Doppler projects, environments, configs and write tokens; the R2 state bucket and its tokens; CI's credentials; the GitHub Environments the apply workflow runs in"
+  description = "Doppler projects, environments, configs and write tokens; the R2 state bucket, its tokens and its B2 history; mini's secrets-backup bucket; the per-stack Cloudflare tokens; CI's credentials; the GitHub Environments the apply workflow runs in"
   id          = "29e13f3f-ad14-43b1-9aab-c270f55b9b66"
 
   # Applied from the owner's laptop only. Its default Doppler provider uses the
@@ -15,7 +15,7 @@ stack {
 # (the owner's token), so the stack that mints the write tokens never depends
 # on them.
 globals {
-  providers                    = ["cloudflare", "github"]
+  providers                    = ["backblaze", "cloudflare", "github"]
   manages_doppler_write_tokens = true
 
   # The CI token's user-scoped policy needs the owner's Cloudflare user ID,

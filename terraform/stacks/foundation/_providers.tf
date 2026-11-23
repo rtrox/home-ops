@@ -11,3 +11,5 @@ provider "cloudflare" {
 provider "github" {
   owner = "rtrox"
 }
+provider "b2" {
+}

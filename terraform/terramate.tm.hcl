@@ -123,6 +123,14 @@ globals {
   # the Doppler project/key it is read from (config: prd on the laptop, ci or
   # ci-apply in CI, selected by the token).
   provider_env = {
+    # The B2 provider key `terraform-backblaze`, made by hand: every capability
+    # except bypassGovernance, so it can't delete Object Locked files. Its two
+    # rows mean provider_keys can't give a stack its own B2 key yet (it would
+    # put the same Doppler key in both variables).
+    backblaze = [
+      { env = "B2_APPLICATION_KEY_ID", project = "tf-at-home", key = "BACKBLAZE_APPLICATION_KEY_ID" },
+      { env = "B2_APPLICATION_KEY", project = "tf-at-home", key = "BACKBLAZE_APPLICATION_KEY" },
+    ]
     cloudflare = [
       { env = "CLOUDFLARE_API_TOKEN", project = "tf-at-home", key = "CLOUDFLARE_TERRAFORM_TOKEN" },
     ]
@@ -219,6 +227,14 @@ generate_hcl "_providers.tf" {
       attributes = {
         owner = global.github_owner
       }
+    }
+
+    # The b2 provider (Backblaze/b2) reads B2_APPLICATION_KEY_ID and
+    # B2_APPLICATION_KEY itself. A stack lists it as "backblaze".
+    tm_dynamic "provider" {
+      for_each = tm_contains(global.providers, "backblaze") ? [1] : []
+      labels   = ["b2"]
+      content {}
     }
 
     # The proxmox provider reads PROXMOX_VE_API_TOKEN itself.

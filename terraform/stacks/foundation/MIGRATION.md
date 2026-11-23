@@ -646,3 +646,63 @@ The Environment secrets are written last, once the service token exists.
   destroys of the token, secret and service token. Never remove the
   Environments from the code without a `removed` block (`destroy = false`):
   they're imported, and the plain removal would delete them.
+
+# P2-3: mini's backups and the clusters/mini token
+
+Part of the clusters/mini move: the sequence, the backups, the consumer checks
+and the rollback are in
+[clusters/mini's MIGRATION.md](../clusters/mini/MIGRATION.md) (added by the
+clusters/mini PR; its steps 1, 2 and 4 run this stack). This section is what this stack's plans must show.
+Assumes `task tf:plan STACK=foundation` says `No changes.` beforehand.
+
+The PR adds `backups.tf`, `mini_token.tf`, the `backblaze` provider (generated:
+`_provider_env.json` now also exports `B2_APPLICATION_KEY_ID` and
+`B2_APPLICATION_KEY` from `tf-at-home/prd`'s `BACKBLAZE_APPLICATION_KEY_ID`
+and `BACKBLAZE_APPLICATION_KEY`, the `terraform-backblaze` key terraform-record
+uses) and the P2-3 imports in `imports.tf`.
+
+| Object | Method |
+| --- | --- |
+| Cloudflare token `home-ops-clusters-mini-<date>` (Zone Read and DNS Write on rtrox.io, Cloudflare Tunnel Write on the account, API Tokens Write on the owner's user), 90-day reissue, 180-day expiry, with an expiry check | create, with `time_rotating.mini_token` |
+| `tf-at-home` `CLOUDFLARE_MINI_TOKEN` in `prd` and `ci-apply` (the token) and `ci` (the read-only CI token, as for `CLOUDFLARE_DNS_TOKEN`) | create |
+| R2 token `tofu-state-copy-mini-readonly` (Item Read on `tofu-state`) | create; terraform-record's `tofu-state-copy` stays until its step 8 |
+| `k8s-at-home/min` `TOFU_STATE_R2_SOURCE` | import, updated to the new token |
+| Bucket `rtrox-tofu-state-history` (Object Lock governance 90 days; hidden versions removed after 90) | import, unchanged (`prevent_destroy`) |
+| Its key `k8s-mini-rtrox-io-tofu-state-copy` (list and write, no read or delete) | create; the old one stays until step 8 |
+| `k8s-at-home/min` `TOFU_STATE_HISTORY_BACKBLAZE_BUCKET` | import, updated to the new key |
+| Bucket `k8s-mini-rtrox-io-secrets-backup` (Object Lock governance 90 days; `doppler/` hidden after 365 days, removed 30 later) | import, unchanged (`prevent_destroy`) |
+| Its key `k8s-mini-rtrox-io-secrets-backup` (list and write, no read) | create; the old one stays until step 8 |
+| `k8s-at-home/min` `SECRETS_BACKUP_BACKBLAZE_BUCKET` | import, updated to the new key |
+
+The Doppler writes go through the default provider (your CLI token), like
+every other write here; `k8s-at-home/min` needs no write token in this stack.
+
+## Step 1: the mini token, alone
+
+```text
+  # cloudflare_api_token.mini will be created
+  # doppler_secret.mini_token_ci will be created
+  # doppler_secret.mini_token_ci_apply will be created
+  # doppler_secret.mini_token_prd will be created
+  # time_rotating.mini_token will be created
+Plan: 0 to import, 5 to add, 0 to change, 0 to destroy.
+```
+
+## Steps 2 and 4: everything else
+
+`Plan: 5 to import, 3 to add, 3 to change, 0 to destroy.`
+
+- **5 imports**: `module.tofu_state_history.b2_bucket.this` and
+  `module.mini_secrets_backup.b2_bucket.this`, each `will be imported` and
+  nothing else; `doppler_secret.tofu_state_r2_source`,
+  `.tofu_state_history_bucket` and `.mini_secrets_backup_bucket`.
+- **3 creates**: `cloudflare_api_token.r2_state_copy`,
+  `module.tofu_state_history.b2_application_key.this["k8s-mini-rtrox-io-tofu-state-copy"]`
+  and `module.mini_secrets_backup.b2_application_key.this["k8s-mini-rtrox-io-secrets-backup"]`.
+- **3 updates**: the three imported `doppler_secret`s, `value` only.
+
+A bucket that shows an update or a replacement: the code differs from the
+live bucket; match `backups.tf` to the plan's current values (a reordering of
+`lifecycle_rules` alone: reorder them) and re-plan. Never apply a change to
+either bucket's file lock. `Cannot import non-existent remote object` or a
+`b2_bucket` lookup error: a bucket or secret name in `imports.tf` is wrong.
