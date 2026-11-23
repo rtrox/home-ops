@@ -38,6 +38,9 @@ name: terraform-apply
 #                             stacks using the proxmox provider (its API token
 #                             is read from there)
 #   CLOUDFLARE_TERRAFORM_TOKEN, DOPPLER_*_WRITE_TOKEN, ...
+#   CLOUDFLARE_<STACK>_TOKEN  per-stack Cloudflare tokens (e.g.
+#                             CLOUDFLARE_DNS_TOKEN), for stacks that set
+#                             provider_keys in their stack.tm.hcl
 #                             per-provider tokens, added as stacks opt in; the
 #                             names match _provider_env.json, generated from
 #                             globals in terraform/terramate.tm.hcl
