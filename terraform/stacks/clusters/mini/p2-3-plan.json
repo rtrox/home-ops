@@ -18,11 +18,16 @@
   "value_from": {
     "doppler_secret.cloudflared_credentials": {
       "attribute": "value",
-      "references": ["cloudflare_zero_trust_tunnel_cloudflared.mini.id", "random_bytes.tunnel_secret.base64"]
+      "references": [
+        "cloudflare_zero_trust_tunnel_cloudflared.mini.id",
+        "random_bytes.tunnel_secret.base64"
+      ]
     },
     "doppler_secret.volsync_bucket": {
       "attribute": "value",
-      "references": ["module.volsync_store.keys"]
+      "references": [
+        "module.volsync_store.keys"
+      ]
     }
   },
   "value_unknown": {
@@ -30,5 +35,23 @@
     "doppler_secret.volsync_bucket": "value",
     "doppler_secret.cnpg_offsite_bucket": "value",
     "doppler_secret.cnpg_offsite_restore_bucket": "value"
+  },
+  "update_only": {
+    "doppler_secret.cloudflared_credentials": [
+      "value",
+      "computed"
+    ],
+    "doppler_secret.volsync_bucket": [
+      "value",
+      "computed"
+    ],
+    "doppler_secret.cnpg_offsite_bucket": [
+      "value",
+      "computed"
+    ],
+    "doppler_secret.cnpg_offsite_restore_bucket": [
+      "value",
+      "computed"
+    ]
   }
 }

@@ -93,7 +93,8 @@ and tokens. Nothing is imported by value.
   ```
 
   Expect `version` of 1.7 or later, `mode=remote`, and `auto-apply=false` or
-  `vcs=false`.
+  `vcs=false`. Note which workspaces say `vcs=true`: TFC refuses CLI applies
+  on them, so steps 4b and 10b confirm their VCS runs in the UI instead.
 - **Baseline: everything plans clean.** On terraform-record `main`, both
   `env -u TF_VAR_doppler_token tofu -chdir=cloudflare plan` and the same for
   `backblaze`. Here, `tf tf:plan STACK=foundation`. Each must say
@@ -132,11 +133,22 @@ The password every B2 repository is encrypted with must never change, and no
 mover may ever see it missing. So the cluster switches to a hand-made key
 **before** Terraform stops writing the old field (step 6).
 
-**1a. Copy it into its own key** (no echo), then check it matches:
+Run step 1 well away from the B2 movers' run (4:00 pm), so no mover starts
+while the Secrets re-render.
+
+**1a. Copy it into its own key** (no echo), then check it matches. The first
+command only checks the field is there and has the right shape (it prints
+nothing), so the copy never writes an empty value:
 
 ```sh
-doppler secrets get VOLSYNC_BACKBLAZE_BUCKET -p k8s-at-home -c min --plain | jq -j .restic_password \
-  | doppler secrets set VOLSYNC_B2_RESTIC_PASSWORD -p k8s-at-home -c min --silent >/dev/null
+( set -euo pipefail
+  doppler secrets get VOLSYNC_BACKBLAZE_BUCKET -p k8s-at-home -c min --plain \
+    | jq -e '.restic_password | type == "string" and test("^[A-Za-z0-9]{32}$")' >/dev/null
+  doppler secrets get VOLSYNC_BACKBLAZE_BUCKET -p k8s-at-home -c min --plain \
+    | jq -je '.restic_password // error("restic_password missing")' \
+    | doppler secrets set VOLSYNC_B2_RESTIC_PASSWORD -p k8s-at-home -c min --silent >/dev/null ) \
+  && echo "copied" || echo "copy FAILED"
+same "new key is 32 characters" "$(dop VOLSYNC_B2_RESTIC_PASSWORD | wc -c | tr -d ' ')" 32
 same "new key = old field" "$(dop VOLSYNC_B2_RESTIC_PASSWORD | h)" "$(dopf VOLSYNC_BACKBLAZE_BUCKET restic_password | h)"
 ```
 
@@ -149,11 +161,14 @@ same "new key = old field" "$(dop VOLSYNC_B2_RESTIC_PASSWORD | h)" "$(dopf VOLSY
 ```sh
 vs_list | while read -r ns s; do printf '%s/%s %s\n' "$ns" "$s" "$(k8s "$ns" "$s" RESTIC_PASSWORD | h)"; done \
   > "$BACKUP_DIR/restic-before-$STAMP.txt"
-wc -l < "$BACKUP_DIR/restic-before-$STAMP.txt"; cut -d' ' -f2 "$BACKUP_DIR/restic-before-$STAMP.txt" | sort -u | wc -l
+same "22 B2 Secrets" "$(wc -l < "$BACKUP_DIR/restic-before-$STAMP.txt" | tr -d ' ')" 22
+same "one password" "$(cut -d' ' -f2 "$BACKUP_DIR/restic-before-$STAMP.txt" | sort -u | wc -l | tr -d ' ')" 1
 same "Secrets use the Doppler password" "$(cut -d' ' -f2 "$BACKUP_DIR/restic-before-$STAMP.txt" | sort -u)" "$(dop VOLSYNC_B2_RESTIC_PASSWORD | h)"
 ```
 
-Expect one line per volsync app, exactly one distinct hash, and `yes`.
+Expect `yes` ×3. There are 22 because paperless includes the volsync
+component twice. If the count differs, find out why before going on (a new
+app is fine: update the number here).
 
 **1c. Merge #2227** (a Flux apply). Once Flux has reconciled the apps,
 force-sync the ExternalSecrets:
@@ -170,10 +185,16 @@ vs_list | while read -r ns s; do
   same "$ns/$s RESTIC_PASSWORD unchanged" "$(k8s "$ns" "$s" RESTIC_PASSWORD | h)" "$(grep -F "$ns/$s " "$BACKUP_DIR/restic-before-$STAMP.txt" | cut -d' ' -f2)"
 done
 kubectl get externalsecret -A | grep -- '-volsync-b2 ' | grep -vc 'SecretSynced'   # 0
+# #2227 is live in every one, including any whose Flux Kustomization is suspended:
+kubectl get externalsecret -A -o json | jq '[.items[] | select(.metadata.name | endswith("-volsync-b2"))
+  | select([.spec.data[]?.remoteRef.key] | index("VOLSYNC_B2_RESTIC_PASSWORD") | not)] | length'   # 0
 ```
 
-**Stop** on any `NO` or a non-zero count. To back out, revert #2227. That is
-safe only until step 6: the old field is still in Doppler until then.
+**Stop** on any `NO` or a non-zero count. A non-zero second count means some
+app hasn't picked up #2227 (a suspended or failing Kustomization). Step 6
+would then leave that app's template without a password (an empty one or a
+failed sync), so fix it first. To back out, revert #2227. That is safe only
+until step 6: the old field is still in Doppler until then.
 
 ## 2. Foundation: the mini token alone
 
@@ -292,6 +313,11 @@ env -u TF_VAR_doppler_token -u TF_LOG -u TF_LOG_PATH tofu -chdir=backblaze apply
 for s in cloudflare backblaze; do env -u TF_VAR_doppler_token tofu -chdir=$s plan -no-color | grep -E '^Plan:|^No changes'; done
 ```
 
+If step 0 showed a workspace with `vcs=true`, TFC refuses the CLI `apply`
+there. Merging queues a VCS run instead: open it in the TFC UI, check its
+resource headers and `Plan:` line match the plan you read in 4a exactly, and
+only then confirm it. Discard it if anything differs.
+
 Nothing in Cloudflare, B2 or Doppler changes, only TFC's state. Then rebase
 #67 onto `main`.
 
@@ -333,20 +359,37 @@ except cloudflared, which follows `CLOUDFLARED_CREDENTIALS` (step 7).
 
 Expect a **public ingress blip of a few minutes**: from cloudflared
 restarting on the new tunnel until `min-ext.rtrox.io`'s CNAME points at it.
-Internal routes aren't affected. Do these at once:
+Internal routes aren't affected.
+
+**7a. external-dns on its new token first**, so that the CNAME change below
+is made with it. Reloader restarts external-dns when its Secret changes:
 
 ```sh
-kubectl annotate externalsecret -n network cloudflared cloudflared-substitution-secret force-sync="$(date +%s)" --overwrite
-kubectl -n network rollout status deploy/cloudflared --timeout=5m    # Reloader restarts it on the new TUNNEL_TOKEN
-flux reconcile kustomization cloudflared-config -n network && flux reconcile kustomization cloudflared -n network   # DNSEndpoint gets the new target
+kubectl annotate externalsecret -n network externaldns-cloudflare-token force-sync="$(date +%s)" --overwrite
+until same x "$(k8s network externaldns-cloudflare-token cloudflare-token | h)" "$(dop EXTERNALDNS_CLOUDFLARE_TOKEN | h)" | grep -q yes; do sleep 5; done
+kubectl -n network rollout status deploy/external-dns --timeout=5m
 ```
 
-external-dns then updates the record on its next sync, within a minute or two.
-Check, printing only tunnel IDs and statuses (not secrets):
+**7b. The cutover**, without pauses. Force-sync cloudflared's two
+ExternalSecrets, wait until the substitution Secret has the new endpoint,
+reconcile the Kustomizations at once (which sets the DNSEndpoint's target),
+then wait for cloudflared's rollout (Reloader restarts it on the new
+TUNNEL_TOKEN):
 
 ```sh
 NEW=$(dopf CLOUDFLARED_CREDENTIALS TunnelID); OLD=$(bak CLOUDFLARED_CREDENTIALS TunnelID); ACCT=$(dopf CLOUDFLARED_CREDENTIALS AccountTag)
 echo "new=$NEW old=$OLD"
+kubectl annotate externalsecret -n network cloudflared cloudflared-substitution-secret force-sync="$(date +%s)" --overwrite
+until [ "$(k8s network cloudflared-substitution-secret TUNNEL_ENDPOINT)" = "$NEW.cfargotunnel.com" ]; do sleep 5; done
+flux reconcile kustomization cloudflared-config -n network && flux reconcile kustomization cloudflared -n network
+kubectl -n network rollout status deploy/cloudflared --timeout=5m
+```
+
+external-dns then updates the record on its next sync, within a minute or two.
+
+**7c. Check**, printing only tunnel IDs and statuses (not secrets):
+
+```sh
 same "cloudflared's token is the new tunnel" "$(k8s network cloudflared-secret TUNNEL_TOKEN | base64 -d | jq -j .t)" "$NEW"
 same "DNSEndpoint targets it" "$(kubectl -n network get dnsendpoint cloudflared-tunnel -o jsonpath='{.spec.endpoints[0].targets[0]}')" "$NEW.cfargotunnel.com"
 cf() { doppler secrets get CLOUDFLARE_MINI_TOKEN -p tf-at-home -c prd --plain | jq -Rsj 'rtrimstr("\n") | "header = \"Authorization: Bearer \(.)\"\n"' | curl -fsS -K - "https://api.cloudflare.com/client/v4/$1"; }
@@ -406,10 +449,23 @@ Every line `yes`. Then each consumer works on it:
 
 1. **external-dns** restarted (Reloader), and
    `kubectl -n network logs deploy/external-dns --since=15m | grep -ciE '403|unauthorized|authentication'`
-   prints `0`. Step 7's CNAME update already proved it can write.
-2. **cert-manager**: `kubectl get certificates -A` all `READY True`, and
-   `kubectl get challenges -A` empty. To test now, `cmctl renew -n <ns> <cert>`
-   and watch its challenge clear.
+   prints `0`. Step 7's CNAME update, made after 7a, proved it can write with
+   the new token.
+2. **cert-manager**, **required before step 10**: one DNS-01 challenge must
+   clear on the new token. Pick a certificate (`kubectl get certificates -A`),
+   renew it, and watch:
+
+   ```sh
+   kubectl get certificate -n <ns> <cert> -o jsonpath='{.status.notAfter}{"\n"}'   # note it
+   cmctl renew -n <ns> <cert>
+   kubectl get challenges -A -w            # one appears, goes valid, and is removed
+   kubectl get certificaterequest -n <ns>  # the newest one: APPROVED True, READY True
+   kubectl get certificate -n <ns> <cert> -o jsonpath='{.status.notAfter}{"\n"}'   # later than before
+   ```
+
+   Then `kubectl get certificates -A` is all `READY True` and
+   `kubectl get challenges -A` is empty. A challenge stuck `pending` with a
+   Cloudflare error means the new token doesn't work: [rollback](#if-something-goes-wrong).
 3. **volsync**: `task volsync:snapshots APP=<app> NAMESPACE=<ns> BACKEND=b2`
    lists snapshots (the new key and the unchanged password open the
    repository). After the next run (4:00 pm), every B2 source succeeded:
@@ -438,7 +494,8 @@ healthy too. Until step 10, everything is reversible from the backup.
 
 ## 10. Delete the old credentials and the old tunnel
 
-**10a. Right before**, both new stacks must say `No changes.`:
+**10a. Right before**, step 8 must be all `yes`, including 8.2's cleared
+DNS-01 challenge, and both new stacks must say `No changes.`:
 
 ```sh
 cd ~/home-ops && git switch main && git pull
@@ -470,7 +527,9 @@ Plan: 0 to add, 0 to change, 5 to destroy.
 ```
 
 Anything else: don't apply. **Stop and read both.** Then merge #67 and apply
-each workspace from `main` as in step 4b. Afterwards, re-run step 8's checks
+each workspace from `main` as in step 4b (on a `vcs=true` workspace, confirm
+the VCS run in the TFC UI only if its headers match the plan above).
+Afterwards, re-run step 8's checks
 1, 3 (`snapshots`) and 5, and watch the next nightly runs.
 
 ## 11. Zero-diff gate, cleanup, then CI
@@ -556,7 +615,17 @@ in `min`, then check the cluster Secret is unchanged (by hash, as in step 8),
 then forget and re-import at the new address. Each is a separate,
 plan-checked step in that PR.
 
-CI's plan jobs can decrypt this stack's state once it exists (the shared
-passphrase and the read-only R2 token, as for every non-laptop-only stack).
-After this move it holds the new tunnel secret and three B2 keys. The restic
-password and the controller tokens aren't in it.
+**State.** This stack's state uses the shared passphrase: `ci-skip`, unlike
+`laptop-only`, doesn't change that. So CI could decrypt it once it exists,
+even while `ci-skip` keeps CI from planning it. A same-repo PR's job on the
+runner has the shared passphrase and the read-only R2 token that reads every
+key. After this move the state holds the new tunnel secret and three B2
+keys. It doesn't hold the restic password or the controller tokens.
+
+**Before `ci-apply`, narrow the volsync key.** It still has the old default
+capabilities, `deleteFiles` included, on a bucket without Object Lock. A
+leaked key (from this state, or from the cluster) could therefore delete
+every B2 backup. Narrow it to what restic needs before CI holds anything
+that can read it. Check whether pruning, which on this bucket hides files,
+needs `deleteFiles` at all. If it does, protect the bucket another way, e.g.
+a retention setting the key can't override.
