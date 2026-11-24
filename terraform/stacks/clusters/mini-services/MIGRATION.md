@@ -56,7 +56,8 @@ runs locally, so the CLI token stays on the laptop.
   unset TFC
   ```
 
-  Expect `local`. Your `tofu` must be 1.7 or later (removed blocks).
+  Expect `local`. Your `tofu` must be 1.10 or later (`removed` with
+  `lifecycle { destroy = false }`).
 - **Baseline.** On terraform-record `main`, `old plan -no-color | grep -E '^Plan:|^No changes'`
   says `No changes.`
 - **The key.** `doppler secrets get POCKETID_API_TOKEN -p tf-at-home -c prd --plain | wc -c`
@@ -84,16 +85,20 @@ Expect `Plan: 11 to import, 0 to add, 0 to change, 0 to destroy.` and `PASS:
 
 **Same objects as terraform-record's?** The imports find each ID by name, so
 check they're the IDs terraform-record's state holds. IDs aren't secret; this
-prints them only if they differ:
+prints them only if they differ. It saves terraform-record's list to `$WAS`,
+because after step 3 that state no longer has it, and step 4 compares again:
 
 ```sh
-new=$(printf '%s\n' "$out" | awk '/^  # .* will be imported$/ {a = $2} /^  # \(imported from "/ {gsub(/^  # \(imported from "|"\)$/, ""); print a, $0}' | sort)
-was=$(cd ~/terraform-record && git switch -q main && git pull -q && old show -json \
-  | jq -r '.values.root_module.resources[] | select(.type | startswith("pocketid_")) | "\(.type).this[\"\(.name)\"] \(.values.id)"' | sort)
-if [ -n "$new" ] && [ "$new" = "$was" ]; then echo "IDs: same"; else diff <(echo "$was") <(echo "$new"); fi
+ids() { awk '/^  # .* will be imported$/ {a = $2} /^  # \(imported from "/ {gsub(/^  # \(imported from "|"\)$/, ""); print a, $0}' | sort; }
+WAS="$PLANS/pocketid-ids-$STAMP.txt"
+(cd ~/terraform-record && git switch -q main && git pull -q && old show -json) \
+  | jq -r '.values.root_module.resources[] | select(.type | startswith("pocketid_")) | "\(.type).this[\"\(.name)\"] \(.values.id)"' \
+  | sort > "$WAS"
+new=$(printf '%s\n' "$out" | ids)
+if [ -s "$WAS" ] && [ "$new" = "$(cat "$WAS")" ]; then echo "IDs: same"; else diff "$WAS" <(echo "$new"); fi
 ```
 
-Expect `IDs: same`.
+Expect `IDs: same`. Keep `$WAS` (and `PLANS`, `STAMP`) until step 5.
 
 ### If the plan or check shows anything else
 
@@ -129,7 +134,15 @@ Merge rtrox/terraform-record#68, then from `main`:
 
 ```sh
 git switch main && git pull
-old apply      # type yes only for the same 13 forgets
+F="$PLANS/pocketid-forget-$STAMP.tfplan"
+old plan -input=false -no-color -out="$F" 2>&1 | grep -E '^  # |^Plan:|^No changes|^(Error|Warning):'
+```
+
+Expect the same as step 2. **Stop and read it**, then apply that file (the
+workspace runs locally, so a saved plan works) and plan again:
+
+```sh
+old apply "$F" && rm -f "$F"
 old plan -no-color | grep -E '^Plan:|^No changes'
 ```
 
@@ -144,11 +157,14 @@ should plan `No changes`, and this stack, `ci-skip`, isn't touched. Then:
 ```sh
 cd ~/home-ops && git switch main && git pull
 P="$PLANS/mini-services-$STAMP.tfplan"
-tf tf:plan STACK=clusters/mini-services -- -no-color -out="$P" 2>&1 | grep -E '^Plan:|^No changes|^(Error|Warning):'
+out=$(tf tf:plan STACK=clusters/mini-services -- -no-color -out="$P" 2>&1)
+printf '%s\n' "$out" | grep -E '^Plan:|^No changes|^(Error|Warning):'
 tf tf:check-plan STACK=clusters/mini-services PLAN="$P" EXPECT=p2-4-plan.json
+new=$(printf '%s\n' "$out" | ids)
+if [ -s "$WAS" ] && [ "$new" = "$(cat "$WAS")" ]; then echo "IDs: same"; else diff "$WAS" <(echo "$new"); fi
 ```
 
-Expect the same as step 1. **Stop and read it**, then
+Expect the same as step 1, `PASS` and `IDs: same`. **Stop and read it**, then
 `tf tf:apply STACK=clusters/mini-services -- "$P" && rm -f "$P"`.
 
 ## 5. Zero-diff gate, then cleanup
@@ -157,7 +173,16 @@ Both say `No changes.`: `tf tf:plan STACK=clusters/mini-services` and
 `old plan`. Log in to one app (Grafana) to be sure. The freeze ends here.
 
 1. **Cleanup PR, here**: delete `imports.tf`, `p2-4-plan.json` and this file.
-   Its plan: `No changes.` (the lookups leave the state).
+   After merging it, plan to a file and apply it: the plan says
+   `No changes.`, but only the apply drops the two lookups from the state:
+
+   ```sh
+   P="$PLANS/mini-services-cleanup-$STAMP.tfplan"
+   tf tf:plan STACK=clusters/mini-services -- -no-color -out="$P" 2>&1 | grep -E '^Plan:|^No changes|^(Error|Warning):'
+   tf tf:apply STACK=clusters/mini-services -- "$P" && rm -f "$P"
+   ```
+
+   Then delete `$WAS`.
 2. **terraform-record**: delete `pocketid/` and its README line. Then delete
    the `arpa-home-pocketid` workspace once `old state list` shows only
    `data.doppler_secrets.tf_read`. That data source keeps a copy of all of
