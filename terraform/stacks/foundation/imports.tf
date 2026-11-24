@@ -115,3 +115,52 @@ import {
   to       = github_repository_environment_deployment_policy.main[each.key]
   id       = "${local.github_repository}:${each.key}:${each.value}"
 }
+
+# P2-3: mini's backup buckets and five Doppler secrets in k8s-at-home/min,
+# from terraform-record's backblaze and cloudflare stacks, which forget them
+# first (removed, destroy = false). The keys and tokens are new (backups.tf,
+# mini_cluster_tokens.tf); the secrets are imported and updated to them. The
+# bucket IDs come from a lookup by name, so these can only adopt a bucket that
+# exists: a missing one fails the plan.
+locals {
+  imported_mini_backup_buckets = {
+    tofu_state_history  = "rtrox-tofu-state-history"
+    mini_secrets_backup = "k8s-mini-rtrox-io-secrets-backup"
+  }
+}
+
+data "b2_bucket" "imported" {
+  for_each    = local.imported_mini_backup_buckets
+  bucket_name = each.value
+}
+
+import {
+  to = module.tofu_state_history.b2_bucket.this
+  id = data.b2_bucket.imported["tofu_state_history"].bucket_id
+}
+
+import {
+  to = module.mini_secrets_backup.b2_bucket.this
+  id = data.b2_bucket.imported["mini_secrets_backup"].bucket_id
+}
+
+import {
+  to = doppler_secret.tofu_state_r2_source
+  id = "k8s-at-home.min.TOFU_STATE_R2_SOURCE"
+}
+
+import {
+  to = doppler_secret.tofu_state_history_bucket
+  id = "k8s-at-home.min.TOFU_STATE_HISTORY_BACKBLAZE_BUCKET"
+}
+
+import {
+  to = doppler_secret.mini_secrets_backup_bucket
+  id = "k8s-at-home.min.SECRETS_BACKUP_BACKBLAZE_BUCKET"
+}
+
+import {
+  for_each = local.mini_cluster_tokens
+  to       = doppler_secret.mini_cluster_token[each.key]
+  id       = "k8s-at-home.min.${each.value}"
+}

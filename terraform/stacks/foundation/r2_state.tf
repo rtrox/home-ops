@@ -7,9 +7,9 @@
 # prevent_destroy; the break-glass R2 token covers the case where it isn't.
 #
 # Not managed here, on purpose: the break-glass R2 token (made by hand and kept
-# outside Doppler, so it still works when Terraform or Doppler doesn't), the
-# state encryption passphrase, and the nightly copy's read-only token
-# (terraform-record cloudflare, r2_state_copy; it's the cluster's credential).
+# outside Doppler, so it still works when Terraform or Doppler doesn't) and the
+# state encryption passphrase. The nightly copy's read-only token and the
+# history bucket are in backups.tf.
 resource "cloudflare_r2_bucket" "tofu_state" {
   account_id = local.account_id
   name       = "tofu-state"
