@@ -42,6 +42,7 @@ jobs:
         with:
           patterns: |-
             cluster-apps/base/**/*
+            cluster-apps/components/**/*
             cluster-apps/mini/**/*
             clusters/base/**/*
             clusters/mini/**/*

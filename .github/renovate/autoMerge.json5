@@ -185,5 +185,14 @@
       ],
       automerge: false,
     },
+    {
+      // TEMPORARY freeze for the P2-3 clusters/mini move (Nov 23, 2026):
+      // no automerges at all until the old mini credentials are deleted
+      // (runbook step 10). Renovate still opens PRs; they wait. Revert this
+      // rule when the move is done. Must stay last to win.
+      description: "TEMPORARY: freeze all automerges during the P2-3 move",
+      matchPackageNames: ["*"],
+      automerge: false,
+    },
   ],
 }

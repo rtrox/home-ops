@@ -11,7 +11,8 @@ name: terraform-plan
 # never printed, and the PR comment holds only the resource headers and counts.
 #
 # Stacks tagged `laptop-only` (they need the owner's personal Doppler token)
-# are never planned here; the comment lists them with a pointer to the laptop.
+# and stacks tagged `ci-skip` (CI can't plan them yet, e.g. during a move) are
+# never planned here; the comment lists them with a pointer to the laptop.
 on:
   pull_request:
     paths:
@@ -78,13 +79,14 @@ jobs:
           failed=false
 
           cd terraform
-          # laptop-only stacks need the owner's personal Doppler token, so CI
-          # never plans them; the comment says to do it by hand.
-          tf_list stacks --changed --no-tags laptop-only --git-change-base "$BASE_REF" || exit 1
-          tf_list laptop --changed --tags laptop-only --git-change-base "$BASE_REF" || exit 1
+          # laptop-only stacks need the owner's personal Doppler token, and CI
+          # can't plan ci-skip ones yet, so CI never plans either; the comment
+          # says to do it by hand.
+          tf_list stacks --changed --no-tags laptop-only,ci-skip --git-change-base "$BASE_REF" || exit 1
+          tf_list laptop --changed --tags laptop-only,ci-skip --git-change-base "$BASE_REF" || exit 1
           echo "Changed stacks:"
           printf "%s\n" "${stacks[@]:-none}"
-          echo "Changed laptop-only stacks:"
+          echo "Changed laptop-only or ci-skip stacks:"
           printf "%s\n" "${laptop[@]:-none}"
 
           {

@@ -1,6 +1,10 @@
 # Stack tags (`tags = [...]` in stack.tm.hcl) the CI workflows honour:
 #   laptop-only  CI never plans, applies or drift-checks it (it needs the
 #                owner's personal Doppler token); PRs just say to use the laptop.
+#   ci-skip      CI never plans, applies or drift-checks it either, but unlike
+#                laptop-only it keeps the shared state passphrase: for a stack
+#                CI can't plan yet (e.g. while it moves in, before CI has its
+#                credentials). Dropping the tag later needs no re-encryption.
 #   ci-apply     opt-in: terraform-apply.yaml applies it on merge to main.
 #                Approval is dynamic, not a tag: a plan with any destroy,
 #                replace or forget waits in `tofu-apply-gated`, any other
