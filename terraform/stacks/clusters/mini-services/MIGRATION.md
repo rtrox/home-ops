@@ -8,8 +8,8 @@ No credential is rotated. The cleanup PR (step 5) deletes this file,
 
 | PR | What | Merged at |
 | --- | --- | --- |
-| home-ops #PR_HOME_OPS | this stack | step 4 |
-| rtrox/terraform-record#PR_TR | forget everything in `pocketid` | step 3 |
+| home-ops #2236 | this stack | step 4 |
+| rtrox/terraform-record#68 | forget everything in `pocketid` | step 3 |
 
 The stack is tagged `ci-skip` (CI doesn't touch it) and is applied from the
 laptop. `ci-apply` comes in a later PR ([CI](#ci)).
@@ -22,11 +22,11 @@ laptop. `ci-apply` comes in a later PR ([CI](#ci)).
 | Clients Actual, autobrr, Booklore, Grafana, Komga, Paperless, qui, Shelfmark, Sure | `pocketid_client.this[<app>]` | import, ID found by name |
 | `SURE_POCKETID_CLIENT`, `ACTUAL_POCKETID_CLIENT` (`k8s-at-home/min`) | none | let go: forgotten, never destroyed; phase 3 rotates them |
 
-Every confidential client's secret was set by hand and isn't in either state (pocket-id
-never returns it after creation), so no Doppler secret built from one can be
-imported: its first apply would overwrite the live value. The other clients'
-Doppler secrets (`GRAFANA_POCKETID_CLIENT`, ...) were never in Terraform.
-Neither were pocket-id's users.
+Every confidential client's secret was set by hand and isn't in either state
+(pocket-id never returns it after creation), so no Doppler secret built from
+one can be imported: its first apply would overwrite the live value. The other
+clients' Doppler secrets (`GRAFANA_POCKETID_CLIENT`, ...) aren't in Terraform,
+and nor are pocket-id's users.
 
 ## Conventions
 
@@ -125,7 +125,7 @@ destroy: stop.
 
 ## 3. Forget
 
-Merge rtrox/terraform-record#PR_TR, then from `main`:
+Merge rtrox/terraform-record#68, then from `main`:
 
 ```sh
 git switch main && git pull
@@ -138,7 +138,7 @@ these objects, which is harmless: nothing changes them either.
 
 ## 4. Apply this stack
 
-Merging #PR_HOME_OPS runs `terraform-apply` for every `ci-apply` stack; each
+Merging #2236 runs `terraform-apply` for every `ci-apply` stack; each
 should plan `No changes`, and this stack, `ci-skip`, isn't touched. Then:
 
 ```sh
@@ -169,7 +169,7 @@ Both say `No changes.`: `tf tf:plan STACK=clusters/mini-services` and
 - **Step 1 or 2**: plans change nothing. Fix and plan again.
 - **Step 3 misbehaves**: forgetting only edits TFC's state, and TFC keeps every
   state version. Carry on with step 4 (it adopts everything), or revert
-  #PR_TR and adopt the objects back in terraform-record with `import` blocks
+  rtrox/terraform-record#68 and adopt the objects back in terraform-record with `import` blocks
   by the same IDs; that plan must be imports only. Never edit state by hand.
 - **Step 4 fails partway**: the imports that finished are in state. Plan,
   check and apply again; the rest are still imports.
