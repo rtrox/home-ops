@@ -1,6 +1,6 @@
 # pocket-id (auth.rtrox.io, running on mini): its groups and OIDC clients.
-# Moved from terraform-record's pocketid stack in migration P2-4
-# (MIGRATION.md). Users aren't managed here yet.
+# Moved from terraform-record's pocketid stack in migration P2-4. Users
+# aren't managed here yet.
 #
 # Client secrets: none of these clients' secrets is in state. pocket-id only
 # returns a secret when it's created, so an imported client's client_secret is
@@ -21,8 +21,8 @@ locals {
     family = "Family Members"
   }
 
-  # Key: the app. name: pocket-id's display name (lookups in imports.tf go by
-  # it). groups: the groups allowed to use the client.
+  # Key: the app. name: pocket-id's display name. groups: the groups allowed
+  # to use the client.
   clients = {
     actual = {
       name          = "Actual"
