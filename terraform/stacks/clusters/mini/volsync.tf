@@ -22,13 +22,15 @@ module "volsync_store" {
   # and without this B2 keeps every pruned chunk forever. Never give mini/ an
   # upload-to-hiding rule; it would expire live backups.
   #
-  # Same rules, in the same order, as terraform-record had: B2 returns them in
-  # the order they were set, and the import compares them in order.
+  # Same rules as terraform-record had, sorted by prefix: B2 returns a
+  # bucket's rules sorted by file_name_prefix (not in the order they were
+  # set), and the plan compares them by position, so any other order shows
+  # as an update that rewrites every rule. Keep this list sorted.
   lifecycle_rules = [
-    { file_name_prefix = "mini/", days_from_hiding_to_deleting = 30, days_from_starting_to_canceling_unfinished_large_files = 7 },
+    { file_name_prefix = "/", days_from_uploading_to_hiding = 1, days_from_hiding_to_deleting = 1, days_from_starting_to_canceling_unfinished_large_files = 1 },
     { file_name_prefix = "bitty/", days_from_uploading_to_hiding = 1, days_from_hiding_to_deleting = 1, days_from_starting_to_canceling_unfinished_large_files = 1 },
     { file_name_prefix = "chongus/", days_from_uploading_to_hiding = 1, days_from_hiding_to_deleting = 1, days_from_starting_to_canceling_unfinished_large_files = 1 },
-    { file_name_prefix = "/", days_from_uploading_to_hiding = 1, days_from_hiding_to_deleting = 1, days_from_starting_to_canceling_unfinished_large_files = 1 },
+    { file_name_prefix = "mini/", days_from_hiding_to_deleting = 30, days_from_starting_to_canceling_unfinished_large_files = 7 },
   ]
 
   # The default capabilities, as before the move (a rotation, not a change of
