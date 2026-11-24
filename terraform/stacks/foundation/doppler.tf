@@ -95,7 +95,7 @@ resource "doppler_environment" "this" {
 }
 
 # Root configs (name == environment): Doppler creates one with every
-# environment, so every root config here is imported (imports.tf), never
+# environment, so every root config here was imported (P2-1), never
 # created. The provider's create would try to set inheritance, which the free
 # plan refuses.
 resource "doppler_config" "this" {
