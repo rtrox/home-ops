@@ -142,6 +142,12 @@ globals {
     github = [
       { env = "GITHUB_TOKEN", project = "tf-at-home", key = "GITHUB_TERRAFORM_TOKEN" },
     ]
+    # A pocket-id API key, made by hand in pocket-id's admin UI. Its keys
+    # have no scopes, so this is an admin key; tf-at-home/ci doesn't hold one
+    # (clusters/mini-services is ci-skip until that's decided).
+    pocketid = [
+      { env = "POCKETID_API_TOKEN", project = "tf-at-home", key = "POCKETID_API_TOKEN" },
+    ]
     # The token is written to hosts-at-home by the Ansible proxmox role.
     proxmox = [
       { env = "PROXMOX_VE_API_TOKEN", project = "hosts-at-home", key = "PVE_TERRAFORM_API_TOKEN" },
@@ -150,6 +156,8 @@ globals {
 
   # The GitHub account that owns the repositories the github provider manages.
   github_owner = "rtrox"
+
+  pocketid_base_url = "https://auth.rtrox.io"
 
   proxmox_endpoint = "https://pve.rtrox.io:8006/"
 }
@@ -239,6 +247,15 @@ generate_hcl "_providers.tf" {
       for_each = tm_contains(global.providers, "backblaze") ? [1] : []
       labels   = ["b2"]
       content {}
+    }
+
+    # The pocketid provider (trozz/pocketid) reads POCKETID_API_TOKEN itself.
+    tm_dynamic "provider" {
+      for_each = tm_contains(global.providers, "pocketid") ? [1] : []
+      labels   = ["pocketid"]
+      attributes = {
+        base_url = global.pocketid_base_url
+      }
     }
 
     # The proxmox provider reads PROXMOX_VE_API_TOKEN itself.
