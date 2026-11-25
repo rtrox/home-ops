@@ -54,6 +54,13 @@ spec:
               PAPERLESS_CONSUMER_ENABLE_BARCODES: "true" # enable search for barcodes
               PAPERLESS_CONSUMER_ENABLE_ASN_BARCODE: "true" # enable setting ASN by ASN barcodes
               PAPERLESS_CONSUMER_BARCODE_SCANNER: "ZXING" # switch from pyzbar to zxing for better recognition
+              # Proton Bridge sidecar listens on 127.0.0.1, which Paperless's mail
+              # SSRF guard refuses by default. Public mail servers (Gmail) are
+              # unaffected; the flag only stops blocking loopback/private hosts.
+              PAPERLESS_EMAIL_ALLOW_INTERNAL_HOSTS: "true"
+              # ...and trust the sidecar's self-signed IMAP certificate (added on
+              # top of the system CAs, so Gmail still verifies normally)
+              PAPERLESS_EMAIL_CERTIFICATE_LOCATION: /certs/bridge-cert.pem
               # Configure OCR
               PAPERLESS_OCR_LANGUAGES: eng
               PAPERLESS_OCR_LANGUAGE: eng
@@ -213,6 +220,15 @@ spec:
             bridge-perms:
               - path: /config
                 subPath: protonmail-bridge
+      bridge-cert:
+        type: configMap
+        name: paperless-bridge-cert
+        advancedMounts:
+          main:
+            main:
+              - path: /certs/bridge-cert.pem
+                subPath: bridge-cert.pem
+                readOnly: true
       docs:
         type: nfs
         server: nas.rtrox.io
