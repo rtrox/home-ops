@@ -29,6 +29,7 @@ locals {
   # DNSSEC is managed (and on) for it.
   zones = {
     "missprissquilts.com" = { waf_rules = [], dnssec = true }
+    "qol.ink"             = { waf_rules = [], dnssec = true }
     "rmt.dev"             = { waf_rules = [], dnssec = true }
     "rtrox.co"            = { waf_rules = [], dnssec = true }
     "rtrox.com"           = { waf_rules = [], dnssec = true }
@@ -45,6 +46,8 @@ locals {
         },
       ]
     }
+    "rvl.ink"   = { waf_rules = [], dnssec = true }
+    "sxl.ink"   = { waf_rules = [], dnssec = true }
     "troxel.io" = { waf_rules = [], dnssec = true }
     "trxl.ink"  = { waf_rules = [], dnssec = true }
     "trxl.io"   = { waf_rules = [], dnssec = true }
