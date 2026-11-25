@@ -10,7 +10,7 @@ terraform {
     # The same version terraform-record ran, so the move changes nothing.
     pocketid = {
       source  = "trozz/pocketid"
-      version = "2.4.2"
+      version = "2.5.0"
     }
   }
 }
