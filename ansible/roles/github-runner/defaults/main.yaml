@@ -34,5 +34,6 @@ github_runner_allowed_lan:
     address: "{{ hostvars[groups['proxmox'][0]].address }}"
     port: 8006
   - name: mini envoy-internal (pocket-id)
-    address: 172.19.32.1 # moves_to in inventory/sites.yaml
+    # At the move, change the site key to house, as for loki_lan_address.
+    address: "{{ (lookup('file', inventory_dir + '/sites.yaml') | from_yaml).sites.apartment.loadbalancer_pools.mini.reserved['envoy-internal'].address }}"
     port: 443
