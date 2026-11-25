@@ -46,6 +46,9 @@ locals {
         # CI's apply credentials (ci_apply.tf). Its own root config, so the ci
         # and prd tokens can't read it.
         ci-apply = { name = "CI Apply" }
+        # The Doppler export job's tokens (doppler_export.tf). No CI token
+        # reads it. Its root config is not managed (unmanaged_root, below).
+        export = { name = "Export", unmanaged_root = true }
       }
     }
   }
@@ -122,12 +125,17 @@ resource "doppler_config" "this" {
   }
 }
 
-# "project/config" -> {project, name} for the configs Terraform writes to and
-# the tokens below: the managed config, or an unmanaged root config's
-# environment.
+# "project/config" -> {project, name} for every config: the managed config, or
+# an unmanaged root config's environment.
 locals {
+  doppler_config_keys = setunion(keys(local.doppler_configs), flatten([
+    for project, p in local.doppler_projects : [
+      for slug, env in p.environments : "${project}/${slug}" if try(env.unmanaged_root, false)
+    ]
+  ]))
+
   doppler_config_ref = {
-    for k in keys(local.doppler_write_tokens) : k => try(
+    for k in local.doppler_config_keys : k => try(
       { project = doppler_config.this[k].project, name = doppler_config.this[k].name },
       { project = doppler_environment.this[k].project, name = doppler_environment.this[k].slug },
     )
