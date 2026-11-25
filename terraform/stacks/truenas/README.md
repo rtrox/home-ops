@@ -50,6 +50,16 @@ blocks can carry them into it.
 | B2 | the shared provider key | everything but `bypassGovernance`; `writeKeys` is account-wide in B2, so no narrower key can create this bucket's keys |
 | Doppler | `DOPPLER_TRUENAS_WRITE_TOKEN` | read and write `hosts-at-home/prd` |
 
+## Known follow-ups
+
+- The NAS moves back to the house at 172.30.1.12 (its `moves_to`): an
+  inventory edit, then a plan and apply of this stack from the laptop.
+- The `nas.rtrox.io` comment (`Main TrueNAs`) keeps its live typo; fix it in
+  its own change (an in-place update).
+- The backup TrueNAS is off until May 2027: paste its ACME token then
+  (rtrox/terraform-record#53).
+- Narrow the B2 key to what Cloud Sync needs, as a second key (above).
+
 ## Before moving this stack to CI
 
 Not planned: it's `laptop-only` because its state holds the Cloud Sync B2
