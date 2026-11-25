@@ -6,3 +6,15 @@ resources:
   - ./helmrelease.yaml
   - ./externalsecret.yaml
   - ./ocirepository.yaml
+# Bridge's self-signed IMAP certificate (public part only), so Paperless can verify
+# it. It lives in Bridge's vault, so it only changes if that vault is recreated
+# (then re-fetch: openssl s_client -starttls imap -connect 127.0.0.1:1143 in the
+# bridge container, and replace this file).
+configMapGenerator:
+  - name: paperless-bridge-cert
+    files:
+      - bridge-cert.pem=./config/bridge-cert.pem
+generatorOptions:
+  disableNameSuffixHash: true
+  annotations:
+    kustomize.toolkit.fluxcd.io/substitute: disabled
