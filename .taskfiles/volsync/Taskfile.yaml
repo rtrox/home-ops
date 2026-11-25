@@ -25,9 +25,9 @@ tasks:
     silent: true
     cmds:
       - |
-        set -eu
+        set -eu -o pipefail
         SECRET_NAME="{{.APP}}-volsync-{{.BACKEND}}-secret"
-        get() { kubectl get secret "${SECRET_NAME}" -n "{{.NAMESPACE}}" -o "jsonpath={.data.$1}" | base64 -d; }
+        get() { v="$(kubectl get secret "${SECRET_NAME}" -n "{{.NAMESPACE}}" -o "jsonpath={.data.$1}" | base64 -d)" && [ -n "$v" ] || { echo "volsync: $1 missing or unreadable in ${SECRET_NAME}" >&2; return 1; }; printf '%s' "$v"; }
         RESTIC_REPOSITORY="$(get RESTIC_REPOSITORY)"
         RESTIC_PASSWORD="$(get RESTIC_PASSWORD)"
         AWS_ACCESS_KEY_ID="$(get AWS_ACCESS_KEY_ID)"
@@ -116,9 +116,9 @@ tasks:
         - RESTIC_CMD
     cmds:
       - |
-        set -eu
+        set -eu -o pipefail
         SECRET_NAME="{{.APP}}-volsync-{{.BACKEND}}-secret"
-        get() { kubectl get secret "${SECRET_NAME}" -n "{{.NAMESPACE}}" -o "jsonpath={.data.$1}" | base64 -d; }
+        get() { v="$(kubectl get secret "${SECRET_NAME}" -n "{{.NAMESPACE}}" -o "jsonpath={.data.$1}" | base64 -d)" && [ -n "$v" ] || { echo "volsync: $1 missing or unreadable in ${SECRET_NAME}" >&2; return 1; }; printf '%s' "$v"; }
         RESTIC_REPOSITORY="$(get RESTIC_REPOSITORY)"
         RESTIC_PASSWORD="$(get RESTIC_PASSWORD)"
         AWS_ACCESS_KEY_ID="$(get AWS_ACCESS_KEY_ID)"
