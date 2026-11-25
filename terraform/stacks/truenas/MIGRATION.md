@@ -13,6 +13,7 @@ The PRs, in merge order:
 | home-ops #2256 | foundation: `CLOUDFLARE_TRUENAS_TOKEN`, the two ACME tokens, their imports | step 1 |
 | rtrox/terraform-record#72 | forget what moves, except the old tokens and key | step 3 |
 | home-ops #2257 | this stack | step 5 |
+| home-ops #2259 | a B2 key TrueNAS's rclone accepts (`legacy_api`) | step 6c |
 | rtrox/terraform-record#73 | delete the old tokens and key (rebase onto `main` after #72 merges) | step 9 |
 
 The stack is tagged `laptop-only`, like foundation: CI never plans, applies
@@ -29,7 +30,7 @@ decrypt the B2 key it holds. Merging either home-ops PR still runs
 | `nas.rtrox.io` A 172.21.1.12 (`rtrox_io_host["nas"]`) | `cloudflare_dns_record.host["nas.rtrox.io"]`, address from `inventory/hosts.yaml` | import by ID |
 | `backup.rtrox.io` A 172.30.1.13 (`rtrox_io_host["backup"]`) | `cloudflare_dns_record.host["backup.rtrox.io"]`, same | import by ID |
 | Bucket `nas-rtrox-io-truenas-backup` (private, no lifecycle rules, no Object Lock) | `module.nas_backup_bucket` | import, unchanged |
-| Its key `nas-rtrox-io-truenas-backup` | new key, same name and capabilities | rotate |
+| Its key `nas-rtrox-io-truenas-backup` | new key `nas-rtrox-io-truenas-backup-legacy`, same capabilities (the first new one, same name as the old, is v4-only and unused) | rotate |
 | `TRUENAS_BACKUP_BUCKET` (same JSON keys) | `doppler_secret.nas_backup_bucket` | import, updated to the new key |
 | Tokens `truenas-cloudflare-api-token`, `truenas-backup-cloudflare-api-token` | foundation: new `nas-rtrox-io-acme-dns01`, `backup-rtrox-io-acme-dns01` (Zone Read, DNS Write on rtrox.io) | rotate |
 | `TRUENAS_CLOUDFLARE_TOKEN`, `TRUENAS_BACKUP_CLOUDFLARE_TOKEN` | foundation: `doppler_secret.truenas_acme_token[<host>]` | import, updated to the new tokens |
@@ -375,7 +376,25 @@ in-use ACME certificate: if it's within its renew window or already expired,
 TrueNAS renews it at its next daily check; confirm the new expiry the next
 day.
 
-**6c. Main TrueNAS, the B2 key.** Credentials > Backup Credentials > Cloud
+**6b is deferred to May 2027**, when the backup TrueNAS is powered on
+(rtrox/terraform-record#53). Skip its checks in steps 7, 8 and 9b: its
+authenticator holds a token that's already deleted, so step 9 takes nothing
+from it.
+
+**Before 6c: the key.** The key step 5 made is refused by TrueNAS 25.04 (B2
+v4-only). Merge #2259, then from `main`:
+
+```sh
+P="$BACKUP_DIR/truenas-b2-key-$STAMP.tfplan"
+tf tf:plan STACK=truenas -- -no-color -out="$P" 2>&1 | grep -E '^  # |^Plan:|^No changes|^(Error|Warning):'
+tf tf:check-plan STACK=truenas PLAN="$P" EXPECT=p2-5-plan-b2-key.json
+```
+
+Expect `Plan: 1 to add, 1 to change, 0 to destroy.` and `PASS: 2 changes`.
+**Stop and read it**, then `tf tf:apply STACK=truenas -- "$P" && rm -f "$P"`.
+
+**6c. Main TrueNAS, the B2 key.** If **Verify Credential** fails, don't Save.
+Credentials > Backup Credentials > Cloud
 Credentials > the B2 one > Edit. Copy, paste and clear each field in turn:
 
 ```sh
@@ -425,6 +444,10 @@ backup: an edit during the wait would show here.
 
 ## 9. Delete the old tokens and key
 
+**Only once 6c has passed with `nas-rtrox-io-truenas-backup-legacy`** and a
+scheduled Cloud Sync run on it succeeded: #73 deletes the key Cloud Sync used
+before.
+
 **9a. Plan #73** (rebased onto `main`) on its branch, each workspace
 as in step 3a:
 
@@ -467,7 +490,11 @@ for s in cloudflare backblaze; do env -u TF_VAR_doppler_token -u TF_LOG -u TF_LO
 
 The freeze ends here.
 
-**Cleanup PR**: delete `imports.tf`, `p2-5-plan.json` and this file, and
+**The unused v4 key**: its own PR, after 6c is proven, removing
+`nas-rtrox-io-truenas-backup` from `backup_bucket.tf` with an expectation
+file that lists that one `delete`.
+
+**Cleanup PR**: delete `imports.tf`, `p2-5-plan*.json` and this file, and
 foundation's `imports.tf` and `p2-5-plan*.json`. Its plans: `No changes.`
 terraform-record's removed blocks, `truenas_write` aliases (keep the one
 `minio` uses), `account.tf` and `modules/cf_token` go in its own cleanup.

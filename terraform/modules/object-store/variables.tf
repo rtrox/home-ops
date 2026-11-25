@@ -10,9 +10,10 @@ variable "bucket_type" {
 }
 
 variable "keys" {
-  description = "Application keys limited to this bucket, by key name. `capabilities` replaces the default list (see main.tf) when set."
+  description = "Application keys limited to this bucket, by key name. `capabilities` replaces the default list (see main.tf) when set. `legacy_api` makes a key that clients older than B2's v4 API accept; changing it has no effect on an existing key (the plan says No changes), so add a second key instead."
   type = map(object({
     capabilities = optional(list(string))
+    legacy_api   = optional(bool, false)
   }))
   default = {}
 
