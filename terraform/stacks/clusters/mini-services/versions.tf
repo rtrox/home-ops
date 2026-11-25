@@ -7,10 +7,10 @@ terraform {
       source  = "DopplerHQ/doppler"
       version = "1.23.2"
     }
-    # The same version terraform-record ran, so the move changes nothing.
+    # Moved from trozz/pocketid (an archive since Nov 2026, same builds).
     pocketid = {
-      source  = "trozz/pocketid"
-      version = "2.4.2"
+      source  = "pocket-id/pocketid"
+      version = "2.5.0"
     }
   }
 }

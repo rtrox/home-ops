@@ -250,7 +250,7 @@ generate_hcl "_providers.tf" {
       content {}
     }
 
-    # The pocketid provider (trozz/pocketid) reads POCKETID_API_TOKEN itself.
+    # The pocketid provider (pocket-id/pocketid) reads POCKETID_API_TOKEN itself.
     tm_dynamic "provider" {
       for_each = tm_contains(global.providers, "pocketid") ? [1] : []
       labels   = ["pocketid"]
