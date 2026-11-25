@@ -1,15 +1,29 @@
 # curt's storage. Wrangler, in curt's own repo, deploys the Workers that use it
 # and runs the D1 migrations, and never creates storage or domains.
 
-# The account, found through a zone, as the dns stack does.
-data "cloudflare_zone" "trx_fm" {
-  filter = {
-    name = "trx.fm"
+# The public hostnames, each with its zone and the Worker that answers it. Every
+# zone here must also be in foundation's curt_zones (its token's Zone Read) and
+# in curt's own DOMAINS setting.
+locals {
+  custom_domains = {
+    "trx.fm"     = { zone = "trx.fm", service = "curt-redirect" }
+    "app.trx.fm" = { zone = "trx.fm", service = "curt-admin" }
+    "rmt.dev"    = { zone = "rmt.dev", service = "curt-redirect" }
+    "trxl.ink"   = { zone = "trxl.ink", service = "curt-redirect" }
   }
 }
 
+data "cloudflare_zone" "curt" {
+  for_each = toset([for d in local.custom_domains : d.zone])
+
+  filter = {
+    name = each.key
+  }
+}
+
+# The account, found through a zone, as the dns stack does.
 locals {
-  account_id = data.cloudflare_zone.trx_fm.account.id
+  account_id = data.cloudflare_zone.curt["trx.fm"].account.id
 }
 
 # The links: the source of truth (clicks are in Analytics Engine). Its location
@@ -41,15 +55,12 @@ resource "cloudflare_workers_kv_namespace" "links" {
 # The public hostnames. Attaching one creates its DNS record and certificate, so
 # the dns stack has no record for them. The Workers must already be deployed.
 resource "cloudflare_workers_custom_domain" "curt" {
-  for_each = {
-    "trx.fm"     = "curt-redirect"
-    "app.trx.fm" = "curt-admin"
-  }
+  for_each = local.custom_domains
 
   account_id = local.account_id
-  zone_id    = data.cloudflare_zone.trx_fm.zone_id
+  zone_id    = data.cloudflare_zone.curt[each.value.zone].zone_id
   hostname   = each.key
-  service    = each.value
+  service    = each.value.service
 }
 
 # For curt's Wrangler configuration (not secret).

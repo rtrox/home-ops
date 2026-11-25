@@ -2,8 +2,9 @@
 # github.com/rtrox/curt).
 #
 # - curt:           the curt stack's own, like mini's (mini_token.tf): storage,
-#                   Zone Read on trx.fm for the account lookup, and Workers
-#                   Scripts Write, which attaching a domain needs. That last one
+#                   Zone Read on curt's zones (the account lookup and attaching
+#                   domains), and Workers Scripts Write, which attaching a
+#                   domain needs. That last one
 #                   can deploy Workers (see below), so this token stays in
 #                   tf-at-home/prd and never goes to CI.
 # - curt_analytics: the admin Worker's, read-only. Copied by hand into a Worker
@@ -17,11 +18,16 @@ locals {
     stack      = ["D1 Write", "Workers KV Storage Write", "Workers Scripts Write"]
     analytics  = ["Account Analytics Read"]
   }
+
+  # The zones curt has hostnames in (the curt stack's custom domains).
+  curt_zones = toset(["rmt.dev", "trx.fm", "trxl.ink"])
 }
 
-data "cloudflare_zone" "trx_fm" {
+data "cloudflare_zone" "curt" {
+  for_each = local.curt_zones
+
   filter = {
-    name = "trx.fm"
+    name = each.key
   }
 }
 
@@ -37,10 +43,10 @@ resource "cloudflare_api_token" "curt" {
 
   policies = [
     {
-      # trx.fm only.
+      # curt's zones only.
       effect            = "allow"
       permission_groups = [for name in local.curt_token_permissions.stack_zone : { id = local.permission_group_ids[name] }]
-      resources         = jsonencode({ "com.cloudflare.api.account.zone.${data.cloudflare_zone.trx_fm.zone_id}" = "*" })
+      resources         = jsonencode({ for z in data.cloudflare_zone.curt : "com.cloudflare.api.account.zone.${z.zone_id}" => "*" })
     },
     {
       # This account only.
@@ -60,8 +66,8 @@ resource "cloudflare_api_token" "curt" {
       error_message = "A Cloudflare permission group was not found by name; Cloudflare may have renamed it."
     }
     precondition {
-      condition     = can(regex("^[0-9a-f]{32}$", data.cloudflare_zone.trx_fm.zone_id))
-      error_message = "The trx.fm zone lookup returned no zone ID."
+      condition     = alltrue([for z in data.cloudflare_zone.curt : can(regex("^[0-9a-f]{32}$", z.zone_id))])
+      error_message = "A curt zone lookup returned no zone ID."
     }
   }
 }
