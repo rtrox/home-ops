@@ -21,6 +21,10 @@ locals {
   groups = {
     admins = "Admins"
     family = "Family Members"
+    # curt checks curt-users for access and curt-admins for admin: an admin
+    # needs both.
+    curt-admins = "curt Admins"
+    curt-users  = "curt Users"
   }
 
   # Key: the app. name: pocket-id's display name. groups: the groups allowed
@@ -38,6 +42,14 @@ locals {
       callback_urls = ["https://booklore.rtrox.io/oauth2-callback"]
       is_public     = true
       groups        = ["family"]
+    }
+    # A public client: the browser does the code exchange (PKCE, no secret).
+    # curt runs on Cloudflare Workers, not in mini.
+    curt = {
+      name          = "curt"
+      callback_urls = ["https://app.trx.fm/auth/callback"]
+      is_public     = true
+      groups        = ["curt-admins", "curt-users"]
     }
     grafana = {
       name          = "Grafana"
