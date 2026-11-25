@@ -13,7 +13,7 @@ locals {
   cloudflare_user_id = var.cloudflare_user_id
 
   # Only what home-ops' stacks plan in CI today (proxmox: zone lookup, DNS
-  # records, API tokens; dns: zones, records, the custom WAF rulesets). Add
+  # records, API tokens; dns: zones, records, the custom WAF and rate-limit rulesets, zone settings). Add
   # groups when a stack needs them; never an account-wide R2 read, which would
   # expose every bucket's objects, and no account-level group: Account Settings
   # Read also reads the account's members and audit log, so stacks find the

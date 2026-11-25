@@ -22,7 +22,7 @@ globals {
   providers = ["cloudflare"]
 
   # Its own Cloudflare token (foundation's dns_token.tf): Zone Read/Write,
-  # DNS Write and Zone WAF Write on the account's zones, nothing else. In
+  # DNS Write, Zone WAF Write and Zone Settings Write on the account's zones, nothing else. In
   # tf-at-home/ci the same key holds the read-only CI token.
   provider_keys = { cloudflare = "CLOUDFLARE_DNS_TOKEN" }
 

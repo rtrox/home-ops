@@ -4,7 +4,8 @@
 # adds a token like this one rather than widening a shared one.
 #
 # What the dns stack manages (terraform/modules/cloudflare-zone): cloudflare_zone,
-# cloudflare_dns_record, cloudflare_ruleset (http_request_firewall_custom) and
+# cloudflare_dns_record, cloudflare_ruleset (http_request_firewall_custom and
+# http_ratelimit), cloudflare_zone_setting (Zone Settings Write) and
 # data "cloudflare_zone" (a lookup by name, which only Zone Read covers). One policy, on every zone in this account. No
 # account-level, user-level, R2 or API-token permissions.
 #
