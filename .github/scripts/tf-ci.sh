@@ -157,6 +157,23 @@ tf_list() {
   return 0
 }
 
+# tf_infra_changed ARRAY BASE_REF: Terramate's `watch` takes no globs (checked
+# on 0.17.4), so it can't mark clusters/mini-services changed when a
+# cluster-apps/mini/*/*/infra.yaml is added, changed or deleted. This does:
+# if such a file differs from BASE_REF, it appends the stack to ARRAY, unless
+# it's already there or is tagged laptop-only or ci-skip. Run from terraform/.
+tf_infra_changed() {
+  local -n _tf_arr=$1
+  local base=$2 stack=stacks/clusters/mini-services diff plannable
+  diff=$(git diff --name-only "$base"...HEAD -- ':(top,glob)cluster-apps/mini/*/*/infra.yaml') \
+    || { echo "::error::git diff failed"; return 1; }
+  if [ -z "$diff" ]; then return 0; fi
+  if printf '%s\n' "${_tf_arr[@]}" | grep -qx "$stack"; then return 0; fi
+  tf_list plannable --no-tags laptop-only,ci-skip || return 1
+  if printf '%s\n' "${plannable[@]}" | grep -qx "$stack"; then _tf_arr+=("$stack"); fi
+  return 0
+}
+
 # tf_summary_hash LOG: a hash of the summary lines. The apply workflow compares
 # the hash of the plan that was shown with the one it is about to apply.
 tf_summary_hash() {

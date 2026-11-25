@@ -80,6 +80,7 @@ on:
     paths:
       - "terraform/**"
       - "inventory/**"
+      - "cluster-apps/**/infra.yaml"
       - ".github/workflows/terraform-apply.yaml"
       - ".github/scripts/tf-ci.sh"
   workflow_dispatch:

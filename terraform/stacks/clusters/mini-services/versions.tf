@@ -2,8 +2,7 @@
 # The generated _providers.tf configures them; _backend.tf sets required_version.
 terraform {
   required_providers {
-    # The generated _providers.tf always configures doppler; nothing here
-    # uses it until phase 3.
+    # Writes the infra.yaml clients' secrets to k8s-at-home/min-ci (infra.tf).
     doppler = {
       source  = "DopplerHQ/doppler"
       version = "1.23.2"

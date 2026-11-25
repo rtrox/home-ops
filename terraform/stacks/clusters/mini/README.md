@@ -30,10 +30,18 @@ secrets). Foundation made it, with one token per consumer under
 
 foundation, which CI never plans, keeps writing its mini secrets to `min`.
 This stack's existing secrets stay in `min` for now and move before it's
-tagged `ci-apply`, each as its own plan-checked step: write it to `min-ci`, then set a reference in `min` (`${min-ci.KEY}`;
-references are on Doppler's free plan, config inheritance isn't), check the
-cluster Secret is unchanged (compare a hash of its value before and after),
-then forget and re-import at the new address.
+tagged `ci-apply`, one secret at a time, in this order (any other order has
+Terraform overwrite or delete the live value, or the cluster read a
+dangling reference):
+
+1. Write the current value to `min-ci` by hand (Doppler).
+2. Forget the old `doppler_secret` from this stack's state (`removed` block
+   with `destroy = false`), so Terraform never touches the one in `min`
+   again. Plan-check that it's a forget, not a destroy.
+3. Only then set the reference in `min` (`${min-ci.KEY}`; references are on
+   Doppler's free plan, config inheritance isn't), and check the cluster
+   Secret is unchanged (compare a hash of its value before and after).
+4. Import the `min-ci` secret at its new address.
 
 The cluster reads `min-ci` through a second ClusterSecretStore, `doppler-ci`,
 with its own read-only token, so the existing `doppler` store keeps reading

@@ -1,1 +1,1 @@
-[{"env":"POCKETID_API_TOKEN","key":"POCKETID_API_TOKEN","project":"tf-at-home"}]
+[{"env":"POCKETID_API_TOKEN","key":"POCKETID_API_TOKEN","project":"tf-at-home"},{"env":"TF_VAR_doppler_write_token_k8s_at_home_min_ci","key":"DOPPLER_MINI_CI_WRITE_TOKEN","project":"tf-at-home"}]

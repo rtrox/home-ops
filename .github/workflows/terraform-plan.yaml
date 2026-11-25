@@ -18,6 +18,7 @@ on:
     paths:
       - "terraform/**"
       - "inventory/**"
+      - "cluster-apps/**/infra.yaml"
       - ".github/workflows/terraform-plan.yaml"
       - ".github/scripts/tf-ci.sh"
 
@@ -84,6 +85,8 @@ jobs:
           # says to do it by hand.
           tf_list stacks --changed --no-tags laptop-only,ci-skip --git-change-base "$BASE_REF" || exit 1
           tf_list laptop --changed --tags laptop-only,ci-skip --git-change-base "$BASE_REF" || exit 1
+          # Terramate's watch takes no globs: infra.yaml changes mark clusters/mini-services.
+          tf_infra_changed stacks "$BASE_REF" || exit 1
           echo "Changed stacks:"
           printf "%s\n" "${stacks[@]:-none}"
           echo "Changed laptop-only or ci-skip stacks:"
