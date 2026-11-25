@@ -10,11 +10,12 @@ tasks:
         - APP
         - NAMESPACE
 
-  restic-env:
-    desc: Print restic environment variables for a Volsync backup (use with eval)
+  restic-shell:
+    desc: Open a shell with restic credentials for a Volsync backup in its environment
     requires: *default-requires
     vars:
       BACKEND: '{{.BACKEND | default "minio"}}'
+    interactive: true
     preconditions:
       - which kubectl
       - sh: test "{{.BACKEND}}" = "minio" -o "{{.BACKEND}}" = "b2"
@@ -24,11 +25,18 @@ tasks:
     silent: true
     cmds:
       - |
+        set -eu -o pipefail
         SECRET_NAME="{{.APP}}-volsync-{{.BACKEND}}-secret"
-        echo "export RESTIC_REPOSITORY='$(kubectl get secret ${SECRET_NAME} -n {{.NAMESPACE}} -o jsonpath='{.data.RESTIC_REPOSITORY}' | base64 -d)'"
-        echo "export RESTIC_PASSWORD='$(kubectl get secret ${SECRET_NAME} -n {{.NAMESPACE}} -o jsonpath='{.data.RESTIC_PASSWORD}' | base64 -d)'"
-        echo "export AWS_ACCESS_KEY_ID='$(kubectl get secret ${SECRET_NAME} -n {{.NAMESPACE}} -o jsonpath='{.data.AWS_ACCESS_KEY_ID}' | base64 -d)'"
-        echo "export AWS_SECRET_ACCESS_KEY='$(kubectl get secret ${SECRET_NAME} -n {{.NAMESPACE}} -o jsonpath='{.data.AWS_SECRET_ACCESS_KEY}' | base64 -d)'"
+        get() { v="$(kubectl get secret "${SECRET_NAME}" -n "{{.NAMESPACE}}" -o "jsonpath={.data.$1}" | base64 -d)" && [ -n "$v" ] || { echo "volsync: $1 missing or unreadable in ${SECRET_NAME}" >&2; return 1; }; printf '%s' "$v"; }
+        RESTIC_REPOSITORY="$(get RESTIC_REPOSITORY)"
+        RESTIC_PASSWORD="$(get RESTIC_PASSWORD)"
+        AWS_ACCESS_KEY_ID="$(get AWS_ACCESS_KEY_ID)"
+        AWS_SECRET_ACCESS_KEY="$(get AWS_SECRET_ACCESS_KEY)"
+        export RESTIC_REPOSITORY RESTIC_PASSWORD AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY
+        # Print only the host part of the repository, never a credential
+        REPO_HOST="$(printf '%s' "${RESTIC_REPOSITORY}" | sed -E 's#^[a-z0-9]+:##; s#^[a-z0-9]+://##; s#^[^@/]*@##; s#/.*##')"
+        echo "restic credentials loaded for repository host ${REPO_HOST}; type exit to leave"
+        exec "${SHELL:-sh}"
 
   snapshots:
     desc: List restic snapshots for a Volsync backup
@@ -99,6 +107,7 @@ tasks:
 
   _with-restic-env:
     internal: true
+    silent: true
     requires:
       vars:
         - APP
@@ -107,9 +116,12 @@ tasks:
         - RESTIC_CMD
     cmds:
       - |
+        set -eu -o pipefail
         SECRET_NAME="{{.APP}}-volsync-{{.BACKEND}}-secret"
-        export RESTIC_REPOSITORY="$(kubectl get secret ${SECRET_NAME} -n {{.NAMESPACE}} -o jsonpath='{.data.RESTIC_REPOSITORY}' | base64 -d)"
-        export RESTIC_PASSWORD="$(kubectl get secret ${SECRET_NAME} -n {{.NAMESPACE}} -o jsonpath='{.data.RESTIC_PASSWORD}' | base64 -d)"
-        export AWS_ACCESS_KEY_ID="$(kubectl get secret ${SECRET_NAME} -n {{.NAMESPACE}} -o jsonpath='{.data.AWS_ACCESS_KEY_ID}' | base64 -d)"
-        export AWS_SECRET_ACCESS_KEY="$(kubectl get secret ${SECRET_NAME} -n {{.NAMESPACE}} -o jsonpath='{.data.AWS_SECRET_ACCESS_KEY}' | base64 -d)"
+        get() { v="$(kubectl get secret "${SECRET_NAME}" -n "{{.NAMESPACE}}" -o "jsonpath={.data.$1}" | base64 -d)" && [ -n "$v" ] || { echo "volsync: $1 missing or unreadable in ${SECRET_NAME}" >&2; return 1; }; printf '%s' "$v"; }
+        RESTIC_REPOSITORY="$(get RESTIC_REPOSITORY)"
+        RESTIC_PASSWORD="$(get RESTIC_PASSWORD)"
+        AWS_ACCESS_KEY_ID="$(get AWS_ACCESS_KEY_ID)"
+        AWS_SECRET_ACCESS_KEY="$(get AWS_SECRET_ACCESS_KEY)"
+        export RESTIC_REPOSITORY RESTIC_PASSWORD AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY
         {{.RESTIC_CMD}}

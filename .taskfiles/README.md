@@ -237,16 +237,16 @@ task ansible:upgrade HOST=dns
 
 Tasks for interacting with Volsync backups using restic.
 
-### `volsync:restic-env`
+### `volsync:restic-shell`
 
-Print restic environment variables for use with `eval`.
+Open a shell with the restic credentials in its environment (nothing is printed).
 
 ```bash
 # MinIO backend (default)
-eval $(task volsync:restic-env APP=qbittorrent NAMESPACE=downloads)
+task volsync:restic-shell APP=qbittorrent NAMESPACE=downloads
 
 # B2 backend
-eval $(task volsync:restic-env APP=qbittorrent NAMESPACE=downloads BACKEND=b2)
+task volsync:restic-shell APP=qbittorrent NAMESPACE=downloads BACKEND=b2
 
 # Then use restic directly
 restic snapshots
@@ -342,7 +342,7 @@ task volsync:snapshots APP=paperless-ngx NAMESPACE=default
 task volsync:ls APP=paperless-ngx NAMESPACE=default SNAPSHOT=latest
 
 # For actual restore, use restic directly
-eval $(task volsync:restic-env APP=paperless-ngx NAMESPACE=default)
+task volsync:restic-shell APP=paperless-ngx NAMESPACE=default
 restic restore latest --target /tmp/restore
 ```
 
