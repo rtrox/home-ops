@@ -87,7 +87,7 @@ spec:
           bridge:
             image:
               repository: ghcr.io/rtrox/protonmail-bridge
-              tag: 3.27.2@sha256:934f09ef774592b9c4bf7c8cc941e5bba1ea86cb7ebfb3e3802e288b6ea805b2
+              tag: 3.27.2@sha256:36ffe3b0d4e0a6fe6219b7832d8a44125c491eeb287eaf0063d8ac7624b450e8
             env:
               TZ: America/Los_Angeles
             securityContext:
@@ -109,7 +109,7 @@ spec:
           bridge-perms:
             image:
               repository: ghcr.io/rtrox/protonmail-bridge
-              tag: 3.27.2@sha256:934f09ef774592b9c4bf7c8cc941e5bba1ea86cb7ebfb3e3802e288b6ea805b2
+              tag: 3.27.2@sha256:36ffe3b0d4e0a6fe6219b7832d8a44125c491eeb287eaf0063d8ac7624b450e8
             command: ["/bin/sh", "-c", "chown 568:568 /config"]
             securityContext:
               runAsUser: 0
