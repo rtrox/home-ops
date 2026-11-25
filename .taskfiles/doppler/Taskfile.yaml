@@ -1,0 +1,43 @@
+---
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+version: "3"
+
+tasks:
+  notes:
+    desc: Push notes.yaml to Doppler (writes only the notes that differ; DRY_RUN=true to preview)
+    dir: "{{.ROOT_DIR}}/.taskfiles/doppler"
+    preconditions:
+      - which doppler jq yq
+      - sh: test -n "$(doppler configure get token --plain)"
+        msg: "doppler isn't logged in (run: doppler login)"
+    vars:
+      DRY_RUN: '{{.DRY_RUN | default "false"}}'
+    cmds:
+      # Reads each project's configs once. jq keeps only names and notes: no
+      # secret value is printed or kept.
+      - cmd: |
+          set -eu
+          yq -o=json notes.yaml | jq -r 'keys[]' | while read -r project; do
+            want=$(yq -o=json notes.yaml | jq -c --arg p "$project" '.[$p] | with_entries(.value |= "\(.what). \(if (.written_by | startswith("by hand")) then "Set " else "Written by: " end)\(.written_by). Read by: \(.read_by).")')
+            have='{}'
+            for config in $(doppler configs -p "$project" --json | jq -r '.[] | select(.root) | .name'); do
+              notes=$(doppler secrets -p "$project" -c "$config" --json | jq -c 'map_values(.note // "")')
+              have=$(jq -nc --argjson a "$have" --argjson b "$notes" '$a + $b')
+            done
+            jq -nr --argjson w "$want" --argjson h "$have" '
+              ($w | keys[] | select(. as $k | $h | has($k) | not) | "missing \(.)"),
+              ($w | to_entries[] | select(.key as $k | $h | has($k)) | select(.value != $h[.key]) | "set \(.key)\t\(.value)")
+            ' | while IFS=$(printf '\t') read -r action note; do
+              key=${action#* }
+              case "$action" in
+                missing*) echo "$project/$key: no such secret, skipped" ;;
+                set*)
+                  echo "$project/$key: $note"
+                  if [ "{{.DRY_RUN}}" != true ]; then
+                    doppler secrets notes set "$key" "$note" -p "$project" --silent </dev/null
+                    sleep 1.1 # the free plan allows 60 writes a minute
+                  fi ;;
+              esac
+            done
+          done
+        silent: true
