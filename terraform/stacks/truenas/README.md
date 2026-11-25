@@ -62,7 +62,7 @@ blocks can carry them into it.
 
 ## Before moving this stack to CI
 
-Not planned: it's `laptop-only` because its state holds the Cloud Sync B2
+Planned, once it's safe. It's `laptop-only` because its state holds the Cloud Sync B2
 key, which has the old default capabilities (`deleteFiles` included) on a
 bucket without Object Lock. A stolen copy could delete the off-site backup.
 Moving it to `ci-apply` would mean the shared passphrase (CI can decrypt that

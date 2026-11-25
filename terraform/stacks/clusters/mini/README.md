@@ -28,9 +28,9 @@ secrets). Foundation made it, with one token per consumer under
 `DOPPLER_MINI_CI_WRITE_TOKEN`: read-only in `tf-at-home/ci`, read/write in
 `ci-apply` and `prd`. This stack's new secrets are written there.
 
-The secrets that exist today (this stack's and foundation's two mini
-writes) stay in `min` for now and move later, each as its own plan-checked
-step: write it to `min-ci`, then set a reference in `min` (`${min-ci.KEY}`;
+foundation, which CI never plans, keeps writing its mini secrets to `min`.
+This stack's existing secrets stay in `min` for now and move before it's
+tagged `ci-apply`, each as its own plan-checked step: write it to `min-ci`, then set a reference in `min` (`${min-ci.KEY}`;
 references are on Doppler's free plan, config inheritance isn't), check the
 cluster Secret is unchanged (compare a hash of its value before and after),
 then forget and re-import at the new address.

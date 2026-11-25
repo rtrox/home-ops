@@ -49,7 +49,7 @@ resource "doppler_secret" "ci_apply_min_ci_token" {
   value   = doppler_service_token.min_ci_apply.key
 }
 
-# The cluster's read-only token for min_ci, as a plain-string key in
+# The cluster's read-only token for min-ci, as a plain-string key in
 # k8s-at-home/min: ESO's Doppler provider ignores remoteRef.property, so a
 # JSON value could not be split. An ExternalSecret on the existing `doppler`
 # store renders it into the new store's Secret.
