@@ -1,7 +1,8 @@
 # curt
 
-Storage for [curt](https://github.com/rtrox/curt), a URL shortener on Cloudflare
-Workers: its D1 database and KV namespace. Both have `prevent_destroy`.
+Storage and domains for [curt](https://github.com/rtrox/curt), a URL shortener on Cloudflare
+Workers: its D1 database and KV namespace (both with `prevent_destroy`), and the
+hostnames its Workers answer on. Wrangler declares no routes or domains.
 
 Applied from the laptop (`ci-skip`), after `foundation`, which makes its
 Cloudflare token:

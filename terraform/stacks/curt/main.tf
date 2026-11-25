@@ -1,6 +1,5 @@
 # curt's storage. Wrangler, in curt's own repo, deploys the Workers that use it
-# and runs the D1 migrations, and never creates storage. Domains, DNS and rules
-# come in a later change, once the Workers exist.
+# and runs the D1 migrations, and never creates storage or domains.
 
 # The account, found through a zone, as the dns stack does.
 data "cloudflare_zone" "trx_fm" {
@@ -37,6 +36,20 @@ resource "cloudflare_workers_kv_namespace" "links" {
   lifecycle {
     prevent_destroy = true
   }
+}
+
+# The public hostnames. Attaching one creates its DNS record and certificate, so
+# the dns stack has no record for them. The Workers must already be deployed.
+resource "cloudflare_workers_custom_domain" "curt" {
+  for_each = {
+    "trx.fm"     = "curt-redirect"
+    "app.trx.fm" = "curt-admin"
+  }
+
+  account_id = local.account_id
+  zone_id    = data.cloudflare_zone.trx_fm.zone_id
+  hostname   = each.key
+  service    = each.value
 }
 
 # For curt's Wrangler configuration (not secret).

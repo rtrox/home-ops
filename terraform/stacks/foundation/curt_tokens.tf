@@ -1,8 +1,11 @@
 # Cloudflare tokens for curt, the URL shortener on Workers (stacks/curt, and
 # github.com/rtrox/curt).
 #
-# - curt:           the curt stack's own, like mini's (mini_token.tf): storage
-#                   only, and Zone Read on trx.fm for the account lookup.
+# - curt:           the curt stack's own, like mini's (mini_token.tf): storage,
+#                   Zone Read on trx.fm for the account lookup, and Workers
+#                   Scripts Write, which attaching a domain needs. That last one
+#                   can deploy Workers (see below), so this token stays in
+#                   tf-at-home/prd and never goes to CI.
 # - curt_analytics: the admin Worker's, read-only. Copied by hand into a Worker
 #                   secret, so it doesn't rotate on its own.
 #
@@ -11,7 +14,7 @@
 locals {
   curt_token_permissions = {
     stack_zone = ["Zone Read"]
-    stack      = ["D1 Write", "Workers KV Storage Write"]
+    stack      = ["D1 Write", "Workers KV Storage Write", "Workers Scripts Write"]
     analytics  = ["Account Analytics Read"]
   }
 }
