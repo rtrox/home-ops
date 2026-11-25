@@ -37,12 +37,13 @@ tasks:
     status:
       - test "{{.CLUSTER_NAME}}" != mini
     cmds:
-      # Captured first, so a failed create never overwrites the Secret.
+      # Captured first, so a failed create never overwrites the Secret. Each run
+      # makes a new token: revoke the older mini-export-store ones afterwards.
       - cmd: |
           set -eu
           token=$(doppler configs tokens create --project tf-at-home --config export mini-export-store --plain)
           test -n "$token"
-          printf %s "$token" | kubectl -n external-secrets create secret generic doppler-export-token --from-file=dopplerToken=/dev/stdin --dry-run=client -o yaml | kubectl apply -f -
+          printf %s "$token" | kubectl -n external-secrets create secret generic doppler-export-token --from-file=dopplerToken=/dev/stdin --dry-run=client -o yaml | kubectl --context {{.CLUSTER_NAME}} apply -f -
 
   apps:
     desc: Bootstrap Apps
@@ -63,6 +64,7 @@ tasks:
       # - until kubectl wait nodes --for=condition=Ready=False --all --timeout=10m; do sleep 5; done
       - kubectl apply --server-side --filename {{.CLUSTER_DIR}}/bootstrap/resources/namespaces.yaml
       - doppler configs tokens create --project k8s-at-home --config ${CLUSTER_NAME:0:3} doppler-eso --plain | kubectl -n external-secrets create secret generic doppler-token --from-file=dopplerToken=/dev/stdin --dry-run=client -o yaml | kubectl apply -f -
-      - task: doppler-export-token
       - helmfile --quiet --file {{.CLUSTER_DIR}}/bootstrap/helmfile.d/00-crds.yaml template | yq ea --exit-status 'select(.kind == "CustomResourceDefinition")' - | kubectl apply --server-side --filename -
       - helmfile --file {{.CLUSTER_DIR}}/bootstrap/helmfile.d/01-apps.yaml sync --hide-notes
+      # Last: the apps above don't need it.
+      - task: doppler-export-token
