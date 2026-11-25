@@ -11,7 +11,8 @@ data "cloudflare_zone" "rtrox_io" {
 locals {
   account_id = data.cloudflare_zone.rtrox_io.account.id
 
-  # Every zone gets these, last (bots unless the zone sets short_links = true).
+  # Every zone gets these, last. The bot rule (bots and high threat scores) is
+  # left off zones with short_links = true.
   waf_bot_rules = [
     {
       description = "Firewall rule to block bots and threats determined by CF"
