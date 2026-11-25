@@ -109,19 +109,17 @@ globals {
   #
   # The foundation stack creates one read/write service token per entry and
   # writes it to that secret (in tf-at-home/prd), so a config Terraform writes
-  # to is one line here. terraform-record's stacks read the same secret names
-  # until they move.
+  # to is one line here. None for tf-at-home: only foundation writes there, with
+  # the owner's token. terraform-record's MinIO stack reads the same secret names
+  # until phase 4 removes it.
   #
   # NOTE for CI: a stack with doppler_writes needs these same key names in
   # tf-at-home/ci (and ci-apply), holding tokens it can use; the proxmox stack
   # has none.
   doppler_write_tokens = {
-    "hosts-at-home/prd"   = "DOPPLER_TRUENAS_WRITE_TOKEN"
-    "k8s-at-home/min"     = "DOPPLER_MINI_WRITE_TOKEN"
-    "k8s-at-home/min-ci"  = "DOPPLER_MINI_CI_WRITE_TOKEN"
-    "tf-at-home/prd"      = "DOPPLER_TF_WRITE_TOKEN"
-    "tf-at-home/ci"       = "DOPPLER_TF_CI_WRITE_TOKEN"
-    "tf-at-home/ci-apply" = "DOPPLER_TF_CI_APPLY_WRITE_TOKEN"
+    "hosts-at-home/prd"  = "DOPPLER_TRUENAS_WRITE_TOKEN"
+    "k8s-at-home/min"    = "DOPPLER_MINI_WRITE_TOKEN"
+    "k8s-at-home/min-ci" = "DOPPLER_MINI_CI_WRITE_TOKEN"
   }
 
   # Provider -> the standard environment variable carrying its credential, and

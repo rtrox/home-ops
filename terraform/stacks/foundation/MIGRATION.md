@@ -31,6 +31,10 @@ Not moving: the nightly copy's token `tofu-state-copy` and `TOFU_STATE_R2_SOURCE
 state passphrase, and the read-only service tokens (`doppler-eso`,
 `doppler-export`, `ci-runner-plan`, `tfc-remote-runs`), which stay hand-made.
 
+Since then (Nov 25, 2026): the `doppler-export` tokens were replaced by the
+generated `export-read` ones (`doppler_export.tf`), and the three `tf-at-home`
+write tokens were removed, since nothing used them.
+
 ## 0. Preconditions
 
 - **Terraform Cloud version.** `removed` blocks need Terraform 1.7 or later,
