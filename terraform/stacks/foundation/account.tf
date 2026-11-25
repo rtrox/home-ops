@@ -19,6 +19,7 @@ locals {
       local.r2_state_copy_permissions,
       local.truenas_token_permissions,
       local.truenas_acme_token_permissions,
+      flatten(values(local.curt_token_permissions)),
     )) :
     name => one([for g in data.cloudflare_api_token_permission_groups_list.all.result : g.id if g.name == name])
   }

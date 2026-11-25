@@ -175,6 +175,10 @@ tf-at-home:
     what: "B2 key for the old state bucket; goes with MinIO in phase 4"
     written_by: "by hand (Backblaze)"
     read_by: "terraform-record minio"
+  CLOUDFLARE_CURT_TOKEN:
+    what: "The curt stack's Cloudflare token"
+    written_by: "foundation"
+    read_by: "curt"
   CLOUDFLARE_DNS_TOKEN:
     what: "The dns stack's Cloudflare token (read-only in ci)"
     written_by: "foundation"
@@ -195,6 +199,14 @@ tf-at-home:
     what: "The owner's Cloudflare user ID"
     written_by: "by hand (Cloudflare)"
     read_by: "foundation"
+  CURT_ANALYTICS_CLOUDFLARE_TOKEN:
+    what: "Cloudflare analytics read token for curt"
+    written_by: "foundation"
+    read_by: "copied to curt's admin Worker (AE_TOKEN)"
+  CURT_DEPLOY_CLOUDFLARE_TOKEN:
+    what: "Cloudflare token for curt's Wrangler deploys"
+    written_by: "foundation"
+    read_by: "copied to curt's GitHub repo"
   DOPPLER_EXPORT_TOKENS:
     what: "A read token for every other Doppler config"
     written_by: "foundation"
