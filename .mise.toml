@@ -2,7 +2,7 @@
 _.python.venv = { path = "{{config_root}}/.venv", create = true }
 
 [tools]
-"aqua:astral-sh/uv" = ["0.13.9"]
+"aqua:astral-sh/uv" = ["0.13.10"]
 "aqua:google/yamlfmt" = ["latest"]
 "aqua:kubernetes-sigs/kustomize" = ["latest"]
 "aqua:fluxcd/flux2" = ["latest"]
