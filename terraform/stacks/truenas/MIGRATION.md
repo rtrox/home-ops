@@ -10,10 +10,10 @@ The PRs, in merge order:
 
 | PR | What | Merged at |
 | --- | --- | --- |
-| home-ops #FOUNDATION_PR | foundation: `CLOUDFLARE_TRUENAS_TOKEN`, the two ACME tokens, their imports | step 1 |
-| rtrox/terraform-record#FORGET_PR | forget what moves, except the old tokens and key | step 3 |
-| home-ops #TRUENAS_PR | this stack | step 5 |
-| rtrox/terraform-record#DELETE_PR | delete the old tokens and key (rebase onto `main` after #FORGET_PR merges) | step 9 |
+| home-ops #2256 | foundation: `CLOUDFLARE_TRUENAS_TOKEN`, the two ACME tokens, their imports | step 1 |
+| rtrox/terraform-record#72 | forget what moves, except the old tokens and key | step 3 |
+| home-ops #2257 | this stack | step 5 |
+| rtrox/terraform-record#73 | delete the old tokens and key (rebase onto `main` after #72 merges) | step 9 |
 
 The stack is tagged `ci-skip` (CI doesn't touch it) and is applied from the
 laptop. Merging either home-ops PR still runs `terraform-apply` for the
@@ -134,7 +134,7 @@ step 6b fixes them.
 
 ## 1. Foundation: the truenas stack's token alone
 
-Merge #FOUNDATION_PR. Then plan only the token, check it, stop, and apply:
+Merge #2256. Then plan only the token, check it, stop, and apply:
 
 ```sh
 cd ~/home-ops && git switch main && git pull
@@ -168,7 +168,7 @@ changes`: `cloudflare_api_token.truenas_acme["nas.rtrox.io"]` and
 `["backup.rtrox.io"]` created; `doppler_secret.truenas_acme_token[...]` for
 both imported and updated, `value` only.
 
-This stack, from #TRUENAS_PR's branch:
+This stack, from #2257's branch:
 
 ```sh
 git switch p2-5/truenas && git pull
@@ -204,7 +204,7 @@ Don't apply. Fix the code and plan again.
 
 ## 3. Forget, in terraform-record (TFC)
 
-**3a. Plan #FORGET_PR** on its branch, in each workspace. Remote TFC runs
+**3a. Plan #72** on its branch, in each workspace. Remote TFC runs
 must never get your Doppler CLI token, so unset it:
 
 ```sh
@@ -236,7 +236,7 @@ The `Warning: Some objects will no longer be managed` is expected. If the
 workspace's Terraform words the summary differently, what matters is the
 headers and `0 to destroy`. **Stop and read both.**
 
-**3b. Apply.** Merge #FORGET_PR, then from `main` apply each workspace, type
+**3b. Apply.** Merge #72, then from `main` apply each workspace, type
 `yes` only for the same plan, and plan again:
 
 ```sh
@@ -250,7 +250,7 @@ On a `vcs=true` workspace, merging queues a VCS run instead: confirm it in
 the TFC UI only if its headers and `Plan:` line match 3a exactly.
 
 Nothing in Cloudflare, B2 or Doppler changes, only TFC's state. Then rebase
-#DELETE_PR onto `main`.
+#73 onto `main`.
 
 ## 4. Apply foundation
 
@@ -266,7 +266,7 @@ Expect the same as step 2. **Stop and read it**, then
 
 ## 5. Apply this stack
 
-Merge #TRUENAS_PR, then:
+Merge #2257, then:
 
 ```sh
 git switch main && git pull
@@ -389,7 +389,7 @@ backup: an edit during the wait would show here.
 
 ## 9. Delete the old tokens and key
 
-**9a. Plan #DELETE_PR** (rebased onto `main`) on its branch, each workspace
+**9a. Plan #73** (rebased onto `main`) on its branch, each workspace
 as in step 3a:
 
 ```text
@@ -404,7 +404,7 @@ Plan: 0 to add, 0 to change, 1 to destroy.
 
 Anything else: don't apply. **Stop and read both.**
 
-**9b. Apply.** Merge #DELETE_PR and apply each workspace from `main` as in
+**9b. Apply.** Merge #73 and apply each workspace from `main` as in
 step 3b. Then, on the main TrueNAS, **Verify Credential** and a Cloud Sync
 **Dry Run** again, and `dop TRUENAS_CLOUDFLARE_TOKEN | cfverify` and the
 same for the backup token, both `active`.
@@ -427,7 +427,7 @@ Delete the `truenas-*` backup once the gate has held for a week.
   undo.
 - **Step 3 (forget) misbehaves**: forgetting edits only TFC's state. Don't
   apply foundation or this stack. Either carry on (steps 4 and 5 adopt
-  everything), or revert #FORGET_PR and adopt the objects back in
+  everything), or revert #72 and adopt the objects back in
   terraform-record with `import` blocks (the record IDs in `imports.tf` here;
   the bucket by its ID; the secrets as `hosts-at-home.prd.<NAME>`). Either
   plan must be imports only.
@@ -449,7 +449,7 @@ Delete the `truenas-*` backup once the gate has held for a week.
 - **After step 9** the old tokens and key are gone, so rollback is forward:
   reissue the broken one (`-replace` it in the stack that owns it), its
   Doppler secret follows, and paste it into TrueNAS.
-- **Something destroyed**: nothing here plans a destroy before #DELETE_PR, the
+- **Something destroyed**: nothing here plans a destroy before #73, the
   checker fails on any, and the bucket has `prevent_destroy`. Stop and look.
   Never edit state by hand.
 
