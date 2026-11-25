@@ -5,7 +5,7 @@
 # Delete this file and p2-5-plan*.json in the cleanup PR once the zero-diff
 # gate passes.
 import {
-  for_each = local.truenas_acme_tokens
+  for_each = local.truenas_acme_hosts
   to       = doppler_secret.truenas_acme_token[each.key]
   id       = "hosts-at-home.prd.${each.value.doppler_key}"
 }
