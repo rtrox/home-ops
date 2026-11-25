@@ -21,7 +21,7 @@ name: terraform-apply
 #      summary is what the approver reviews. It outputs a hash of each stack's
 #      summary lines.
 #   2. `apply` runs one matrix job per stack, strictly in stack order
-#      (max-parallel 1, fail-fast). Each job waits on its Environment, then
+#      (max-parallel 1). Each job waits on its Environment, then
 #      re-plans to a local file with the read-write credentials, recomputes the
 #      hash, and refuses to apply if it differs from step 1's. Otherwise it
 #      applies that saved plan file and prints only success or failure and the
@@ -72,8 +72,11 @@ name: terraform-apply
 # Every push plans EVERY ci-apply stack, so a skipped run (GitHub keeps only
 # the newest pending run per concurrency group), a failed plan or a rejected
 # approval is retried by the next run or a manual workflow_dispatch. Only
-# stacks whose plan has changes are applied. If any plan fails, nothing is
-# applied (fail closed).
+# stacks whose plan has changes are applied. A stack whose plan failed is never
+# applied (it is not in the matrix), but it does not stop the others: one stack's
+# outage (pocket-id, Doppler) must not hold up the rest. The run still ends red
+# (the plan job fails), and a later stack applies even if an earlier one failed
+# or its approval was rejected (fail-fast is off).
 on:
   push:
     branches: [main]
@@ -183,7 +186,7 @@ jobs:
 
           fail_step() {
             failed=true
-            tf_comment_line "$1" "plan failed" "nothing is applied; see the run" >> "$lines"
+            tf_comment_line "$1" "plan failed" "not applied; see the run" >> "$lines"
             printf '\n#### `%s`\n\nFailed at step: **%s**. See the job log (the plan itself is not printed).\n' "$1" "$2" >> "$summary"
           }
 
@@ -230,7 +233,7 @@ jobs:
 
           echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
           if [ "$failed" = true ]; then
-            echo "At least one stack failed to plan; nothing will be applied."
+            echo "At least one stack failed to plan; it is not applied (the others are)."
             exit 1
           fi
 
@@ -280,7 +283,7 @@ jobs:
           {
             printf '### Terraform apply\n\nCommit `%s`. Counts and results only; the plan is not printed.\n\n' "${GITHUB_SHA::7}"
             if [ "$PLAN_OUTCOME" != success ] || [ "$PLAN_RESULT" != success ]; then
-              printf '**Nothing was applied**: at least one stack failed to plan.\n\n'
+              printf '**At least one stack failed to plan and was not applied** (the others were, if their plans were fine).\n\n'
             fi
             printf '%s\n' "$PLAN_LINES"
           } >"$body"
@@ -305,9 +308,11 @@ jobs:
   apply:
     name: Apply ${{ matrix.stack }}
     needs: [plan, announce]
-    # No status function on purpose: the implicit success() means a cancel
-    # stops it, and a failed announce skips it (fail closed).
-    if: ${{ needs.plan.outputs.matrix != '' && needs.plan.outputs.matrix != '[]' }}
+    # Runs although the plan job failed: the matrix only holds stacks whose
+    # plan succeeded, and a failed plan must not hold up the others. Fail
+    # closed: a cancel stops it, and so does a failed announce or a missing
+    # matrix (the plan job crashed before deciding).
+    if: ${{ !cancelled() && needs.announce.result == 'success' && needs.plan.outputs.matrix != '' && needs.plan.outputs.matrix != '[]' }}
     # One job per stack, in stack order. Gated stacks wait for approval.
     # `url` makes the deployment's "View deployment" go to the merged PR (the
     # run when announce found none or failed).
@@ -318,7 +323,7 @@ jobs:
     timeout-minutes: 60
     strategy:
       max-parallel: 1
-      fail-fast: true
+      fail-fast: false
       matrix:
         include: ${{ fromJSON(needs.plan.outputs.matrix) }}
     steps:
@@ -480,7 +485,7 @@ jobs:
           {
             printf '### Terraform apply\n\nCommit `%s`. Counts and results only; the plan is not printed.\n\n' "${GITHUB_SHA::7}"
             if [ "$PLAN_OUTCOME" != success ] || [ "$PLAN_RESULT" != success ]; then
-              printf '**Nothing was applied**: at least one stack failed to plan.\n\n'
+              printf '**At least one stack failed to plan and was not applied** (the others were, if their plans were fine).\n\n'
             fi
             printf '%s\n' "$PLAN_LINES"
             results=""

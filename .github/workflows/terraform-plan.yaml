@@ -52,7 +52,9 @@ jobs:
           cache: false
           install_args: aqua:astral-sh/uv aqua:opentofu/opentofu aqua:terramate-io/terramate aqua:terraform-linters/tflint aqua:jqlang/jq
 
-      # Read-only Doppler service tokens, in the container's environment. Each
+      # Read-only Doppler service tokens, in the container's environment. (The
+      # pocket-id API key in tf-at-home/ci is an exception: its keys have no
+      # scopes, so it is an admin key until pocket-id ships read-only ones.) Each
       # is scoped to the `ci` config of one project: CI_DOPPLER_TF_READ ->
       # tf-at-home/ci (R2_STATE_READONLY, TOFU_STATE_PASSPHRASE, a read-only
       # Cloudflare token), CI_DOPPLER_HOSTS_READ -> hosts-at-home/ci (a
