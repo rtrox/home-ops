@@ -233,7 +233,7 @@ jobs:
 
           echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
           if [ "$failed" = true ]; then
-            echo "At least one stack failed to plan; it is not applied (the others are)."
+            echo "At least one stack failed to plan; it is not applied (the others are applied, if their plans were fine)."
             exit 1
           fi
 
@@ -283,7 +283,7 @@ jobs:
           {
             printf '### Terraform apply\n\nCommit `%s`. Counts and results only; the plan is not printed.\n\n' "${GITHUB_SHA::7}"
             if [ "$PLAN_OUTCOME" != success ] || [ "$PLAN_RESULT" != success ]; then
-              printf '**At least one stack failed to plan and was not applied** (the others were, if their plans were fine).\n\n'
+              printf '**At least one stack failed to plan and was not applied** (the others are applied if their plans were fine).\n\n'
             fi
             printf '%s\n' "$PLAN_LINES"
           } >"$body"
@@ -485,7 +485,7 @@ jobs:
           {
             printf '### Terraform apply\n\nCommit `%s`. Counts and results only; the plan is not printed.\n\n' "${GITHUB_SHA::7}"
             if [ "$PLAN_OUTCOME" != success ] || [ "$PLAN_RESULT" != success ]; then
-              printf '**At least one stack failed to plan and was not applied** (the others were, if their plans were fine).\n\n'
+              printf '**At least one stack failed to plan and was not applied** (the others are applied if their plans were fine).\n\n'
             fi
             printf '%s\n' "$PLAN_LINES"
             results=""

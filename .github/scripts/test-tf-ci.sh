@@ -29,6 +29,9 @@ OpenTofu will perform the following actions:
   # data.x.read will be read during apply
   # aws_thing.imported["secret key"] will be imported
   # aws_thing.gone will be removed from the OpenTofu state
+  # pocketid_client.infra["my-app"] will be destroyed
+  # pocketid_client.infra["Secret_key"] will be destroyed
+  # doppler_secret.other["hidden-key"] will be destroyed
   # aws_thing.old has moved to aws_thing.new["other key"]
   # aws_thing.removed will no longer be managed by OpenTofu, but will not be destroyed
 
@@ -42,6 +45,8 @@ for want in "will be created" "will be updated in-place" "will be destroyed" "mu
   if grep -qF "$want" <<<"$headers"; then check "header: $want" ok; else check "header: $want" no; fi
 done
 if grep -qF 'secret key' <<<"$headers"; then check "keys are redacted" no; else check "keys are redacted" ok; fi
+if grep -qF 'pocketid_client.infra["my-app"] will be destroyed' <<<"$headers"; then check "client app names show" ok; else check "client app names show" no; fi
+if grep -qE 'Secret_key|hidden-key|other key' <<<"$headers"; then check "other keys stay redacted" no; else check "other keys stay redacted" ok; fi
 if [ "$(tf_summary_totals "$log")" = "Plan: 1 to import, 2 to add, 1 to change, 1 to destroy, 1 to forget." ]; then
   check "totals with import and forget" ok
 else check "totals with import and forget" no; fi

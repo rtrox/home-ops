@@ -1,7 +1,7 @@
 # Proxmox host (`pve.rtrox.io`)
 
 Single Proxmox VE node at `172.21.1.21`. Managed with Ansible (`ansible/proxmox.yaml`, role
-`proxmox`); VMs will be defined in Terraform (`terraform-record/proxmox`, not yet created).
+`proxmox`); VMs are defined in Terraform (`terraform/stacks/proxmox`).
 
 ## Hardware
 

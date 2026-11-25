@@ -132,9 +132,14 @@ tf_excludes() {
 
 # tf_summary_headers LOG: only the "# <type.name> will be <action>" headers.
 # for_each keys and indexes become [...] first, so no key value reaches a
-# public place; everything else in the plan is dropped.
+# public place; everything else in the plan is dropped. The one exception is
+# mini-services' clients, keyed by app names that are already public in this
+# repo, so an approver can see which client a delete is for.
 tf_summary_headers() {
-  sed -E 's/\[[^]]*\]/[…]/g' "$1" \
+  sed -E \
+    -e 's/(pocketid_client\.(this|infra)|doppler_secret\.infra_client|terraform_data\.infra_mode)\["([a-z0-9-]+)"\]/\1<\3>/g' \
+    -e 's/\[[^]]*\]/[…]/g' \
+    -e 's/(pocketid_client\.(this|infra)|doppler_secret\.infra_client|terraform_data\.infra_mode)<([a-z0-9-]+)>/\1["\3"]/g' "$1" \
     | grep -E '^  # [^ ]+ (will|must|has) ' || true
 }
 

@@ -96,9 +96,7 @@ resource "pocketid_client" "this" {
 
   allowed_user_groups = [for g in each.value.groups : pocketid_group.this[g].id]
 
-  # A deleted client takes its ID and secret with it: the app's login breaks
-  # until a new client's values are in Doppler and the app.
-  lifecycle {
-    prevent_destroy = true
-  }
+  # No prevent_destroy: CI holds any apply that destroys for approval. A deleted
+  # client takes its ID and secret with it: the app's login breaks until a new
+  # client's values are in Doppler and the app.
 }
