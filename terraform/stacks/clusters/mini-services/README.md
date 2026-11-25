@@ -1,7 +1,7 @@
 # clusters/mini-services
 
 pocket-id's groups and OIDC clients. The groups and the older clients are
-hand-written in `pocketid.tf` (the groups can't be destroyed). New clients are declared
+hand-written in `pocketid.tf`. New clients are declared
 by the app, in `infra.yaml` (`infra.tf`).
 
 ## infra.yaml
