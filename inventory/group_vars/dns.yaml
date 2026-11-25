@@ -3,6 +3,13 @@
 # apply unless this is uncommented, which keeps the house's previous upstreams.
 # blocky_legacy_upstreams: true
 
+# Both Blockys use ns1's Valkey, by its own address, not the VIP: after a
+# failover, a connection made while the VIP was elsewhere can stay open and
+# dead (ns2 missed ns1's updates until Blocky restarted, Nov 25, 2026). Sharing
+# needs both hosts up anyway; with ns1 down, ns2 runs on its own cache and
+# blocking toggles don't sync.
+blocky_redis_address: "{{ hostvars['ns1.rtrox.io'].address }}:{{ valkey_port | default(6379) }}"
+
 # The house resolvers' Valkey database number.
 blocky_redis_database: 1
 
