@@ -10,21 +10,25 @@ Cloudflare token:
 task tf:apply STACK=curt
 ```
 
-The outputs are the two IDs curt's Wrangler configuration needs.
+The outputs are the two IDs curt's Wrangler configuration needs (it also needs
+the Cloudflare account ID).
 
 ## Tokens
 
-Foundation's `curt_tokens.tf` makes three, each in Doppler `tf-at-home/prd`:
+Foundation's `curt_tokens.tf` makes two, in Doppler `tf-at-home/prd`:
 
 | Key | For | Reaches it |
 | --- | --- | --- |
 | `CLOUDFLARE_CURT_TOKEN` | this stack | `task tf:*` |
-| `CURT_DEPLOY_CLOUDFLARE_TOKEN` | Wrangler in curt's GitHub Actions | by hand, as a GitHub secret there |
 | `CURT_ANALYTICS_CLOUDFLARE_TOKEN` | the admin Worker's `AE_TOKEN` | by hand, as a Worker secret |
 
-The first is reissued every 90 days by a foundation apply. The other two are
-copied by hand, so they only change on purpose: replace the token in foundation
-(`tofu apply -replace`), then copy the new value before anything else needs it.
+The first is reissued every 90 days by a foundation apply. The second is copied
+by hand, so it only changes on purpose:
+`task tf:apply STACK=foundation -- -replace=cloudflare_api_token.curt_analytics`.
+That deletes the old token, so metrics stop until the new one is copied.
+
+There is no deploy token: a token that can deploy a Worker can bind any R2
+bucket to it, `tofu-state` included. Deploy from the laptop (`wrangler login`).
 
 pocket-id's client and groups are in `clusters/mini-services`. The trx.fm zone,
 its WAF rules and DNSSEC are the `dns` stack's.

@@ -203,10 +203,6 @@ tf-at-home:
     what: "Cloudflare analytics read token for curt"
     written_by: "foundation"
     read_by: "copied to curt's admin Worker (AE_TOKEN)"
-  CURT_DEPLOY_CLOUDFLARE_TOKEN:
-    what: "Cloudflare token for curt's Wrangler deploys"
-    written_by: "foundation"
-    read_by: "copied to curt's GitHub repo"
   DOPPLER_EXPORT_TOKENS:
     what: "A read token for every other Doppler config"
     written_by: "foundation"

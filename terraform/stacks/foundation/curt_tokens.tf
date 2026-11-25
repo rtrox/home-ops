@@ -1,28 +1,18 @@
 # Cloudflare tokens for curt, the URL shortener on Workers (stacks/curt, and
-# github.com/rtrox/curt). Cloudflare can't limit these account permissions to
-# one Worker, database or namespace, so each reaches every one in the account.
+# github.com/rtrox/curt).
 #
-# - stack:     the curt stack's own, like mini's (mini_token.tf): storage only,
-#              and Zone Read on trx.fm for the account lookup.
-# - deploy:    Wrangler in curt's GitHub Actions: Worker code and D1 migrations.
-#              No KV (Wrangler only binds it by ID), DNS or zone permission:
-#              Terraform attaches domains.
-# - analytics: the admin Worker, read-only.
+# - curt:           the curt stack's own, like mini's (mini_token.tf): storage
+#                   only, and Zone Read on trx.fm for the account lookup.
+# - curt_analytics: the admin Worker's, read-only. Copied by hand into a Worker
+#                   secret, so it doesn't rotate on its own.
 #
-# The last two are copied by hand (a GitHub secret, a Worker secret), so they
-# don't rotate on their own: a rotation here would break them until copied.
+# No token for Wrangler deploys: one that can deploy a Worker can bind any R2
+# bucket to it, tofu-state included, so it isn't handed to curt's GitHub repo.
 locals {
   curt_token_permissions = {
     stack_zone = ["Zone Read"]
     stack      = ["D1 Write", "Workers KV Storage Write"]
-    deploy     = ["Workers Scripts Write", "D1 Write"]
     analytics  = ["Account Analytics Read"]
-  }
-
-  # Hand-copied token -> its Doppler key (tf-at-home/prd).
-  curt_hand_tokens = {
-    deploy    = "CURT_DEPLOY_CLOUDFLARE_TOKEN"
-    analytics = "CURT_ANALYTICS_CLOUDFLARE_TOKEN"
   }
 }
 
@@ -88,17 +78,15 @@ resource "doppler_secret" "curt_token_prd" {
   value   = cloudflare_api_token.curt.value
 }
 
-resource "cloudflare_api_token" "curt_hand" {
-  for_each = local.curt_hand_tokens
-
-  name   = "curt-${each.key}"
+resource "cloudflare_api_token" "curt_analytics" {
+  name   = "curt-analytics"
   status = "active"
 
   policies = [
     {
       # This account only.
       effect            = "allow"
-      permission_groups = [for name in local.curt_token_permissions[each.key] : { id = local.permission_group_ids[name] }]
+      permission_groups = [for name in local.curt_token_permissions.analytics : { id = local.permission_group_ids[name] }]
       resources         = jsonencode({ "com.cloudflare.api.account.${local.account_id}" = "*" })
     },
   ]
@@ -106,17 +94,15 @@ resource "cloudflare_api_token" "curt_hand" {
   lifecycle {
     create_before_destroy = true
     precondition {
-      condition     = alltrue([for name in local.curt_token_permissions[each.key] : local.permission_group_ids[name] != null])
+      condition     = alltrue([for name in local.curt_token_permissions.analytics : local.permission_group_ids[name] != null])
       error_message = "A Cloudflare permission group was not found by name; Cloudflare may have renamed it."
     }
   }
 }
 
-resource "doppler_secret" "curt_hand_token" {
-  for_each = local.curt_hand_tokens
-
+resource "doppler_secret" "curt_analytics_token" {
   project = "tf-at-home"
   config  = "prd"
-  name    = each.value
-  value   = cloudflare_api_token.curt_hand[each.key].value
+  name    = "CURT_ANALYTICS_CLOUDFLARE_TOKEN"
+  value   = cloudflare_api_token.curt_analytics.value
 }
