@@ -19,7 +19,7 @@ locals {
   # Read also reads the account's members and audit log, so stacks find the
   # account ID through a zone lookup (Zone Read) instead.
   ci_readonly_permissions = {
-    zone = ["Zone Read", "DNS Read", "Zone WAF Read"]
+    zone = ["Zone Read", "DNS Read", "Zone WAF Read", "Zone Settings Read"]
     user = ["API Tokens Read"]
   }
 }

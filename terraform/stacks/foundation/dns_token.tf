@@ -12,7 +12,7 @@
 # deliberately not granted here: add a new zone from the laptop with a broader
 # token if so.
 locals {
-  dns_token_permissions = ["Zone Read", "Zone Write", "DNS Write", "Zone WAF Write"]
+  dns_token_permissions = ["Zone Read", "Zone Write", "DNS Write", "Zone WAF Write", "Zone Settings Write"]
 }
 
 # Reissued every 90 days; each token expires 180 days after issue.
