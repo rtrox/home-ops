@@ -79,6 +79,51 @@ spec:
                 memory: 2048Mi
               limits:
                 memory: 8096Mi
+          # Proton Mail Bridge sidecar: Paperless reads Proton mail over IMAP at
+          # 127.0.0.1:1143. Bridge binds loopback only, so nothing else can reach
+          # it. State (GPG key, pass store, login session) lives on the
+          # Volsync-backed data volume under protonmail-bridge/. One-time login:
+          #   kubectl exec -it -n default deploy/paperless-ngx-main -c bridge -- /entrypoint.sh init
+          bridge:
+            image:
+              repository: ghcr.io/rtrox/protonmail-bridge
+              tag: 3.27.2@sha256:934f09ef774592b9c4bf7c8cc941e5bba1ea86cb7ebfb3e3802e288b6ea805b2
+            env:
+              TZ: America/Los_Angeles
+            securityContext:
+              runAsUser: 568
+              runAsGroup: 568
+              runAsNonRoot: true
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop: ["ALL"]
+            resources:
+              requests:
+                cpu: 20m
+                memory: 128Mi
+              limits:
+                memory: 1Gi
+        initContainers:
+          # The data volume's subPath directory is created root-owned; hand it to
+          # the Bridge user before the sidecar starts.
+          bridge-perms:
+            image:
+              repository: ghcr.io/rtrox/protonmail-bridge
+              tag: 3.27.2@sha256:934f09ef774592b9c4bf7c8cc941e5bba1ea86cb7ebfb3e3802e288b6ea805b2
+            command: ["/bin/sh", "-c", "chown 568:568 /config"]
+            securityContext:
+              runAsUser: 0
+              runAsNonRoot: false
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop: ["ALL"]
+                add: ["CHOWN"]
+            resources:
+              requests:
+                cpu: 10m
+                memory: 16Mi
+              limits:
+                memory: 64Mi
 
       tika:
         type: deployment
@@ -162,6 +207,12 @@ spec:
           main:
             main:
               - path: /data/local
+            bridge:
+              - path: /config
+                subPath: protonmail-bridge
+            bridge-perms:
+              - path: /config
+                subPath: protonmail-bridge
       docs:
         type: nfs
         server: nas.rtrox.io
