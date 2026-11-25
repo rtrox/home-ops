@@ -195,7 +195,7 @@ This will:
 
 ## Ansible Tasks
 
-Tasks for the Ansible-managed single-board computers (see [ansible/README.md](../ansible/README.md)). They run under `doppler run -p hosts-at-home -c prd --` (so roles can read secrets from the environment) and need the local-only `ansible/.ansible-vault-pass`, and always run with `--forks 1` so group targets are applied one host at a time.
+Tasks for the Ansible-managed single-board computers (see [ansible/README.md](../ansible/README.md)). They run under `doppler run -p hosts-at-home -c prd --` (so roles can read secrets from the environment), and always run with `--forks 1` so group targets are applied one host at a time.
 
 ### `ansible:syntax`
 

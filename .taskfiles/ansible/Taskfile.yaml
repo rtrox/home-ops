@@ -5,14 +5,13 @@ version: "3"
 vars:
   ANSIBLE_DIR: "{{.ROOT_DIR}}/ansible"
   # Plays run under doppler run, so roles can read secrets with
-  # lookup('env', ...) (the design's path off Ansible Vault). The SSH user is
+  # lookup('env', ...). The SSH user is
   # rtrox everywhere (inventory/group_vars/all.yaml).
   DOPPLER_RUN: doppler run -p hosts-at-home -c prd --
   # --forks 1 applies to one host at a time, so a group target like `dns` never
   # restarts Docker (and drops DNS) on both name servers at once.
   ANSIBLE_ARGS: >-
     -i ../inventory/hosts.yaml
-    --vault-password-file .ansible-vault-pass
     --forks 1
 
 tasks:
@@ -23,7 +22,7 @@ tasks:
       - sh: test -n "$(doppler configure get token --plain)"
         msg: "doppler isn't logged in (run: doppler login)"
 
-  # site.yaml and upgrade.yaml also need ansible on PATH and the vault password.
+  # site.yaml and upgrade.yaml also need ansible on PATH.
   _preconditions:
     internal: true
     dir: "{{.ANSIBLE_DIR}}"
@@ -31,8 +30,6 @@ tasks:
     preconditions:
       - sh: which ansible-playbook
         msg: "ansible-playbook not found on PATH"
-      - sh: test -f .ansible-vault-pass
-        msg: "ansible/.ansible-vault-pass is missing (local-only, see ansible/README.md)"
 
   syntax:
     desc: Syntax-check the Ansible playbooks

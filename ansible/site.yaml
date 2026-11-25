@@ -82,11 +82,6 @@
   hosts: dns
   become: true
 
-  vars_files:
-    - blocky_secrets.yaml
-    - keepalived_secrets.yaml
-    - valkey_secrets.yaml
-
   pre_tasks:
     - name: Detect Docker (read-only; see tasks/docker-present.yaml)
       ansible.builtin.import_tasks: tasks/docker-present.yaml
@@ -118,13 +113,8 @@
   hosts: dns_apartment:!offline
   become: true
 
-  # TODO: dns-a1 reuses the house's Valkey password (valkey_secrets.yaml) until
-  # the Doppler migration gives it its own. Blocky's per-host settings come
-  # from inventory/group_vars/dns_apartment.yaml, so blocky_secrets.yaml (the
-  # house router's address) is not loaded.
-  vars_files:
-    - valkey_secrets.yaml
-
+  # TODO: dns-a1 reuses the house's Valkey password until phase 3 gives each
+  # site its own. Its settings are in inventory/group_vars/dns_apartment.yaml.
   pre_tasks:
     - name: Detect Docker (read-only; see tasks/docker-present.yaml)
       ansible.builtin.import_tasks: tasks/docker-present.yaml
