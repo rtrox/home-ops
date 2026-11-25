@@ -1,0 +1,6 @@
+---
+# Throwaway client for the P2-4b end-to-end test; removed in a follow-up PR.
+oidc:
+  callback: https://infra-test.invalid/oauth/callback
+  groups: [admins]
+  name: infra-test (throwaway)

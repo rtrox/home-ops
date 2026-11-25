@@ -5,6 +5,7 @@ kind: Kustomization
 namespace: security
 resources:
   - ./doppler-export/ks.yaml
+  - ./infra-test/ks.yaml
   - ./pocket-id/ks.yaml
 components:
   - ../../components/namespace
