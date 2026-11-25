@@ -18,6 +18,7 @@ vars:
 
 includes:
   ansible: .taskfiles/ansible/Taskfile.yaml
+  doppler: .taskfiles/doppler/Taskfile.yaml
   flux: .taskfiles/flux/Taskfile.yaml
   inventory: .taskfiles/inventory/Taskfile.yaml
   # k8s: .taskfiles/k8s/Taskfile.yaml

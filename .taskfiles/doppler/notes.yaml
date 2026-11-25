@@ -1,0 +1,286 @@
+---
+# Notes on the Doppler secrets, pushed by `task doppler:notes`: what each is for,
+# which stack writes it (or that it's set by hand, and where a new value comes
+# from), and what reads it. A note belongs to a project and key name, shared by
+# every config. It's public: say nothing sensitive. No entry for *_POCKETID_CLIENT
+# keys. Not Terraform: one resource per note would add several Doppler reads each
+# to every foundation plan, past the free plan's rate limit.
+k8s-at-home:
+  ALERTMANAGER:
+    what: "Pushover keys for alerts"
+    written_by: "by hand (pushover.net)"
+    read_by: "observability/kube-prometheus-stack"
+  AUTOBRR:
+    what: "autobrr session secret"
+    written_by: "by hand (any random string)"
+    read_by: "downloads/autobrr"
+  BLOCKY_APARTMENT:
+    what: "Apartment Valkey password, the same one dns-a1 uses"
+    written_by: "by hand"
+    read_by: "network/blocky"
+  BLUESKY:
+    what: "PDS secrets: JWT secret, admin password, SMTP URL and the PLC rotation key (don't change it)"
+    written_by: "by hand"
+    read_by: "default/bluesky-pds"
+  CERTMANAGER_CLOUDFLARE_TOKEN:
+    what: "Cloudflare token for DNS-01 challenges"
+    written_by: "foundation"
+    read_by: "cert-manager"
+  CLOUDFLARED_CREDENTIALS:
+    what: "Cloudflare Tunnel credentials"
+    written_by: "clusters/mini"
+    read_by: "network/cloudflared"
+  CLUSTER_NAME:
+    what: "Cluster's name, the prefix of its volsync B2 repositories"
+    written_by: "by hand"
+    read_by: "the volsync component"
+  CLUSTER_WEBHOOK_TOKEN:
+    what: "Token for the GitHub webhook that triggers Flux"
+    written_by: "by hand (set the same value on the GitHub webhook)"
+    read_by: "flux-system/flux-operator"
+  CNPG_MINIO_BUCKET:
+    what: "MinIO bucket and key for Postgres WAL and base backups"
+    written_by: "terraform-record minio"
+    read_by: "database/cloudnative-pg, database/cnpg-offsite"
+  CNPG_OFFSITE_BACKBLAZE_BUCKET:
+    what: "B2 bucket and key for the off-site Postgres copy (no delete)"
+    written_by: "clusters/mini"
+    read_by: "database/cnpg-offsite"
+  CNPG_OFFSITE_RESTORE_BACKBLAZE_BUCKET:
+    what: "Read-only B2 key for restoring the off-site Postgres copy"
+    written_by: "clusters/mini"
+    read_by: "nothing day to day; restores"
+  CNPG_ROOT_CREDENTIALS:
+    what: "Postgres superuser"
+    written_by: "by hand"
+    read_by: "database/cloudnative-pg"
+  CURSEFORGE_API_KEY:
+    what: "CurseForge API key"
+    written_by: "by hand (console.curseforge.com)"
+    read_by: "default/minecraft-vanilla"
+  DOPPLER_CI_STORE_TOKEN:
+    what: "Read token for k8s-at-home/min-ci"
+    written_by: "foundation"
+    read_by: "the doppler-ci ClusterSecretStore"
+  EXTERNALDNS_CLOUDFLARE_TOKEN:
+    what: "Cloudflare token for DNS records"
+    written_by: "foundation"
+    read_by: "external-dns"
+  GRAFANA_ADMIN:
+    what: "Grafana admin login"
+    written_by: "by hand"
+    read_by: "observability/grafana"
+  GRIMMORY:
+    what: "Grimmory's MariaDB passwords"
+    written_by: "by hand"
+    read_by: "default/grimmory"
+  HEALTHCHECKS:
+    what: "healthchecks.io ping URLs, one field per check"
+    written_by: "by hand (healthchecks.io)"
+    read_by: "alertmanager, cnpg-offsite, doppler-export, tofu-state-copy"
+  MINECRAFT_RCON_PASSWORD:
+    what: "Minecraft RCON password"
+    written_by: "by hand (any random string)"
+    read_by: "default/minecraft-vanilla"
+  N8N:
+    what: "n8n's Postgres password and encryption key (changing the key breaks its saved credentials)"
+    written_by: "by hand"
+    read_by: "default/n8n, database/cloudnative-pg"
+  PAPERLESS_ADMIN_PASSWORD:
+    what: "Paperless admin password"
+    written_by: "by hand"
+    read_by: "default/paperless"
+  POCKET_ID:
+    what: "pocket-id's encryption key"
+    written_by: "by hand"
+    read_by: "security/pocket-id"
+  PROWLARR:
+    what: "Prowlarr API key"
+    written_by: "by hand"
+    read_by: "downloads/prowlarr"
+  QB_GLUETUN_ENV:
+    what: "VPN settings for qBittorrent's gluetun"
+    written_by: "by hand (VPN provider)"
+    read_by: "downloads/qbittorrent"
+  QB_OPENVPN_CONFIG:
+    what: "VPN configuration file for qBittorrent's gluetun"
+    written_by: "by hand (VPN provider)"
+    read_by: "downloads/qbittorrent"
+  QUI:
+    what: "qui session secret"
+    written_by: "by hand (any random string)"
+    read_by: "downloads/qui"
+  RADARR:
+    what: "Radarr API key"
+    written_by: "by hand"
+    read_by: "downloads/radarr"
+  RESTIC_PASSWORD:
+    what: "Encrypts every volsync repository in MinIO; changing it makes them unreadable"
+    written_by: "by hand"
+    read_by: "the volsync component"
+  SABNZBD:
+    what: "SABnzbd API key"
+    written_by: "by hand"
+    read_by: "downloads/sabnzbd"
+  SECRETS_BACKUP_BACKBLAZE_BUCKET:
+    what: "B2 bucket and key for the Doppler export"
+    written_by: "foundation"
+    read_by: "security/doppler-export"
+  SONARR:
+    what: "Sonarr API key"
+    written_by: "by hand"
+    read_by: "downloads/sonarr"
+  SURE:
+    what: "Sure's Postgres password and encryption keys (changing the keys breaks its encrypted data)"
+    written_by: "by hand"
+    read_by: "default/sure, database/cloudnative-pg"
+  SURE_MINIO_BUCKET:
+    what: "MinIO bucket and key for Sure's uploads"
+    written_by: "terraform-record minio"
+    read_by: "default/sure"
+  THANOS_MINIO_BUCKET:
+    what: "MinIO bucket and key for Thanos"
+    written_by: "terraform-record minio"
+    read_by: "observability/kube-prometheus-stack"
+  TOFU_STATE_HISTORY_BACKBLAZE_BUCKET:
+    what: "B2 bucket and key for the OpenTofu state copy"
+    written_by: "foundation"
+    read_by: "terraform/tofu-state-copy"
+  TOFU_STATE_R2_SOURCE:
+    what: "Read-only R2 key for the OpenTofu state bucket"
+    written_by: "foundation"
+    read_by: "terraform/tofu-state-copy"
+  VOLSYNC_B2_RESTIC_PASSWORD:
+    what: "Encrypts every volsync repository in B2; changing it makes them unreadable"
+    written_by: "by hand, never Terraform"
+    read_by: "the volsync component"
+  VOLSYNC_BACKBLAZE_BUCKET:
+    what: "B2 bucket and key for volsync"
+    written_by: "clusters/mini"
+    read_by: "the volsync component"
+  VOLSYNC_MINIO_BUCKET:
+    what: "MinIO bucket and key for volsync"
+    written_by: "terraform-record minio"
+    read_by: "the volsync component"
+tf-at-home:
+  BACKBLAZE_APPLICATION_KEY:
+    what: "The terraform-backblaze B2 key"
+    written_by: "by hand (Backblaze)"
+    read_by: "foundation, clusters/mini, truenas"
+  BACKBLAZE_APPLICATION_KEY_ID:
+    what: "ID of the terraform-backblaze B2 key"
+    written_by: "by hand (Backblaze)"
+    read_by: "foundation, clusters/mini, truenas"
+  BACKBLAZE_TERRAFORM_STATE_KEY:
+    what: "B2 key for the old state bucket; goes with MinIO in phase 4"
+    written_by: "by hand (Backblaze)"
+    read_by: "terraform-record minio"
+  CLOUDFLARE_DNS_TOKEN:
+    what: "The dns stack's Cloudflare token (read-only in ci)"
+    written_by: "foundation"
+    read_by: "dns"
+  CLOUDFLARE_MINI_TOKEN:
+    what: "The mini stack's Cloudflare token"
+    written_by: "foundation"
+    read_by: "clusters/mini"
+  CLOUDFLARE_TERRAFORM_TOKEN:
+    what: "Cloudflare token for stacks without their own (read-only in ci)"
+    written_by: "foundation in ci; by hand in prd"
+    read_by: "foundation, proxmox"
+  CLOUDFLARE_TRUENAS_TOKEN:
+    what: "The truenas stack's Cloudflare token"
+    written_by: "foundation"
+    read_by: "truenas"
+  CLOUDFLARE_USER_ID:
+    what: "The owner's Cloudflare user ID"
+    written_by: "by hand (Cloudflare)"
+    read_by: "foundation"
+  DOPPLER_EXPORT_TOKENS:
+    what: "A read token for every other Doppler config"
+    written_by: "foundation"
+    read_by: "security/doppler-export"
+  DOPPLER_MINI_CI_WRITE_TOKEN:
+    what: "Token for k8s-at-home/min-ci (read-only in ci)"
+    written_by: "foundation"
+    read_by: "clusters/mini-services"
+  DOPPLER_MINI_WRITE_TOKEN:
+    what: "Write token for k8s-at-home/min"
+    written_by: "foundation"
+    read_by: "clusters/mini, terraform-record minio"
+  DOPPLER_TRUENAS_WRITE_TOKEN:
+    what: "Write token for hosts-at-home/prd"
+    written_by: "foundation"
+    read_by: "truenas, terraform-record minio"
+  GITHUB_TERRAFORM_TOKEN:
+    what: "Fine-grained GitHub token limited to home-ops; expires yearly"
+    written_by: "by hand (GitHub)"
+    read_by: "foundation"
+  HEALTHCHECKS_TF_DRIFT_PING_URL:
+    what: "healthchecks.io ping URL for nightly drift"
+    written_by: "by hand (healthchecks.io)"
+    read_by: "the terraform-drift workflow"
+  MINIO_PASSWORD:
+    what: "MinIO admin password; goes with MinIO in phase 4"
+    written_by: "by hand"
+    read_by: "terraform-record minio"
+  MINIO_USER:
+    what: "MinIO admin user; goes with MinIO in phase 4"
+    written_by: "by hand"
+    read_by: "terraform-record minio"
+  POCKETID_API_TOKEN:
+    what: "pocket-id API key, a different one per config; they expire Nov 25, 2027"
+    written_by: "by hand (pocket-id admin UI)"
+    read_by: "clusters/mini-services"
+  R2_STATE_READONLY:
+    what: "Read-only R2 key for the state bucket"
+    written_by: "foundation"
+    read_by: "CI plans and drift"
+  R2_STATE_READWRITE:
+    what: "Read/write R2 key for the state bucket (a different one in ci-apply)"
+    written_by: "foundation"
+    read_by: "task tf:*, CI applies"
+  TOFU_STATE_PASSPHRASE:
+    what: "Encrypts every stack's state except laptop-only ones; changing it makes them unreadable"
+    written_by: "by hand"
+    read_by: "task tf:*, CI"
+  TOFU_STATE_PASSPHRASE_LAPTOP:
+    what: "Encrypts laptop-only stacks' state (copy in Bitwarden); never put it in a CI config"
+    written_by: "by hand"
+    read_by: "task tf:*"
+hosts-at-home:
+  CI_DOPPLER_HOSTS_READ:
+    what: "Read token for hosts-at-home/ci"
+    written_by: "by hand"
+    read_by: "the github-runner role"
+  CI_DOPPLER_TF_READ:
+    what: "Read token for tf-at-home/ci"
+    written_by: "by hand"
+    read_by: "the github-runner role"
+  GITHUB_RUNNER_APP:
+    what: "GitHub App that registers the runner"
+    written_by: "by hand (GitHub)"
+    read_by: "the github-runner role"
+  PVE_ACME_EMAIL:
+    what: "Proxmox's ACME account email"
+    written_by: "by hand"
+    read_by: "the proxmox role"
+  PVE_TERRAFORM_API_TOKEN:
+    what: "Proxmox API token (read-only in ci)"
+    written_by: "the Ansible proxmox role"
+    read_by: "proxmox"
+  RTROX_DUPLICACY:
+    what: "MinIO bucket and key for Duplicacy"
+    written_by: "terraform-record minio"
+    read_by: "pasted into TrueNAS"
+  TRUENAS_BACKUP_BUCKET:
+    what: "B2 bucket and key for TrueNAS's off-site copy"
+    written_by: "truenas"
+    read_by: "pasted into TrueNAS"
+  TRUENAS_BACKUP_CLOUDFLARE_TOKEN:
+    what: "The backup TrueNAS's ACME Cloudflare token"
+    written_by: "foundation"
+    read_by: "pasted into the backup TrueNAS"
+  TRUENAS_CLOUDFLARE_TOKEN:
+    what: "The main TrueNAS's ACME Cloudflare token"
+    written_by: "foundation"
+    read_by: "pasted into TrueNAS"

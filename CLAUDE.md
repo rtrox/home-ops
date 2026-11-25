@@ -259,6 +259,7 @@ cluster-apps/mini/[namespace]/              ← Namespace directory (e.g., "defa
   - Extract entire JSON object using `dataFrom.extract`
   - Use `target.template` to expand individual values
   - Example: `BOOKLORE` key in Doppler contains `{"mariadb_password": "...", "mariadb_root_password": "..."}`
+- Every Doppler key has a note (purpose, writer, reader) from `.taskfiles/doppler/notes.yaml`, except `*_POCKETID_CLIENT`: add or remove its entry with the key; the owner pushes them with `task doppler:notes` (`DRY_RUN=true` to preview)
 - SOPS only for bootstrap secrets (considered tech debt)
 - NO postBuild substitution from SOPS secrets
 
