@@ -201,7 +201,7 @@ spec:
               XDG_CONFIG_HOME: /tmp
               XDG_CACHE_HOME: /tmp
               # Configs that legitimately hold no secrets of their own.
-              ALLOW_EMPTY_CONFIGS: chezmoi-secrets/dsk
+              ALLOW_EMPTY_CONFIGS: chezmoi-secrets/dsk k8s-at-home/min-ci
               # Public age keys from .sops.yaml (Ubuntu WSL, work macbook,
               # Endeavour laptop); not secret.
               AGE_RECIPIENTS: >-

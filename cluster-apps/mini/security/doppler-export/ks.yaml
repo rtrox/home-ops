@@ -13,6 +13,8 @@ spec:
   dependsOn:
     - name: external-secrets-store-doppler
       namespace: external-secrets
+    - name: external-secrets-store-doppler-export
+      namespace: external-secrets
   interval: 1h
   path: ./cluster-apps/mini/security/doppler-export/app
   prune: true

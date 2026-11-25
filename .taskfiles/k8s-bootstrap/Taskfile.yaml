@@ -28,6 +28,22 @@ tasks:
       - until talosctl --nodes {{.TALOS_CONTROLLER}} bootstrap; do sleep 5; done
       - talosctl kubeconfig --nodes {{.TALOS_CONTROLLER}} --force --force-context-name "${CLUSTER_NAME}" "${KUBECONFIG}"
 
+  doppler-export-token:
+    desc: Make the doppler-export store's token (read-only, tf-at-home/export)
+    requires: *default-requires
+    preconditions:
+      - which kubectl doppler
+    # Only mini runs the export: anywhere else this is already up to date.
+    status:
+      - test "{{.CLUSTER_NAME}}" != mini
+    cmds:
+      # Captured first, so a failed create never overwrites the Secret.
+      - cmd: |
+          set -eu
+          token=$(doppler configs tokens create --project tf-at-home --config export mini-export-store --plain)
+          test -n "$token"
+          printf %s "$token" | kubectl -n external-secrets create secret generic doppler-export-token --from-file=dopplerToken=/dev/stdin --dry-run=client -o yaml | kubectl apply -f -
+
   apps:
     desc: Bootstrap Apps
     prompt: Bootstrap apps into Talos cluster?
@@ -47,5 +63,6 @@ tasks:
       # - until kubectl wait nodes --for=condition=Ready=False --all --timeout=10m; do sleep 5; done
       - kubectl apply --server-side --filename {{.CLUSTER_DIR}}/bootstrap/resources/namespaces.yaml
       - doppler configs tokens create --project k8s-at-home --config ${CLUSTER_NAME:0:3} doppler-eso --plain | kubectl -n external-secrets create secret generic doppler-token --from-file=dopplerToken=/dev/stdin --dry-run=client -o yaml | kubectl apply -f -
+      - task: doppler-export-token
       - helmfile --quiet --file {{.CLUSTER_DIR}}/bootstrap/helmfile.d/00-crds.yaml template | yq ea --exit-status 'select(.kind == "CustomResourceDefinition")' - | kubectl apply --server-side --filename -
       - helmfile --file {{.CLUSTER_DIR}}/bootstrap/helmfile.d/01-apps.yaml sync --hide-notes
