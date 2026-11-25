@@ -49,7 +49,7 @@ locals {
       name          = "curt"
       callback_urls = ["https://app.trx.fm/auth/callback"]
       is_public     = true
-      groups        = ["curt-admins", "curt-users"]
+      groups        = ["curt-users"]
     }
     grafana = {
       name          = "Grafana"
