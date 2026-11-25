@@ -1,0 +1,18 @@
+{
+  "changes": {
+    "time_rotating.truenas_token": "create",
+    "cloudflare_api_token.truenas": "create",
+    "doppler_secret.truenas_token_prd": "create"
+  },
+  "value_from": {
+    "doppler_secret.truenas_token_prd": {
+      "attribute": "value",
+      "references": [
+        "cloudflare_api_token.truenas"
+      ]
+    }
+  },
+  "value_unknown": {
+    "doppler_secret.truenas_token_prd": "value"
+  }
+}

@@ -1,6 +1,6 @@
 stack {
   name        = "foundation"
-  description = "Doppler projects, environments, configs and write tokens; the R2 state bucket, its tokens and its B2 history; mini's secrets-backup bucket; the per-stack Cloudflare tokens and mini's external-dns and cert-manager tokens; CI's credentials; the GitHub Environments the apply workflow runs in"
+  description = "Doppler projects, environments, configs and write tokens; the R2 state bucket, its tokens and its B2 history; mini's secrets-backup bucket; the per-stack Cloudflare tokens, mini's external-dns and cert-manager tokens and the TrueNAS ACME tokens; CI's credentials; the GitHub Environments the apply workflow runs in"
   id          = "29e13f3f-ad14-43b1-9aab-c270f55b9b66"
 
   # Applied from the owner's laptop only. Its default Doppler provider uses the
