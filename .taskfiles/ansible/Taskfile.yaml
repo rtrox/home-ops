@@ -6,8 +6,11 @@ vars:
   ANSIBLE_DIR: "{{.ROOT_DIR}}/ansible"
   # Plays run under doppler run, so roles can read secrets with
   # lookup('env', ...). The SSH user is
-  # rtrox everywhere (inventory/group_vars/all.yaml).
-  DOPPLER_RUN: doppler run -p hosts-at-home -c prd --
+  # rtrox everywhere (inventory/group_vars/all.yaml). Two nested runs, so every
+  # play gets both configs: ansible/prd (passwords the dns stack generates) and
+  # hosts-at-home/prd (everything else). Their key names are distinct, so
+  # nesting order doesn't matter.
+  DOPPLER_RUN: doppler run -p ansible -c prd -- doppler run -p hosts-at-home -c prd --
   # --forks 1 applies to one host at a time, so a group target like `dns` never
   # restarts Docker (and drops DNS) on both name servers at once.
   ANSIBLE_ARGS: >-

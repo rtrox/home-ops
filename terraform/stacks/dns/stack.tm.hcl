@@ -25,4 +25,9 @@ globals {
   # DNS Write and Zone WAF Write on the account's zones, nothing else. In
   # tf-at-home/ci the same key holds the read-only CI token.
   provider_keys = { cloudflare = "CLOUDFLARE_DNS_TOKEN" }
+
+  # The generated passwords (passwords.tf): the Ansible plays' in ansible/prd,
+  # and the apartment Valkey password again for Blocky in mini. The read-only
+  # tokens in tf-at-home/ci plan; ci-apply and prd hold the read/write ones.
+  doppler_writes = ["ansible/prd", "k8s-at-home/min-ci"]
 }

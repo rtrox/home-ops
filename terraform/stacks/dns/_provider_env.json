@@ -1,1 +1,1 @@
-[{"env":"CLOUDFLARE_API_TOKEN","key":"CLOUDFLARE_DNS_TOKEN","project":"tf-at-home"}]
+[{"env":"CLOUDFLARE_API_TOKEN","key":"CLOUDFLARE_DNS_TOKEN","project":"tf-at-home"},{"env":"TF_VAR_doppler_write_token_ansible_prd","key":"DOPPLER_ANSIBLE_WRITE_TOKEN","project":"tf-at-home"},{"env":"TF_VAR_doppler_write_token_k8s_at_home_min_ci","key":"DOPPLER_MINI_CI_WRITE_TOKEN","project":"tf-at-home"}]

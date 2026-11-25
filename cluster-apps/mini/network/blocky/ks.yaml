@@ -20,5 +20,5 @@ spec:
     namespace: flux-system
   wait: false
   dependsOn:
-    - name: external-secrets-store-doppler
+    - name: external-secrets-store-doppler-ci
       namespace: external-secrets

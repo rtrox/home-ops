@@ -201,10 +201,8 @@ spec:
               XDG_CONFIG_HOME: /tmp
               XDG_CACHE_HOME: /tmp
               # Configs that legitimately hold no secrets of their own. Remove one
-              # once it has any (min-ci: the first infra.yaml client).
-              # ansible/prd is empty until the dns stack writes the passwords;
-              # the PR that adds them removes it.
-              ALLOW_EMPTY_CONFIGS: chezmoi-secrets/dsk k8s-at-home/min-ci ansible/prd
+              # once it has any.
+              ALLOW_EMPTY_CONFIGS: chezmoi-secrets/dsk
               # Public age keys from .sops.yaml (Ubuntu WSL, work macbook,
               # Endeavour laptop); not secret.
               AGE_RECIPIENTS: >-

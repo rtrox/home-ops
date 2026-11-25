@@ -1,7 +1,7 @@
 ---
 - name: Fail if the Valkey password is not set
   ansible.builtin.fail:
-    msg: "valkey_password is empty: run through task ansible:* (Doppler hosts-at-home/prd VALKEY_PASSWORD)"
+    msg: "valkey_password is empty: run through task ansible:* (Doppler ansible/prd VALKEY_HOUSE_PASSWORD or VALKEY_APARTMENT_PASSWORD)"
   when: valkey_password is not defined or valkey_password | length == 0
 
 - name: Ensure Docker service is enabled and running

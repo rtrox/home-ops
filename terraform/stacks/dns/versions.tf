@@ -10,5 +10,9 @@ terraform {
       source  = "DopplerHQ/doppler"
       version = "1.23.2"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "3.9.1"
+    }
   }
 }

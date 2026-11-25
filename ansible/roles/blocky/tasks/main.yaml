@@ -1,4 +1,11 @@
 ---
+# Without this, an empty password would render `password: ""` and Blocky would
+# connect to Valkey unauthenticated (or fail to), silently.
+- name: Fail if the Valkey password is empty
+  fail:
+    msg: "blocky_redis_password is empty: run through task ansible:* (Doppler ansible/prd VALKEY_HOUSE_PASSWORD or VALKEY_APARTMENT_PASSWORD)"
+  when: blocky_redis_password | default('') | length == 0
+
 # NetworkManager (Raspberry Pi OS) rewrites /etc/resolv.conf on every boot and
 # DHCP renewal, pointing the host at the DHCP-provided resolver: the VIP, i.e.
 # Blocky itself. NetworkManager has its own DHCP client and ignores

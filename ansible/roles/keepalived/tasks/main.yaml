@@ -1,7 +1,7 @@
 ---
 - name: "Fail if required variables are not set"
   fail:
-    msg: "keepalived_vip_address or keepalived_auth_password is empty: run through task ansible:* (Doppler hosts-at-home/prd KEEPALIVED_AUTH_PASSWORD)"
+    msg: "keepalived_vip_address or keepalived_auth_password is empty: run through task ansible:* (Doppler ansible/prd KEEPALIVED_HOUSE_PASSWORD)"
   when: keepalived_vip_address | length == 0 or keepalived_auth_password | length == 0
 
 - name: Ensure Docker service is enabled and running
