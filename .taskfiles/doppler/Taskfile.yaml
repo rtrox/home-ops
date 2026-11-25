@@ -20,7 +20,8 @@ tasks:
           yq -o=json notes.yaml | jq -r 'keys[]' | while read -r project; do
             want=$(yq -o=json notes.yaml | jq -c --arg p "$project" '.[$p] | with_entries(.value |= "\(.what). \(if (.written_by | startswith("by hand")) then "Set " else "Written by: " end)\(.written_by). Read by: \(.read_by).")')
             have='{}'
-            for config in $(doppler configs -p "$project" --json | jq -r '.[] | select(.root) | .name'); do
+            configs=$(doppler configs -p "$project" --json | jq -r '.[] | select(.root) | .name')
+            for config in $configs; do
               notes=$(doppler secrets -p "$project" -c "$config" --json | jq -c 'map_values(.note // "")')
               have=$(jq -nc --argjson a "$have" --argjson b "$notes" '$a + $b')
             done
@@ -33,7 +34,7 @@ tasks:
                 missing*) echo "$project/$key: no such secret, skipped" ;;
                 set*)
                   echo "$project/$key: $note"
-                  if [ "{{.DRY_RUN}}" != true ]; then
+                  if [ "{{.DRY_RUN}}" = false ]; then
                     doppler secrets notes set "$key" "$note" -p "$project" --silent </dev/null
                     sleep 1.1 # the free plan allows 60 writes a minute
                   fi ;;
