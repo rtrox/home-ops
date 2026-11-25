@@ -11,6 +11,8 @@
 # write its Doppler secret (the architecture's oidc-client module, extracted
 # from these resources with moved blocks).
 #
+# Clients an app declares itself (infra.yaml) are in infra.tf.
+#
 # Renaming a group or client, or changing a callback URL, changes it in
 # pocket-id and can break that app's login.
 

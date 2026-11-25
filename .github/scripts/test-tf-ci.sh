@@ -159,4 +159,30 @@ printf '# comment\n\nfirst.addr\n  second.addr # trailing\nlast.addr' >"$tmp/exc
 res=$(cd "$tmp/excl" && tf_excludes && printf '%s,' "${EXCLUDES[@]}")
 if [ "$res" = "-exclude=first.addr,-exclude=second.addr,-exclude=last.addr," ]; then check "excludes: no trailing newline keeps last address" ok; else check "excludes: no trailing newline keeps last address" no; fi
 
+# tf_infra_changed: terramate's watch takes no globs, so an added, changed or
+# deleted infra.yaml must add the stack itself. terramate is stubbed to list the
+# plannable stacks; a throwaway repo supplies the diffs.
+terramate() { printf 'stacks/dns\nstacks/clusters/mini-services\n'; }
+unset GIT_DIR GIT_INDEX_FILE GIT_WORK_TREE # set when this runs from a git hook
+repo=$tmp/repo
+mkdir -p "$repo/terraform" "$repo/cluster-apps/mini/default/app"
+rg() { git -C "$repo" -c user.email=t@t -c user.name=t -c commit.gpgsign=false "$@" >/dev/null 2>&1; }
+echo x >"$repo/terraform/f"
+rg init -q -b main && rg add -A && rg commit -qm base && rg checkout -q -b pr
+infra_case() { # NAME EXPECTED BASE [PRESET...]
+  local name=$1 want=$2 base=$3 got
+  shift 3
+  got=$(cd "$repo/terraform" && arr=("$@") && tf_infra_changed arr "$base" && printf '%s,' "${arr[@]}")
+  if [ "$got" = "$want" ]; then check "infra.yaml: $name" ok; else check "infra.yaml: $name" no; fi
+}
+infra_case "no infra.yaml change" "," main
+echo "oidc: {}" >"$repo/cluster-apps/mini/default/app/infra.yaml"
+rg add -A && rg commit -qm add
+infra_case "added" "stacks/clusters/mini-services," main
+infra_case "already listed, not doubled" "stacks/clusters/mini-services," main stacks/clusters/mini-services
+rg checkout -q main && rg merge -q --ff-only pr && rg checkout -q -b pr2
+rg rm -q cluster-apps/mini/default/app/infra.yaml && rg commit -qm del
+infra_case "deleted" "stacks/clusters/mini-services," main
+unset -f terramate rg
+
 exit "$fails"

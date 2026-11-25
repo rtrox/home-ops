@@ -144,8 +144,8 @@ globals {
       { env = "GITHUB_TOKEN", project = "tf-at-home", key = "GITHUB_TERRAFORM_TOKEN" },
     ]
     # A pocket-id API key, made by hand in pocket-id's admin UI. Its keys
-    # have no scopes, so this is an admin key; tf-at-home/ci doesn't hold one
-    # (clusters/mini-services is ci-skip until that's decided).
+    # have no scopes, so this is an admin key, and tf-at-home/ci holds one too
+    # (the owner accepted that, so CI can plan clusters/mini-services).
     pocketid = [
       { env = "POCKETID_API_TOKEN", project = "tf-at-home", key = "POCKETID_API_TOKEN" },
     ]
