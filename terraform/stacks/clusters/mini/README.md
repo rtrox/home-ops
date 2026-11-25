@@ -18,26 +18,26 @@ CI to plan it with read-only credentials, and to apply it with
 | --- | --- | --- |
 | Cloudflare | `CLOUDFLARE_MINI_TOKEN` = the read-only CI token, plus an account-level `Cloudflare Tunnel Read` on `ci_readonly` | `CLOUDFLARE_MINI_TOKEN` = the real token (foundation adds the `doppler_secret` then, not before: every ci-apply job downloads the whole config) |
 | B2 | `BACKBLAZE_APPLICATION_KEY_ID`/`_KEY`: a hand-made read-only key (`listBuckets`, `readBuckets`, `listKeys`, and whatever reading file-lock settings needs), no file reads | a key that can create keys on these two buckets (`writeKeys` is account-wide in B2, so this is effectively the provider key; decide then) |
-| Doppler | a read token on `k8s-at-home/min_tf` (below) | `DOPPLER_MINI_WRITE_TOKEN`, a write token on `min_tf` |
+| Doppler | `DOPPLER_MINI_CI_WRITE_TOKEN`, a read token on `min_ci` (below) | the same key, a write token on `min_ci` |
 
-**Doppler: a Terraform-only config.** A read token on `k8s-at-home/min` would
+**Doppler: `k8s-at-home/min_ci`.** A read token on `k8s-at-home/min` would
 read every secret of every app in mini, and every PR plan job reads `ci`.
-Instead, the secrets Terraform writes move to their own config:
+So the line is: a secret written by a stack CI plans goes to `min_ci`, an
+environment of its own (not a branch of `min`, which would inherit its
+secrets). Foundation made it, with one token per consumer under
+`DOPPLER_MINI_CI_WRITE_TOKEN`: read-only in `tf-at-home/ci`, read/write in
+`ci-apply` and `prd`. This stack's new secrets are written there.
 
-1. foundation creates a `k8s-at-home` environment `min_tf`, an import of its
-   root config, and its write token (`doppler_write_tokens`).
-2. This stack (and foundation's two mini writes) write their keys to `min_tf`
-   instead of `min`.
-3. In `min`, each of those keys becomes a reference, `${min_tf.KEY}`.
-   References are on Doppler's free plan; config inheritance isn't. So
-   ExternalSecrets keep reading `min`, unchanged.
-4. CI's plan token reads `min_tf`, which holds exactly what this stack's
-   state already holds, and no app secret.
+The secrets that exist today (this stack's and foundation's two mini
+writes) stay in `min` for now and move later, each as its own plan-checked
+step: write it to `min_ci`, then set a reference in `min` (`${min_ci.KEY}`;
+references are on Doppler's free plan, config inheritance isn't), check the
+cluster Secret is unchanged (compare a hash of its value before and after),
+then forget and re-import at the new address.
 
-The cutover moves each secret: write it to `min_tf`, then set the reference
-in `min`, then check the cluster Secret is unchanged (compare a hash of its value before and after),
-then forget and re-import at the new address. Each is a separate,
-plan-checked step in that PR.
+The cluster reads `min_ci` through a second ClusterSecretStore, `doppler-ci`,
+with its own read-only token, so the existing `doppler` store keeps reading
+`min`.
 
 **State.** This stack's state uses the shared passphrase: `ci-skip`, unlike
 `laptop-only`, doesn't change that. So CI could decrypt it once it exists,

@@ -75,5 +75,5 @@ state) and a state migration to re-encrypt it. Before that:
 - **B2**: a read-only key for plans, as clusters/mini's README describes.
 - **Doppler**: a read token for plans. One on `hosts-at-home/prd` reads every
   host secret there (the Proxmox API token among them), so give this stack's
-  secrets their own config first, as clusters/mini's README plans for
-  `k8s-at-home/min_tf`.
+  secrets their own config first, as clusters/mini's README does with
+  `k8s-at-home/min_ci` (a config for secrets written by a stack CI plans).
