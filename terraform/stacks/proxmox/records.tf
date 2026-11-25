@@ -1,7 +1,12 @@
 # pve.rtrox.io's A record. DNS-only (an internal address), automatic TTL. Name
 # and content come from inventory/hosts.yaml, as the truenas and dns stacks'
-# host records do, so renumbering the host is an inventory edit (stack.tm.hcl
-# watches the file). Moved from terraform-record's cloudflare stack.
+# host records do (stack.tm.hcl watches the file). Moved from terraform-record's
+# cloudflare stack.
+#
+# Renumbering the host takes the inventory edit and a targeted apply: the
+# Proxmox provider connects to this name, so once the host has moved a full
+# plan fails until the record follows. First plan and apply with
+# `-target=cloudflare_dns_record.pve`, then plan the whole stack.
 locals {
   pve_host = try(local.inventory_groups.proxmox.hosts["pve.rtrox.io"], null)
 }
