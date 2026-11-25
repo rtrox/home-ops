@@ -49,6 +49,7 @@ locals {
     "rvl.ink"   = { waf_rules = [], dnssec = true }
     "sxl.ink"   = { waf_rules = [], dnssec = true }
     "troxel.io" = { waf_rules = [], dnssec = true }
+    "trx.fm"    = { waf_rules = [], dnssec = true }
     "trxl.ink"  = { waf_rules = [], dnssec = true }
     "trxl.io"   = { waf_rules = [], dnssec = true }
     "trxl.tech" = { waf_rules = [], dnssec = true }
