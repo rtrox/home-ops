@@ -15,10 +15,12 @@ The PRs, in merge order:
 | home-ops #2257 | this stack | step 5 |
 | rtrox/terraform-record#73 | delete the old tokens and key (rebase onto `main` after #72 merges) | step 9 |
 
-The stack is tagged `ci-skip` (CI doesn't touch it) and is applied from the
-laptop. Merging either home-ops PR still runs `terraform-apply` for the
-`ci-apply` stacks (it plans all of them on any `terraform/**` change), which
-should say `No changes.` for each.
+The stack is tagged `laptop-only`, like foundation: CI never plans, applies
+or drift-checks it, and `task tf:*` encrypts its state with
+`TOFU_STATE_PASSPHRASE_LAPTOP` (never the shared passphrase), so CI can't
+decrypt the B2 key it holds. Merging either home-ops PR still runs
+`terraform-apply` for the `ci-apply` stacks (it plans all of them on any
+`terraform/**` change), which should say `No changes.` for each.
 
 ## What moves, and how
 
@@ -31,6 +33,12 @@ should say `No changes.` for each.
 | `TRUENAS_BACKUP_BUCKET` (same JSON keys) | `doppler_secret.nas_backup_bucket` | import, updated to the new key |
 | Tokens `truenas-cloudflare-api-token`, `truenas-backup-cloudflare-api-token` | foundation: new `nas-rtrox-io-acme-dns01`, `backup-rtrox-io-acme-dns01` (Zone Read, DNS Write on rtrox.io) | rotate |
 | `TRUENAS_CLOUDFLARE_TOKEN`, `TRUENAS_BACKUP_CLOUDFLARE_TOKEN` | foundation: `doppler_secret.truenas_acme_token[<host>]` | import, updated to the new tokens |
+
+Foundation writes the two token secrets to `hosts-at-home/prd` with the
+owner's own Doppler token, not `DOPPLER_TRUENAS_WRITE_TOKEN`: deliberate, as
+for every Doppler write in foundation (P2-3 did the same for
+`k8s-at-home/min`), so foundation never depends on the write tokens it mints.
+This stack writes `TRUENAS_BACKUP_BUCKET` with `DOPPLER_TRUENAS_WRITE_TOKEN`.
 
 Not moving: `pve.rtrox.io` (stays in terraform-record until the proxmox stack
 takes it) and the duplicacy bucket (MinIO, until phase 4). Nothing is
@@ -93,6 +101,12 @@ step 6b fixes them.
 
   Note which say `vcs=true`: TFC refuses CLI applies there, so steps 3b and
   9b confirm their VCS runs in the UI instead.
+- **The laptop passphrase is there.** `task tf:*` stops if
+  `TOFU_STATE_PASSPHRASE_LAPTOP` is missing from `tf-at-home/prd`, and never
+  falls back. Foundation already uses it; check without printing it:
+  `doppler secrets get TOFU_STATE_PASSPHRASE_LAPTOP -p tf-at-home -c prd --plain | wc -c`
+  prints a number above 16. Its Bitwarden copy now covers this stack's state
+  too.
 - **Baseline: everything plans clean.** On terraform-record `main`,
   `env -u TF_VAR_doppler_token tofu -chdir=cloudflare plan` and the same for
   `backblaze`; here, `tf tf:plan STACK=foundation`. Each says `No changes.`
@@ -303,12 +317,26 @@ Expect `yes` ×7.
 One value at a time: copy it, paste it, clear the clipboard, check it. The
 menu paths are TrueNAS SCALE's; use your version's equivalent.
 
-The hash checks run in each TrueNAS's shell (System > Shell, or SSH). They
-print a 12-character prefix on each side; compare the two by eye. TrueNAS
-releases name the fields differently, so the `jq` tries both shapes; if it
-prints the hash of an empty string (`e3b0c44298fc`), the field wasn't found:
-look at `midclt call <query> | jq 'map(keys)'` (keys only, no values) and
-adjust.
+The hash checks run in each TrueNAS's shell (System > Shell, or SSH). Each
+side prints a value's length and a 12-character hash prefix; compare them by
+eye. Define the same helper on the laptop and in each TrueNAS's shell:
+
+```sh
+fp() { v=$(cat); printf 'len=%s sha=%s\n' "$(printf %s "$v" | wc -c | tr -d ' ')" "$(printf %s "$v" | sha256sum | cut -c1-12)"; unset v; }
+```
+
+TrueNAS releases name the fields differently, so the `jq` tries both
+shapes. When the two sides differ, look at the TrueNAS side first:
+
+- `len=0`: the field wasn't found. Look at `midclt call <query> | jq 'map(keys)'`
+  (keys only, no values) and adjust the `jq`.
+- A length that isn't the laptop's, and the value looks like a mask (for
+  example `len=8`, from `********`): this TrueNAS **redacts** the field in
+  its API, so the hash check can't work. That's not a `NO`. Skip it and rely
+  on the functional checks below, which then get a decisive repeat in 9b,
+  once the old credential is gone and only the new one can pass.
+- The same length but another hash: a wrong paste, or the old value. Paste
+  again.
 
 **6a. Main TrueNAS, ACME token.**
 
@@ -321,12 +349,12 @@ Edit: paste into **API Token**, Save. Then `clipclear`. Check:
 
 ```sh
 # On the laptop:
-dop TRUENAS_CLOUDFLARE_TOKEN | h | cut -c1-12
+dop TRUENAS_CLOUDFLARE_TOKEN | fp
 # In the main TrueNAS's shell (put the authenticator's name in):
-midclt call acme.dns.authenticator.query | jq -j --arg n '<authenticator name>' '.[] | select(.name == $n) | (.attributes // .) | .api_token // ""' | sha256sum | cut -c1-12
+midclt call acme.dns.authenticator.query | jq -j --arg n '<authenticator name>' '.[] | select(.name == $n) | (.attributes // .) | .api_token // ""' | fp
 ```
 
-The two prefixes match. Then **prove a DNS-01 issue works**, without
+The two lines match (or the field is redacted, above). Then **prove a DNS-01 issue works**, without
 touching the certificate in use, against Let's Encrypt's staging directory
 (no rate limits, untrusted certificate):
 
@@ -359,14 +387,17 @@ Click **Verify Credential** (it must succeed), then Save. Check:
 
 ```sh
 # On the laptop:
-for f in application_key_id application_key; do printf '%s %s\n' "$f" "$(dopf TRUENAS_BACKUP_BUCKET "$f" | h | cut -c1-12)"; done
+for f in application_key_id application_key; do printf '%s %s\n' "$f" "$(dopf TRUENAS_BACKUP_BUCKET "$f" | fp)"; done
 # In the main TrueNAS's shell (put the credential's name in):
 for f in account key; do
-  printf '%s %s\n' "$f" "$(midclt call cloudsync.credentials.query | jq -j --arg n '<credential name>' --arg f "$f" '.[] | select(.name == $n) | (.attributes // .provider) | .[$f] // ""' | sha256sum | cut -c1-12)"
+  printf '%s %s\n' "$f" "$(midclt call cloudsync.credentials.query | jq -j --arg n '<credential name>' --arg f "$f" '.[] | select(.name == $n) | (.attributes // .provider) | .[$f] // ""' | fp)"
 done
 ```
 
-`account` matches `application_key_id`, `key` matches `application_key`.
+`account` matches `application_key_id`, `key` matches `application_key`. The
+key ID isn't a secret, so even where TrueNAS redacts `key` it should show
+`account` in full (and in the credential's edit form): a matching `account`
+alone proves the new key is the one saved.
 Then **a Cloud Sync dry run**: Data Protection > Cloud Sync Tasks > the task >
 **Dry Run**. It must finish with no errors (a dry run lists and compares but
 copies nothing). An authorization error means the new key doesn't work:
@@ -410,14 +441,31 @@ Plan: 0 to add, 0 to change, 1 to destroy.
 Anything else: don't apply. **Stop and read both.**
 
 **9b. Apply.** Merge #73 and apply each workspace from `main` as in
-step 3b. Then, on the main TrueNAS, **Verify Credential** and a Cloud Sync
-**Dry Run** again, and `dop TRUENAS_CLOUDFLARE_TOKEN | cfverify` and the
-same for the backup token, both `active`.
+step 3b. Now only the new credentials exist, so these prove TrueNAS holds
+them, even where step 6's hash checks were redacted:
+
+- `dop TRUENAS_CLOUDFLARE_TOKEN | cfverify` and the same for the backup
+  token, both `active`;
+- on each TrueNAS, step 6a's staging certificate issue again (then delete
+  it);
+- on the main TrueNAS, **Verify Credential** and a Cloud Sync **Dry Run**.
+
+A failure here is a paste that didn't take: Doppler holds the working value
+(`cfverify` says so), so paste it again from Doppler and repeat the check.
 
 ## 10. Zero-diff gate and cleanup
 
-All four say `No changes.`: `tf tf:plan` for `foundation` and `truenas`, and
-both terraform-record workspaces. The freeze ends here.
+All four say `No changes.`:
+
+```sh
+cd ~/home-ops && git switch main && git pull
+tf tf:plan STACK=foundation -- -no-color 2>&1 | grep -E '^Plan:|^No changes'
+tf tf:plan STACK=truenas -- -no-color 2>&1 | grep -E '^Plan:|^No changes'
+cd ~/terraform-record && git switch main && git pull
+for s in cloudflare backblaze; do env -u TF_VAR_doppler_token -u TF_LOG -u TF_LOG_PATH tofu -chdir=$s plan -no-color | grep -E '^Plan:|^No changes'; done
+```
+
+The freeze ends here.
 
 **Cleanup PR**: delete `imports.tf`, `p2-5-plan.json` and this file, and
 foundation's `imports.tf` and `p2-5-plan*.json`. Its plans: `No changes.`
@@ -450,12 +498,16 @@ Delete the `truenas-*` backup once the gate has held for a week.
     to that gains nothing. Go forward: check `dop TRUENAS_BACKUP_CLOUDFLARE_TOKEN |
     cfverify` says `active`; if it doesn't, reissue it with
     `tf tf:plan STACK=foundation -- -replace='cloudflare_api_token.truenas_acme["backup.rtrox.io"]' -out=...`,
-    check, apply, and paste again. As a stopgap until step 9,
+    check, apply, and paste again. `-replace` is right only here, for a
+    token that already doesn't work; rotate a working one with a second
+    entry (README.md). As a stopgap until step 9,
     `bak TRUENAS_BACKUP_CLOUDFLARE_TOKEN | clip` is terraform-record's old,
     still-live token.
-- **After step 9** the old tokens and key are gone, so rollback is forward:
-  reissue the broken one (`-replace` it in the stack that owns it), its
-  Doppler secret follows, and paste it into TrueNAS.
+- **After step 9** the old tokens and key are gone, so rollback is forward.
+  If Doppler's value works (`cfverify`, or Verify Credential with it), paste
+  it again. Only if Doppler's value itself is broken, reissue it
+  (`-replace` in the stack that owns it: it no longer works, so nothing
+  loses a working credential), its Doppler secret follows, and paste it.
 - **Something destroyed**: nothing here plans a destroy before #73, the
   checker fails on any, and the bucket has `prevent_destroy`. Stop and look.
   Never edit state by hand.
@@ -465,8 +517,9 @@ Delete the `truenas-*` backup once the gate has held for a week.
 - `pve.rtrox.io`'s record is still in terraform-record's `cloudflare` stack;
   the proxmox stack takes it (same moved-then-removed pattern).
 - The NAS moves back to the house at 172.30.1.12 (its `moves_to`): an
-  inventory edit, then a laptop apply of this stack while it is `ci-skip`.
+  inventory edit, then a plan and apply of this stack from the laptop (it's
+  `laptop-only`: nothing plans it for you).
 - The `nas.rtrox.io` comment (`Main TrueNAs`) keeps its live typo; fix it in
   its own change (an in-place update).
 - Narrow the B2 key to what Cloud Sync needs, and give it a key name of its
-  own, before `ci-apply` (README.md).
+  own (README.md).

@@ -3,13 +3,18 @@ stack {
   description = "The two TrueNAS hosts' A records, and the main TrueNAS's cloud-sync B2 bucket and key"
   id          = "b971bcc6-8fdc-431f-9266-ca7eb58d9ffb"
 
-  # ci-skip for now (see README.md): CI has no credentials for it yet, so CI
-  # doesn't plan, apply or drift-check it, and the owner applies it from the
-  # laptop. Unlike laptop-only, the state keeps the shared passphrase. A later
-  # PR swaps the tag for ci-apply, once CI can plan it.
-  tags = ["ci-skip"]
+  # Applied from the owner's laptop only, like foundation: CI never plans,
+  # applies or drift-checks it, and task tf:* encrypts its state with
+  # TOFU_STATE_PASSPHRASE_LAPTOP, which CI doesn't hold. The state holds the
+  # Cloud Sync B2 key, which can delete files on a bucket without Object Lock,
+  # so CI must not be able to decrypt it (README.md).
+  tags = ["laptop-only"]
 
-  # records.tf reads it; an inventory change must re-plan the stack.
+  # records.tf builds both A records from it (each host's dns_name and
+  # address). An address edit, such as the NAS's renumber at its move
+  # (`moves_to`), changes the live record at the next laptop apply. There's no
+  # drift check for a laptop-only stack, so plan this stack after any edit to
+  # nas.rtrox.io or backup.rtrox.io in the inventory.
   watch = [
     "/inventory/hosts.yaml",
   ]
