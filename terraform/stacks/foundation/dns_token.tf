@@ -4,7 +4,8 @@
 # adds a token like this one rather than widening a shared one.
 #
 # What the dns stack manages (terraform/modules/cloudflare-zone): cloudflare_zone,
-# cloudflare_dns_record, cloudflare_ruleset (http_request_firewall_custom) and
+# cloudflare_dns_record, cloudflare_ruleset (http_request_firewall_custom and
+# http_ratelimit), cloudflare_zone_setting (Zone Settings Write) and
 # data "cloudflare_zone" (a lookup by name, which only Zone Read covers). One policy, on every zone in this account. No
 # account-level, user-level, R2 or API-token permissions.
 #
@@ -12,7 +13,7 @@
 # deliberately not granted here: add a new zone from the laptop with a broader
 # token if so.
 locals {
-  dns_token_permissions = ["Zone Read", "Zone Write", "DNS Write", "Zone WAF Write"]
+  dns_token_permissions = ["Zone Read", "Zone Write", "DNS Write", "Zone WAF Write", "Zone Settings Write"]
 }
 
 # Reissued every 90 days; each token expires 180 days after issue.
