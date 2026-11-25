@@ -26,7 +26,13 @@ github_runner_network: github-runner-jobs
 github_runner_bridge: ghrunner0
 github_runner_subnet: 10.254.254.0/24
 # LAN hosts a plan needs. pve.rtrox.io's API: the proxmox stack plans through it.
+# envoy-internal: auth.rtrox.io (pocket-id), for clusters/mini-services. The
+# rule matches the address, so jobs can reach every app on that gateway, not
+# only pocket-id.
 github_runner_allowed_lan:
   - name: pve.rtrox.io API
     address: "{{ hostvars[groups['proxmox'][0]].address }}"
     port: 8006
+  - name: mini envoy-internal (pocket-id)
+    address: 172.19.32.1 # moves_to in inventory/sites.yaml
+    port: 443
