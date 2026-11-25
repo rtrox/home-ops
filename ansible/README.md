@@ -18,7 +18,7 @@ The hosts live in the committed [`inventory/hosts.yaml`](../inventory/hosts.yaml
 
 - **The SSH user** is `rtrox` everywhere (committed in `inventory/group_vars/all.yaml`). The `admin-user` role creates it with a locked password, passwordless sudo and the GitHub keys. On a brand-new host, bootstrap once as its original user: `task ansible:apply HOST=<host> -- -e ansible_user=<user>`.
 
-- **`.ansible-vault-pass`**: the Ansible Vault password, mode `600`.
+- **Doppler**: `doppler login`; the tasks read `hosts-at-home/prd`.
 
 The `geerlingguy.docker` role is installed from Galaxy, not vendored:
 
@@ -32,7 +32,7 @@ SSH access is by key only (`secure-ssh` disables password auth), and the `ansibl
 ## Proxmox
 
 `pve.rtrox.io` has its own playbook, `proxmox.yaml`, with the `proxmox` role. It is kept out of
-`site.yaml` so it never needs the vault password. The group vars set its SSH user and the
+`site.yaml`. The group vars set its SSH user and the
 admin account name, both `rtrox` (see Setup).
 
 ```sh
@@ -61,7 +61,7 @@ curl http://172.21.99.1/api/blocking/status
 curl 'http://172.21.99.1/api/blocking/disable?duration=10m'   # pauses blocking (shared through Valkey)
 ```
 
-TODO: dns-a1 reuses the house's Valkey password (`valkey_secrets.yaml`) until the Doppler migration gives it its own.
+TODO: dns-a1 reuses the house's Valkey password until migration phase 3 gives each site its own.
 
 ### One Blocky config
 
@@ -87,8 +87,8 @@ Apply one DNS server at a time. Restarting Docker (any `daemon.json` change does
 ## Playbook layout (`site.yaml`)
 
 1. **All hosts**: `journald`, `armbian`, `raspberry-pi`, `auto-upgrade`, `secure-ssh`, `geerlingguy.docker`, `raspi-monitor`, `node-exporter`, then hostname, UTC timezone and common packages.
-2. **`dns`**: `valkey`, `blocky`, `alloy`, `keepalived`, `tailscaled`. Loads `blocky_secrets.yaml`, `keepalived_secrets.yaml` and `valkey_secrets.yaml`.
-3. **`dns_apartment`** (dns-a1): `admin-user`, `secure-ssh`, `geerlingguy.docker`, `node-exporter`, `valkey`, `blocky`, then `qemu-guest-agent` and a few packages. Loads `valkey_secrets.yaml`.
+2. **`dns`**: `valkey`, `blocky`, `alloy`, `keepalived`, `tailscaled`.
+3. **`dns_apartment`** (dns-a1): `admin-user`, `secure-ssh`, `geerlingguy.docker`, `node-exporter`, `valkey`, `blocky`, then `qemu-guest-agent` and a few packages.
 4. **`avahi`**: `vlans`, `avahi`.
 5. **`runners`** (runner.rtrox.io): `admin-user`, `secure-ssh`, `geerlingguy.docker`, `github-runner`, plus `qemu-guest-agent`. The role needs `GITHUB_RUNNER_APP`, `CI_DOPPLER_TF_READ` and `CI_DOPPLER_HOSTS_READ` from `hosts-at-home/prd` (the `task ansible:*` wrapper provides them).
 
@@ -116,20 +116,14 @@ Role variables and their defaults live in each role's `defaults/main.yaml`.
 
 ## Secrets
 
-All secrets files are Ansible Vault-encrypted, named `<thing>_secrets.yaml`:
+Secrets are in Doppler `hosts-at-home/prd`. The `task ansible:*` tasks run under `doppler run`, and the inventory or a role reads them with `lookup('env', ...)`. A play run without it fails on the empty value.
 
-| File                      | Used by                              |
-| ------------------------- | ------------------------------------ |
-| `blocky_secrets.yaml`     | `blocky` (upstream, Postgres address) |
-| `valkey_secrets.yaml`     | `valkey`, `blocky` (Valkey password)  |
-| `keepalived_secrets.yaml` | `keepalived` (VIP, auth password)    |
-
-```sh
-ansible-vault edit --vault-password-file .ansible-vault-pass blocky_secrets.yaml
-```
-
-Never commit a decrypted secrets file. The `ansible-vault-encrypted` pre-commit hook (also run in CI) rejects any `*_secrets.yaml` without the `$ANSIBLE_VAULT;` header.
+| Doppler key | Used by |
+| --- | --- |
+| `VALKEY_PASSWORD` | `valkey`, `blocky` (house and apartment; dns-a2's copy is `BLOCKY_APARTMENT` in `k8s-at-home/min`) |
+| `KEEPALIVED_AUTH_PASSWORD` | `keepalived` |
+| `GITHUB_RUNNER_APP`, `CI_DOPPLER_TF_READ`, `CI_DOPPLER_HOSTS_READ` | `github-runner` |
 
 ## Linting
 
-`ansible/` is covered by the repo's yamllint config (`.github/lint/.yamllint.yaml`), except the vault-encrypted `*_secrets.yaml` files. It runs in pre-commit and CI.
+`ansible/` is covered by the repo's yamllint config (`.github/lint/.yamllint.yaml`). It runs in pre-commit and CI.

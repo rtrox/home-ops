@@ -10,7 +10,6 @@ ignore: |
   *.sid.yaml
   *.sid-raw.yaml
   *.bty.yaml
-  ansible/*_secrets.yaml
 extends: default
 rules:
   truthy:

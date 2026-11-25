@@ -92,11 +92,3 @@ repos:
         entry: bash .github/scripts/check-workflow-exitcode.sh
         files: ^\.github/(workflows/.*\.ya?ml|scripts/check-workflow-exitcode\.sh)$
         pass_filenames: false
-      # Ansible secrets files must stay vault-encrypted. --negate fails any
-      # matching file that does NOT contain the vault header.
-      - id: ansible-vault-encrypted
-        name: Check Ansible secrets files are vault-encrypted
-        language: pygrep
-        entry: '^\$ANSIBLE_VAULT;'
-        args: [--negate]
-        files: ^ansible/.*_secrets\.yaml$

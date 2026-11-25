@@ -9,4 +9,4 @@ valkey_maxmemory: 64mb
 # The official image runs as this uid/gid; it owns the config file so the
 # password stays unreadable to other users.
 valkey_uid: 999
-# valkey_password comes from valkey_secrets.yaml.
+# valkey_password comes from Doppler (inventory/group_vars).

@@ -260,6 +260,10 @@ hosts-at-home:
     what: "GitHub App that registers the runner"
     written_by: "by hand (GitHub)"
     read_by: "the github-runner role"
+  KEEPALIVED_AUTH_PASSWORD:
+    what: "keepalived's VRRP password on ns1 and ns2"
+    written_by: "by hand"
+    read_by: "the keepalived role"
   PVE_ACME_EMAIL:
     what: "Proxmox's ACME account email"
     written_by: "by hand"
@@ -284,3 +288,7 @@ hosts-at-home:
     what: "The main TrueNAS's ACME Cloudflare token"
     written_by: "foundation"
     read_by: "pasted into TrueNAS"
+  VALKEY_PASSWORD:
+    what: "Valkey password on ns1, ns2 and dns-a1; BLOCKY_APARTMENT in k8s-at-home must match"
+    written_by: "by hand"
+    read_by: "the valkey and blocky roles"

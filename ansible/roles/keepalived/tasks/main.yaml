@@ -1,8 +1,8 @@
 ---
-- name: "Fail if required variables are not defined"
+- name: "Fail if required variables are not set"
   fail:
-    msg: "You must define keepalived_vip_address and keepalived_auth_password in your inventory or extra vars."
-  when: keepalived_vip_address is not defined or keepalived_auth_password is not defined
+    msg: "keepalived_vip_address or keepalived_auth_password is empty: run through task ansible:* (Doppler hosts-at-home/prd KEEPALIVED_AUTH_PASSWORD)"
+  when: keepalived_vip_address | length == 0 or keepalived_auth_password | length == 0
 
 - name: Ensure Docker service is enabled and running
   systemd:
@@ -22,7 +22,7 @@
     src: keepalived.conf.j2
     dest: /etc/keepalived/keepalived.conf
     mode: "0600"
-  diff: false # the rendered config contains auth_pass from the vault
+  diff: false # the rendered config contains auth_pass
   notify: restart keepalived service
 
 - name: Generate systemd Service for Keepalived
