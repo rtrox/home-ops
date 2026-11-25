@@ -13,10 +13,11 @@
 # Rollout facts:
 # - Blocky's Valkey is `required: false`, so a wrong password only loses the
 #   shared cache and blocking state; DNS keeps answering.
-# - ns1 and ns2 with different VRRP passwords each ignore the other's
-#   advertisements and both claim the VIP until both have the new one.
+# - While ns1 and ns2 have different keepalived passwords they ignore each
+#   other's IPv4 adverts. The IPv6 ones have no password and share a sync
+#   group, so the backup should stay backup (not tested). Keep the gap short.
 # - Hosts change only when the owner runs Ansible; dns-a2 (Blocky in mini)
-#   switches by itself once Flux has reconciled the new BLOCKY_APARTMENT.
+#   switches by itself within an hour of the apply (its ExternalSecret's refresh).
 
 # Alphanumeric only: Valkey's are quoted in valkey.conf and Blocky's YAML.
 resource "random_password" "valkey_house" {

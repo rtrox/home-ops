@@ -113,8 +113,7 @@
   hosts: dns_apartment:!offline
   become: true
 
-  # TODO: dns-a1 reuses the house's Valkey password until phase 3 gives each
-  # site its own. Its settings are in inventory/group_vars/dns_apartment.yaml.
+  # Its settings are in inventory/group_vars/dns_apartment.yaml.
   pre_tasks:
     - name: Detect Docker (read-only; see tasks/docker-present.yaml)
       ansible.builtin.import_tasks: tasks/docker-present.yaml
