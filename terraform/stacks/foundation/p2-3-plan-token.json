@@ -1,7 +1,0 @@
-{
-  "changes": {
-    "time_rotating.mini_token": "create",
-    "cloudflare_api_token.mini": "create",
-    "doppler_secret.mini_token_prd": "create"
-  }
-}
