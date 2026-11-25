@@ -31,5 +31,8 @@ That deletes the old token, so metrics stop until the new one is copied.
 There is no deploy token: a token that can deploy a Worker can bind any R2
 bucket to it, `tofu-state` included. Deploy from the laptop (`wrangler login`).
 
-pocket-id's client and groups are in `clusters/mini-services`. The trx.fm zone,
-its WAF rules and DNSSEC are the `dns` stack's.
+pocket-id's client and groups are in `clusters/mini-services`. The zones (trx.fm,
+rmt.dev, trxl.ink), their WAF and rate-limit rules and DNSSEC are the `dns`
+stack's. Adding a short domain takes four places: `custom_domains` here,
+`curt_zones` in foundation, `short_links = true` in the dns stack's
+`zones.tf`, and curt's `DOMAINS` setting.
