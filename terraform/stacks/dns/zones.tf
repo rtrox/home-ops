@@ -65,6 +65,10 @@ module "zone" {
 # DNSSEC (the provider sets status disabled, then deletes the settings), which
 # can break resolution while the DS record is removed, hence prevent_destroy.
 # The registrar (Cloudflare Registrar) publishes the DS record itself.
+# To turn DNSSEC off for a zone, set status = "disabled" and apply (Cloudflare
+# pulls the DS first); never just delete the entry. Until the registry has a
+# new zone's DS, Cloudflare reports status "pending", so plans show
+# pending -> active for it: harmless, and gone once the DS is published.
 resource "cloudflare_zone_dnssec" "this" {
   for_each = { for name, z in local.zones : name => z if z.dnssec }
 
