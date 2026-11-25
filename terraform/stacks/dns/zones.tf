@@ -11,13 +11,15 @@ data "cloudflare_zone" "rtrox_io" {
 locals {
   account_id = data.cloudflare_zone.rtrox_io.account.id
 
-  # Every zone gets these, last.
-  waf_default_rules = [
+  # Every zone gets these, last (bots unless the zone sets block_bots = false).
+  waf_bot_rules = [
     {
       description = "Firewall rule to block bots and threats determined by CF"
       expression  = "(cf.client.bot) or (cf.threat_score gt 14)"
       action      = "block"
     },
+  ]
+  waf_country_rules = [
     {
       description = "Firewall rule to block certain countries"
       expression  = "(ip.geoip.country in {\"CN\" \"IN\" \"KP\" \"RU\"})"
@@ -25,8 +27,8 @@ locals {
     },
   ]
 
-  # Zone -> its own WAF rules, which come before the defaults, and whether
-  # DNSSEC is managed (and on) for it.
+  # Zone -> its own WAF rules, which come before the defaults, whether DNSSEC is
+  # managed (and on) for it, and optionally block_bots (default true).
   zones = {
     "missprissquilts.com" = { waf_rules = [], dnssec = true }
     "qol.ink"             = { waf_rules = [], dnssec = true }
@@ -49,7 +51,8 @@ locals {
     "rvl.ink"   = { waf_rules = [], dnssec = true }
     "sxl.ink"   = { waf_rules = [], dnssec = true }
     "troxel.io" = { waf_rules = [], dnssec = true }
-    "trx.fm"    = { waf_rules = [], dnssec = true }
+    # Short links: link-preview bots must get through.
+    "trx.fm"    = { waf_rules = [], dnssec = true, block_bots = false }
     "trxl.ink"  = { waf_rules = [], dnssec = true }
     "trxl.io"   = { waf_rules = [], dnssec = true }
     "trxl.tech" = { waf_rules = [], dnssec = true }
@@ -60,9 +63,13 @@ module "zone" {
   source   = "../../modules/cloudflare-zone"
   for_each = local.zones
 
-  account_id       = local.account_id
-  domain           = each.key
-  waf_custom_rules = concat(each.value.waf_rules, local.waf_default_rules)
+  account_id = local.account_id
+  domain     = each.key
+  waf_custom_rules = concat(
+    each.value.waf_rules,
+    [for r in local.waf_bot_rules : r if try(each.value.block_bots, true)],
+    local.waf_country_rules,
+  )
 }
 
 # DNSSEC for every zone except rtrox.io. Destroying this resource disables
