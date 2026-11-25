@@ -1,0 +1,17 @@
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/external-secrets.io/clustersecretstore_v1beta1.json
+# Reads k8s-at-home/min-ci: the secrets written by Terraform stacks CI plans
+# (terraform/stacks/clusters/mini/README.md). Everything else is in `doppler`.
+apiVersion: external-secrets.io/v1
+kind: ClusterSecretStore
+metadata:
+  name: doppler-ci
+spec:
+  provider:
+    doppler:
+      auth:
+        secretRef:
+          dopplerToken:
+            name: doppler-ci-token
+            key: dopplerToken
+            namespace: external-secrets
