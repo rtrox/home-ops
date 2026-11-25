@@ -16,6 +16,7 @@ locals {
     { for k, r in local.records_rvl_ink : "rvl.ink/${k}" => merge(r, { zone = "rvl.ink" }) },
     { for k, r in local.records_sxl_ink : "sxl.ink/${k}" => merge(r, { zone = "sxl.ink" }) },
     { for k, r in local.records_troxel_io : "troxel.io/${k}" => merge(r, { zone = "troxel.io" }) },
+    { for k, r in local.records_trx_fm : "trx.fm/${k}" => merge(r, { zone = "trx.fm" }) },
     { for k, r in local.records_trxl_io : "trxl.io/${k}" => merge(r, { zone = "trxl.io" }) },
   )
 
@@ -352,6 +353,30 @@ locals {
       name    = "_dmarc.troxel.io"
       type    = "TXT"
       content = "v=DMARC1; p=quarantine"
+    }
+  }
+
+  # trx.fm is for short links and sends and receives no mail; same records as
+  # rmt.dev. Its web records come with the short-link service.
+  records_trx_fm = {
+    null_mx = {
+      comment  = "Null MX: this domain accepts no mail (RFC 7505)"
+      name     = "trx.fm"
+      type     = "MX"
+      content  = "."
+      priority = 0
+    }
+    spf_none = {
+      comment = "SPF: no server may send as this domain"
+      name    = "trx.fm"
+      type    = "TXT"
+      content = "v=spf1 -all"
+    }
+    dmarc_reject = {
+      comment = "DMARC: reject mail failing SPF/DKIM"
+      name    = "_dmarc.trx.fm"
+      type    = "TXT"
+      content = "v=DMARC1; p=reject"
     }
   }
 
