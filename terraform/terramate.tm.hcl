@@ -120,6 +120,7 @@ globals {
     "hosts-at-home/prd"  = "DOPPLER_TRUENAS_WRITE_TOKEN"
     "k8s-at-home/min"    = "DOPPLER_MINI_WRITE_TOKEN"
     "k8s-at-home/min-ci" = "DOPPLER_MINI_CI_WRITE_TOKEN"
+    "ansible/prd"        = "DOPPLER_ANSIBLE_WRITE_TOKEN"
   }
 
   # Provider -> the standard environment variable carrying its credential, and
