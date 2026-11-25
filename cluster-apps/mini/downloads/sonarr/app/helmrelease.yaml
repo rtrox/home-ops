@@ -32,7 +32,7 @@ spec:
               SONARR__APP__THEME: dark
               # Only answer requests for these hostnames (DNS-rebinding guard). Must
               # include every name in-cluster callers use (recyclarr, prowlarr, exporter).
-              SONARR__APP__ALLOWEDHOSTS: sonarr.rtrox.io,sonarr,sonarr.downloads,sonarr.downloads.svc,sonarr.downloads.svc.cluster.local,localhost
+              SONARR__SERVER__ALLOWEDHOSTS: sonarr.rtrox.io,sonarr,sonarr.downloads,sonarr.downloads.svc,sonarr.downloads.svc.cluster.local,localhost
               SONARR__AUTH__METHOD: External
               SONARR__AUTH__REQUIRED: DisabledForLocalAddresses
               SONARR__LOG__LEVEL: info
