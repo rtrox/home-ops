@@ -72,5 +72,10 @@ resource "b2_application_key" "this" {
 
   key_name     = each.key
   capabilities = coalesce(each.value.capabilities, local.default_capabilities)
-  bucket_ids   = [b2_bucket.this.bucket_id]
+
+  # bucket_ids creates the key with B2's v4 API, and only clients that log in
+  # with v4 accept it. The deprecated bucket_id creates it with an older API
+  # (provider >= 0.12.1), which every client accepts.
+  bucket_id  = each.value.legacy_api ? b2_bucket.this.bucket_id : null
+  bucket_ids = each.value.legacy_api ? null : [b2_bucket.this.bucket_id]
 }

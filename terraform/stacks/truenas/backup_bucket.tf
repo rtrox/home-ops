@@ -13,14 +13,19 @@ module "nas_backup_bucket" {
   # The default capabilities, as before the move (a rotation, not a change of
   # access). Narrowing them to what Cloud Sync needs is a follow-up. A second
   # key here only mid-rotation (README.md).
+  #
+  # legacy_api: TrueNAS 25.04's rclone (1.67) logs in with B2's v1 API, which
+  # refuses a v4 bucket-limited key. rclone 1.73 is said to accept them.
   keys = {
-    "nas-rtrox-io-truenas-backup" = {}
+    # Unused: v4-only, refused by TrueNAS. Remove once the one below is proven.
+    "nas-rtrox-io-truenas-backup"        = {}
+    "nas-rtrox-io-truenas-backup-legacy" = { legacy_api = true }
   }
 }
 
 locals {
   # The key in TRUENAS_BACKUP_BUCKET, the one TrueNAS should hold.
-  nas_backup_key = "nas-rtrox-io-truenas-backup"
+  nas_backup_key = "nas-rtrox-io-truenas-backup-legacy"
 }
 
 resource "doppler_secret" "nas_backup_bucket" {
