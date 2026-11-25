@@ -1,7 +1,7 @@
 # clusters/mini-services
 
 pocket-id's groups and OIDC clients. The groups and the older clients are
-hand-written in `pocketid.tf` and can't be destroyed. New clients are declared
+hand-written in `pocketid.tf` (the groups can't be destroyed). New clients are declared
 by the app, in `infra.yaml` (`infra.tf`).
 
 ## infra.yaml
@@ -53,9 +53,13 @@ is fine: it retries).
 
 - Deleting `infra.yaml` destroys the client (and the Doppler secret), so that
   apply waits for the owner's approval in `tofu-apply-gated`.
+- Deleting a hand-written client's entry in `pocketid.tf` works the same way,
+  except that its Doppler secret is hand-set: delete that too.
 - Flipping `public` replaces the client (a destroy, so also gated): pocket-id
   makes a secret only when it creates the client, so an in-place change to
   confidential would have none. The app gets a new client id and secret.
+  If that apply fails after the marker updates but before the client is
+  replaced, the next plan shows nothing to replace: `tofu taint` the client.
 - Terraform refuses to write a Doppler secret when pocket-id has no client secret
   (an imported client, say). Replace the client (taint it, or change `public`
   and back) so pocket-id makes one.

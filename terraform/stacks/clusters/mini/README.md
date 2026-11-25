@@ -33,11 +33,11 @@ foundation, which CI never plans, keeps writing its mini secrets to `min`.
 Phase 3 replaces this line with a split by purpose: `kubernetes` holds app
 secrets and `kubernetes-platform` what the cluster runs on, this stack's
 included, and CI gets a token for each. If the stack goes into CI before that,
-its existing secrets move to `min-ci` first; after it, read the steps below as
-moving each secret to its project. Either way, one secret at a time, in this
-order (any other order has
-Terraform overwrite or delete the live value, or the cluster read a
-dangling reference):
+its existing secrets move to `min-ci` first, in the order below. After the
+split, the same order moves each secret to its project instead, and the
+reference in step 3 names the project too. Either way, one secret at a time
+(any other order has Terraform overwrite or delete the live value, or the
+cluster read a dangling reference):
 
 1. Write the current value to `min-ci` by hand (Doppler).
 2. Forget the old `doppler_secret` from this stack's state (`removed` block

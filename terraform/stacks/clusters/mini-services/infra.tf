@@ -1,9 +1,8 @@
 # OIDC clients declared by the apps themselves: every
 # cluster-apps/mini/<namespace>/<app>/infra.yaml (see README.md). Separate from
-# pocketid_client.this, which holds the hand-written clients in pocketid.tf and
-# can't be destroyed: these have no prevent_destroy, so deleting an infra.yaml
-# destroys its client. CI holds such an apply for the owner's approval (it
-# destroys), which is the only guard.
+# pocketid_client.this, which holds the hand-written clients in pocketid.tf.
+# Neither has prevent_destroy: deleting an infra.yaml destroys its client, and
+# CI holds such an apply for the owner's approval, which is the only guard.
 #
 # Each confidential client's id and secret go to k8s-at-home/min-ci as
 # <APP>_POCKETID_CLIENT, the same JSON shape the hand-made secrets use. Public
@@ -51,8 +50,9 @@ locals {
 
   infra_typed = [
     for i in local.infra_checked : merge(i, {
-      callbacks = try(tolist(i.oidc.callback), [try(i.oidc.callback, null)])
-      groups    = try(tolist(i.oidc.groups), [])
+      # length() rejects null, which tolist() passes through.
+      callbacks = try(length(i.oidc.callback) >= 0 ? tolist(i.oidc.callback) : [], [try(i.oidc.callback, null)])
+      groups    = try(length(i.oidc.groups) >= 0 ? tolist(i.oidc.groups) : [], [])
       name      = try(i.oidc.name, i.app)
       has_pub   = contains(i.oidc_keys, "public")
       public    = try(i.oidc.public, false)

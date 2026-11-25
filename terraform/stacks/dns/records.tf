@@ -20,30 +20,6 @@ locals {
     { for k, r in local.records_trxl_io : "trxl.io/${k}" => merge(r, { zone = "trxl.io" }) },
   )
 
-  # rmt.dev is unused and sends and receives no mail; same records as
-  # rtrox.com below, for the same reason.
-  records_rmt_dev = {
-    null_mx = {
-      comment  = "Null MX: this domain accepts no mail (RFC 7505)"
-      name     = "rmt.dev"
-      type     = "MX"
-      content  = "."
-      priority = 0
-    }
-    spf_none = {
-      comment = "SPF: no server may send as this domain"
-      name    = "rmt.dev"
-      type    = "TXT"
-      content = "v=spf1 -all"
-    }
-    dmarc_reject = {
-      comment = "DMARC: reject mail failing SPF/DKIM"
-      name    = "_dmarc.rmt.dev"
-      type    = "TXT"
-      content = "v=DMARC1; p=reject"
-    }
-  }
-
   # qol.ink is unused and sends and receives no mail; same records as rmt.dev.
   records_qol_ink = {
     null_mx = {
@@ -67,47 +43,25 @@ locals {
     }
   }
 
-  # rvl.ink is unused and sends and receives no mail; same records as rmt.dev.
-  records_rvl_ink = {
+  # rmt.dev is unused and sends and receives no mail; same records as
+  # rtrox.com's, for the same reason.
+  records_rmt_dev = {
     null_mx = {
       comment  = "Null MX: this domain accepts no mail (RFC 7505)"
-      name     = "rvl.ink"
+      name     = "rmt.dev"
       type     = "MX"
       content  = "."
       priority = 0
     }
     spf_none = {
       comment = "SPF: no server may send as this domain"
-      name    = "rvl.ink"
+      name    = "rmt.dev"
       type    = "TXT"
       content = "v=spf1 -all"
     }
     dmarc_reject = {
       comment = "DMARC: reject mail failing SPF/DKIM"
-      name    = "_dmarc.rvl.ink"
-      type    = "TXT"
-      content = "v=DMARC1; p=reject"
-    }
-  }
-
-  # sxl.ink is unused and sends and receives no mail; same records as rmt.dev.
-  records_sxl_ink = {
-    null_mx = {
-      comment  = "Null MX: this domain accepts no mail (RFC 7505)"
-      name     = "sxl.ink"
-      type     = "MX"
-      content  = "."
-      priority = 0
-    }
-    spf_none = {
-      comment = "SPF: no server may send as this domain"
-      name    = "sxl.ink"
-      type    = "TXT"
-      content = "v=spf1 -all"
-    }
-    dmarc_reject = {
-      comment = "DMARC: reject mail failing SPF/DKIM"
-      name    = "_dmarc.sxl.ink"
+      name    = "_dmarc.rmt.dev"
       type    = "TXT"
       content = "v=DMARC1; p=reject"
     }
@@ -269,6 +223,52 @@ locals {
       name    = "resend._domainkey.rtrox.io"
       type    = "TXT"
       content = "p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDC4Ouykt+YcFO7MMtWryHcwI/DWlMqduE4VVPmoc2D2r5+iFPNZK1zvtirm3Wf5a3XbWJeBRfo1Xw+2m5nX1AWUgbCTKlXTsV+HqpEQ5U+lAj+O73ci3K9iSU+v8192FLgnhc7ejYlhZnQZW3PBCLf6Pbio7XJmNp4rtCEHUVeGwIDAQAB"
+    }
+  }
+
+  # rvl.ink is unused and sends and receives no mail; same records as rmt.dev.
+  records_rvl_ink = {
+    null_mx = {
+      comment  = "Null MX: this domain accepts no mail (RFC 7505)"
+      name     = "rvl.ink"
+      type     = "MX"
+      content  = "."
+      priority = 0
+    }
+    spf_none = {
+      comment = "SPF: no server may send as this domain"
+      name    = "rvl.ink"
+      type    = "TXT"
+      content = "v=spf1 -all"
+    }
+    dmarc_reject = {
+      comment = "DMARC: reject mail failing SPF/DKIM"
+      name    = "_dmarc.rvl.ink"
+      type    = "TXT"
+      content = "v=DMARC1; p=reject"
+    }
+  }
+
+  # sxl.ink is unused and sends and receives no mail; same records as rmt.dev.
+  records_sxl_ink = {
+    null_mx = {
+      comment  = "Null MX: this domain accepts no mail (RFC 7505)"
+      name     = "sxl.ink"
+      type     = "MX"
+      content  = "."
+      priority = 0
+    }
+    spf_none = {
+      comment = "SPF: no server may send as this domain"
+      name    = "sxl.ink"
+      type    = "TXT"
+      content = "v=spf1 -all"
+    }
+    dmarc_reject = {
+      comment = "DMARC: reject mail failing SPF/DKIM"
+      name    = "_dmarc.sxl.ink"
+      type    = "TXT"
+      content = "v=DMARC1; p=reject"
     }
   }
 

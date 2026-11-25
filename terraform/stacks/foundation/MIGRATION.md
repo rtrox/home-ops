@@ -3,8 +3,8 @@
 A one-time runbook for the owner. It moves the R2 state bucket, its Doppler
 secrets and CI's read-only credentials out of terraform-record's `cloudflare`
 stack into this stack, and brings the hand-made Doppler projects,
-environments, configs and write tokens under Terraform. Delete this file and
-`imports.tf` in the cleanup PR (step 8).
+environments, configs and write tokens under Terraform. `imports.tf` is already
+deleted; this file stays for its recovery notes.
 
 **Laptop only.** This stack's default Doppler provider is your personal CLI
 token (`DOPPLER_TOKEN`, set by `task tf:*`), because only a personal token can
@@ -403,7 +403,7 @@ The freeze ends here.
 
 ## 8. Cleanup
 
-A home-ops PR deletes `imports.tf` and this file (its plan: `No changes.`).
+Done: `imports.tf` is deleted (its plan: `No changes.`). This file stays.
 Delete the step 0 backups once the gate has held for a week.
 
 ## If an apply goes wrong
