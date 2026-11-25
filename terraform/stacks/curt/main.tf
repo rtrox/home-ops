@@ -2,8 +2,9 @@
 # and runs the D1 migrations, and never creates storage or domains.
 
 # The public hostnames, each with its zone and the Worker that answers it. Every
-# zone here must also be in foundation's curt_zones (its token's Zone Read) and
-# in curt's own DOMAINS setting.
+# zone here must also be in foundation's curt_zones (its token's Zone Read),
+# have short_links = true in the dns stack's zones.tf, and be in curt's own
+# DOMAINS setting.
 locals {
   custom_domains = {
     "trx.fm"     = { zone = "trx.fm", service = "curt-redirect" }

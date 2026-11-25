@@ -33,5 +33,6 @@ bucket to it, `tofu-state` included. Deploy from the laptop (`wrangler login`).
 
 pocket-id's client and groups are in `clusters/mini-services`. The zones (trx.fm,
 rmt.dev, trxl.ink), their WAF and rate-limit rules and DNSSEC are the `dns`
-stack's. Adding a short domain takes three places: `custom_domains` here,
-`curt_zones` in foundation, and curt's `DOMAINS` setting.
+stack's. Adding a short domain takes four places: `custom_domains` here,
+`curt_zones` in foundation, `short_links = true` in the dns stack's
+`zones.tf`, and curt's `DOMAINS` setting.
