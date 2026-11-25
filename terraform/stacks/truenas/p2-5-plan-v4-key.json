@@ -1,0 +1,5 @@
+{
+  "changes": {
+    "module.nas_backup_bucket.b2_application_key.this[\"nas-rtrox-io-truenas-backup\"]": "delete"
+  }
+}
