@@ -29,8 +29,13 @@ secrets). Foundation made it, with one token per consumer under
 `ci-apply` and `prd`. This stack's new secrets are written there.
 
 foundation, which CI never plans, keeps writing its mini secrets to `min`.
-This stack's existing secrets stay in `min` for now and move before it's
-tagged `ci-apply`, one secret at a time, in this order (any other order has
+
+Phase 3 replaces this line with a split by purpose: `kubernetes` holds app
+secrets and `kubernetes-platform` what the cluster runs on, this stack's
+included, and CI gets a token for each. If the stack goes into CI before that,
+its existing secrets move to `min-ci` first; after it, read the steps below as
+moving each secret to its project. Either way, one secret at a time, in this
+order (any other order has
 Terraform overwrite or delete the live value, or the cluster read a
 dangling reference):
 
