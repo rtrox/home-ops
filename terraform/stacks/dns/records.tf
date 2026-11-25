@@ -17,6 +17,7 @@ locals {
     { for k, r in local.records_sxl_ink : "sxl.ink/${k}" => merge(r, { zone = "sxl.ink" }) },
     { for k, r in local.records_troxel_io : "troxel.io/${k}" => merge(r, { zone = "troxel.io" }) },
     { for k, r in local.records_trx_fm : "trx.fm/${k}" => merge(r, { zone = "trx.fm" }) },
+    { for k, r in local.records_trxl_ink : "trxl.ink/${k}" => merge(r, { zone = "trxl.ink" }) },
     { for k, r in local.records_trxl_io : "trxl.io/${k}" => merge(r, { zone = "trxl.io" }) },
   )
 
@@ -43,8 +44,8 @@ locals {
     }
   }
 
-  # rmt.dev is unused and sends and receives no mail; same records as
-  # rtrox.com's, for the same reason.
+  # rmt.dev is a curt short domain and sends and receives no mail; same records
+  # as rtrox.com's, for the same reason.
   records_rmt_dev = {
     null_mx = {
       comment  = "Null MX: this domain accepts no mail (RFC 7505)"
@@ -375,6 +376,29 @@ locals {
     dmarc_reject = {
       comment = "DMARC: reject mail failing SPF/DKIM"
       name    = "_dmarc.trx.fm"
+      type    = "TXT"
+      content = "v=DMARC1; p=reject"
+    }
+  }
+
+  # trxl.ink is a curt short domain and sends and receives no mail.
+  records_trxl_ink = {
+    null_mx = {
+      comment  = "Null MX: this domain accepts no mail (RFC 7505)"
+      name     = "trxl.ink"
+      type     = "MX"
+      content  = "."
+      priority = 0
+    }
+    spf_none = {
+      comment = "SPF: no server may send as this domain"
+      name    = "trxl.ink"
+      type    = "TXT"
+      content = "v=spf1 -all"
+    }
+    dmarc_reject = {
+      comment = "DMARC: reject mail failing SPF/DKIM"
+      name    = "_dmarc.trxl.ink"
       type    = "TXT"
       content = "v=DMARC1; p=reject"
     }
