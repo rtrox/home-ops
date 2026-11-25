@@ -36,7 +36,7 @@ tasks:
         # Print only the host part of the repository, never a credential
         REPO_HOST="$(printf '%s' "${RESTIC_REPOSITORY}" | sed -E 's#^[a-z0-9]+:##; s#^[a-z0-9]+://##; s#^[^@/]*@##; s#/.*##')"
         echo "restic credentials loaded for repository host ${REPO_HOST}; type exit to leave"
-        exec "${SHELL:-sh}"
+        exec mise exec -- "${SHELL:-sh}"
 
   snapshots:
     desc: List restic snapshots for a Volsync backup
@@ -45,7 +45,8 @@ tasks:
       BACKEND: '{{.BACKEND | default "minio"}}'
     preconditions:
       - which kubectl
-      - which restic
+      - sh: mise exec -- restic version >/dev/null 2>&1
+        msg: "restic not found: run mise install"
       - sh: test "{{.BACKEND}}" = "minio" -o "{{.BACKEND}}" = "b2"
         msg: "BACKEND must be 'minio' or 'b2'"
     cmds:
@@ -64,7 +65,8 @@ tasks:
       SNAPSHOT: '{{.SNAPSHOT | default "latest"}}'
     preconditions:
       - which kubectl
-      - which restic
+      - sh: mise exec -- restic version >/dev/null 2>&1
+        msg: "restic not found: run mise install"
     cmds:
       - task: _with-restic-env
         vars:
@@ -80,7 +82,8 @@ tasks:
       BACKEND: '{{.BACKEND | default "minio"}}'
     preconditions:
       - which kubectl
-      - which restic
+      - sh: mise exec -- restic version >/dev/null 2>&1
+        msg: "restic not found: run mise install"
     cmds:
       - task: _with-restic-env
         vars:
@@ -96,7 +99,8 @@ tasks:
       BACKEND: '{{.BACKEND | default "minio"}}'
     preconditions:
       - which kubectl
-      - which restic
+      - sh: mise exec -- restic version >/dev/null 2>&1
+        msg: "restic not found: run mise install"
     cmds:
       - task: _with-restic-env
         vars:
@@ -124,4 +128,4 @@ tasks:
         AWS_ACCESS_KEY_ID="$(get AWS_ACCESS_KEY_ID)"
         AWS_SECRET_ACCESS_KEY="$(get AWS_SECRET_ACCESS_KEY)"
         export RESTIC_REPOSITORY RESTIC_PASSWORD AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY
-        {{.RESTIC_CMD}}
+        mise exec -- {{.RESTIC_CMD}}
