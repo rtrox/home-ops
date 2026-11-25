@@ -122,7 +122,7 @@ jobs:
     # the check runs the same Renovate version as the real thing (pinned and
     # bumped by Renovate itself) instead of whatever an action bundles.
     container:
-      image: ghcr.io/renovatebot/renovate:44.258.2@sha256:a40f6261cb670c2ea0a906adf289bde0c52207fc39b8e1d407f2afe29d63aa07
+      image: ghcr.io/renovatebot/renovate:44.261.2@sha256:1022cef9c87acb3a6fb6c00dd112cbcac2c86a2928975bc8949b8d5e9aba56b1
       # The image runs as an unprivileged user that cannot write the workspace.
       options: --user root
     steps:
