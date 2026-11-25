@@ -23,8 +23,9 @@ in the same apply, before TrueNAS has the new one. Add a second one instead:
 
 1. **Add**: a second entry (a new key) next to the current one, and point the
    Doppler secret at it. For the B2 key, a second key under
-   `module.nas_backup_bucket`'s `keys`, and `local.nas_backup_key` set to its
-   name. For an ACME token, a second entry in foundation's
+   `module.nas_backup_bucket`'s `keys`, with `legacy_api = true` while
+   TrueNAS's rclone is older than 1.73 (it refuses the key otherwise), and
+   `local.nas_backup_key` set to its name. For an ACME token, a second entry in foundation's
    `truenas_acme_tokens` and the host's `token` in `truenas_acme_hosts`.
    Apply: one created, the Doppler secret updated, nothing deleted.
 2. **Paste and prove** it in TrueNAS:

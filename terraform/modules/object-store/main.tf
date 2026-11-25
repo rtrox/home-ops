@@ -4,8 +4,8 @@
 # The calling stack writes each key where its consumer reads it (usually a
 # doppler_secret, with `endpoint` and `bucket` alongside). Keys aren't rotated
 # on a schedule: B2 keys don't expire unless asked to, and every consumer
-# would need a restart. Rotate one by replacing it (`-replace`), or by adding
-# a second key and removing the first once its consumer has the new one.
+# would need a restart. Rotate one by adding a second key and removing the
+# first once its consumer has the new one.
 data "b2_account_info" "current" {}
 
 locals {
