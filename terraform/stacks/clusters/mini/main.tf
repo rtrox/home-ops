@@ -1,6 +1,6 @@
 # What mini needs from outside the cluster to boot and run. Moved from
-# terraform-record's cloudflare and backblaze stacks in migration P2-3
-# (MIGRATION.md). The architecture's `k8s-cluster` module is extracted from
+# terraform-record's cloudflare and backblaze stacks in migration P2-3.
+# The architecture's `k8s-cluster` module is extracted from
 # these files, with moved blocks, when a second cluster needs the same things.
 #
 # The Doppler secrets here are what the cluster's ExternalSecrets read, in

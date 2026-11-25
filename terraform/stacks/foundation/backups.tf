@@ -4,7 +4,7 @@
 # live here, not in clusters/mini, so restoring Terraform's state or Doppler
 # never depends on a stack whose own state is in that bucket. Moved from
 # terraform-record's backblaze and cloudflare stacks in migration P2-3
-# (terraform/stacks/clusters/mini/MIGRATION.md): the buckets are imported, the
+# (see terraform/stacks/clusters/mini/README.md): the buckets were imported, the
 # keys and the R2 token are new, and the Doppler secrets are imported and point
 # at them.
 #
