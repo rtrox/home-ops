@@ -35,7 +35,7 @@ locals {
         # config of its own, not a branch of min: a branch inherits min's
         # secrets, and CI's plan token reads this one. Its root config is not
         # managed (unmanaged_root, below).
-        min_ci = { name = "Mini CI", unmanaged_root = true }
+        min-ci = { name = "Mini CI", unmanaged_root = true }
       }
     }
     "tf-at-home" = {

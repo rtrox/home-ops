@@ -18,11 +18,11 @@ CI to plan it with read-only credentials, and to apply it with
 | --- | --- | --- |
 | Cloudflare | `CLOUDFLARE_MINI_TOKEN` = the read-only CI token, plus an account-level `Cloudflare Tunnel Read` on `ci_readonly` | `CLOUDFLARE_MINI_TOKEN` = the real token (foundation adds the `doppler_secret` then, not before: every ci-apply job downloads the whole config) |
 | B2 | `BACKBLAZE_APPLICATION_KEY_ID`/`_KEY`: a hand-made read-only key (`listBuckets`, `readBuckets`, `listKeys`, and whatever reading file-lock settings needs), no file reads | a key that can create keys on these two buckets (`writeKeys` is account-wide in B2, so this is effectively the provider key; decide then) |
-| Doppler | `DOPPLER_MINI_CI_WRITE_TOKEN`, a read token on `min_ci` (below) | the same key, a write token on `min_ci` |
+| Doppler | `DOPPLER_MINI_CI_WRITE_TOKEN`, a read token on `min-ci` (below) | the same key, a write token on `min-ci` |
 
-**Doppler: `k8s-at-home/min_ci`.** A read token on `k8s-at-home/min` would
+**Doppler: `k8s-at-home/min-ci`.** A read token on `k8s-at-home/min` would
 read every secret of every app in mini, and every PR plan job reads `ci`.
-So the line is: a secret written by a stack CI plans goes to `min_ci`, an
+So the line is: a secret written by a stack CI plans goes to `min-ci`, an
 environment of its own (not a branch of `min`, which would inherit its
 secrets). Foundation made it, with one token per consumer under
 `DOPPLER_MINI_CI_WRITE_TOKEN`: read-only in `tf-at-home/ci`, read/write in
@@ -30,12 +30,12 @@ secrets). Foundation made it, with one token per consumer under
 
 The secrets that exist today (this stack's and foundation's two mini
 writes) stay in `min` for now and move later, each as its own plan-checked
-step: write it to `min_ci`, then set a reference in `min` (`${min_ci.KEY}`;
+step: write it to `min-ci`, then set a reference in `min` (`${min-ci.KEY}`;
 references are on Doppler's free plan, config inheritance isn't), check the
 cluster Secret is unchanged (compare a hash of its value before and after),
 then forget and re-import at the new address.
 
-The cluster reads `min_ci` through a second ClusterSecretStore, `doppler-ci`,
+The cluster reads `min-ci` through a second ClusterSecretStore, `doppler-ci`,
 with its own read-only token, so the existing `doppler` store keeps reading
 `min`.
 
