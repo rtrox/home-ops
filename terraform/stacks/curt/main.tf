@@ -13,7 +13,8 @@ locals {
   account_id = data.cloudflare_zone.trx_fm.account.id
 }
 
-# The links and clicks: the source of truth.
+# The links: the source of truth (clicks are in Analytics Engine). Its location
+# is fixed when it's created: near whoever applies this.
 resource "cloudflare_d1_database" "curt" {
   account_id = local.account_id
   name       = "curt"

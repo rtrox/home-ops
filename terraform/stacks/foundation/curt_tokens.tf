@@ -4,8 +4,9 @@
 #
 # - stack:     the curt stack's own, like mini's (mini_token.tf): storage only,
 #              and Zone Read on trx.fm for the account lookup.
-# - deploy:    Wrangler in curt's GitHub Actions: Worker code, D1 migrations, KV.
-#              No DNS or zone permission: Terraform attaches domains.
+# - deploy:    Wrangler in curt's GitHub Actions: Worker code and D1 migrations.
+#              No KV (Wrangler only binds it by ID), DNS or zone permission:
+#              Terraform attaches domains.
 # - analytics: the admin Worker, read-only.
 #
 # The last two are copied by hand (a GitHub secret, a Worker secret), so they
@@ -14,7 +15,7 @@ locals {
   curt_token_permissions = {
     stack_zone = ["Zone Read"]
     stack      = ["D1 Write", "Workers KV Storage Write"]
-    deploy     = ["Workers Scripts Write", "D1 Write", "Workers KV Storage Write"]
+    deploy     = ["Workers Scripts Write", "D1 Write"]
     analytics  = ["Account Analytics Read"]
   }
 
