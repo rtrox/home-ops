@@ -11,7 +11,7 @@ data "cloudflare_zone" "rtrox_io" {
 locals {
   account_id = data.cloudflare_zone.rtrox_io.account.id
 
-  # Every zone gets these, last (bots unless the zone sets block_bots = false).
+  # Every zone gets these, last (bots unless the zone sets short_links = true).
   waf_bot_rules = [
     {
       description = "Firewall rule to block bots and threats determined by CF"
@@ -28,11 +28,13 @@ locals {
   ]
 
   # Zone -> its own WAF rules, which come before the defaults, whether DNSSEC is
-  # managed (and on) for it, and optionally block_bots (default true).
+  # managed (and on) for it, and optionally short_links (default false): curt's
+  # short domains, which let bots through (link previews) and get a rate limit
+  # and an HTTPS redirect (rate_limits.tf, zone_settings.tf).
   zones = {
     "missprissquilts.com" = { waf_rules = [], dnssec = true }
     "qol.ink"             = { waf_rules = [], dnssec = true }
-    "rmt.dev"             = { waf_rules = [], dnssec = true }
+    "rmt.dev"             = { waf_rules = [], dnssec = true, short_links = true }
     "rtrox.co"            = { waf_rules = [], dnssec = true }
     "rtrox.com"           = { waf_rules = [], dnssec = true }
     "rtrox.dev"           = { waf_rules = [], dnssec = true }
@@ -51,12 +53,16 @@ locals {
     "rvl.ink"   = { waf_rules = [], dnssec = true }
     "sxl.ink"   = { waf_rules = [], dnssec = true }
     "troxel.io" = { waf_rules = [], dnssec = true }
-    # Short links: link-preview bots must get through.
-    "trx.fm"    = { waf_rules = [], dnssec = true, block_bots = false }
-    "trxl.ink"  = { waf_rules = [], dnssec = true }
+    "trx.fm"    = { waf_rules = [], dnssec = true, short_links = true }
+    "trxl.ink"  = { waf_rules = [], dnssec = true, short_links = true }
     "trxl.io"   = { waf_rules = [], dnssec = true }
     "trxl.tech" = { waf_rules = [], dnssec = true }
   }
+}
+
+# curt's short domains (short_links = true).
+locals {
+  short_link_zones = toset([for name, z in local.zones : name if try(z.short_links, false)])
 }
 
 module "zone" {
@@ -67,7 +73,7 @@ module "zone" {
   domain     = each.key
   waf_custom_rules = concat(
     each.value.waf_rules,
-    [for r in local.waf_bot_rules : r if try(each.value.block_bots, true)],
+    [for r in local.waf_bot_rules : r if !try(each.value.short_links, false)],
     local.waf_country_rules,
   )
 }
