@@ -1,0 +1,20 @@
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/external-secrets.io/clustersecretstore_v1.json
+# Reads tf-at-home/export: the weekly export's tokens, which read every Doppler
+# config (terraform/stacks/foundation/doppler_export.tf). Its own token is never
+# kept in Doppler: `task k8s-bootstrap:doppler-export-token` makes it.
+apiVersion: external-secrets.io/v1
+kind: ClusterSecretStore
+metadata:
+  name: doppler-export
+spec:
+  conditions:
+    - namespaces: [security]
+  provider:
+    doppler:
+      auth:
+        secretRef:
+          dopplerToken:
+            name: doppler-export-token
+            key: dopplerToken
+            namespace: external-secrets
