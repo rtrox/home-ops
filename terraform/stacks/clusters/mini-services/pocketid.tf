@@ -21,10 +21,6 @@ locals {
   groups = {
     admins = "Admins"
     family = "Family Members"
-    # curt checks curt-users for access and curt-admins for admin: an admin
-    # needs both.
-    curt-admins = "curt Admins"
-    curt-users  = "curt Users"
   }
 
   # Key: the app. name: pocket-id's display name. groups: the groups allowed
@@ -44,12 +40,13 @@ locals {
       groups        = ["family"]
     }
     # A public client: the browser does the code exchange (PKCE, no secret).
-    # curt runs on Cloudflare Workers, not in mini.
+    # curt runs on Cloudflare Workers, not in mini, and gives admins its admin
+    # rights.
     curt = {
       name          = "curt"
       callback_urls = ["https://app.trx.fm/auth/callback"]
       is_public     = true
-      groups        = ["curt-users"]
+      groups        = ["family"]
     }
     grafana = {
       name          = "Grafana"
@@ -92,10 +89,8 @@ resource "pocketid_group" "this" {
   name          = each.key
   friendly_name = each.value
 
-  # Deleting a group drops it from every client and user that uses it.
-  lifecycle {
-    prevent_destroy = true
-  }
+  # No prevent_destroy: CI holds any apply that destroys for approval. Deleting
+  # a group drops it from every client and user that uses it.
 }
 
 resource "pocketid_client" "this" {
