@@ -5,6 +5,19 @@
 # every config. It's public: say nothing sensitive. No entry for *_POCKETID_CLIENT
 # keys. Not Terraform: one resource per note would add several Doppler reads each
 # to every foundation plan, past the free plan's rate limit.
+ansible:
+  KEEPALIVED_HOUSE_PASSWORD:
+    what: "keepalived's VRRP password on ns1 and ns2 (8 characters, all VRRP uses)"
+    written_by: "dns"
+    read_by: "the keepalived role"
+  VALKEY_APARTMENT_PASSWORD:
+    what: "Valkey password on dns-a1; BLOCKY_APARTMENT in k8s-at-home/min-ci is the same value"
+    written_by: "dns"
+    read_by: "the valkey and blocky roles"
+  VALKEY_HOUSE_PASSWORD:
+    what: "Valkey password on ns1 and ns2"
+    written_by: "dns"
+    read_by: "the valkey and blocky roles"
 k8s-at-home:
   ALERTMANAGER:
     what: "Pushover keys for alerts"
@@ -203,6 +216,10 @@ tf-at-home:
     what: "Cloudflare analytics read token for curt"
     written_by: "foundation"
     read_by: "copied to curt's admin Worker (AE_TOKEN)"
+  DOPPLER_ANSIBLE_WRITE_TOKEN:
+    what: "Token for ansible/prd (read-only in ci)"
+    written_by: "foundation"
+    read_by: "dns"
   DOPPLER_EXPORT_TOKENS:
     what: "A read token for every other Doppler config"
     written_by: "foundation"
