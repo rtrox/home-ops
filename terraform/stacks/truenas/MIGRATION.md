@@ -124,13 +124,18 @@ step 6b fixes them.
 
   Expect three names, all `set=true`. Keep `BACKUP_DIR`, `AGE_KEY` and
   `STAMP` for the whole run.
-- **What the old tokens are now** (expect `active` for the main TrueNAS's;
-  the backup's was deleted, so its call fails with a 401):
+- **The old tokens in Doppler are live.** Both are terraform-record's
+  current tokens; only the backup TrueNAS's UI holds an older, deleted one.
+  Expect `active` twice:
 
   ```sh
   bak TRUENAS_CLOUDFLARE_TOKEN | cfverify
-  bak TRUENAS_BACKUP_CLOUDFLARE_TOKEN | cfverify || echo "backup token: invalid (expected, #53)"
+  bak TRUENAS_BACKUP_CLOUDFLARE_TOKEN | cfverify
   ```
+
+  If the backup's isn't `active`, the backup TrueNAS's stopgap in
+  [If something goes wrong](#if-something-goes-wrong) doesn't exist: note it
+  and carry on.
 
 ## 1. Foundation: the truenas stack's token alone
 
@@ -441,11 +446,13 @@ Delete the `truenas-*` backup once the gate has held for a week.
     `clipclear`, and re-run that step's check. The old token and key work
     until step 9. Doppler keeps the new value; find out why it failed (a
     typo in the paste, a token that isn't `active`) before trying again.
-  - Backup TrueNAS: there is no old value to go back to (it was already
-    deleted). Go forward: check `dop TRUENAS_BACKUP_CLOUDFLARE_TOKEN |
+  - Backup TrueNAS: what it held before is a deleted token, so going back
+    to that gains nothing. Go forward: check `dop TRUENAS_BACKUP_CLOUDFLARE_TOKEN |
     cfverify` says `active`; if it doesn't, reissue it with
     `tf tf:plan STACK=foundation -- -replace='cloudflare_api_token.truenas_acme["backup.rtrox.io"]' -out=...`,
-    check, apply, and paste again.
+    check, apply, and paste again. As a stopgap until step 9,
+    `bak TRUENAS_BACKUP_CLOUDFLARE_TOKEN | clip` is terraform-record's old,
+    still-live token.
 - **After step 9** the old tokens and key are gone, so rollback is forward:
   reissue the broken one (`-replace` it in the stack that owns it), its
   Doppler secret follows, and paste it into TrueNAS.
