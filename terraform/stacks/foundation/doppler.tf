@@ -31,6 +31,11 @@ locals {
       description = ""
       environments = {
         min = { name = "Mini" }
+        # Secrets written by stacks CI plans (clusters/mini/README.md). A root
+        # config of its own, not a branch of min: a branch inherits min's
+        # secrets, and CI's plan token reads this one. Its root config is not
+        # managed (unmanaged_root, below).
+        min-ci = { name = "Mini CI", unmanaged_root = true }
       }
     }
     "tf-at-home" = {
@@ -56,12 +61,12 @@ locals {
     }
   ]...)
 
-  # "project/config" -> config: each environment's root config, then its
-  # branch configs.
+  # "project/config" -> config: each environment's root config (unless
+  # unmanaged_root), then its branch configs.
   doppler_configs = merge([
     for project, p in local.doppler_projects : merge([
       for slug, env in p.environments : {
-        for config in concat([slug], try(env.branches, [])) : "${project}/${config}" => {
+        for config in concat(try(env.unmanaged_root, false) ? [] : [slug], try(env.branches, [])) : "${project}/${config}" => {
           project     = project
           environment = slug
           name        = config
@@ -98,6 +103,13 @@ resource "doppler_environment" "this" {
 # environment, so every root config here was imported (P2-1), never
 # created. The provider's create would try to set inheritance, which the free
 # plan refuses.
+#
+# A new environment's root config is left unmanaged (unmanaged_root): an import
+# block for it fails the plan, since the config doesn't exist until the
+# environment is applied, and the provider's create is unproven on the free plan.
+# Nothing needs it as a resource: local.doppler_config_ref names it through the
+# environment, which also orders its tokens after the environment. Import it in a
+# later PR if wanted.
 resource "doppler_config" "this" {
   for_each = local.doppler_configs
 
@@ -110,6 +122,18 @@ resource "doppler_config" "this" {
   }
 }
 
+# "project/config" -> {project, name} for the configs Terraform writes to and
+# the tokens below: the managed config, or an unmanaged root config's
+# environment.
+locals {
+  doppler_config_ref = {
+    for k in keys(local.doppler_write_tokens) : k => try(
+      { project = doppler_config.this[k].project, name = doppler_config.this[k].name },
+      { project = doppler_environment.this[k].project, name = doppler_environment.this[k].slug },
+    )
+  }
+}
+
 # One read/write token per config Terraform writes to, kept in tf-at-home/prd
 # under the name the stacks read (local.doppler_write_tokens, generated from
 # terramate.tm.hcl). Named for the consumer: the Terraform stacks, which read it
@@ -117,8 +141,8 @@ resource "doppler_config" "this" {
 resource "doppler_service_token" "write" {
   for_each = local.doppler_write_tokens
 
-  project = doppler_config.this[each.key].project
-  config  = doppler_config.this[each.key].name
+  project = local.doppler_config_ref[each.key].project
+  config  = local.doppler_config_ref[each.key].name
   name    = "tf-stacks-write"
   access  = "read/write"
 

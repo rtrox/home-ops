@@ -62,7 +62,7 @@ blocks can carry them into it.
 
 ## Before moving this stack to CI
 
-Not planned: it's `laptop-only` because its state holds the Cloud Sync B2
+Planned, once it's safe. It's `laptop-only` because its state holds the Cloud Sync B2
 key, which has the old default capabilities (`deleteFiles` included) on a
 bucket without Object Lock. A stolen copy could delete the off-site backup.
 Moving it to `ci-apply` would mean the shared passphrase (CI can decrypt that
@@ -75,5 +75,5 @@ state) and a state migration to re-encrypt it. Before that:
 - **B2**: a read-only key for plans, as clusters/mini's README describes.
 - **Doppler**: a read token for plans. One on `hosts-at-home/prd` reads every
   host secret there (the Proxmox API token among them), so give this stack's
-  secrets their own config first, as clusters/mini's README plans for
-  `k8s-at-home/min_tf`.
+  secrets their own config first, as clusters/mini's README does with
+  `k8s-at-home/min-ci` (a config for secrets written by a stack CI plans).
