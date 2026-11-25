@@ -58,7 +58,7 @@ tasks:
           if printf '%s\n' "$laptop" | grep -qxF "stacks/{{.STACK}}"; then
             p=$({{.DOPPLER_GET}} TOFU_STATE_PASSPHRASE_LAPTOP 2>/dev/null) || p=""
             if [ -z "$p" ]; then
-              echo "task tf: {{.STACK}} is laptop-only and needs TOFU_STATE_PASSPHRASE_LAPTOP in tf-at-home/prd (see terraform/stacks/{{.STACK}}/MIGRATION.md step 0). Not falling back to TOFU_STATE_PASSPHRASE." >&2
+              echo "task tf: {{.STACK}} is laptop-only and needs TOFU_STATE_PASSPHRASE_LAPTOP in tf-at-home/prd (see terraform/stacks/foundation/MIGRATION.md step 0). Not falling back to TOFU_STATE_PASSPHRASE." >&2
               exit 1
             fi
           else
