@@ -26,7 +26,7 @@ includes:
   # sops: .taskfiles/sops/Taskfile.yaml
   talos: .taskfiles/talos/Taskfile.yaml
   tf: .taskfiles/terraform/Taskfile.yaml
-  # volsync: .taskfiles/volsync/Taskfile.yaml
+  volsync: .taskfiles/volsync/Taskfile.yaml
 
 tasks:
   default:
