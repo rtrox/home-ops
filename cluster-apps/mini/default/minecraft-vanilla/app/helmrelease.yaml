@@ -26,7 +26,7 @@ spec:
       secret.reloader.stakater.com/reload: &secret minecraft
     image:
       repository: ghcr.io/itzg/minecraft-server
-      tag: java21@sha256:96d1da46d7b59bce34e86d527fdcfdc92a9636e83fbf94a3bb279de6ae07c17c
+      tag: java21@sha256:9f5f4a6b7f638232afba271825ad9fbe58cc10d54d947287949bfeca22a062bb
     resources:
       requests:
         cpu: 1000m
