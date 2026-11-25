@@ -6,9 +6,9 @@
 # They are in this stack's (encrypted) state, so state is the only other place
 # they exist. Nothing here regenerates them by accident: ignore_changes = all
 # means editing an argument never replaces one. Rotating is deliberate:
-#   tofu apply -replace=random_password.valkey_house
-# (a replace waits for owner approval in CI). There is no prevent_destroy, so
-# -replace works.
+# from the laptop (CI has no -replace):
+#   task tf:apply STACK=dns -- -replace=random_password.valkey_house
+# There is no prevent_destroy, so -replace works.
 #
 # Rollout facts:
 # - Blocky's Valkey is `required: false`, so a wrong password only loses the

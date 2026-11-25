@@ -11,7 +11,7 @@ stack {
   # stack's state too.
   tags = ["ci-apply"]
 
-  # Applies after dns: pocket-id or Doppler being down, or a destroy waiting
+  # Applies after dns: pocket-id being down, or a destroy waiting
   # for approval here, must not hold up DNS in the same run (the apply matrix
   # runs in order; a waiting approval still holds later runs). Only the order:
   # a failed stack doesn't stop the ones after it.
