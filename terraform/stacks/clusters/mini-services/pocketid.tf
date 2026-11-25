@@ -26,12 +26,6 @@ locals {
   # Key: the app. name: pocket-id's display name. groups: the groups allowed
   # to use the client.
   clients = {
-    actual = {
-      name          = "Actual"
-      callback_urls = ["https://actual.rtrox.io/openid/callback"]
-      is_public     = false
-      groups        = ["family"]
-    }
     autobrr = {
       name          = "autobrr"
       callback_urls = ["https://autobrr.rtrox.io/api/auth/oidc/callback"]
@@ -50,12 +44,6 @@ locals {
       callback_urls = ["https://grafana.mini.rtrox.io/login/generic_oauth"]
       is_public     = false
       groups        = ["admins"]
-    }
-    komga = {
-      name          = "Komga"
-      callback_urls = ["https://komga.rtrox.io/login/oauth2/code/pocketid"]
-      is_public     = false
-      groups        = ["family"]
     }
     paperless = {
       name          = "Paperless"
