@@ -3,7 +3,7 @@ stack {
   description = "proxmox"
   id          = "c17753ff-4224-4901-aa83-53af40872024"
 
-  # vms.tf reads these; an inventory change must re-plan the stack.
+  # vms.tf and records.tf read these; an inventory change must re-plan the stack.
   watch = [
     "/inventory/hosts.yaml",
     "/inventory/sites.yaml",
