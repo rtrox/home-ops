@@ -6,10 +6,9 @@
 # returns a secret when it's created, so an imported client's client_secret is
 # null, and each confidential client's secret was set by hand in Doppler
 # (<APP>_POCKETID_CLIENT). So nothing here may build a Doppler secret from
-# client_secret: it would overwrite the live value. Phase 3 rotates each
-# client through Terraform, one app at a time, and only then does this stack
-# write its Doppler secret (the architecture's oidc-client module, extracted
-# from these resources with moved blocks).
+# client_secret: it would overwrite the live value. Phase 3 moves each one to
+# the app's infra.yaml, one app at a time, which makes a new client whose
+# secret this stack writes (README.md, "Moving a client from pocketid.tf to infra.yaml").
 #
 # Clients an app declares itself (infra.yaml) are in infra.tf.
 #

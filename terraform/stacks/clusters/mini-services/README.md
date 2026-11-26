@@ -71,3 +71,27 @@ The next plan fails reading it (404). Forget it from the state, from the
 laptop (`tofu state rm 'pocketid_client.infra["<app>"]'`), then merge any change
 to re-plan: the client is created again with a new id and secret, and Doppler
 is updated.
+
+## Moving a client from pocketid.tf to infra.yaml
+The hand-written clients' secrets were set by hand and aren't in state. Moving
+one to infra.yaml replaces it with a new client whose secret this stack writes.
+In one PR:
+
+1. Delete the app's entry from `local.clients` in `pocketid.tf`.
+2. Add the app's `infra.yaml` with the same callback, groups and name.
+3. Point the ExternalSecret's `<APP>_POCKETID_CLIENT` entry at `doppler-ci` (a
+   per-entry `sourceRef.storeRef`, so the app's other keys stay on `doppler`),
+   and add `external-secrets-store-doppler-ci` to the app's `ks.yaml`
+   `dependsOn`.
+
+The plan creates the new client and its Doppler secret and destroys the old
+client, so the apply waits in `tofu-apply-gated`. Until it runs, the
+ExternalSecret errors and keeps the old Secret, so the app keeps working. Once
+approved, logins fail from the old client's delete until the Secret refreshes
+(force it with `kubectl -n <ns> annotate externalsecret <name>
+force-sync=$(date +%s) --overwrite`) and the app restarts. After a successful
+login, delete the old `<APP>_POCKETID_CLIENT` from `k8s-at-home/min`.
+
+An app configured in its own UI (shelfmark) needs the new id and secret
+entered there by hand. Settings made in pocket-id's UI that the provider
+doesn't manage (a logo, a launch URL) aren't carried over.
