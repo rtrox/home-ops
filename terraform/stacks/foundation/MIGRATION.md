@@ -359,7 +359,7 @@ done
 | --- | --- | --- |
 | `hosts-at-home/prd` | `Terraform` (read/write) | `tf-stacks-write` |
 | `k8s-at-home/min` | `Terraform` (read/write) | `tf-stacks-write`, `doppler-eso` |
-| `tf-at-home/prd` | `terraform-cloudflare-tf-write` | `tf-stacks-write`, `tfc-remote-runs` |
+| `tf-at-home/prd` | `terraform-cloudflare-tf-write` | `tf-stacks-write` |
 | `tf-at-home/ci` | `terraform-cloudflare-ci-write` | `tf-stacks-write`, `ci-runner-plan` |
 
 The hand-made `doppler-export` tokens this table once kept were revoked on
