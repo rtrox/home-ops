@@ -1,22 +1,20 @@
-# The main TrueNAS's off-site copy: a TrueNAS Cloud Sync task (rclone) pushes
-# to a bucket here with the key below. Until the move to the locked bucket,
-# the owner pasted that key into TrueNAS; cloud_sync.tf now writes it there.
+# The main TrueNAS's off-site copy: a TrueNAS Cloud Sync task (rclone,
+# cloud_sync.tf) pushes to the bucket here with the key below.
 #
-# The old bucket, being retired: private, no lifecycle rules, no Object Lock.
-module "nas_backup_bucket" {
-  source = "../../modules/object-store"
+# The old bucket, nas-rtrox-io-truenas-backup, is forgotten, not destroyed
+# (its prevent_destroy refuses that, and it still holds files): the owner
+# purges it by hand (README.md). This block can go once that's applied.
+removed {
+  from = module.nas_backup_bucket
 
-  name = "nas-rtrox-io-truenas-backup"
-
-  # No key: Cloud Sync writes to the locked bucket now, and the old key could
-  # delete files. The next apply forgets this bucket (README.md, step 4).
-  keys = {}
+  lifecycle {
+    destroy = false
+  }
 }
 
-# The replacement, with Object Lock, so a leaked key can't destroy the copy
-# and this stack's state can be readable by CI (phase 4, "truenas into CI").
-# Filled by a server-side copy from the bucket above (README.md), then Cloud
-# Sync switches to it; the old bucket goes once one run here succeeds.
+# With Object Lock, so a leaked key can't destroy the copy and this stack's
+# state can be readable by CI (phase 4, "truenas into CI"). Filled by a
+# server-side copy from the old bucket, then Cloud Sync switched to it.
 #
 # legacy_api: TrueNAS 25.04's rclone (1.67) logs in with B2's v1 API, which
 # refuses a v4 bucket-limited key. rclone 1.73 is said to accept them.
