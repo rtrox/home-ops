@@ -43,9 +43,7 @@ resource "truenas_cloud_sync" "nas_backup" {
   direction     = "PUSH"
   transfer_mode = "SYNC"
 
-  # Paused for the move to the locked bucket; turned back on after the Dry Run
-  # (README.md).
-  enabled = false
+  enabled = true
 
   # Replaced as a whole on update: every attribute the task has, not only the
   # bucket.
