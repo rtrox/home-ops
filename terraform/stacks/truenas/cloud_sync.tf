@@ -16,6 +16,12 @@
 # text and hide the encrypted copies. Hence prevent_destroy. After a disaster,
 # recreate it by hand in the UI (same path, include list, folder, password and
 # salt), then import it again.
+#
+# prevent_destroy doesn't cover a create. **If any plan shows
+# truenas_cloud_sync.nas_backup "will be created", stop**: the task left
+# state or was deleted in TrueNAS, and the create would be the unencrypted,
+# unrestricted task above. Rename this address only with a `moved` block.
+# Before this stack is ci-apply, CI must gate a create of it too.
 resource "truenas_cloudsync_credential" "nas_backup" {
   name          = "nas-rtrox-io-truenas-backup-locked"
   provider_type = "B2"

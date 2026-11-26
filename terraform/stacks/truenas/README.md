@@ -68,7 +68,13 @@ Two trade-offs, accepted with the move:
 
 ## Rotating a credential
 
-Nothing here reaches TrueNAS by itself: the owner pastes each value into the
+The Cloud Sync B2 key is written to TrueNAS by this stack (`cloud_sync.tf`):
+to rotate it, add a second key under `module.nas_backup_locked_bucket`'s
+`keys` and point `local.nas_backup_key` at it; one apply updates the
+TrueNAS credential, and a later one removes the old key. The rest of this
+section covers the ACME tokens, which still reach TrueNAS by hand.
+
+Nothing else here reaches TrueNAS by itself: the owner pastes each value into the
 TrueNAS UI. So a rotation must keep the old value valid until the new one is
 pasted in and proven. **Never `-replace`**: that deletes the old credential
 in the same apply, before TrueNAS has the new one. Add a second one instead:

@@ -1,8 +1,8 @@
 # The main TrueNAS's off-site copy: a TrueNAS Cloud Sync task (rclone) pushes
-# to this bucket with the key below, which the owner pastes into TrueNAS
-# (Credentials > Backup Credentials > Cloud Credentials).
+# to a bucket here with the key below. Until the move to the locked bucket,
+# the owner pasted that key into TrueNAS; cloud_sync.tf now writes it there.
 #
-# Same settings as terraform-record had: private, no lifecycle rules, no
+# The old bucket. Same settings as terraform-record had: private, no lifecycle rules, no
 # Object Lock. B2 keeps every version of an overwritten or deleted file, as
 # it did before.
 module "nas_backup_bucket" {
