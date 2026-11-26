@@ -1,18 +1,21 @@
 # The main TrueNAS's off-site copy: Cloud Sync task 1 ("Backblaze Backup"),
-# pushing /mnt/rusty to the B2 bucket in backup_bucket.tf, with its credential.
+# pushing /mnt/rusty's homes, shared and documents (its `include` list:
+# /homes/**, /shared/**, /documents/**; about 0.5 TB, not media or nvr) to the
+# B2 bucket in backup_bucket.tf, with its credential.
 #
 # The task was made by hand and is imported, never created here: the provider
-# can't set Cloud Sync encryption, and the task encrypts (content and file
-# names). Its updates send only the fields below, so TrueNAS keeps the
-# encryption, its password and salt, and every other setting. Keeping them out
+# can't set Cloud Sync encryption or the include list, and the task encrypts
+# (content and file names). Its updates send only the fields below, so TrueNAS
+# keeps the encryption, its password and salt, the include list, and every
+# other setting. Keeping them out
 # of Terraform is deliberate: whoever reads this state gets the B2 key but only
 # ciphertext. The password and salt are in Bitwarden.
 #
-# Never let Terraform replace the task: a new one would be unencrypted, see
-# none of the encrypted files in the bucket, upload everything in plain text
-# and hide the encrypted copies. Hence prevent_destroy. After a disaster,
-# recreate it by hand in the UI (same path, folder, password and salt), then
-# import it again.
+# Never let Terraform replace the task: a new one would be unencrypted and
+# have no include list, so it would push all 57 TB of /mnt/rusty in plain
+# text and hide the encrypted copies. Hence prevent_destroy. After a disaster,
+# recreate it by hand in the UI (same path, include list, folder, password and
+# salt), then import it again.
 resource "truenas_cloudsync_credential" "nas_backup" {
   name          = "nas-rtrox-io-truenas-backup-locked"
   provider_type = "B2"
