@@ -29,7 +29,7 @@ create service tokens on the free plan. It never runs in CI.
 Not moving: the nightly copy's token `tofu-state-copy` and `TOFU_STATE_R2_SOURCE`
 (they stay in terraform-record, untouched), the break-glass R2 token, the
 state passphrase, and the read-only service tokens (`doppler-eso`,
-`doppler-export`, `ci-runner-plan`, `tfc-remote-runs`), which stay hand-made.
+`doppler-export`, `ci-runner-plan`, `tfc-remote-runs`), which stayed hand-made.
 
 Since then (Nov 25, 2026): the `doppler-export` tokens were replaced by the
 generated `export-read` ones (`doppler_export.tf`), and the three `tf-at-home`
@@ -357,10 +357,14 @@ done
 
 | Config | Revoke | Keep |
 | --- | --- | --- |
-| `hosts-at-home/prd` | `Terraform` (read/write) | `tf-stacks-write`, `doppler-export` |
-| `k8s-at-home/min` | `Terraform` (read/write) | `tf-stacks-write`, `doppler-eso`, `doppler-export` |
-| `tf-at-home/prd` | `terraform-cloudflare-tf-write` | `tf-stacks-write`, `tfc-remote-runs`, `doppler-export` |
+| `hosts-at-home/prd` | `Terraform` (read/write) | `tf-stacks-write` |
+| `k8s-at-home/min` | `Terraform` (read/write) | `tf-stacks-write`, `doppler-eso` |
+| `tf-at-home/prd` | `terraform-cloudflare-tf-write` | `tf-stacks-write`, `tfc-remote-runs` |
 | `tf-at-home/ci` | `terraform-cloudflare-ci-write` | `tf-stacks-write`, `ci-runner-plan` |
+
+The hand-made `doppler-export` tokens this table once kept were revoked on
+Nov 25, 2026 (replaced by foundation's `export-read` tokens), and
+`tfc-remote-runs` on Nov 24, with the last Terraform Cloud workspaces.
 
 ```sh
 doppler configs tokens revoke <slug> -p <project> -c <config>
