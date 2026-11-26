@@ -25,12 +25,6 @@ locals {
   # Key: the app. name: pocket-id's display name. groups: the groups allowed
   # to use the client.
   clients = {
-    autobrr = {
-      name          = "autobrr"
-      callback_urls = ["https://autobrr.rtrox.io/api/auth/oidc/callback"]
-      is_public     = false
-      groups        = ["family"]
-    }
     # A public client: PKCE, no secret.
     booklore = {
       name          = "Booklore"
@@ -53,23 +47,11 @@ locals {
       is_public     = false
       groups        = ["family"]
     }
-    qui = {
-      name          = "qui"
-      callback_urls = ["https://qui.rtrox.io/api/auth/oidc/callback"]
-      is_public     = false
-      groups        = ["family"]
-    }
     # Configured in shelfmark's own UI (Settings -> Security), not from a
     # Kubernetes Secret; SHELFMARK_POCKETID_CLIENT in Doppler holds the values.
     shelfmark = {
       name          = "Shelfmark"
       callback_urls = ["https://shelfmark.rtrox.io/api/auth/oidc/callback"]
-      is_public     = false
-      groups        = ["family"]
-    }
-    sure = {
-      name          = "Sure"
-      callback_urls = ["https://sure.rtrox.io/auth/openid_connect/callback"]
       is_public     = false
       groups        = ["family"]
     }

@@ -1,0 +1,6 @@
+# pocket-id client, made by the clusters/mini-services stack (its README).
+# Writes SURE_POCKETID_CLIENT to Doppler k8s-at-home/min-ci.
+oidc:
+  callback: https://sure.rtrox.io/auth/openid_connect/callback
+  groups: [family]
+  name: Sure
