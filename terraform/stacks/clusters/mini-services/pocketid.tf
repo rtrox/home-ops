@@ -48,12 +48,6 @@ locals {
       is_public     = true
       groups        = ["family"]
     }
-    grafana = {
-      name          = "Grafana"
-      callback_urls = ["https://grafana.mini.rtrox.io/login/generic_oauth"]
-      is_public     = false
-      groups        = ["admins"]
-    }
     paperless = {
       name          = "Paperless"
       callback_urls = ["https://paper.rtrox.io/accounts/oidc/pocketid/login/callback/**"]
