@@ -21,9 +21,52 @@ module "nas_backup_bucket" {
   }
 }
 
+# The replacement, with Object Lock, so a leaked key can't destroy the copy
+# and this stack's state can be readable by CI (phase 4, "truenas into CI").
+# Filled by a server-side copy from the bucket above (README.md), then Cloud
+# Sync switches to it; the old bucket goes once one run here succeeds.
+#
+# Object Lock (governance, 45 days), as the CNPG off-site bucket: neither the
+# key nor the lifecycle rule can remove a version within 45 days of upload.
+# Cloud Sync's deletes become hides (its rclone doesn't hard-delete), which the
+# key can do without deleteFiles; the lifecycle rule removes hidden versions
+# 30 days later, once they're out of the lock. A stolen key can hide files,
+# but every version stays recoverable for at least 30 days.
+module "nas_backup_locked_bucket" {
+  source = "../../modules/object-store"
+
+  name = "nas-rtrox-io-truenas-backup-locked"
+
+  file_lock = {
+    default_retention = {
+      mode     = "governance"
+      duration = 45
+      unit     = "days"
+    }
+  }
+
+  lifecycle_rules = [
+    {
+      file_name_prefix                                       = ""
+      days_from_hiding_to_deleting                           = 30
+      days_from_starting_to_canceling_unfinished_large_files = 7
+    },
+  ]
+
+  # Cloud Sync's: list, read and write (uploads and hides), never delete or
+  # bypass the lock. legacy_api as above.
+  keys = {
+    "nas-rtrox-io-truenas-backup-locked" = {
+      capabilities = ["listBuckets", "listFiles", "readFiles", "writeFiles"]
+      legacy_api   = true
+    }
+  }
+}
+
 locals {
-  # The key in TRUENAS_BACKUP_BUCKET, the one TrueNAS should hold.
-  nas_backup_key = "nas-rtrox-io-truenas-backup-legacy"
+  # The key in TRUENAS_BACKUP_BUCKET, the one TrueNAS should hold: the locked
+  # bucket's, once this is applied.
+  nas_backup_key = "nas-rtrox-io-truenas-backup-locked"
 }
 
 resource "doppler_secret" "nas_backup_bucket" {
@@ -33,9 +76,9 @@ resource "doppler_secret" "nas_backup_bucket" {
   config  = "prd"
   name    = "TRUENAS_BACKUP_BUCKET"
   value = jsonencode({
-    application_key_id = module.nas_backup_bucket.keys[local.nas_backup_key].application_key_id
-    application_key    = module.nas_backup_bucket.keys[local.nas_backup_key].application_key
-    endpoint           = module.nas_backup_bucket.bucket.endpoint
-    bucket             = module.nas_backup_bucket.bucket.name
+    application_key_id = module.nas_backup_locked_bucket.keys[local.nas_backup_key].application_key_id
+    application_key    = module.nas_backup_locked_bucket.keys[local.nas_backup_key].application_key
+    endpoint           = module.nas_backup_locked_bucket.bucket.endpoint
+    bucket             = module.nas_backup_locked_bucket.bucket.name
   })
 }

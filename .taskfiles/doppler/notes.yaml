@@ -302,7 +302,7 @@ hosts-at-home:
     written_by: "terraform-record minio"
     read_by: "pasted into TrueNAS"
   TRUENAS_BACKUP_BUCKET:
-    what: "B2 bucket and key for TrueNAS's off-site copy"
+    what: "B2 bucket and key for TrueNAS's off-site copy (Object Lock bucket, a key that can't delete)"
     written_by: "truenas"
     read_by: "pasted into TrueNAS"
   TRUENAS_BACKUP_CLOUDFLARE_TOKEN:
