@@ -103,6 +103,10 @@ k8s-at-home:
     what: "Paperless admin password"
     written_by: "by hand"
     read_by: "default/paperless"
+  PAPERLESS_SECRET_KEY:
+    what: "Paperless's Django SECRET_KEY (sessions, signed links); rotating it logs everyone out (min-ci)"
+    written_by: "clusters/mini-services"
+    read_by: "default/paperless"
   POCKET_ID:
     what: "pocket-id's encryption key"
     written_by: "by hand"

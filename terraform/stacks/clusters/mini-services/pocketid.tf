@@ -41,12 +41,6 @@ locals {
       is_public     = true
       groups        = ["family"]
     }
-    paperless = {
-      name          = "Paperless"
-      callback_urls = ["https://paper.rtrox.io/accounts/oidc/pocketid/login/callback/**"]
-      is_public     = false
-      groups        = ["family"]
-    }
     # Configured in shelfmark's own UI (Settings -> Security), not from a
     # Kubernetes Secret; SHELFMARK_POCKETID_CLIENT in Doppler holds the values.
     shelfmark = {

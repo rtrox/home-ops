@@ -1,0 +1,6 @@
+# pocket-id client, made by the clusters/mini-services stack (its README).
+# Writes PAPERLESS_POCKETID_CLIENT to Doppler k8s-at-home/min-ci.
+oidc:
+  callback: https://paper.rtrox.io/accounts/oidc/pocketid/login/callback/**
+  groups: [family]
+  name: Paperless
