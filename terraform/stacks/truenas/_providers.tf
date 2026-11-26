@@ -14,3 +14,6 @@ provider "cloudflare" {
 }
 provider "b2" {
 }
+provider "truenas" {
+  url = "https://nas.rtrox.io"
+}

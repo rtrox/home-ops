@@ -276,6 +276,10 @@ tf-at-home:
     what: "Encrypts laptop-only stacks' state (copy in Bitwarden); never put it in a CI config"
     written_by: "by hand"
     read_by: "task tf:*"
+  TRUENAS_API_KEY:
+    what: "TrueNAS API key for the truenas stack: user terraform (Local Administrator) in prd; terraform-ro (Read-Only Administrator) in ci, for when the stack moves to CI"
+    written_by: "by hand (TrueNAS: Credentials > Users > Add API Key)"
+    read_by: "task tf:* and CI, as TRUENAS_API_KEY"
 hosts-at-home:
   CI_DOPPLER_HOSTS_READ:
     what: "Read token for hosts-at-home/ci"

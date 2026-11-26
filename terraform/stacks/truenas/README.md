@@ -51,11 +51,12 @@ Two trade-offs, accepted with the move:
      rclone check B2:nas-rtrox-io-truenas-backup B2:nas-rtrox-io-truenas-backup-locked --fast-list --one-way
    )
    ```
-3. **Switch Cloud Sync**: a new cloud credential from `TRUENAS_BACKUP_BUCKET`
-   (Verify Credential); on the same task (it holds any encryption password and
-   salt), change only the credential and bucket; then a Dry Run, which should
-   list nothing (or almost nothing) to transfer. Re-enable the schedule; wait
-   for one real run.
+3. **Switch Cloud Sync**, in Terraform (`cloud_sync.tf`): a new cloud
+   credential from the locked bucket's key, and task 1, imported, pointed at
+   it and the new bucket. Encryption isn't touched (see that file). Then in
+   TrueNAS, Verify Credential and a Dry Run of the task, which should list
+   nothing (or almost nothing) to transfer; then set `enabled = true` and
+   apply, and wait for one real run.
 4. **Retire the old bucket** in a later PR, once a real run has succeeded, in
    two applies: first set `module.nas_backup_bucket`'s `keys = {}`, which
    destroys the old key (it can delete files, so it must not be left live);
@@ -67,7 +68,13 @@ Two trade-offs, accepted with the move:
 
 ## Rotating a credential
 
-Nothing here reaches TrueNAS by itself: the owner pastes each value into the
+The Cloud Sync B2 key is written to TrueNAS by this stack (`cloud_sync.tf`):
+to rotate it, add a second key under `module.nas_backup_locked_bucket`'s
+`keys` and point `local.nas_backup_key` at it; one apply updates the
+TrueNAS credential, and a later one removes the old key. The rest of this
+section covers the ACME tokens, which still reach TrueNAS by hand.
+
+Nothing else here reaches TrueNAS by itself: the owner pastes each value into the
 TrueNAS UI. So a rotation must keep the old value valid until the new one is
 pasted in and proven. **Never `-replace`**: that deletes the old credential
 in the same apply, before TrueNAS has the new one. Add a second one instead:

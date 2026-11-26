@@ -14,5 +14,11 @@ terraform {
       source  = "DopplerHQ/doppler"
       version = "1.23.2"
     }
+    # 2.x: the newest line that supports TrueNAS 25.04 (partly; tested in
+    # migration P4-0). Move to 3.x after the upgrade to 25.10.
+    truenas = {
+      source  = "PjSalty/truenas"
+      version = "2.4.1"
+    }
   }
 }

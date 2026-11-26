@@ -148,6 +148,12 @@ globals {
     pocketid = [
       { env = "POCKETID_API_TOKEN", project = "tf-at-home", key = "POCKETID_API_TOKEN" },
     ]
+    # TrueNAS API keys, made by hand (Credentials > Users > Add API Key): the
+    # user terraform (Local Administrator) in prd and ci-apply, terraform-ro
+    # (Read-Only Administrator) in ci. API keys used over plain HTTP are revoked.
+    truenas = [
+      { env = "TRUENAS_API_KEY", project = "tf-at-home", key = "TRUENAS_API_KEY" },
+    ]
     # The token is written to hosts-at-home by the Ansible proxmox role.
     proxmox = [
       { env = "PROXMOX_VE_API_TOKEN", project = "hosts-at-home", key = "PVE_TERRAFORM_API_TOKEN" },
@@ -160,6 +166,9 @@ globals {
   pocketid_base_url = "https://auth.rtrox.io"
 
   proxmox_endpoint = "https://pve.rtrox.io:8006/"
+
+  # HTTPS only: TrueNAS revokes an API key sent over plain HTTP.
+  truenas_url = "https://nas.rtrox.io"
 }
 
 assert {
@@ -255,6 +264,15 @@ generate_hcl "_providers.tf" {
       labels   = ["pocketid"]
       attributes = {
         base_url = global.pocketid_base_url
+      }
+    }
+
+    # The truenas provider (PjSalty/truenas) reads TRUENAS_API_KEY itself.
+    tm_dynamic "provider" {
+      for_each = tm_contains(global.providers, "truenas") ? [1] : []
+      labels   = ["truenas"]
+      attributes = {
+        url = global.truenas_url
       }
     }
 
