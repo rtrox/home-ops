@@ -2,13 +2,11 @@
 # Moved from terraform-record's pocketid stack in migration P2-4. Users
 # aren't managed here yet.
 #
-# Client secrets: none of these clients' secrets is in state. pocket-id only
-# returns a secret when it's created, so an imported client's client_secret is
-# null, and each confidential client's secret was set by hand in Doppler
-# (<APP>_POCKETID_CLIENT). So nothing here may build a Doppler secret from
-# client_secret: it would overwrite the live value. Phase 3 moves each one to
-# the app's infra.yaml, one app at a time, which makes a new client whose
-# secret this stack writes (README.md, "Moving a client from pocketid.tf to infra.yaml").
+# Only public clients (PKCE, no secret) are left here. A confidential client
+# belongs in its app's infra.yaml (infra.tf), which writes its secret to
+# Doppler. Never add one here: pocket-id returns a secret only when it creates
+# the client, so an imported one has none in state (README.md, "Moving a
+# client from pocketid.tf to infra.yaml").
 #
 # Clients an app declares itself (infra.yaml) are in infra.tf.
 #
@@ -39,14 +37,6 @@ locals {
       name          = "curt"
       callback_urls = ["https://app.trx.fm/auth/callback"]
       is_public     = true
-      groups        = ["family"]
-    }
-    # Configured in shelfmark's own UI (Settings -> Security), not from a
-    # Kubernetes Secret; SHELFMARK_POCKETID_CLIENT in Doppler holds the values.
-    shelfmark = {
-      name          = "Shelfmark"
-      callback_urls = ["https://shelfmark.rtrox.io/api/auth/oidc/callback"]
-      is_public     = false
       groups        = ["family"]
     }
   }
