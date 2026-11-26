@@ -51,11 +51,12 @@ Two trade-offs, accepted with the move:
      rclone check B2:nas-rtrox-io-truenas-backup B2:nas-rtrox-io-truenas-backup-locked --fast-list --one-way
    )
    ```
-3. **Switch Cloud Sync**: a new cloud credential from `TRUENAS_BACKUP_BUCKET`
-   (Verify Credential); on the same task (it holds any encryption password and
-   salt), change only the credential and bucket; then a Dry Run, which should
-   list nothing (or almost nothing) to transfer. Re-enable the schedule; wait
-   for one real run.
+3. **Switch Cloud Sync**, in Terraform (`cloud_sync.tf`): a new cloud
+   credential from the locked bucket's key, and task 1, imported, pointed at
+   it and the new bucket. Encryption isn't touched (see that file). Then in
+   TrueNAS, Verify Credential and a Dry Run of the task, which should list
+   nothing (or almost nothing) to transfer; then set `enabled = true` and
+   apply, and wait for one real run.
 4. **Retire the old bucket** in a later PR, once a real run has succeeded, in
    two applies: first set `module.nas_backup_bucket`'s `keys = {}`, which
    destroys the old key (it can delete files, so it must not be left live);

@@ -22,7 +22,7 @@ stack {
 
 # What this stack needs generated (see terraform/terramate.tm.hcl).
 globals {
-  providers      = ["backblaze", "cloudflare"]
+  providers      = ["backblaze", "cloudflare", "truenas"]
   doppler_writes = ["hosts-at-home/prd"]
 
   # Its own Cloudflare token (foundation's truenas_token.tf): Zone Read and DNS
