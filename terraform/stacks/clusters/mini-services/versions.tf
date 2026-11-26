@@ -7,6 +7,11 @@ terraform {
       source  = "DopplerHQ/doppler"
       version = "1.23.2"
     }
+    # App secrets it generates (paperless.tf).
+    random = {
+      source  = "hashicorp/random"
+      version = "3.9.1"
+    }
     # Moved from trozz/pocketid (an archive since Nov 2026, same builds).
     pocketid = {
       source  = "pocket-id/pocketid"

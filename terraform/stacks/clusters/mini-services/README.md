@@ -92,6 +92,6 @@ approved, logins fail from the old client's delete until the Secret refreshes
 force-sync=$(date +%s) --overwrite`) and the app restarts. After a successful
 login, delete the old `<APP>_POCKETID_CLIENT` from `k8s-at-home/min`.
 
-An app configured in its own UI (shelfmark) needs the new id and secret
-entered there by hand. Settings made in pocket-id's UI that the provider
+An app configured in its own UI would need the new id and secret entered
+there by hand (none left: shelfmark reads them from env vars). Settings made in pocket-id's UI that the provider
 doesn't manage (a logo, a launch URL) aren't carried over.

@@ -17,6 +17,8 @@ spec:
       namespace: rook-ceph
     - name: external-secrets-store-doppler
       namespace: external-secrets
+    - name: external-secrets-store-doppler-ci
+      namespace: external-secrets
   path: ./cluster-apps/mini/downloads/shelfmark/app
   prune: true
   sourceRef:
