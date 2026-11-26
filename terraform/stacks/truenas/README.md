@@ -14,6 +14,57 @@ state is encrypted with the owner's own passphrase
 (`TOFU_STATE_PASSPHRASE_LAPTOP`, which `task tf:*` picks for laptop-only
 stacks). Plan it after any inventory edit to either host: nothing else will.
 
+## Moving to the locked bucket (phase 4)
+
+`module.nas_backup_locked_bucket` replaces `nas-rtrox-io-truenas-backup`:
+same contents, plus Object Lock (governance, 45 days) and a key that can't
+delete. That's what lets this stack's state, which holds the key, be read by
+CI. `TRUENAS_BACKUP_BUCKET` points at the new bucket once applied. Until step
+4, the rest of this README still describes the old bucket as the live one.
+
+Two trade-offs, accepted with the move:
+- **History:** the old bucket keeps every version forever; the new one keeps a
+  hidden or overwritten version 30 days (45 within the lock). The copy takes
+  current files only, so the old bucket's history goes when it's retired.
+- **Reads:** the key keeps `readFiles` (rclone needs it), so whoever reads this
+  state can download the backup. Before the stack drops `laptop-only`, confirm
+  the Cloud Sync task has Remote Encryption on.
+
+1. **Apply** this stack: 2 to add (the bucket and its key), 1 to change (the
+   Doppler secret), 0 to destroy.
+2. **Copy server-side** with the `terraform-backblaze` key (account-wide, no
+   bypassGovernance). Both buckets are in one account, so rclone uses B2's
+   server-side copy: no download or upload, and file mod times are kept, so
+   Cloud Sync sees nothing to upload afterwards. Pause the Cloud Sync task's
+   schedule first. In a subshell, so the key doesn't stay in your shell; the
+   `lsf` first checks the destination exists, since with this key a typo would
+   create a new, unlocked bucket:
+
+   ```sh
+   (
+     export RCLONE_CONFIG_B2_TYPE=b2
+     export RCLONE_CONFIG_B2_ACCOUNT="$(doppler secrets get BACKBLAZE_APPLICATION_KEY_ID -p tf-at-home -c prd --plain)"
+     export RCLONE_CONFIG_B2_KEY="$(doppler secrets get BACKBLAZE_APPLICATION_KEY -p tf-at-home -c prd --plain)"
+     rclone lsf B2:nas-rtrox-io-truenas-backup-locked --max-depth 1 &&
+     rclone copy B2:nas-rtrox-io-truenas-backup B2:nas-rtrox-io-truenas-backup-locked \
+       --fast-list --checkers 32 --transfers 32 --progress &&
+     rclone check B2:nas-rtrox-io-truenas-backup B2:nas-rtrox-io-truenas-backup-locked --fast-list --one-way
+   )
+   ```
+3. **Switch Cloud Sync**: a new cloud credential from `TRUENAS_BACKUP_BUCKET`
+   (Verify Credential); on the same task (it holds any encryption password and
+   salt), change only the credential and bucket; then a Dry Run, which should
+   list nothing (or almost nothing) to transfer. Re-enable the schedule; wait
+   for one real run.
+4. **Retire the old bucket** in a later PR, once a real run has succeeded, in
+   two applies: first set `module.nas_backup_bucket`'s `keys = {}`, which
+   destroys the old key (it can delete files, so it must not be left live);
+   then forget the bucket with `removed { from = module.nas_backup_bucket ...
+   destroy = false }` (its `prevent_destroy` refuses a destroy) and empty and
+   delete it by hand (`rclone purge` with the key above). Delete the old cloud
+   credential in TrueNAS too, and update the rest of this README. Then the
+   stack can move to CI.
+
 ## Rotating a credential
 
 Nothing here reaches TrueNAS by itself: the owner pastes each value into the
