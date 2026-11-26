@@ -5,9 +5,8 @@ stack {
 
   # Applied from the owner's laptop only, like foundation: CI never plans,
   # applies or drift-checks it, and task tf:* encrypts its state with
-  # TOFU_STATE_PASSPHRASE_LAPTOP, which CI doesn't hold. The state holds the
-  # Cloud Sync B2 key, which can delete files on a bucket without Object Lock,
-  # so CI must not be able to decrypt it (README.md).
+  # TOFU_STATE_PASSPHRASE_LAPTOP, which CI doesn't hold. Its move to CI is
+  # planned (README.md, "Before moving this stack to CI").
   tags = ["laptop-only"]
 
   # records.tf builds both A records from it (each host's dns_name and

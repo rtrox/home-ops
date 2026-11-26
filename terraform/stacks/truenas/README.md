@@ -33,9 +33,10 @@ the bucket forgotten. Two trade-offs came with it:
 
 **Purging the old bucket**, once the apply that forgets it is done: with the
 `terraform-backblaze` key, in a subshell so the key doesn't stay in your
-shell. Type the name with care: the locked bucket refuses deletes within the
-lock, but nothing else here does. `rclone purge` deletes every version and then
-the bucket:
+shell. `rclone purge` deletes every version and then the bucket. **Type the
+name with care**: this key can delete in any bucket in the account. Even the
+locked one only protects versions younger than 45 days, so a purge with the
+wrong name would delete its older versions:
 
 ```sh
 (
@@ -62,8 +63,8 @@ pasted in and proven. **Never `-replace`**: that deletes the old credential
 in the same apply, before TrueNAS has the new one. Add a second one instead:
 
 1. **Add**: a second entry in foundation's `truenas_acme_tokens`, and point
-   the host's `token` in `truenas_acme_hosts` at it. Apply: one created,
-   nothing deleted.
+   the host's `token` in `truenas_acme_hosts` at it. Apply: one created, the
+   Doppler secret updated, nothing deleted.
 2. **Paste and prove** it in TrueNAS: issue a throwaway certificate for the
    host's name with that authenticator against Let's Encrypt's staging
    directory (a CSR, then Create ACME Certificate), then delete it. The
