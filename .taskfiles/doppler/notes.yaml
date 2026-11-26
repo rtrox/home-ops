@@ -308,7 +308,7 @@ hosts-at-home:
   TRUENAS_BACKUP_BUCKET:
     what: "B2 bucket and key for TrueNAS's off-site copy (Object Lock bucket, a key that can't delete)"
     written_by: "truenas"
-    read_by: "pasted into TrueNAS"
+    read_by: "a copy; the truenas stack writes the key to TrueNAS itself"
   TRUENAS_BACKUP_CLOUDFLARE_TOKEN:
     what: "The backup TrueNAS's ACME Cloudflare token"
     written_by: "foundation"

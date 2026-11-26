@@ -6,10 +6,10 @@
 # Written as plain resources keyed by host, so the architecture's `host`
 # module (DNS records, ACME token, backup bucket) can later take them over
 # with `moved` blocks: cloudflare_dns_record.host["<host>"] and
-# module.nas_backup_bucket go into module.host["<host>"].
+# module.nas_backup_locked_bucket go into module.host["<host>"].
 #
-# The Doppler secret here is what the owner pastes into TrueNAS, in
-# hosts-at-home/prd; renaming it loses that link.
+# The Doppler secret here (hosts-at-home/prd) holds the same key that
+# cloud_sync.tf writes to TrueNAS.
 
 # The zone is found by name, as the dns stack (which manages it) does.
 data "cloudflare_zone" "rtrox_io" {
