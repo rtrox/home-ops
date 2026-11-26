@@ -2,29 +2,24 @@
 # to a bucket here with the key below. Until the move to the locked bucket,
 # the owner pasted that key into TrueNAS; cloud_sync.tf now writes it there.
 #
-# The old bucket. Same settings as terraform-record had: private, no lifecycle rules, no
-# Object Lock. B2 keeps every version of an overwritten or deleted file, as
-# it did before.
+# The old bucket, being retired: private, no lifecycle rules, no Object Lock.
 module "nas_backup_bucket" {
   source = "../../modules/object-store"
 
   name = "nas-rtrox-io-truenas-backup"
 
-  # The default capabilities, as before the move (a rotation, not a change of
-  # access). Narrowing them to what Cloud Sync needs is a follow-up. A second
-  # key here only mid-rotation (README.md).
-  #
-  # legacy_api: TrueNAS 25.04's rclone (1.67) logs in with B2's v1 API, which
-  # refuses a v4 bucket-limited key. rclone 1.73 is said to accept them.
-  keys = {
-    "nas-rtrox-io-truenas-backup-legacy" = { legacy_api = true }
-  }
+  # No key: Cloud Sync writes to the locked bucket now, and the old key could
+  # delete files. The next apply forgets this bucket (README.md, step 4).
+  keys = {}
 }
 
 # The replacement, with Object Lock, so a leaked key can't destroy the copy
 # and this stack's state can be readable by CI (phase 4, "truenas into CI").
 # Filled by a server-side copy from the bucket above (README.md), then Cloud
 # Sync switches to it; the old bucket goes once one run here succeeds.
+#
+# legacy_api: TrueNAS 25.04's rclone (1.67) logs in with B2's v1 API, which
+# refuses a v4 bucket-limited key. rclone 1.73 is said to accept them.
 #
 # Object Lock (governance, 45 days), as the CNPG off-site bucket: neither the
 # key nor the lifecycle rule can remove a version within 45 days of upload.
@@ -54,7 +49,7 @@ module "nas_backup_locked_bucket" {
   ]
 
   # Cloud Sync's: list, read and write (uploads and hides), never delete or
-  # bypass the lock. legacy_api as above.
+  # bypass the lock.
   keys = {
     "nas-rtrox-io-truenas-backup-locked" = {
       capabilities = ["listBuckets", "listFiles", "readFiles", "writeFiles"]
