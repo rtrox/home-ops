@@ -80,7 +80,8 @@ In one PR:
 1. Delete the app's entry from `local.clients` in `pocketid.tf`.
 2. Add the app's `infra.yaml` with the same callback, groups and name.
 3. Point the ExternalSecret's `<APP>_POCKETID_CLIENT` entry at `doppler-ci` (a
-   per-entry `sourceRef.storeRef`, so the app's other keys stay on `doppler`),
+   per-entry `sourceRef.storeRef`, so the app's other keys stay on `doppler`;
+   or the whole `secretStoreRef` when it's the ExternalSecret's only key),
    and add `external-secrets-store-doppler-ci` to the app's `ks.yaml`
    `dependsOn`.
 
@@ -93,5 +94,6 @@ force-sync=$(date +%s) --overwrite`) and the app restarts. After a successful
 login, delete the old `<APP>_POCKETID_CLIENT` from `k8s-at-home/min`.
 
 An app configured in its own UI would need the new id and secret entered
-there by hand (none left: shelfmark reads them from env vars). Settings made in pocket-id's UI that the provider
-doesn't manage (a logo, a launch URL) aren't carried over.
+there by hand (none left: shelfmark reads them from env vars). Settings made
+in pocket-id's UI that the provider doesn't manage (a logo, a launch URL)
+aren't carried over.
