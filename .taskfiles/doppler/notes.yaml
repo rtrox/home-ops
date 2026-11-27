@@ -51,6 +51,10 @@ k8s-at-home:
     what: "Token for the GitHub webhook that triggers Flux"
     written_by: "by hand (set the same value on the GitHub webhook)"
     read_by: "flux-system/flux-operator"
+  CNPG_LOCAL_BUCKET:
+    what: "Garage bucket and key for Postgres WAL and base backups (replaces the MinIO one)"
+    written_by: "clusters/mini"
+    read_by: "nothing yet; database/cloudnative-pg and database/cnpg-offsite after the cutover"
   CNPG_MINIO_BUCKET:
     what: "MinIO bucket and key for Postgres WAL and base backups"
     written_by: "terraform-record minio"
@@ -151,10 +155,18 @@ k8s-at-home:
     what: "Sure's Postgres password and encryption keys (changing the keys breaks its encrypted data)"
     written_by: "by hand"
     read_by: "default/sure, database/cloudnative-pg"
+  SURE_LOCAL_BUCKET:
+    what: "Garage bucket and key for Sure's uploads (replaces the MinIO one)"
+    written_by: "clusters/mini"
+    read_by: "nothing yet; default/sure after its cutover"
   SURE_MINIO_BUCKET:
     what: "MinIO bucket and key for Sure's uploads"
     written_by: "terraform-record minio"
     read_by: "default/sure"
+  THANOS_LOCAL_BUCKET:
+    what: "Garage bucket and key for Thanos (replaces the MinIO one)"
+    written_by: "clusters/mini"
+    read_by: "nothing yet; observability/kube-prometheus-stack after its cutover"
   THANOS_MINIO_BUCKET:
     what: "MinIO bucket and key for Thanos"
     written_by: "terraform-record minio"
@@ -175,6 +187,10 @@ k8s-at-home:
     what: "B2 bucket and key for volsync"
     written_by: "clusters/mini"
     read_by: "the volsync component"
+  VOLSYNC_LOCAL_BUCKET:
+    what: "Garage bucket and key for volsync (replaces the MinIO one)"
+    written_by: "clusters/mini"
+    read_by: "nothing yet; the volsync component after its cutover"
   VOLSYNC_MINIO_BUCKET:
     what: "MinIO bucket and key for volsync"
     written_by: "terraform-record minio"
@@ -292,7 +308,7 @@ hosts-at-home:
   GARAGE_ADMIN_TOKEN:
     what: "Garage's admin API token (port 3903); generated, and passed to the app as an env var"
     written_by: "truenas"
-    read_by: "the garagehq provider (buckets and keys, later)"
+    read_by: "the garagehq provider in clusters/mini (buckets and keys)"
   GARAGE_METRICS_TOKEN:
     what: "Bearer token for Garage's /metrics on the admin port"
     written_by: "truenas"

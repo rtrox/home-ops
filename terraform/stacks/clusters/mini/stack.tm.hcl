@@ -1,6 +1,6 @@
 stack {
   name        = "clusters/mini"
-  description = "What the mini cluster needs from outside itself: its API record, its Cloudflare Tunnel, and its volsync and CNPG off-site buckets"
+  description = "What the mini cluster needs from outside itself: its API record, its Cloudflare Tunnel, its volsync and CNPG off-site buckets on B2, and its local buckets on Garage"
   id          = "734e9e1e-effe-4582-9dd6-ed44ac0fb571"
 
   # ci-skip for now (see README.md): CI has no
@@ -18,7 +18,7 @@ stack {
 
 # What this stack needs generated (see terraform/terramate.tm.hcl).
 globals {
-  providers      = ["backblaze", "cloudflare"]
+  providers      = ["backblaze", "cloudflare", "garage"]
   doppler_writes = ["k8s-at-home/min"]
 
   # Its own Cloudflare token (foundation's mini_token.tf): Zone Read and DNS

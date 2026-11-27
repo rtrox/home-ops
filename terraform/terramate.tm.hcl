@@ -154,6 +154,14 @@ globals {
     truenas = [
       { env = "TRUENAS_API_KEY", project = "tf-at-home", key = "TRUENAS_API_KEY" },
     ]
+    # The Garage admin token (the truenas stack's garage.tf generates it and
+    # writes it to hosts-at-home/prd). The garage provider (arsolitt/garagehq)
+    # has no environment variable for it, only a `token` attribute, so it goes
+    # in as the sensitive variable garage_admin_token (declared in the
+    # generated _providers.tf).
+    garage = [
+      { env = "TF_VAR_garage_admin_token", project = "hosts-at-home", key = "GARAGE_ADMIN_TOKEN" },
+    ]
     # The token is written to hosts-at-home by the Ansible proxmox role.
     proxmox = [
       { env = "PROXMOX_VE_API_TOKEN", project = "hosts-at-home", key = "PVE_TERRAFORM_API_TOKEN" },
@@ -169,6 +177,10 @@ globals {
 
   # HTTPS only: TrueNAS revokes an API key sent over plain HTTP.
   truenas_url = "https://nas.rtrox.io"
+
+  # Garage's admin API (host:port). Plain HTTP on the LAN, so the token
+  # crosses it in clear: a known gap until Garage gets TLS. S3 is on :3900.
+  garage_admin_host = "s3.nas.rtrox.io:3903"
 }
 
 assert {
@@ -273,6 +285,27 @@ generate_hcl "_providers.tf" {
       labels   = ["truenas"]
       attributes = {
         url = global.truenas_url
+      }
+    }
+
+    # The garage provider (arsolitt/garagehq, from registry.terraform.io) takes
+    # the admin token as an attribute only. A stack lists it as "garage".
+    tm_dynamic "variable" {
+      for_each = tm_contains(global.providers, "garage") ? [1] : []
+      labels   = ["garage_admin_token"]
+      attributes = {
+        type      = tm_hcl_expression("string")
+        sensitive = true
+      }
+    }
+
+    tm_dynamic "provider" {
+      for_each = tm_contains(global.providers, "garage") ? [1] : []
+      labels   = ["garage"]
+      attributes = {
+        host   = global.garage_admin_host
+        scheme = "http"
+        token  = tm_hcl_expression("var.garage_admin_token")
       }
     }
 
