@@ -35,8 +35,12 @@ the bucket forgotten and purged by hand (Nov 2026). Two trade-offs came with it:
 
 The Cloud Sync B2 key is written to TrueNAS by this stack (`cloud_sync.tf`):
 to rotate it, add a second key under `module.nas_backup_locked_bucket`'s
-`keys` and point `local.nas_backup_key` at it; one apply updates the
-TrueNAS credential, and a later one removes the old key. The rest of this
+`keys` and point `local.nas_backup_key` at it. One apply replaces the TrueNAS
+credential (the new one is created first, the task moves to it, then the old
+one goes; it's named after the key ID, so names don't clash), and a later one
+removes the old key. **Not yet**: that replace needs the trigger the next change
+adds (`cloud_sync.tf`); until then, don't rotate. Editing the key by hand in
+TrueNAS isn't noticed: the credential is only compared by key ID. The rest of this
 section covers the ACME tokens, which still reach TrueNAS by hand.
 
 Nothing else here reaches TrueNAS by itself: the owner pastes each ACME token into the
@@ -90,8 +94,10 @@ state migration to re-encrypt it. Before that:
 - **CI gate** (done): `tf-ci.sh`'s `TF_GATE_ON_CREATE` sends a plan that
   creates `truenas_cloud_sync` to `tofu-apply-gated` (a create would be
   unencrypted; see `cloud_sync.tf`). Don't approve one.
-- **TrueNAS**: the read-only API key for plans, once its secret fields
-  (shown as placeholders) don't make the plan drift.
+- **TrueNAS**: the read-only API key in `tf-at-home/ci` for plans (its
+  placeholder secrets don't drift: `cloud_sync.tf` ignores them), the full
+  one in `ci-apply`. Never the read-only key for an apply: a state saved after
+  its refresh would hold the placeholder, and the next rename would send it.
 - **Cloudflare**: `CLOUDFLARE_TRUENAS_TOKEN` in `tf-at-home/ci` holding the
   read-only CI token, and in `ci-apply` the real one (foundation adds both
   `doppler_secret`s then).
