@@ -36,8 +36,9 @@ the bucket forgotten and purged by hand (Nov 2026). Two trade-offs came with it:
 
 `garage.tf`: Garage v2 (replaces MinIO, migration phase 4) as a TrueNAS custom
 app on the main NAS: one node, replication factor 1, `garage server
---single-node` (it lays itself out, so the layout isn't Terraform's). Buckets
-and keys come later (P4-2).
+--single-node` (it lays itself out, so the layout isn't Terraform's).
+`duplicacy.tf` makes Duplicacy's bucket on it (below); mini's buckets are in
+`clusters/mini`.
 
 - **Endpoint:** `http://s3.nas.rtrox.io:3900` (region `garage`); the A record
   points at the NAS's inventory address. The admin API and `/metrics` are on
@@ -65,6 +66,34 @@ and keys come later (P4-2).
   metadata snapshot (`metadata_auto_snapshot_interval`) are on. After an
   unclean shutdown that corrupts LMDB, restore the newest snapshot from
   `metadata_dir/snapshots` (Garage's recovery docs).
+
+- **Duplicacy's bucket:** `duplicacy.tf` makes `rtrox-duplicacy` (MinIO's
+  name) through the `garage-store` module: one key of the same name with read
+  and write on that bucket only (never owner), and writes
+  `{application_key_id, application_key, endpoint, bucket, region}` to
+  `hosts-at-home/prd` as `DUPLICACY_LOCAL_BUCKET` (endpoint
+  `http://s3.nas.rtrox.io:3900`, region `garage`). Nothing reads it yet:
+  Duplicacy keeps using `RTROX_DUPLICACY` (the MinIO key, written by
+  terraform-record; this stack never touches it) until its cutover. The
+  bucket is `prevent_destroy`, and a destroyed key can't be re-imported, so
+  rotate a key by adding a second one.
+- **The garagehq provider and a fresh apply:** the provider configures
+  itself with only a host and a token (it makes no API call until a resource
+  is read or written), so a plan with no Garage in state works, and the
+  provider being configured before Garage exists isn't a failure by itself.
+  But on a first apply, or a rebuild after a disaster, the Garage resources
+  (`module.garage_duplicacy`) need the admin API up, which the same stack
+  creates: they `depends_on` `truenas_app.garage`, so Terraform makes the app
+  first and then the bucket, but the app takes a moment to start listening
+  and the token has to exist. Do it in two steps: `task tf:apply STACK=truenas
+  -- -target=truenas_app.garage` (and the records it needs), wait until
+  `http://s3.nas.rtrox.io:3903/health` answers, then a plain apply. The
+  scoped CI plan token (below) lives inside Garage, so a rebuilt Garage has
+  none: make it again, then update `tf-at-home/ci`. With the NAS down, plan
+  the rest with `-target`.
+- **A garage plan needs the runner to reach `nas.rtrox.io:3903`:** the CI
+  runner's firewall change is its own PR (#2352) and must be applied first,
+  or the plan and apply jobs fail on the Garage resources.
 
 ## Rotating a credential
 
@@ -95,8 +124,8 @@ For the B2 key, the new key keeps `legacy_api = true` while TrueNAS's rclone
 is older than 1.73 (it refuses the key otherwise). After the first apply,
 Verify Credential and a Dry Run of the task before removing the old key.
 
-The duplicacy bucket stays on MinIO, in terraform-record, until phase 4's
-Garage. The architecture's `host` module (records, ACME token, backup
+Duplicacy's MinIO bucket (`RTROX_DUPLICACY`) stays in terraform-record until
+the Duplicacy cutover; its Garage bucket is `duplicacy.tf`. The architecture's `host` module (records, ACME token, backup
 bucket) is extracted later; the resources here are keyed by host so `moved`
 blocks can carry them into it.
 
@@ -127,6 +156,7 @@ Moved from `laptop-only` to `ci-apply` in Nov 2026. CI's credentials:
 | TrueNAS | `TRUENAS_API_KEY`: user terraform-ro (Read-Only Administrator); its placeholder secrets don't drift (`cloud_sync.tf`); the Garage app's compose reads back unredacted (checked with `CI_KEYS` after the first apply) | the full key (a Doppler reference to `prd`) |
 | B2 | `home-ops-ci-plan-readonly`: list and read buckets, their settings and keys, no files | the account key (a reference to `prd`) |
 | Cloudflare | `CLOUDFLARE_TRUENAS_TOKEN` = the read-only CI token (foundation's `truenas_ci.tf`) | the real token |
+| Garage | `GARAGE_ADMIN_TOKEN`: a read-only scoped admin token (`GetBucketInfo`, `GetKeyInfo` only), made by hand inside Garage | the full admin token (a Doppler reference to `hosts-at-home/prd`) |
 | Doppler | `DOPPLER_TRUENAS_WRITE_TOKEN`, read on `hosts-at-home/prd` | read/write |
 
 - **Gate:** `tf-ci.sh`'s `TF_GATE_ON_CREATE` sends a plan that creates
@@ -142,12 +172,17 @@ Moved from `laptop-only` to `ci-apply` in Nov 2026. CI's credentials:
   read-only key it gets sees the whole NAS config.
 - **Known gap, accepted:** the Garage secrets are in this stack's state, which
   PR plan jobs decrypt, and in `hosts-at-home/prd`, which their read token
-  reads. The runner's firewall lets jobs reach the NAS on `:443` only, not
-  Garage's `:3900`/`:3903`; revisit when P4-2 opens those for the garagehq
-  provider.
+  reads. The runner's firewall change for `nas.rtrox.io:3903` (the garagehq
+  provider's admin API) is PR #2352, a prerequisite for planning this stack.
+- **Known gap, accepted:** the plan's Garage token holds `GetKeyInfo`, and
+  Garage scopes are per endpoint, not per parameter. The provider's refresh
+  never sends `showSecretKey` (only an import does), so a plan doesn't read
+  any key's secret, but a PR job's own code could call `GetKeyInfo` with
+  `showSecretKey=true` and read every key's secret (Duplicacy's, mini's). The
+  admin API is plain HTTP on the LAN as well.
 - Test what CI's keys see from the laptop with `task tf:plan STACK=truenas
   CI_KEYS="BACKBLAZE_APPLICATION_KEY_ID BACKBLAZE_APPLICATION_KEY
-  TRUENAS_API_KEY CLOUDFLARE_TRUENAS_TOKEN DOPPLER_TRUENAS_WRITE_TOKEN"`.
+  TRUENAS_API_KEY GARAGE_ADMIN_TOKEN CLOUDFLARE_TRUENAS_TOKEN DOPPLER_TRUENAS_WRITE_TOKEN"`.
 
 **The state's re-encryption** (once, before the merge that tagged it
 `ci-apply`), from that branch, where `task tf:*` already picks the shared

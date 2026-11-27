@@ -158,9 +158,12 @@ globals {
     # writes it to hosts-at-home/prd). The garage provider (arsolitt/garagehq)
     # has no environment variable for it, only a `token` attribute, so it goes
     # in as the sensitive variable garage_admin_token (declared in the
-    # generated _providers.tf).
+    # generated _providers.tf). Read from tf-at-home like TRUENAS_API_KEY, made
+    # by hand: prd and ci-apply hold a Doppler reference to hosts-at-home/prd's
+    # token (full admin), ci holds a read-only scoped admin token
+    # (GetBucketInfo, GetKeyInfo), so a PR plan can't change buckets or keys.
     garage = [
-      { env = "TF_VAR_garage_admin_token", project = "hosts-at-home", key = "GARAGE_ADMIN_TOKEN" },
+      { env = "TF_VAR_garage_admin_token", project = "tf-at-home", key = "GARAGE_ADMIN_TOKEN" },
     ]
     # The token is written to hosts-at-home by the Ansible proxmox role.
     proxmox = [
