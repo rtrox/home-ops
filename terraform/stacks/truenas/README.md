@@ -69,9 +69,9 @@ app on the main NAS: one node, replication factor 1, `garage server
 
   Each prints its bearer token once (`<id>.<secret>`). Put them in Doppler
   `tf-at-home`, key `GARAGE_ADMIN_TOKEN`: `prd` = the `terraform-apply`
-  token, `ci-apply` = the reference `${prd.GARAGE_ADMIN_TOKEN}`, `ci` = the
+  token, `ci-apply` = the reference `'${prd.GARAGE_ADMIN_TOKEN}'` (single-quoted in the shell), `ci` = the
   `ci-plan-readonly` token. Rotate by making a new one, updating Doppler,
-  then `garage admin-token delete` the old (`garage admin-token list`).
+  then `garage admin-token delete --yes` the old (`garage admin-token list`).
 - **Updates:** a compose edit (a new image digest, a config change) updates the
   app in place; only `app_name`, `catalog_app`, `train` and `version` would
   replace it, and only `app_name` is set (never rename it). Replacing the app is safe for data (bind mounts)
@@ -156,6 +156,7 @@ blocks can carry them into it.
 | B2 | the shared provider key | everything but `bypassGovernance`; `writeKeys` is account-wide in B2, so no narrower key can create this bucket's keys |
 | Doppler | `DOPPLER_TRUENAS_WRITE_TOKEN` | read and write `hosts-at-home/prd` |
 | TrueNAS | `TRUENAS_API_KEY` | the full API key (user terraform, Local Administrator) |
+| Garage | `GARAGE_ADMIN_TOKEN` (`tf-at-home/prd`, made by hand) | the `terraform-apply` admin token, scope `*`: every bucket and key |
 
 ## Known follow-ups
 
@@ -195,12 +196,15 @@ Moved from `laptop-only` to `ci-apply` in Nov 2026. CI's credentials:
   only in `tf-at-home/prd` and `ci-apply` (a reference), which plan jobs
   don't read. The runner's firewall change for `nas.rtrox.io:3903` (the
   garagehq provider's admin API) is PR #2352, a prerequisite for planning
-  this stack, and it must come after the tokens exist and are in Doppler.
+  this stack, and its Ansible apply must come after this stack's apply that
+  removed the config admin token (until then the full token is in state, the
+  compose and `hosts-at-home/prd`, all CI-readable).
 - **Known gap, accepted:** the plan token holds `GetKeyInfo`, and Garage
   scopes are per endpoint, not per parameter. A plan's refresh never sends
   `showSecretKey`, but a PR job's own code could call `GetKeyInfo` with
   `showSecretKey=true` and read every key's secret (Duplicacy's, mini's).
-  Those secrets are in this stack's state anyway (and in Doppler). The admin
+  Those secrets are in this stack's and clusters/mini's state anyway (both
+  CI-decryptable), and in Doppler. The admin
   API is also plain HTTP on the LAN.
 - Test what CI's keys see from the laptop with `task tf:plan STACK=truenas
   CI_KEYS="BACKBLAZE_APPLICATION_KEY_ID BACKBLAZE_APPLICATION_KEY
