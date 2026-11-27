@@ -27,10 +27,9 @@
 # changes. CI plans read TrueNAS with a read-only API key, which gets secret
 # fields back as a placeholder, so comparing them would show a change on every
 # CI plan. A new B2 key (a rotation, or a replace under the same name) has a
-# new key ID, hence a new credential, named
-# after that ID so names never clash: created first, the task moved to it, then
-# the old one deleted. The plan shows a replace, so a ci-apply run waits for
-# approval.
+# new key ID, hence a new credential, named after that ID so names never
+# clash: created first, the task moved to it, then the old one deleted. The
+# plan shows a replace, so a ci-apply run waits for approval.
 resource "terraform_data" "nas_backup_key" {
   input = module.nas_backup_locked_bucket.keys[local.nas_backup_key].application_key_id
 }
