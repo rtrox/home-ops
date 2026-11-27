@@ -83,6 +83,11 @@ tasks:
       # of prd (plans only, see preconditions), e.g. CI_KEYS=TRUENAS_API_KEY to
       # see what CI's read-only TrueNAS key plans. Everything else stays prd.
       ci_keys=" {{.CI_KEYS}} "
+      # Every CI_KEYS entry must be one of this stack's keys: a typo (or a
+      # comma list) would otherwise plan with prd and look like a ci test.
+      for k in $ci_keys; do
+        printf '%s\n' $rows | grep -q ":$k\$" || { echo "task tf: CI_KEYS entry $k isn't one of this stack's Doppler keys (space-separated names)" >&2; exit 1; }
+      done
       for row in $rows; do
         name=${row%%:*}; rest=${row#*:}; project=${rest%%:*}; key=${rest#*:}
         config=prd
