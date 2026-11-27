@@ -17,9 +17,12 @@
 # **A plan that destroys or replaces truenas_dataset.garage_* is a mistake:**
 # a change of `pool` or `name` is a replace, which prevent_destroy refuses.
 #
-# Secrets: the RPC secret (32 bytes, hex) and the admin and metrics tokens are
-# generated here, passed as environment variables (garage.toml has none) and
-# written to Doppler hosts-at-home/prd. They are in the compose, so also in
+# Secrets: the RPC secret (32 bytes, hex) and the metrics token are generated
+# here, passed as environment variables (garage.toml has none) and written to
+# Doppler hosts-at-home/prd. There is no admin token in the config: the admin
+# API's tokens are made by hand with `garage admin-token create` (README.md),
+# so the full one is never in this state, the compose or a Doppler config CI
+# reads. They are in the compose, so also in
 # this stack's state (encrypted; CI can read it, see README.md).
 #
 # Updating the compose is an in-place update (custom_compose). app_name,
@@ -57,11 +60,6 @@ resource "random_bytes" "garage_rpc_secret" {
 }
 
 # No symbols in the tokens: Compose would treat a `$` as interpolation.
-
-resource "random_password" "garage_admin_token" {
-  length  = 48
-  special = false
-}
 
 resource "random_password" "garage_metrics_token" {
   length  = 48
@@ -105,7 +103,6 @@ locals {
         restart = "unless-stopped"
         environment = {
           GARAGE_RPC_SECRET    = random_bytes.garage_rpc_secret.hex
-          GARAGE_ADMIN_TOKEN   = sensitive(random_password.garage_admin_token.result)
           GARAGE_METRICS_TOKEN = sensitive(random_password.garage_metrics_token.result)
         }
         ports = [
@@ -157,15 +154,6 @@ resource "cloudflare_dns_record" "garage_s3" {
       error_message = "nas.rtrox.io is missing from inventory/hosts.yaml, or has no valid IPv4 address there."
     }
   }
-}
-
-resource "doppler_secret" "garage_admin_token" {
-  provider = doppler.hosts_at_home_prd
-
-  project = "hosts-at-home"
-  config  = "prd"
-  name    = "GARAGE_ADMIN_TOKEN"
-  value   = random_password.garage_admin_token.result
 }
 
 resource "doppler_secret" "garage_rpc_secret" {

@@ -154,14 +154,12 @@ globals {
     truenas = [
       { env = "TRUENAS_API_KEY", project = "tf-at-home", key = "TRUENAS_API_KEY" },
     ]
-    # The Garage admin token (the truenas stack's garage.tf generates it and
-    # writes it to hosts-at-home/prd). The garage provider (arsolitt/garagehq)
-    # has no environment variable for it, only a `token` attribute, so it goes
-    # in as the sensitive variable garage_admin_token (declared in the
-    # generated _providers.tf). Read from tf-at-home like TRUENAS_API_KEY, made
-    # by hand: prd and ci-apply hold a Doppler reference to hosts-at-home/prd's
-    # token (full admin), ci holds a read-only scoped admin token
-    # (GetBucketInfo, GetKeyInfo), so a PR plan can't change buckets or keys.
+    # The Garage admin token, made by hand with `garage admin-token create`
+    # (truenas README): the full-scope token in prd (ci-apply references it),
+    # a read-only scoped one (GetBucketInfo, GetKeyInfo) in ci. The garage
+    # provider (arsolitt/garagehq) has no environment variable for it, only a
+    # `token` attribute, so it goes in as the sensitive variable
+    # garage_admin_token (declared in the generated _providers.tf).
     garage = [
       { env = "TF_VAR_garage_admin_token", project = "tf-at-home", key = "GARAGE_ADMIN_TOKEN" },
     ]

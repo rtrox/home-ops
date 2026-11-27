@@ -49,17 +49,36 @@ app on the main NAS: one node, replication factor 1, `garage server
   data. The app runs as 568:568 (the APPS dataset preset).
 - **Config:** `garage.toml` is inline in the compose (`configs:` with
   `content:`), with no secrets. The RPC secret (`random_bytes`, 32 bytes hex; not `random_id`, whose id would print it) and
-  the admin and metrics tokens (`random_password`) are env vars in the compose
-  and are written to Doppler `hosts-at-home/prd` (`GARAGE_RPC_SECRET`,
-  `GARAGE_ADMIN_TOKEN`, `GARAGE_METRICS_TOKEN`). They are in this stack's
-  state too (encrypted, but CI can read it).
+  the metrics token (`random_password`) are env vars in the compose and are
+  written to Doppler `hosts-at-home/prd` (`GARAGE_RPC_SECRET`,
+  `GARAGE_METRICS_TOKEN`). They are in this stack's state too (encrypted,
+  but CI can read it).
+- **Admin tokens are made by hand, never by Terraform.** The config has no
+  `admin_token`, so no full-admin token is in state, the compose (which CI's
+  read-only TrueNAS key reads back) or `hosts-at-home/prd` (which plan jobs
+  read). Garage v2 keeps tokens made with `garage admin-token create` in its
+  metadata, so they survive restarts and upgrades. Make both, with the
+  container's own CLI (it talks to the daemon over RPC with the container's
+  `GARAGE_RPC_SECRET`; the default scope is `*`, and no `--expires-in` means
+  no expiry, which `Expiration: never` in the output confirms):
+
+  ```
+  docker exec ix-garage-garage-1 /garage admin-token create --scope '*' terraform-apply
+  docker exec ix-garage-garage-1 /garage admin-token create --scope GetBucketInfo,GetKeyInfo ci-plan-readonly
+  ```
+
+  Each prints its bearer token once (`<id>.<secret>`). Put them in Doppler
+  `tf-at-home`, key `GARAGE_ADMIN_TOKEN`: `prd` = the `terraform-apply`
+  token, `ci-apply` = the reference `${prd.GARAGE_ADMIN_TOKEN}`, `ci` = the
+  `ci-plan-readonly` token. Rotate by making a new one, updating Doppler,
+  then `garage admin-token delete` the old (`garage admin-token list`).
 - **Updates:** a compose edit (a new image digest, a config change) updates the
   app in place; only `app_name`, `catalog_app`, `train` and `version` would
   replace it, and only `app_name` is set (never rename it). Replacing the app is safe for data (bind mounts)
   but not for uptime. **Plan after any Garage upgrade**, and check a major
   upgrade's notes for a metadata migration first.
-- **Rotating a secret:** `task tf:apply STACK=truenas -- -replace=random_password.garage_admin_token`
-  (or the metrics token, or `random_bytes.garage_rpc_secret`). On this single
+- **Rotating a secret:** `task tf:apply STACK=truenas -- -replace=random_password.garage_metrics_token`
+  (or `random_bytes.garage_rpc_secret`). On this single
   node an RPC-secret rotation only restarts the container; with more nodes,
   every node must change together.
 - **Durability:** one copy, so `metadata_fsync`, `data_fsync` and a 6-hourly
@@ -79,18 +98,18 @@ app on the main NAS: one node, replication factor 1, `garage server
   rotate a key by adding a second one.
 - **The garagehq provider and a fresh apply:** the provider configures
   itself with only a host and a token (it makes no API call until a resource
-  is read or written), so a plan with no Garage in state works, and the
-  provider being configured before Garage exists isn't a failure by itself.
-  But on a first apply, or a rebuild after a disaster, the Garage resources
-  (`module.garage_duplicacy`) need the admin API up, which the same stack
-  creates: they `depends_on` `truenas_app.garage`, so Terraform makes the app
-  first and then the bucket, but the app takes a moment to start listening
-  and the token has to exist. Do it in two steps: `task tf:apply STACK=truenas
-  -- -target=truenas_app.garage` (and the records it needs), wait until
-  `http://s3.nas.rtrox.io:3903/health` answers, then a plain apply. The
-  scoped CI plan token (below) lives inside Garage, so a rebuilt Garage has
-  none: make it again, then update `tf-at-home/ci`. With the NAS down, plan
-  the rest with `-target`.
+  is read or written), so the provider being configured before Garage exists
+  isn't a failure by itself. But on a first apply, or a rebuild after a
+  disaster, `module.garage_duplicacy` needs the admin API up, which this
+  stack creates, and **a rebuilt Garage has no admin tokens**: its metadata
+  is new (or restored from an older snapshot). So: `task tf:apply STACK=truenas
+  -- -target=truenas_app.garage`, wait until
+  `http://s3.nas.rtrox.io:3903/health` answers, make both tokens again (see
+  above), update the three Doppler entries, then a plain apply. The module
+  `depends_on` the app, so within one apply the bucket waits for the app's
+  update, but not for the daemon to be listening again: if a bucket call
+  fails on a restart, re-run the apply (it's idempotent). With the NAS down,
+  plan the rest with `-target`.
 - **A garage plan needs the runner to reach `nas.rtrox.io:3903`:** the CI
   runner's firewall change is its own PR (#2352) and must be applied first,
   or the plan and apply jobs fail on the Garage resources.
@@ -156,7 +175,7 @@ Moved from `laptop-only` to `ci-apply` in Nov 2026. CI's credentials:
 | TrueNAS | `TRUENAS_API_KEY`: user terraform-ro (Read-Only Administrator); its placeholder secrets don't drift (`cloud_sync.tf`); the Garage app's compose reads back unredacted (checked with `CI_KEYS` after the first apply) | the full key (a Doppler reference to `prd`) |
 | B2 | `home-ops-ci-plan-readonly`: list and read buckets, their settings and keys, no files | the account key (a reference to `prd`) |
 | Cloudflare | `CLOUDFLARE_TRUENAS_TOKEN` = the read-only CI token (foundation's `truenas_ci.tf`) | the real token |
-| Garage | `GARAGE_ADMIN_TOKEN`: a read-only scoped admin token (`GetBucketInfo`, `GetKeyInfo` only), made by hand inside Garage | the full admin token (a Doppler reference to `hosts-at-home/prd`) |
+| Garage | `GARAGE_ADMIN_TOKEN` = `ci-plan-readonly` (`GetBucketInfo`, `GetKeyInfo` only), made by hand | `GARAGE_ADMIN_TOKEN` = a same-project reference to `prd`'s `terraform-apply` token (full scope, made by hand) |
 | Doppler | `DOPPLER_TRUENAS_WRITE_TOKEN`, read on `hosts-at-home/prd` | read/write |
 
 - **Gate:** `tf-ci.sh`'s `TF_GATE_ON_CREATE` sends a plan that creates
@@ -170,16 +189,19 @@ Moved from `laptop-only` to `ci-apply` in Nov 2026. CI's credentials:
   `nas.rtrox.io:443` (`github_runner_allowed_lan`), so a PR job can reach the
   TrueNAS web UI and API unauthenticated (and try passwords), and the
   read-only key it gets sees the whole NAS config.
-- **Known gap, accepted:** the Garage secrets are in this stack's state, which
-  PR plan jobs decrypt, and in `hosts-at-home/prd`, which their read token
-  reads. The runner's firewall change for `nas.rtrox.io:3903` (the garagehq
-  provider's admin API) is PR #2352, a prerequisite for planning this stack.
-- **Known gap, accepted:** the plan's Garage token holds `GetKeyInfo`, and
-  Garage scopes are per endpoint, not per parameter. The provider's refresh
-  never sends `showSecretKey` (only an import does), so a plan doesn't read
-  any key's secret, but a PR job's own code could call `GetKeyInfo` with
-  `showSecretKey=true` and read every key's secret (Duplicacy's, mini's). The
-  admin API is plain HTTP on the LAN as well.
+- **Known gap, accepted:** the Garage RPC secret and metrics token are in
+  this stack's state, which PR plan jobs decrypt, and in `hosts-at-home/prd`,
+  which their read token reads. The full admin token is not in either: it's
+  only in `tf-at-home/prd` and `ci-apply` (a reference), which plan jobs
+  don't read. The runner's firewall change for `nas.rtrox.io:3903` (the
+  garagehq provider's admin API) is PR #2352, a prerequisite for planning
+  this stack, and it must come after the tokens exist and are in Doppler.
+- **Known gap, accepted:** the plan token holds `GetKeyInfo`, and Garage
+  scopes are per endpoint, not per parameter. A plan's refresh never sends
+  `showSecretKey`, but a PR job's own code could call `GetKeyInfo` with
+  `showSecretKey=true` and read every key's secret (Duplicacy's, mini's).
+  Those secrets are in this stack's state anyway (and in Doppler). The admin
+  API is also plain HTTP on the LAN.
 - Test what CI's keys see from the laptop with `task tf:plan STACK=truenas
   CI_KEYS="BACKBLAZE_APPLICATION_KEY_ID BACKBLAZE_APPLICATION_KEY
   TRUENAS_API_KEY GARAGE_ADMIN_TOKEN CLOUDFLARE_TRUENAS_TOKEN DOPPLER_TRUENAS_WRITE_TOKEN"`.
