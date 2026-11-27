@@ -14,7 +14,7 @@ The backups of the root of trust and mini's controller tokens live in
 `garage.tf` makes mini's four buckets on Garage (the NAS, `truenas` stack):
 `k8s-rtrox-io-volsync-store`, `k8s-rtrox-io-mini-cnpg`,
 `k8s-rtrox-io-mini-thanos` and `k8s-rtrox-io-mini-sure`, the MinIO buckets'
-names, through the `object-store` module with `backend = "garage"`. Each has
+names, through the `garage-store` module. Each has
 one key, named after the bucket, with read and write on that bucket only. Each
 writes `{application_key_id, application_key, endpoint, bucket, region}` to
 Doppler `k8s-at-home/min` as `VOLSYNC_LOCAL_BUCKET`, `CNPG_LOCAL_BUCKET`,

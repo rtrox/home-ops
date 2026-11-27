@@ -14,12 +14,6 @@ terraform {
       source  = "DopplerHQ/doppler"
       version = "1.23.2"
     }
-    # object-store declares it; not configured here yet (its resources have
-    # count 0 with backend b2). On the Terraform registry, not OpenTofu's.
-    garage = {
-      source  = "registry.terraform.io/arsolitt/garagehq"
-      version = "1.3.1"
-    }
     random = {
       source  = "hashicorp/random"
       version = "3.9.1"

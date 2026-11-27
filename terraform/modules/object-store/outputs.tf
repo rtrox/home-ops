@@ -1,23 +1,18 @@
 output "bucket" {
-  description = "The bucket's ID and name, and the S3 endpoint it's reached at (the B2 account's, or the Garage `endpoint` input)."
+  description = "The bucket's ID and name, and the S3 endpoint of the account it's in."
   value = {
-    id       = local.b2 ? b2_bucket.this[0].bucket_id : garage_bucket.this[0].id
-    name     = local.b2 ? b2_bucket.this[0].bucket_name : garage_bucket.this[0].global_alias
-    endpoint = local.b2 ? data.b2_account_info.current[0].s3_api_url : var.endpoint
+    id       = b2_bucket.this.bucket_id
+    name     = b2_bucket.this.bucket_name
+    endpoint = data.b2_account_info.current.s3_api_url
   }
 }
 
 output "keys" {
   description = "Key name -> {application_key_id, application_key}."
-  value = local.b2 ? {
+  value = {
     for name, key in b2_application_key.this : name => {
       application_key_id = key.application_key_id
       application_key    = key.application_key
-    }
-    } : {
-    for name, key in garage_key.this : name => {
-      application_key_id = key.access_key_id
-      application_key    = key.secret_access_key
     }
   }
   sensitive = true

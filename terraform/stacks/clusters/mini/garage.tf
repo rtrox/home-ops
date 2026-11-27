@@ -23,36 +23,32 @@ locals {
 }
 
 module "garage_volsync" {
-  source = "../../../modules/object-store"
+  source = "../../../modules/garage-store"
 
-  backend  = "garage"
   endpoint = local.garage_s3_endpoint
   name     = local.garage_buckets.VOLSYNC_LOCAL_BUCKET
   keys     = { (local.garage_buckets.VOLSYNC_LOCAL_BUCKET) = {} }
 }
 
 module "garage_cnpg" {
-  source = "../../../modules/object-store"
+  source = "../../../modules/garage-store"
 
-  backend  = "garage"
   endpoint = local.garage_s3_endpoint
   name     = local.garage_buckets.CNPG_LOCAL_BUCKET
   keys     = { (local.garage_buckets.CNPG_LOCAL_BUCKET) = {} }
 }
 
 module "garage_thanos" {
-  source = "../../../modules/object-store"
+  source = "../../../modules/garage-store"
 
-  backend  = "garage"
   endpoint = local.garage_s3_endpoint
   name     = local.garage_buckets.THANOS_LOCAL_BUCKET
   keys     = { (local.garage_buckets.THANOS_LOCAL_BUCKET) = {} }
 }
 
 module "garage_sure" {
-  source = "../../../modules/object-store"
+  source = "../../../modules/garage-store"
 
-  backend  = "garage"
   endpoint = local.garage_s3_endpoint
   name     = local.garage_buckets.SURE_LOCAL_BUCKET
   keys     = { (local.garage_buckets.SURE_LOCAL_BUCKET) = {} }
