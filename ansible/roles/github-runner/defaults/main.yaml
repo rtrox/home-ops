@@ -28,7 +28,8 @@ github_runner_subnet: 10.254.254.0/24
 # LAN hosts a plan needs. pve.rtrox.io's API: the proxmox stack plans through it.
 # envoy-internal: auth.rtrox.io (pocket-id), for clusters/mini-services. The
 # rule matches the address, so jobs can reach every app on that gateway, not
-# only pocket-id.
+# only pocket-id. nas.rtrox.io: the TrueNAS API, for the truenas stack (its
+# web UI is on the same port; the API key is the real control).
 github_runner_allowed_lan:
   - name: pve.rtrox.io API
     address: "{{ hostvars[groups['proxmox'][0]].address }}"
@@ -36,4 +37,7 @@ github_runner_allowed_lan:
   - name: mini envoy-internal (pocket-id)
     # At the move, change the site key to house, as for loki_lan_address.
     address: "{{ (lookup('file', inventory_dir + '/sites.yaml') | from_yaml).sites.apartment.loadbalancer_pools.mini.reserved['envoy-internal'].address }}"
+    port: 443
+  - name: nas.rtrox.io API (truenas stack)
+    address: "{{ hostvars['nas.rtrox.io'].address }}"
     port: 443
