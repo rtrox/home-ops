@@ -277,7 +277,7 @@ tf-at-home:
     written_by: "by hand"
     read_by: "task tf:*"
   TRUENAS_API_KEY:
-    what: "TrueNAS API key for the truenas stack: user terraform (Local Administrator) in prd; terraform-ro (Read-Only Administrator) in ci, for when the stack moves to CI"
+    what: "TrueNAS API key for the truenas stack: user terraform (Local Administrator) in prd; terraform-ro (Read-Only Administrator) in ci, for CI plans; ci-apply references prd"
     written_by: "by hand (TrueNAS: Credentials > Users > Add API Key)"
     read_by: "task tf:* and CI, as TRUENAS_API_KEY"
 hosts-at-home:
