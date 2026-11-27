@@ -1,17 +1,6 @@
 # The main TrueNAS's off-site copy: a TrueNAS Cloud Sync task (rclone,
 # cloud_sync.tf) pushes to the bucket here with the key below.
 #
-# The old bucket, nas-rtrox-io-truenas-backup, is forgotten, not destroyed
-# (its prevent_destroy refuses that, and it still holds files): the owner
-# purges it by hand (README.md). This block can go once that's applied.
-removed {
-  from = module.nas_backup_bucket
-
-  lifecycle {
-    destroy = false
-  }
-}
-
 # With Object Lock, so a leaked key can't destroy the copy and this stack's
 # state can be readable by CI (phase 4, "truenas into CI"). Filled by a
 # server-side copy from the old bucket, then Cloud Sync switched to it.
