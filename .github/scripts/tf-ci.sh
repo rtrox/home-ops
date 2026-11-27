@@ -195,27 +195,38 @@ tf_summary_hash() {
 # reason (counts only, never values) and returns 0 when the apply is GATED, 1
 # when it may run straight away. Gated means the plan destroys, replaces
 # (create-then-destroy and destroy-then-create both carry "delete") or forgets
-# anything. Fail closed: a missing or unparsable JSON, or a text plan whose
+# anything, or creates a resource of a type in TF_GATE_ON_CREATE. Fail closed: a missing or unparsable JSON, or a text plan whose
 # totals show a destroy or forget the JSON missed, is gated.
+# Resource types whose create needs approval, because a create can do harm an
+# update can't: truenas_cloud_sync would be a new task with no Remote
+# Encryption (the provider can't set it; stacks/truenas/cloud_sync.tf), pushing
+# the pool to B2 in the clear.
+TF_GATE_ON_CREATE='["truenas_cloud_sync"]'
+
 tf_plan_gate() {
-  local json=$1 log=$2 counts del forget totals tdel tforget
+  local json=$1 log=$2 counts del forget created totals tdel tforget
   # Allowlist: every change must carry an actions array made only of known
   # actions; anything else (missing change or actions, unknown or
   # differently-cased action) is an error, hence gated.
-  counts=$(jq -r 'if (type == "object") and (.format_version | type) == "string"
+  counts=$(jq -r --argjson gated "$TF_GATE_ON_CREATE" 'if (type == "object") and (.format_version | type) == "string"
       and ((.resource_changes // []) | type) == "array"
     then (.resource_changes // []) as $rc
       | if all($rc[]; (.change | type) == "object" and (.change.actions | type) == "array"
           and (.change.actions | length) > 0
-          and all(.change.actions[]; IN("no-op", "create", "read", "update", "delete", "forget")))
-        then "\([$rc[] | select(.change.actions | index("delete"))] | length) \([$rc[] | select(.change.actions | index("forget"))] | length)"
+          and all(.change.actions[]; IN("no-op", "create", "read", "update", "delete", "forget"))
+          and ((.change.actions | index("create")) == null or (.type | type) == "string"))
+        then "\([$rc[] | select(.change.actions | index("delete"))] | length) \([$rc[] | select(.change.actions | index("forget"))] | length) \([$rc[] | select((.change.actions | index("create")) and (.type as $t | $gated | index($t)))] | length)"
         else error end
     else error end' "$json" 2>/dev/null) || counts=""
-  if ! [[ $counts =~ ^[0-9]+\ [0-9]+$ ]]; then
+  if ! [[ $counts =~ ^[0-9]+\ [0-9]+\ [0-9]+$ ]]; then
     echo "could not read the plan to check it for destroys, replaces and forgets"
     return 0
   fi
-  read -r del forget <<<"$counts"
+  read -r del forget created <<<"$counts"
+  if [ "$created" -gt 0 ]; then
+    echo "plan creates $created resource(s) whose create needs approval (TF_GATE_ON_CREATE)"
+    return 0
+  fi
   totals=$(tf_summary_totals "$log")
   # Exactly one well-formed Plan: line, or none (no changes, outputs only).
   # More than one, or one we cannot parse, is gated.
