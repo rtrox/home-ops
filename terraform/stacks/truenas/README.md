@@ -24,30 +24,12 @@ UI; see that file).
 
 It replaced `nas-rtrox-io-truenas-backup` in phase 4: a server-side copy
 (rclone, B2 to B2), Cloud Sync switched over, then the old key destroyed and
-the bucket forgotten. Two trade-offs came with it:
+the bucket forgotten and purged by hand (Nov 2026). Two trade-offs came with it:
 - **History:** a hidden or overwritten version is kept 30 days (45 within
   the lock), not forever as before. The copy took current files only.
 - **Reads:** the key keeps `readFiles` (rclone needs it), so whoever reads this
   state can download the backup. Before the stack drops `laptop-only`, confirm
   the Cloud Sync task has Remote Encryption on.
-
-**Purging the old bucket**, once the apply that forgets it is done: with the
-`terraform-backblaze` key, in a subshell so the key doesn't stay in your
-shell. `rclone purge` deletes every version and then the bucket. **Type the
-name with care**: this key can delete in any bucket in the account. Even the
-locked one only protects versions younger than 45 days, so a purge with the
-wrong name would delete its older versions:
-
-```sh
-(
-  export RCLONE_CONFIG_B2_TYPE=b2
-  export RCLONE_CONFIG_B2_ACCOUNT="$(doppler secrets get BACKBLAZE_APPLICATION_KEY_ID -p tf-at-home -c prd --plain)"
-  export RCLONE_CONFIG_B2_KEY="$(doppler secrets get BACKBLAZE_APPLICATION_KEY -p tf-at-home -c prd --plain)"
-  rclone purge B2:nas-rtrox-io-truenas-backup --fast-list --progress
-)
-```
-
-Then delete the `removed` block in `backup_bucket.tf`.
 
 ## Rotating a credential
 
