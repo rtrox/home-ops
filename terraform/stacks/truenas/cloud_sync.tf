@@ -26,8 +26,8 @@
 # The credential is never compared with TrueNAS, only replaced when the key
 # changes. CI plans read TrueNAS with a read-only API key, which gets secret
 # fields back as a placeholder, so comparing them would show a change on every
-# CI plan. Once the replace trigger below lands, a new B2 key (a rotation, or a
-# replace under the same name) has a new key ID, hence a new credential, named
+# CI plan. A new B2 key (a rotation, or a replace under the same name) has a
+# new key ID, hence a new credential, named
 # after that ID so names never clash: created first, the task moved to it, then
 # the old one deleted. The plan shows a replace, so a ci-apply run waits for
 # approval.
@@ -43,13 +43,9 @@ resource "truenas_cloudsync_credential" "nas_backup" {
     key     = module.nas_backup_locked_bucket.keys[local.nas_backup_key].application_key
   })
 
-  # replace_triggered_by = [terraform_data.nas_backup_key] comes in the next
-  # change: added in the same apply as terraform_data, that resource's create
-  # would itself trigger a replace. **Don't rotate the key until it lands**:
-  # the apply would rename this credential but keep the old secret (Update
-  # resends the state's), and removing the old key would then stop backups.
   lifecycle {
     ignore_changes        = [provider_attributes_json]
+    replace_triggered_by  = [terraform_data.nas_backup_key]
     create_before_destroy = true
   }
 }

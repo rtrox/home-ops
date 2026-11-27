@@ -38,9 +38,8 @@ to rotate it, add a second key under `module.nas_backup_locked_bucket`'s
 `keys` and point `local.nas_backup_key` at it. One apply replaces the TrueNAS
 credential (the new one is created first, the task moves to it, then the old
 one goes; it's named after the key ID, so names don't clash), and a later one
-removes the old key. **Not yet**: that replace needs the trigger the next change
-adds (`cloud_sync.tf`); until then, don't rotate. Editing the key by hand in
-TrueNAS isn't noticed: the credential is only compared by key ID. The rest of this
+removes the old key. Editing the key by hand in TrueNAS isn't noticed: the
+credential is only compared by key ID (`cloud_sync.tf`). The rest of this
 section covers the ACME tokens, which still reach TrueNAS by hand.
 
 Nothing else here reaches TrueNAS by itself: the owner pastes each ACME token into the
