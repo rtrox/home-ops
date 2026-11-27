@@ -1,6 +1,6 @@
 stack {
   name        = "truenas"
-  description = "The two TrueNAS hosts' A records, and the main TrueNAS's cloud-sync B2 bucket and key"
+  description = "The two TrueNAS hosts' A records, the main TrueNAS's cloud-sync B2 bucket and key, and Garage (S3) on the main TrueNAS"
   id          = "b971bcc6-8fdc-431f-9266-ca7eb58d9ffb"
 
   # Applied by CI on merge (terraform-apply.yaml), like dns. A plan with a

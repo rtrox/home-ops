@@ -30,6 +30,35 @@ the bucket forgotten and purged by hand (Nov 2026). Two trade-offs came with it:
   Encryption matters: it was confirmed on before the stack moved to CI, so
   those downloads are ciphertext.
 
+## Garage (S3)
+
+`garage.tf`: Garage v2 (replaces MinIO, migration phase 4) as a TrueNAS custom
+app on the main NAS: one node, replication factor 1, `garage server
+--single-node` (it lays itself out, so the layout isn't Terraform's). Buckets
+and keys come later (P4-2).
+
+- **Endpoint:** `http://s3.nas.rtrox.io:3900` (region `garage`); the A record
+  points at the NAS's inventory address. The admin API and `/metrics` are on
+  `:3903`. RPC (`:3901`) is inside the container and not published.
+- **Storage:** two datasets, both `prevent_destroy`: the data on
+  `rusty/garage` (HDD pool), the LMDB metadata on `zippy/garage-meta` (SSD
+  pool). They are bind mounts, not ixVolumes, so deleting the app deletes no
+  data. The app runs as 568:568 (the APPS dataset preset).
+- **Config:** `garage.toml` is inline in the compose (`configs:` with
+  `content:`), with no secrets. The RPC secret (`random_id`, 32 bytes hex) and
+  the admin and metrics tokens (`random_password`) are env vars in the compose
+  and are written to Doppler `hosts-at-home/prd` (`GARAGE_RPC_SECRET`,
+  `GARAGE_ADMIN_TOKEN`, `GARAGE_METRICS_TOKEN`). They are in this stack's
+  state too (encrypted, but CI can read it).
+- **Updates:** a compose edit (a new image digest, a config change) updates the
+  app in place; only `app_name`, `catalog_app`, `train` and `version` would
+  replace it, and none is set. Replacing the app is safe for data (bind mounts)
+  but not for uptime. **Plan after any Garage upgrade**, and check a major
+  upgrade's notes for a metadata migration first.
+- **Rotating a secret:** `task tf:apply STACK=truenas -- -replace=random_password.garage_admin_token`
+  (or the metrics token). **Never rotate the RPC secret** on a live node
+  without reading Garage's notes: it is the cluster's identity.
+
 ## Rotating a credential
 
 The Cloud Sync B2 key is written to TrueNAS by this stack (`cloud_sync.tf`):
