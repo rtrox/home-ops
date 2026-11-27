@@ -97,11 +97,12 @@ state migration to re-encrypt it. Before that:
   placeholder secrets don't drift: `cloud_sync.tf` ignores them), the full
   one in `ci-apply`. Never the read-only key for an apply: a state saved after
   its refresh would hold the placeholder, and the next rename would send it.
-- **Cloudflare**: `CLOUDFLARE_TRUENAS_TOKEN` in `tf-at-home/ci` holding the
-  read-only CI token, and in `ci-apply` the real one (foundation adds both
-  `doppler_secret`s then).
-- **B2**: a read-only key for plans, as clusters/mini's README describes.
-- **Doppler**: a read token for plans. One on `hosts-at-home/prd` reads every
-  host secret there (the Proxmox API token among them), so give this stack's
-  secrets their own config first, as clusters/mini's README does with
-  `k8s-at-home/min-ci` (a config for secrets written by a stack CI plans).
+- **Cloudflare** (foundation's `truenas_ci.tf`): `CLOUDFLARE_TRUENAS_TOKEN`
+  in `ci` holds the read-only CI token, in `ci-apply` the real one.
+- **Doppler** (foundation's `truenas_ci.tf`): `DOPPLER_TRUENAS_WRITE_TOKEN` in
+  `ci` is a read token on `hosts-at-home/prd`, in `ci-apply` a read/write one.
+  **Known gap, accepted:** that config holds every host's secrets (the Proxmox
+  API token among them), so every PR plan job can read them.
+- **B2**: a hand-made read-only key for plans (`listBuckets`, `readBuckets`,
+  `listKeys`, and what reading Object Lock settings needs), the same one
+  clusters/mini's README asks for; the account key in `ci-apply`.

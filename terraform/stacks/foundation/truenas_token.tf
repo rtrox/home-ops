@@ -7,9 +7,8 @@
 # TrueNAS ACME tokens are made here (truenas_acme_tokens.tf), so this one can't
 # mint others.
 #
-# Only in tf-at-home/prd: the stack is laptop-only. A ci-apply copy (and a
-# read-only one in ci) would come with a PR that moves it to CI, if ever
-# (truenas/README.md).
+# In prd for the laptop, ci-apply for CI's applies, and ci with the read-only
+# CI token's value for plans (truenas_ci.tf), as the dns stack's.
 locals {
   truenas_token_permissions = ["Zone Read", "DNS Write"]
 }
