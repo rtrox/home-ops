@@ -21,7 +21,8 @@
 # truenas_cloud_sync.nas_backup "will be created", stop**: the task left
 # state or was deleted in TrueNAS, and the create would be the unencrypted,
 # unrestricted task above. Rename this address only with a `moved` block.
-# Before this stack is ci-apply, CI must gate a create of it too.
+# CI gates a create of this type too (TF_GATE_ON_CREATE in tf-ci.sh).
+#
 # The credential is never compared with TrueNAS, only replaced when the key
 # changes. CI plans read TrueNAS with a read-only API key, which gets secret
 # fields back as a placeholder, so comparing them would show a change on every
