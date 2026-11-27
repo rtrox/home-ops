@@ -19,12 +19,18 @@ one key, named after the bucket, with read and write on that bucket only. Each
 writes `{application_key_id, application_key, endpoint, bucket, region}` to
 Doppler `k8s-at-home/min` as `VOLSYNC_LOCAL_BUCKET`, `CNPG_LOCAL_BUCKET`,
 `THANOS_LOCAL_BUCKET` and `SURE_LOCAL_BUCKET` (`endpoint` is
-`http://s3.nas.rtrox.io:3900`, `region` is `garage`).
+`http://s3.nas.rtrox.io:3900`, a full URL like the B2 keys', not MinIO's
+host:port; `region` is `garage`, and Garage needs path-style requests).
+**Each cutover adapts its template:** volsync's `s3:http://{{ .endpoint }}`,
+CNPG's and cnpg-offsite's endpoint, Sure's hard-coded `us-east-1`, and
+Thanos's host:port `endpoint` (strip the scheme, `insecure: true`).
 
 The owner applies them from the laptop (`task tf:apply STACK=clusters/mini`;
 the stack is `ci-skip`): the garage provider reaches Garage's admin API
 (`s3.nas.rtrox.io:3903`) with `GARAGE_ADMIN_TOKEN` from `hosts-at-home/prd`,
-which CI's runner can't reach yet. The consumers still read the
+which CI's job firewall doesn't allow yet (`github_runner_allowed_lan`). So
+every plan of this stack needs Garage up: with the NAS down, plan the rest
+with `-target`. The consumers still read the
 `*_MINIO_BUCKET` keys: each moves to its `*_LOCAL_BUCKET` key in its own
 cutover PR. Garage's layout isn't in Terraform (the provider's `garage_node`
 fails on Garage v2.6.0), and a destroyed key can't be re-imported (Garage

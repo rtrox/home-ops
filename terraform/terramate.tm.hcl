@@ -154,10 +154,11 @@ globals {
     truenas = [
       { env = "TRUENAS_API_KEY", project = "tf-at-home", key = "TRUENAS_API_KEY" },
     ]
-    # The Garage admin token (the truenas stack's garage.tf
-    # generates it and writes it to hosts-at-home/prd). The garage provider (arsolitt/garagehq) has no environment
-    # variable for it, only a `token` attribute, so it goes in as the sensitive
-    # variable garage_admin_token (declared in the generated _providers.tf).
+    # The Garage admin token (the truenas stack's garage.tf generates it and
+    # writes it to hosts-at-home/prd). The garage provider (arsolitt/garagehq)
+    # has no environment variable for it, only a `token` attribute, so it goes
+    # in as the sensitive variable garage_admin_token (declared in the
+    # generated _providers.tf).
     garage = [
       { env = "TF_VAR_garage_admin_token", project = "hosts-at-home", key = "GARAGE_ADMIN_TOKEN" },
     ]
@@ -177,8 +178,8 @@ globals {
   # HTTPS only: TrueNAS revokes an API key sent over plain HTTP.
   truenas_url = "https://nas.rtrox.io"
 
-  # Garage's admin API (host:port, plain HTTP: it's on the LAN, and the token
-  # is the only credential). The S3 API is on :3900.
+  # Garage's admin API (host:port). Plain HTTP on the LAN, so the token
+  # crosses it in clear: a known gap until Garage gets TLS. S3 is on :3900.
   garage_admin_host = "s3.nas.rtrox.io:3903"
 }
 

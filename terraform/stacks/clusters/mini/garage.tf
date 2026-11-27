@@ -63,11 +63,26 @@ locals {
   }
 }
 
-# Same shape as VOLSYNC_BACKBLAZE_BUCKET and the MinIO keys, plus region (the
-# S3 clients need it; Garage's is "garage").
+# Same shape as VOLSYNC_BACKBLAZE_BUCKET (endpoint is a full URL, scheme
+# included), plus region. The MinIO keys' endpoint is host:port, and their
+# consumers add `http://` themselves (Thanos takes host:port only), so each
+# cutover changes its template, not just the key name. Garage wants requests
+# signed for region "garage" and path-style addressing (no root_domain).
 resource "doppler_secret" "garage_bucket" {
   for_each = local.garage_modules
   provider = doppler.k8s_at_home_min
+
+  lifecycle {
+    # The provider only knows a key's secret from its create (or an import
+    # with the secret): never write an empty key over a live secret.
+    precondition {
+      condition = (
+        try(length(each.value.keys[local.garage_buckets[each.key]].application_key_id), 0) > 0 &&
+        try(length(each.value.keys[local.garage_buckets[each.key]].application_key), 0) > 0
+      )
+      error_message = "The Garage key for ${each.key} has no ID or secret in state; don't write it to Doppler."
+    }
+  }
 
   project = "k8s-at-home"
   config  = "min"

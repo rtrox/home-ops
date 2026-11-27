@@ -308,7 +308,7 @@ hosts-at-home:
   GARAGE_ADMIN_TOKEN:
     what: "Garage's admin API token (port 3903); generated, and passed to the app as an env var"
     written_by: "truenas"
-    read_by: "the garagehq provider (buckets and keys, later)"
+    read_by: "the garagehq provider in clusters/mini (buckets and keys)"
   GARAGE_METRICS_TOKEN:
     what: "Bearer token for Garage's /metrics on the admin port"
     written_by: "truenas"
