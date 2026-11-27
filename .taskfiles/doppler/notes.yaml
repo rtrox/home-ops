@@ -181,11 +181,11 @@ k8s-at-home:
     read_by: "the volsync component"
 tf-at-home:
   BACKBLAZE_APPLICATION_KEY:
-    what: "The terraform-backblaze B2 key"
+    what: "B2 key for Terraform: the terraform-backblaze account key in prd (ci-apply references it); the read-only home-ops-ci-plan-readonly key in ci"
     written_by: "by hand (Backblaze)"
     read_by: "foundation, clusters/mini, truenas"
   BACKBLAZE_APPLICATION_KEY_ID:
-    what: "ID of the terraform-backblaze B2 key"
+    what: "ID of the B2 key in BACKBLAZE_APPLICATION_KEY (account key in prd and ci-apply; home-ops-ci-plan-readonly in ci)"
     written_by: "by hand (Backblaze)"
     read_by: "foundation, clusters/mini, truenas"
   BACKBLAZE_TERRAFORM_STATE_KEY:
@@ -209,7 +209,7 @@ tf-at-home:
     written_by: "foundation in ci; by hand in prd"
     read_by: "foundation, proxmox"
   CLOUDFLARE_TRUENAS_TOKEN:
-    what: "The truenas stack's Cloudflare token"
+    what: "The truenas stack's Cloudflare token: the real token in prd and ci-apply; the shared read-only CI token in ci"
     written_by: "foundation"
     read_by: "truenas"
   CLOUDFLARE_USER_ID:
@@ -237,7 +237,7 @@ tf-at-home:
     written_by: "foundation"
     read_by: "clusters/mini, terraform-record minio"
   DOPPLER_TRUENAS_WRITE_TOKEN:
-    what: "Write token for hosts-at-home/prd"
+    what: "Token for hosts-at-home/prd: read/write in prd and ci-apply; read-only in ci, for plans"
     written_by: "foundation"
     read_by: "truenas, terraform-record minio"
   GITHUB_TERRAFORM_TOKEN:
@@ -277,7 +277,7 @@ tf-at-home:
     written_by: "by hand"
     read_by: "task tf:*"
   TRUENAS_API_KEY:
-    what: "TrueNAS API key for the truenas stack: user terraform (Local Administrator) in prd; terraform-ro (Read-Only Administrator) in ci, for when the stack moves to CI"
+    what: "TrueNAS API key for the truenas stack: user terraform (Local Administrator) in prd; terraform-ro (Read-Only Administrator) in ci, for CI plans; ci-apply references prd"
     written_by: "by hand (TrueNAS: Credentials > Users > Add API Key)"
     read_by: "task tf:* and CI, as TRUENAS_API_KEY"
 hosts-at-home:
