@@ -26,8 +26,9 @@ the bucket forgotten and purged by hand (Nov 2026). Two trade-offs came with it:
 - **History:** a hidden or overwritten version is kept 30 days (45 within
   the lock), not forever as before. The copy took current files only.
 - **Reads:** the key keeps `readFiles` (rclone needs it), so whoever reads this
-  state can download the backup. Before the stack drops `laptop-only`, confirm
-  the Cloud Sync task has Remote Encryption on.
+  state can download the backup. That's why the Cloud Sync task's Remote
+  Encryption matters: it was confirmed on before the stack moved to CI, so
+  those downloads are ciphertext.
 
 ## Rotating a credential
 
