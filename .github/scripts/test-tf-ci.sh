@@ -119,7 +119,7 @@ rc_json() { printf '{"format_version":"1.2","resource_changes":[{"address":"a.b"
 cs_json() { printf '{"format_version":"1.2","resource_changes":[{"address":"truenas_cloud_sync.x","type":"truenas_cloud_sync","change":{"actions":%s}}]}' "$1"; }
 gate "add only" ungated "$(rc_json '["create"]')"
 gate "update" ungated "$(rc_json '["update"]')" "Plan: 0 to add, 1 to change, 0 to destroy."
-gate "no-op and read" ungated "$(rc_json '["no-op"]')"
+gate "no-op and read" ungated "$(rc_json '["no-op"]')" "No changes. Your infrastructure matches the configuration."
 gate "empty plan" ungated '{"format_version":"1.2"}' "Changes to Outputs:"
 gate "delete" gated "$(rc_json '["delete"]')"
 gate "replace (delete then create)" gated "$(rc_json '["delete","create"]')"
@@ -146,7 +146,8 @@ gate "create of a TF_GATE_ON_CREATE type" gated "$(cs_json '["create"]')"
 gate "update of a TF_GATE_ON_CREATE type" ungated "$(cs_json '["update"]')" "Plan: 0 to add, 1 to change, 0 to destroy."
 gate "import-only (no-op) of a TF_GATE_ON_CREATE type" ungated "$(cs_json '["no-op"]')" "Plan: 1 to import, 0 to add, 0 to change, 0 to destroy."
 gate "create with no type" gated '{"format_version":"1.2","resource_changes":[{"address":"a.b","change":{"actions":["create"]}}]}'
-gate "create with a non-string type" gated '{"format_version":"1.2","resource_changes":[{"address":"a.b","type":1,"change":{"actions":["create"]}}]}' 
+gate "create with a non-string type" gated '{"format_version":"1.2","resource_changes":[{"address":"a.b","type":1,"change":{"actions":["create"]}}]}'
+gate "text shows more adds than the JSON's creates" gated "$(rc_json '["update"]')" "Plan: 1 to add, 1 to change, 0 to destroy."
 rm -f "$tmp/gate.json"
 if tf_plan_gate "$tmp/none.json" "$tmp/gate.log" >/dev/null; then check "gate: nonexistent file path" ok; else check "gate: nonexistent file path" no; fi
 rc_json '["delete","create"]' >"$tmp/gate.json"

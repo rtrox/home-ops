@@ -204,7 +204,7 @@ tf_summary_hash() {
 TF_GATE_ON_CREATE='["truenas_cloud_sync"]'
 
 tf_plan_gate() {
-  local json=$1 log=$2 counts del forget created totals tdel tforget
+  local json=$1 log=$2 counts del forget created adds totals tdel tforget tadd
   # Allowlist: every change must carry an actions array made only of known
   # actions; anything else (missing change or actions, unknown or
   # differently-cased action) is an error, hence gated.
@@ -215,14 +215,14 @@ tf_plan_gate() {
           and (.change.actions | length) > 0
           and all(.change.actions[]; IN("no-op", "create", "read", "update", "delete", "forget"))
           and ((.change.actions | index("create")) == null or (.type | type) == "string"))
-        then "\([$rc[] | select(.change.actions | index("delete"))] | length) \([$rc[] | select(.change.actions | index("forget"))] | length) \([$rc[] | select((.change.actions | index("create")) and (.type as $t | $gated | index($t)))] | length)"
+        then "\([$rc[] | select(.change.actions | index("delete"))] | length) \([$rc[] | select(.change.actions | index("forget"))] | length) \([$rc[] | select((.change.actions | index("create")) and (.type as $t | $gated | index($t)))] | length) \([$rc[] | select(.change.actions | index("create"))] | length)"
         else error end
     else error end' "$json" 2>/dev/null) || counts=""
-  if ! [[ $counts =~ ^[0-9]+\ [0-9]+\ [0-9]+$ ]]; then
+  if ! [[ $counts =~ ^[0-9]+\ [0-9]+\ [0-9]+\ [0-9]+$ ]]; then
     echo "could not read the plan to check it for destroys, replaces and forgets"
     return 0
   fi
-  read -r del forget created <<<"$counts"
+  read -r del forget created adds <<<"$counts"
   if [ "$created" -gt 0 ]; then
     echo "plan creates $created resource(s) whose create needs approval (TF_GATE_ON_CREATE)"
     return 0
@@ -237,6 +237,13 @@ tf_plan_gate() {
   fi
   tdel=$(grep -oE '[0-9]+ to destroy' <<<"$totals" | grep -oE '^[0-9]+' || true)
   tforget=$(grep -oE '[0-9]+ to forget' <<<"$totals" | grep -oE '^[0-9]+' || true)
+  tadd=$(grep -oE '[0-9]+ to add' <<<"$totals" | grep -oE '^[0-9]+' || true)
+  # Creates are only typed in the JSON, so text showing more adds than the
+  # JSON has creates means the JSON can't be trusted to rule out a gated one.
+  if [ "${tadd:-0}" -gt "$adds" ]; then
+    echo "could not match the plan's adds to its JSON to check them for gated creates"
+    return 0
+  fi
   if [ "${tdel:-0}" -gt "$del" ]; then del=$tdel; fi
   if [ "${tforget:-0}" -gt "$forget" ]; then forget=$tforget; fi
   if [ "$del" -gt 0 ] || [ "$forget" -gt 0 ]; then
