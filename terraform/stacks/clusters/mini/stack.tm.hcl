@@ -18,7 +18,7 @@ stack {
 
 # What this stack needs generated (see terraform/terramate.tm.hcl).
 globals {
-  providers      = ["backblaze", "cloudflare"]
+  providers      = ["backblaze", "cloudflare", "garage"]
   doppler_writes = ["k8s-at-home/min"]
 
   # Its own Cloudflare token (foundation's mini_token.tf): Zone Read and DNS
