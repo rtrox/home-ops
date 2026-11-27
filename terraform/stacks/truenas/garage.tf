@@ -22,8 +22,9 @@
 # written to Doppler hosts-at-home/prd. They are in the compose, so also in
 # this stack's state (encrypted; CI can read it, see README.md).
 #
-# Updating the compose is an in-place update (custom_compose; only app_name,
-# catalog_app, train and version force a replace, and none is set here).
+# Updating the compose is an in-place update (custom_compose). app_name,
+# catalog_app, train and version force a replace; only app_name is set, so
+# never rename the app.
 # Plan after any Garage upgrade (a new image digest here), see README.md.
 
 resource "truenas_dataset" "garage_data" {
@@ -49,9 +50,13 @@ resource "truenas_dataset" "garage_meta" {
 }
 
 # RPC secret: 32 bytes as 64 hex characters, what Garage requires.
-resource "random_id" "garage_rpc_secret" {
-  byte_length = 32
+# random_bytes, not random_id: random_id's attributes aren't sensitive, and its
+# id (the secret in base64) is printed in plan and apply progress lines.
+resource "random_bytes" "garage_rpc_secret" {
+  length = 32
 }
+
+# No symbols in the tokens: Compose would treat a `$` as interpolation.
 
 resource "random_password" "garage_admin_token" {
   length  = 48
@@ -71,6 +76,11 @@ locals {
     metadata_dir = "/var/lib/garage/meta"
     data_dir = "/var/lib/garage/data"
     db_engine = "lmdb"
+    # One copy and no other node to repair from: fsync both, and snapshot the
+    # metadata (Garage recommends it for LMDB; snapshots go in metadata_dir).
+    metadata_fsync = true
+    data_fsync = true
+    metadata_auto_snapshot_interval = "6h"
 
     replication_factor = 1
 
@@ -94,7 +104,7 @@ locals {
         user    = "568:568"
         restart = "unless-stopped"
         environment = {
-          GARAGE_RPC_SECRET    = sensitive(random_id.garage_rpc_secret.hex)
+          GARAGE_RPC_SECRET    = random_bytes.garage_rpc_secret.hex
           GARAGE_ADMIN_TOKEN   = sensitive(random_password.garage_admin_token.result)
           GARAGE_METRICS_TOKEN = sensitive(random_password.garage_metrics_token.result)
         }
@@ -107,7 +117,7 @@ locals {
           "${truenas_dataset.garage_data.mount_point}:/var/lib/garage/data",
         ]
         configs = [
-          { source = "garage_toml", target = "/etc/garage.toml", mode = "0444" },
+          { source = "garage_toml", target = "/etc/garage.toml" },
         ]
       }
     }
@@ -164,7 +174,7 @@ resource "doppler_secret" "garage_rpc_secret" {
   project = "hosts-at-home"
   config  = "prd"
   name    = "GARAGE_RPC_SECRET"
-  value   = random_id.garage_rpc_secret.hex
+  value   = random_bytes.garage_rpc_secret.hex
 }
 
 resource "doppler_secret" "garage_metrics_token" {

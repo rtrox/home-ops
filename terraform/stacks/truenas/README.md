@@ -7,7 +7,9 @@ Doppler `hosts-at-home/prd` (`TRUENAS_BACKUP_BUCKET`). Moved from
 terraform-record's `cloudflare` and `backblaze` stacks in migration P2-5.
 The hosts' ACME DNS-01 tokens (`TRUENAS_CLOUDFLARE_TOKEN`,
 `TRUENAS_BACKUP_CLOUDFLARE_TOKEN`) live in `foundation`
-(`truenas_acme_tokens.tf`), so this stack can't mint tokens.
+(`truenas_acme_tokens.tf`), so this stack can't mint tokens. It also runs
+Garage (S3, replacing MinIO) as a TrueNAS custom app, with its datasets and the
+`s3.nas.rtrox.io` record (see "Garage (S3)").
 
 Tagged `ci-apply`: CI plans it on PRs, applies it on merge and checks it for
 drift nightly, with the shared state passphrase (see "In CI" below).
@@ -45,19 +47,24 @@ and keys come later (P4-2).
   pool). They are bind mounts, not ixVolumes, so deleting the app deletes no
   data. The app runs as 568:568 (the APPS dataset preset).
 - **Config:** `garage.toml` is inline in the compose (`configs:` with
-  `content:`), with no secrets. The RPC secret (`random_id`, 32 bytes hex) and
+  `content:`), with no secrets. The RPC secret (`random_bytes`, 32 bytes hex; not `random_id`, whose id would print it) and
   the admin and metrics tokens (`random_password`) are env vars in the compose
   and are written to Doppler `hosts-at-home/prd` (`GARAGE_RPC_SECRET`,
   `GARAGE_ADMIN_TOKEN`, `GARAGE_METRICS_TOKEN`). They are in this stack's
   state too (encrypted, but CI can read it).
 - **Updates:** a compose edit (a new image digest, a config change) updates the
   app in place; only `app_name`, `catalog_app`, `train` and `version` would
-  replace it, and none is set. Replacing the app is safe for data (bind mounts)
+  replace it, and only `app_name` is set (never rename it). Replacing the app is safe for data (bind mounts)
   but not for uptime. **Plan after any Garage upgrade**, and check a major
   upgrade's notes for a metadata migration first.
 - **Rotating a secret:** `task tf:apply STACK=truenas -- -replace=random_password.garage_admin_token`
-  (or the metrics token). **Never rotate the RPC secret** on a live node
-  without reading Garage's notes: it is the cluster's identity.
+  (or the metrics token, or `random_bytes.garage_rpc_secret`). On this single
+  node an RPC-secret rotation only restarts the container; with more nodes,
+  every node must change together.
+- **Durability:** one copy, so `metadata_fsync`, `data_fsync` and a 6-hourly
+  metadata snapshot (`metadata_auto_snapshot_interval`) are on. After an
+  unclean shutdown that corrupts LMDB, restore the newest snapshot from
+  `metadata_dir/snapshots` (Garage's recovery docs).
 
 ## Rotating a credential
 
@@ -117,7 +124,7 @@ Moved from `laptop-only` to `ci-apply` in Nov 2026. CI's credentials:
 
 | | Plans (`tf-at-home/ci`) | Applies (`ci-apply`) |
 | --- | --- | --- |
-| TrueNAS | `TRUENAS_API_KEY`: user terraform-ro (Read-Only Administrator); its placeholder secrets don't drift (`cloud_sync.tf`) | the full key (a Doppler reference to `prd`) |
+| TrueNAS | `TRUENAS_API_KEY`: user terraform-ro (Read-Only Administrator); its placeholder secrets don't drift (`cloud_sync.tf`); the Garage app's compose reads back unredacted (checked with `CI_KEYS` after the first apply) | the full key (a Doppler reference to `prd`) |
 | B2 | `home-ops-ci-plan-readonly`: list and read buckets, their settings and keys, no files | the account key (a reference to `prd`) |
 | Cloudflare | `CLOUDFLARE_TRUENAS_TOKEN` = the read-only CI token (foundation's `truenas_ci.tf`) | the real token |
 | Doppler | `DOPPLER_TRUENAS_WRITE_TOKEN`, read on `hosts-at-home/prd` | read/write |
@@ -133,6 +140,11 @@ Moved from `laptop-only` to `ci-apply` in Nov 2026. CI's credentials:
   `nas.rtrox.io:443` (`github_runner_allowed_lan`), so a PR job can reach the
   TrueNAS web UI and API unauthenticated (and try passwords), and the
   read-only key it gets sees the whole NAS config.
+- **Known gap, accepted:** the Garage secrets are in this stack's state, which
+  PR plan jobs decrypt, and in `hosts-at-home/prd`, which their read token
+  reads. The runner's firewall lets jobs reach the NAS on `:443` only, not
+  Garage's `:3900`/`:3903`; revisit when P4-2 opens those for the garagehq
+  provider.
 - Test what CI's keys see from the laptop with `task tf:plan STACK=truenas
   CI_KEYS="BACKBLAZE_APPLICATION_KEY_ID BACKBLAZE_APPLICATION_KEY
   TRUENAS_API_KEY CLOUDFLARE_TRUENAS_TOKEN DOPPLER_TRUENAS_WRITE_TOKEN"`.
