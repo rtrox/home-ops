@@ -9,10 +9,8 @@ The hosts' ACME DNS-01 tokens (`TRUENAS_CLOUDFLARE_TOKEN`,
 `TRUENAS_BACKUP_CLOUDFLARE_TOKEN`) live in `foundation`
 (`truenas_acme_tokens.tf`), so this stack can't mint tokens.
 
-Tagged `laptop-only`: CI never plans, applies or drift-checks it, and its
-state is encrypted with the owner's own passphrase
-(`TOFU_STATE_PASSPHRASE_LAPTOP`, which `task tf:*` picks for laptop-only
-stacks). Plan it after any inventory edit to either host: nothing else will.
+Tagged `ci-apply`: CI plans it on PRs, applies it on merge and checks it for
+drift nightly, with the shared state passphrase (see "In CI" below).
 
 ## The off-site bucket
 
@@ -65,44 +63,110 @@ Garage. The architecture's `host` module (records, ACME token, backup
 bucket) is extracted later; the resources here are keyed by host so `moved`
 blocks can carry them into it.
 
-## Credentials
+## Credentials (the laptop's, `prd`; CI's are under "In CI")
 
 | Provider | Key | Can |
 | --- | --- | --- |
 | Cloudflare | `CLOUDFLARE_TRUENAS_TOKEN` (foundation's `truenas_token.tf`) | Zone Read and DNS Write on rtrox.io |
 | B2 | the shared provider key | everything but `bypassGovernance`; `writeKeys` is account-wide in B2, so no narrower key can create this bucket's keys |
 | Doppler | `DOPPLER_TRUENAS_WRITE_TOKEN` | read and write `hosts-at-home/prd` |
-| TrueNAS | `TRUENAS_API_KEY` | the full API key; a read-only one is in Doppler for CI plans later |
+| TrueNAS | `TRUENAS_API_KEY` | the full API key (user terraform, Local Administrator) |
 
 ## Known follow-ups
 
 - The NAS moves back to the house at 172.30.1.12 (its `moves_to`): an
-  inventory edit, then a plan and apply of this stack from the laptop.
+  inventory edit; CI plans and applies it.
 - The `nas.rtrox.io` comment (`Main TrueNAs`) keeps its live typo; fix it in
   its own change (an in-place update).
 - The backup TrueNAS is off until May 2027: paste its ACME token then
   (rtrox/terraform-record#53).
 
-## Before moving this stack to CI
+## In CI
 
-Planned. The Cloud Sync key in its state can no longer delete (the locked
-bucket, above), so that's no longer the reason it's `laptop-only`. Moving it
-to `ci-apply` means the shared passphrase (CI can decrypt that state) and a
-state migration to re-encrypt it. Before that:
+Moved from `laptop-only` to `ci-apply` in Nov 2026. CI's credentials:
 
-- **CI gate** (done): `tf-ci.sh`'s `TF_GATE_ON_CREATE` sends a plan that
-  creates `truenas_cloud_sync` to `tofu-apply-gated` (a create would be
-  unencrypted; see `cloud_sync.tf`). Don't approve one.
-- **TrueNAS**: the read-only API key in `tf-at-home/ci` for plans (its
-  placeholder secrets don't drift: `cloud_sync.tf` ignores them), the full
-  one in `ci-apply`. Never the read-only key for an apply: a state saved after
-  its refresh would hold the placeholder, and the next rename would send it.
-- **Cloudflare** (foundation's `truenas_ci.tf`): `CLOUDFLARE_TRUENAS_TOKEN`
-  in `ci` holds the read-only CI token, in `ci-apply` the real one.
-- **Doppler** (foundation's `truenas_ci.tf`): `DOPPLER_TRUENAS_WRITE_TOKEN` in
-  `ci` is a read token on `hosts-at-home/prd`, in `ci-apply` a read/write one.
-  **Known gap, accepted:** that config holds every host's secrets (the Proxmox
-  API token among them), so every PR plan job can read them.
-- **B2**: a hand-made read-only key for plans (`listBuckets`, `readBuckets`,
-  `listKeys`, and what reading Object Lock settings needs), the same one
-  clusters/mini's README asks for; the account key in `ci-apply`.
+| | Plans (`tf-at-home/ci`) | Applies (`ci-apply`) |
+| --- | --- | --- |
+| TrueNAS | `TRUENAS_API_KEY`: user terraform-ro (Read-Only Administrator); its placeholder secrets don't drift (`cloud_sync.tf`) | the full key (a Doppler reference to `prd`) |
+| B2 | `home-ops-ci-plan-readonly`: list and read buckets, their settings and keys, no files | the account key (a reference to `prd`) |
+| Cloudflare | `CLOUDFLARE_TRUENAS_TOKEN` = the read-only CI token (foundation's `truenas_ci.tf`) | the real token |
+| Doppler | `DOPPLER_TRUENAS_WRITE_TOKEN`, read on `hosts-at-home/prd` | read/write |
+
+- **Gate:** `tf-ci.sh`'s `TF_GATE_ON_CREATE` sends a plan that creates
+  `truenas_cloud_sync` to `tofu-apply-gated` (a create would be unencrypted;
+  see `cloud_sync.tf`). Don't approve one.
+- **Never the read-only TrueNAS key for an apply:** a state saved after its
+  refresh would hold the placeholder, and the next rename would send it.
+- **Known gap, accepted:** the plan token on `hosts-at-home/prd` reads every
+  host's secrets (the Proxmox API token among them), so every PR plan job can.
+- Test what CI's keys see from the laptop with `task tf:plan STACK=truenas
+  CI_KEYS="BACKBLAZE_APPLICATION_KEY_ID BACKBLAZE_APPLICATION_KEY
+  TRUENAS_API_KEY CLOUDFLARE_TRUENAS_TOKEN DOPPLER_TRUENAS_WRITE_TOKEN"`.
+
+**The state's re-encryption** (once, before the merge that tagged it
+`ci-apply`), from that branch, where `task tf:*` already picks the shared
+passphrase. Two applies with extra key providers in `TF_ENCRYPTION`, which
+OpenTofu merges into the code's `encryption` block:
+
+1. Save under a temporary key provider `next` (the shared passphrase), reading
+   with `laptop` (the laptop passphrase, aliased to the metadata key the state
+   was written under, `key_provider.pbkdf2.main`). The fallback can't simply be
+   the laptop key under `main`'s metadata key: the primary method registers
+   that key before it fails, and the fallback's then collides ("Duplicate
+   metadata key").
+2. Save under `main` (the code's), reading with `next`.
+
+Each apply needs a change to save the state (an unchanged state isn't written):
+the first creates `terraform_data.state_encryption`, the second replaces it.
+Earlier versions in the B2 state history stay encrypted with
+`TOFU_STATE_PASSPHRASE_LAPTOP`, which foundation still uses. Both passphrases
+are base64, so they're safe inside the HCL strings.
+
+```sh
+(
+  laptop="$(doppler secrets get TOFU_STATE_PASSPHRASE_LAPTOP -p tf-at-home -c prd --plain)"
+  shared="$(doppler secrets get TOFU_STATE_PASSPHRASE -p tf-at-home -c prd --plain)"
+  next_kp="key_provider \"pbkdf2\" \"next\" { passphrase = \"$shared\" }
+method \"aes_gcm\" \"next\" { keys = key_provider.pbkdf2.next }"
+  unset shared
+
+  # 1: laptop -> next
+  export TF_ENCRYPTION="$next_kp
+key_provider \"pbkdf2\" \"laptop\" {
+  passphrase               = \"$laptop\"
+  encrypted_metadata_alias = \"key_provider.pbkdf2.main\"
+}
+method \"aes_gcm\" \"laptop\" { keys = key_provider.pbkdf2.laptop }
+state {
+  enforced = true
+  method   = method.aes_gcm.next
+  fallback { method = method.aes_gcm.laptop }
+}
+plan {
+  enforced = true
+  method   = method.aes_gcm.next
+  fallback { method = method.aes_gcm.laptop }
+}"
+  unset laptop
+  task tf:apply STACK=truenas || exit 1
+
+  # 2: next -> main
+  export TF_ENCRYPTION="$next_kp
+state {
+  enforced = true
+  method   = method.aes_gcm.main
+  fallback { method = method.aes_gcm.next }
+}
+plan {
+  enforced = true
+  method   = method.aes_gcm.main
+  fallback { method = method.aes_gcm.next }
+}"
+  task tf:apply STACK=truenas -- -replace=terraform_data.state_encryption
+)
+```
+
+Pass 1 should plan 1 to add (the marker), pass 2 1 to add and 1 to destroy
+(the marker's replace), nothing else. If pass 2 fails, the state is readable
+with pass 2's `TF_ENCRYPTION`; rerun it. Then, without `TF_ENCRYPTION`,
+`task tf:plan STACK=truenas` must say No changes.

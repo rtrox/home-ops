@@ -3,17 +3,15 @@ stack {
   description = "The two TrueNAS hosts' A records, and the main TrueNAS's cloud-sync B2 bucket and key"
   id          = "b971bcc6-8fdc-431f-9266-ca7eb58d9ffb"
 
-  # Applied from the owner's laptop only, like foundation: CI never plans,
-  # applies or drift-checks it, and task tf:* encrypts its state with
-  # TOFU_STATE_PASSPHRASE_LAPTOP, which CI doesn't hold. Its move to CI is
-  # planned (README.md, "Before moving this stack to CI").
-  tags = ["laptop-only"]
+  # Applied by CI on merge (terraform-apply.yaml), like dns. A plan with a
+  # destroy, replace or forget, or a create of truenas_cloud_sync
+  # (TF_GATE_ON_CREATE), waits for the owner's approval in tofu-apply-gated.
+  # Laptop-only until Nov 2026 (README.md, "In CI").
+  tags = ["ci-apply"]
 
   # records.tf builds both A records from it (each host's dns_name and
   # address). An address edit, such as the NAS's renumber at its move
-  # (`moves_to`), changes the live record at the next laptop apply. There's no
-  # drift check for a laptop-only stack, so plan this stack after any edit to
-  # nas.rtrox.io or backup.rtrox.io in the inventory.
+  # (`moves_to`), changes the live record at the next apply.
   watch = [
     "/inventory/hosts.yaml",
   ]
