@@ -37,6 +37,9 @@ tasks:
         msg: "jq and doppler must be on PATH"
       - sh: test -n "$(doppler configure get token --plain)"
         msg: "doppler isn't logged in (run: doppler login)"
+      # CI_KEYS (plan only): a test of what CI's read-only credentials see.
+      - sh: test -z "{{.CI_KEYS}}" || test "{{.CMD}}" = plan
+        msg: "CI_KEYS is for plans only (CI's read-only credentials must never apply)"
     env:
       AWS_ACCESS_KEY_ID:
         sh: "{{.DOPPLER_GET}} R2_STATE_READWRITE | jq -er .access_key_id"
@@ -76,9 +79,20 @@ tasks:
       # _provider_env.json). Values stay in this process's environment.
       rows=$(jq -r 'if type == "array" and all(.[]; (.env | type) == "string" and (.project | type) == "string" and (.key | type) == "string")
         then .[] | "\(.env):\(.project):\(.key)" else error end' _provider_env.json) || { echo "malformed _provider_env.json (run: task tf:generate)" >&2; exit 1; }
+      # CI_KEYS="KEY ..." reads those Doppler keys from the ci config instead
+      # of prd (plans only, see preconditions), e.g. CI_KEYS=TRUENAS_API_KEY to
+      # see what CI's read-only TrueNAS key plans. Everything else stays prd.
+      ci_keys=" {{.CI_KEYS}} "
+      # Every CI_KEYS entry must be one of this stack's keys: a typo (or a
+      # comma list) would otherwise plan with prd and look like a ci test.
+      for k in $ci_keys; do
+        printf '%s\n' $rows | grep -q ":$k\$" || { echo "task tf: CI_KEYS entry $k isn't one of this stack's Doppler keys (space-separated names)" >&2; exit 1; }
+      done
       for row in $rows; do
         name=${row%%:*}; rest=${row#*:}; project=${rest%%:*}; key=${rest#*:}
-        value=$(doppler secrets get -p "$project" -c prd --plain "$key") || { echo "could not read $key from $project/prd" >&2; exit 1; }
+        config=prd
+        case "$ci_keys" in *" $key "*) config=ci; echo "task tf: $key from $project/ci" >&2 ;; esac
+        value=$(doppler secrets get -p "$project" -c "$config" --plain "$key") || { echo "could not read $key from $project/$config" >&2; exit 1; }
         export "$name=$value"
       done
       {{if .PIPE}}set -o pipefail{{end}}
@@ -103,16 +117,16 @@ tasks:
         vars: { STACK: "{{.STACK}}", CMD: init, ALLOW_OVERRIDE: "{{.ALLOW_OVERRIDE}}" }
 
   plan:
-    desc: Plan a stack (STACK=proxmox)
+    desc: Plan a stack (STACK=proxmox; CI_KEYS="KEY ..." reads those keys from the ci config, to test CI's read-only credentials)
     requires:
       vars: [STACK]
     cmds:
       # Pick up provider or lock-file changes first. -input=false: never prompts
       # (a backend migration needs an explicit `task tf:init -- -migrate-state`).
       - task: _tofu
-        vars: { STACK: "{{.STACK}}", CMD: init -input=false, NO_CLI_ARGS: "true" }
+        vars: { STACK: "{{.STACK}}", CMD: init -input=false, NO_CLI_ARGS: "true", CI_KEYS: "" }
       - task: _tofu
-        vars: { STACK: "{{.STACK}}", CMD: plan }
+        vars: { STACK: "{{.STACK}}", CMD: plan, CI_KEYS: "{{.CI_KEYS}}" }
 
   apply:
     desc: Apply a stack (STACK=proxmox). The owner's step; agents are denied it.
