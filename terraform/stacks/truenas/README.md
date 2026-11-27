@@ -100,6 +100,10 @@ Moved from `laptop-only` to `ci-apply` in Nov 2026. CI's credentials:
   refresh would hold the placeholder, and the next rename would send it.
 - **Known gap, accepted:** the plan token on `hosts-at-home/prd` reads every
   host's secrets (the Proxmox API token among them), so every PR plan job can.
+- **Known gap, accepted:** the runner's job firewall lets every job reach
+  `nas.rtrox.io:443` (`github_runner_allowed_lan`), so a PR job can reach the
+  TrueNAS web UI and API unauthenticated (and try passwords), and the
+  read-only key it gets sees the whole NAS config.
 - Test what CI's keys see from the laptop with `task tf:plan STACK=truenas
   CI_KEYS="BACKBLAZE_APPLICATION_KEY_ID BACKBLAZE_APPLICATION_KEY
   TRUENAS_API_KEY CLOUDFLARE_TRUENAS_TOKEN DOPPLER_TRUENAS_WRITE_TOKEN"`.
