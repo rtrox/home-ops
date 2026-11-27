@@ -115,10 +115,11 @@ gate() { # NAME EXPECT(gated|ungated) JSON [TEXT-TOTALS]
   reason=$(tf_plan_gate "$tmp/gate.json" "$tmp/gate.log") && got=gated
   if [ "$got" = "$2" ] && { [ "$got" = ungated ] || [ -n "$reason" ]; }; then check "gate: $1" ok; else check "gate: $1 (got $got)" no; fi
 }
-rc_json() { printf '{"format_version":"1.2","resource_changes":[{"address":"a.b","change":{"actions":%s}}]}' "$1"; }
+rc_json() { printf '{"format_version":"1.2","resource_changes":[{"address":"a.b","type":"a","change":{"actions":%s}}]}' "$1"; }
+cs_json() { printf '{"format_version":"1.2","resource_changes":[{"address":"truenas_cloud_sync.x","type":"truenas_cloud_sync","change":{"actions":%s}}]}' "$1"; }
 gate "add only" ungated "$(rc_json '["create"]')"
 gate "update" ungated "$(rc_json '["update"]')" "Plan: 0 to add, 1 to change, 0 to destroy."
-gate "no-op and read" ungated "$(rc_json '["no-op"]')"
+gate "no-op and read" ungated "$(rc_json '["no-op"]')" "No changes. Your infrastructure matches the configuration."
 gate "empty plan" ungated '{"format_version":"1.2"}' "Changes to Outputs:"
 gate "delete" gated "$(rc_json '["delete"]')"
 gate "replace (delete then create)" gated "$(rc_json '["delete","create"]')"
@@ -141,6 +142,12 @@ gate "deposed delete" gated '{"format_version":"1.2","resource_changes":[{"addre
 gate "multiple totals lines" gated "$(rc_json '["create"]')" "$(printf 'Plan: 1 to add, 0 to change, 0 to destroy.\nPlan: 0 to add, 0 to change, 0 to destroy.')"
 gate "unparsable totals line" gated "$(rc_json '["create"]')" "Plan: lots to add."
 gate "nonexistent JSON file" gated ""
+gate "create of a TF_GATE_ON_CREATE type" gated "$(cs_json '["create"]')"
+gate "update of a TF_GATE_ON_CREATE type" ungated "$(cs_json '["update"]')" "Plan: 0 to add, 1 to change, 0 to destroy."
+gate "import-only (no-op) of a TF_GATE_ON_CREATE type" ungated "$(cs_json '["no-op"]')" "Plan: 1 to import, 0 to add, 0 to change, 0 to destroy."
+gate "create with no type" gated '{"format_version":"1.2","resource_changes":[{"address":"a.b","change":{"actions":["create"]}}]}'
+gate "create with a non-string type" gated '{"format_version":"1.2","resource_changes":[{"address":"a.b","type":1,"change":{"actions":["create"]}}]}'
+gate "text shows more adds than the JSON's creates" gated "$(rc_json '["update"]')" "Plan: 1 to add, 1 to change, 0 to destroy."
 rm -f "$tmp/gate.json"
 if tf_plan_gate "$tmp/none.json" "$tmp/gate.log" >/dev/null; then check "gate: nonexistent file path" ok; else check "gate: nonexistent file path" no; fi
 rc_json '["delete","create"]' >"$tmp/gate.json"

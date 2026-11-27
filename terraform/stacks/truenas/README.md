@@ -87,8 +87,9 @@ bucket, above), so that's no longer the reason it's `laptop-only`. Moving it
 to `ci-apply` means the shared passphrase (CI can decrypt that state) and a
 state migration to re-encrypt it. Before that:
 
-- **CI gate**: `tf-ci.sh` must refuse a plan that creates
-  `truenas_cloud_sync` (a create would be unencrypted; see `cloud_sync.tf`).
+- **CI gate** (done): `tf-ci.sh`'s `TF_GATE_ON_CREATE` sends a plan that
+  creates `truenas_cloud_sync` to `tofu-apply-gated` (a create would be
+  unencrypted; see `cloud_sync.tf`). Don't approve one.
 - **TrueNAS**: the read-only API key for plans, once its secret fields
   (shown as placeholders) don't make the plan drift.
 - **Cloudflare**: `CLOUDFLARE_TRUENAS_TOKEN` in `tf-at-home/ci` holding the
