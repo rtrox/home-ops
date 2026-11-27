@@ -1,5 +1,6 @@
 # What the two TrueNAS hosts need from outside themselves: their A records and
-# the main TrueNAS's cloud-sync bucket. Moved from terraform-record's
+# the main TrueNAS's cloud-sync bucket. (Garage, on the main NAS, is in
+# garage.tf.) Moved from terraform-record's
 # cloudflare and backblaze stacks in migration P2-5. Their ACME DNS-01 tokens
 # are foundation's (truenas_acme_tokens.tf there).
 #

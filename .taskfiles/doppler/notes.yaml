@@ -289,6 +289,18 @@ hosts-at-home:
     what: "Read token for tf-at-home/ci"
     written_by: "by hand"
     read_by: "the github-runner role"
+  GARAGE_ADMIN_TOKEN:
+    what: "Garage's admin API token (port 3903); generated, and passed to the app as an env var"
+    written_by: "truenas"
+    read_by: "the garagehq provider (buckets and keys, later)"
+  GARAGE_METRICS_TOKEN:
+    what: "Bearer token for Garage's /metrics on the admin port"
+    written_by: "truenas"
+    read_by: "Prometheus (scrape, later)"
+  GARAGE_RPC_SECRET:
+    what: "Garage's RPC secret (32 bytes, hex); generated, and passed to the app as an env var"
+    written_by: "truenas"
+    read_by: "a copy; the truenas stack passes it to the app itself"
   GITHUB_RUNNER_APP:
     what: "GitHub App that registers the runner"
     written_by: "by hand (GitHub)"
