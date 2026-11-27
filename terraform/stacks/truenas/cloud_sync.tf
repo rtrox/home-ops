@@ -22,13 +22,31 @@
 # state or was deleted in TrueNAS, and the create would be the unencrypted,
 # unrestricted task above. Rename this address only with a `moved` block.
 # Before this stack is ci-apply, CI must gate a create of it too.
+# The credential is never compared with TrueNAS, only replaced when the key
+# changes. CI plans read TrueNAS with a read-only API key, which gets secret
+# fields back as a placeholder, so comparing them would show a change on every
+# CI plan. A rotation (README.md) is a new key name, hence a new credential:
+# created first, the task moved to it, then the old one deleted. The plan shows
+# a replace, so a ci-apply run waits for approval.
+resource "terraform_data" "nas_backup_key" {
+  input = module.nas_backup_locked_bucket.keys[local.nas_backup_key].application_key_id
+}
+
 resource "truenas_cloudsync_credential" "nas_backup" {
-  name          = "nas-rtrox-io-truenas-backup-locked"
+  name          = local.nas_backup_key
   provider_type = "B2"
   provider_attributes_json = jsonencode({
     account = module.nas_backup_locked_bucket.keys[local.nas_backup_key].application_key_id
     key     = module.nas_backup_locked_bucket.keys[local.nas_backup_key].application_key
   })
+
+  # replace_triggered_by = [terraform_data.nas_backup_key] comes in the next
+  # change: added in the same apply as terraform_data, that resource's create
+  # would itself trigger a replace. Until then a rotation isn't picked up.
+  lifecycle {
+    ignore_changes        = [provider_attributes_json]
+    create_before_destroy = true
+  }
 }
 
 import {
