@@ -27,8 +27,10 @@ Thanos's host:port `endpoint` (strip the scheme, `insecure: true`).
 
 The owner applies them from the laptop (`task tf:apply STACK=clusters/mini`;
 the stack is `ci-skip`): the garage provider reaches Garage's admin API
-(`s3.nas.rtrox.io:3903`) with `GARAGE_ADMIN_TOKEN` from `hosts-at-home/prd`,
-which CI's job firewall doesn't allow yet (`github_runner_allowed_lan`). So
+(`s3.nas.rtrox.io:3903`) with `GARAGE_ADMIN_TOKEN` from `tf-at-home/prd` (the
+full-scope `terraform-apply` token, made by hand with `garage admin-token
+create`; see the `truenas` README), which CI's job firewall doesn't allow yet
+(`github_runner_allowed_lan`; PR #2352 adds it for the `truenas` stack). So
 every plan of this stack needs Garage up: with the NAS down, plan the rest
 with `-target`. The consumers still read the
 `*_MINIO_BUCKET` keys: each moves to its `*_LOCAL_BUCKET` key in its own
@@ -48,7 +50,7 @@ CI to plan it with read-only credentials, and to apply it with
 | Cloudflare | `CLOUDFLARE_MINI_TOKEN` = the read-only CI token, plus an account-level `Cloudflare Tunnel Read` on `ci_readonly` | `CLOUDFLARE_MINI_TOKEN` = the real token (foundation adds the `doppler_secret` then, not before: every ci-apply job downloads the whole config) |
 | B2 | `BACKBLAZE_APPLICATION_KEY_ID`/`_KEY`: a hand-made read-only key (`listBuckets`, `readBuckets`, `listKeys`, and whatever reading file-lock settings needs), no file reads | a key that can create keys on these two buckets (`writeKeys` is account-wide in B2, so this is effectively the provider key; decide then) |
 | Doppler | `DOPPLER_MINI_CI_WRITE_TOKEN`, a read token on `min-ci` (below) | the same key, a write token on `min-ci` |
-| Garage | `GARAGE_ADMIN_TOKEN` in `hosts-at-home` (read via `TF_CI_HOSTS_TOKEN`), and the runner able to reach the admin port 3903. `GARAGE_ADMIN_TOKEN` can create and delete buckets and keys, so a CI plan needs a separate read-only scoped admin token (Garage admin tokens take scopes), not this one | the same, from `ci-apply` |
+| Garage | `GARAGE_ADMIN_TOKEN` in `tf-at-home/ci`: the read-only scoped admin token the `truenas` stack's plans already use (`GetBucketInfo`, `GetKeyInfo`; see that README), and the runner able to reach the admin port 3903 (PR #2352) | `GARAGE_ADMIN_TOKEN` in `ci-apply`: a same-project reference to `prd`'s full-scope token (it can create and delete buckets and keys) |
 
 **Doppler: `k8s-at-home/min-ci`.** A read token on `k8s-at-home/min` would
 read every secret of every app in mini, and every PR plan job reads `ci`.

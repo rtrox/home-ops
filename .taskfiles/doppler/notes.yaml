@@ -256,6 +256,10 @@ tf-at-home:
     what: "Token for hosts-at-home/prd: read/write in prd and ci-apply; read-only in ci, for plans"
     written_by: "foundation"
     read_by: "truenas, terraform-record minio"
+  GARAGE_ADMIN_TOKEN:
+    what: "Garage admin API token for the garage provider: the full-scope `terraform-apply` token in prd (ci-apply references prd's); the read-only `ci-plan-readonly` token (GetBucketInfo, GetKeyInfo) in ci"
+    written_by: "by hand, garage admin-token create"
+    read_by: "task tf:* and CI, as TF_VAR_garage_admin_token (truenas, clusters/mini)"
   GITHUB_TERRAFORM_TOKEN:
     what: "Fine-grained GitHub token limited to home-ops; expires yearly"
     written_by: "by hand (GitHub)"
@@ -305,10 +309,10 @@ hosts-at-home:
     what: "Read token for tf-at-home/ci"
     written_by: "by hand"
     read_by: "the github-runner role"
-  GARAGE_ADMIN_TOKEN:
-    what: "Garage's admin API token (port 3903); generated, and passed to the app as an env var"
+  DUPLICACY_LOCAL_BUCKET:
+    what: "Garage bucket and key for Duplicacy (replaces RTROX_DUPLICACY, the MinIO one)"
     written_by: "truenas"
-    read_by: "the garagehq provider in clusters/mini (buckets and keys)"
+    read_by: "nothing yet; pasted into TrueNAS at the Duplicacy cutover"
   GARAGE_METRICS_TOKEN:
     what: "Bearer token for Garage's /metrics on the admin port"
     written_by: "truenas"

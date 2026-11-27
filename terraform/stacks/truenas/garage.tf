@@ -1,11 +1,12 @@
 # Garage v2 (S3 storage that replaces MinIO), a TrueNAS custom app on the main
 # NAS: one node, replication factor 1 (migration P4-1). Buckets and keys are
-# later (P4-2), and the cluster layout isn't Terraform's: `server
+# garage-store modules (duplicacy.tf here, mini's in clusters/mini), and the
+# cluster layout isn't Terraform's: `server
 # --single-node` lays the node out itself (the garagehq provider's
 # `garage_node` fails on v2.6.0).
 #
 # The endpoint is http://s3.nas.rtrox.io:3900. The admin API (3903, which the
-# garagehq provider needs later, and /metrics) is published too; RPC (3901)
+# garagehq provider uses, and /metrics) is published too; RPC (3901)
 # stays inside the container.
 #
 # Two datasets, both prevent_destroy: the data on rusty (the HDD pool), the
@@ -17,10 +18,13 @@
 # **A plan that destroys or replaces truenas_dataset.garage_* is a mistake:**
 # a change of `pool` or `name` is a replace, which prevent_destroy refuses.
 #
-# Secrets: the RPC secret (32 bytes, hex) and the admin and metrics tokens are
-# generated here, passed as environment variables (garage.toml has none) and
-# written to Doppler hosts-at-home/prd. They are in the compose, so also in
-# this stack's state (encrypted; CI can read it, see README.md).
+# Secrets: the RPC secret (32 bytes, hex) and the metrics token are generated
+# here, passed as environment variables (garage.toml has none) and written to
+# Doppler hosts-at-home/prd. There is no admin token in the config: the admin
+# API's tokens are made by hand with `garage admin-token create` (README.md),
+# so the full one is never in this state, the compose or a Doppler config CI
+# reads. The RPC secret and metrics token are in the compose, so also in this
+# stack's state (encrypted; CI can read it, see README.md).
 #
 # Updating the compose is an in-place update (custom_compose). app_name,
 # catalog_app, train and version force a replace; only app_name is set, so
@@ -58,11 +62,6 @@ resource "random_bytes" "garage_rpc_secret" {
 
 # No symbols in the tokens: Compose would treat a `$` as interpolation.
 
-resource "random_password" "garage_admin_token" {
-  length  = 48
-  special = false
-}
-
 resource "random_password" "garage_metrics_token" {
   length  = 48
   special = false
@@ -71,7 +70,7 @@ resource "random_password" "garage_metrics_token" {
 locals {
   garage_image = "dxflrs/garage:v2.6.0@sha256:4b5a318fc9fe2fbec5d3af590eeafe05d83492e6411266fa0b9e215c20264013"
 
-  # No secrets: the RPC secret and both tokens come from the environment.
+  # No secrets: the RPC secret and the metrics token come from the environment.
   garage_toml = <<-EOT
     metadata_dir = "/var/lib/garage/meta"
     data_dir = "/var/lib/garage/data"
@@ -105,7 +104,6 @@ locals {
         restart = "unless-stopped"
         environment = {
           GARAGE_RPC_SECRET    = random_bytes.garage_rpc_secret.hex
-          GARAGE_ADMIN_TOKEN   = sensitive(random_password.garage_admin_token.result)
           GARAGE_METRICS_TOKEN = sensitive(random_password.garage_metrics_token.result)
         }
         ports = [
@@ -157,15 +155,6 @@ resource "cloudflare_dns_record" "garage_s3" {
       error_message = "nas.rtrox.io is missing from inventory/hosts.yaml, or has no valid IPv4 address there."
     }
   }
-}
-
-resource "doppler_secret" "garage_admin_token" {
-  provider = doppler.hosts_at_home_prd
-
-  project = "hosts-at-home"
-  config  = "prd"
-  name    = "GARAGE_ADMIN_TOKEN"
-  value   = random_password.garage_admin_token.result
 }
 
 resource "doppler_secret" "garage_rpc_secret" {

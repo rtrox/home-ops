@@ -14,6 +14,11 @@ terraform {
       source  = "DopplerHQ/doppler"
       version = "1.23.2"
     }
+    # On the Terraform registry, not OpenTofu's.
+    garage = {
+      source  = "registry.terraform.io/arsolitt/garagehq"
+      version = "1.3.1"
+    }
     random = {
       source  = "hashicorp/random"
       version = "3.9.1"
